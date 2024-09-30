@@ -9,5 +9,5 @@ export const metadata = {
 };
 
 export default function DashboardServerLayout({ children }: { children: React.ReactNode }) {
-    return <DashboardLayout>{children}</DashboardLayout>;
+    return <DashboardLayout><div className="px-4 py-3">{children}</div></DashboardLayout>;
 }
