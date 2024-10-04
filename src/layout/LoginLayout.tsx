@@ -7,11 +7,8 @@ interface LoginLayoutProps {
 }
 
 export default function LoginLayout({ children }: LoginLayoutProps) {
-    const [isOpened, setIsOpened] = useState(false);
-
     return (
         <React.Fragment>
-            login layout
             {children}
         </React.Fragment>
     );
