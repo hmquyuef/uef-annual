@@ -4,6 +4,7 @@ import CustomModal from "@/components/CustomModal";
 import CustomNotification from "@/components/CustomNotification";
 import FormWorkloadType from "@/components/forms/workloads/formWorkloadType";
 import NotFound from "@/components/NotFound";
+import { getListRolesByEmail } from "@/services/users/usersServices";
 import {
   AddUpdateWorkloadType,
   getWorkloadTypes,
@@ -39,7 +40,7 @@ const Workloads = () => {
   const [status, setStatus] = useState<
     "success" | "error" | "info" | "warning"
   >("success");
-  const [userRole, setUserRole] = useState("user");
+  const [userRole, setUserRole] = useState<string[]>([]);
   const [selectedItem, setSelectedItem] = useState<
     Partial<WorkloadTypeItem> | undefined
   >(undefined);
@@ -47,6 +48,12 @@ const Workloads = () => {
     const response = await getWorkloadTypes();
     setTypes(response.items);
   };
+
+  const getRolesUser = async () => {
+    const response = await getListRolesByEmail(emailUser);
+    const roles = response.items.map((item) => item.roles.map((role) => role.name));
+    setUserRole(roles[0]);
+  }
 
   const handleEllipsis = (type: WorkloadTypeItem) => {
     setIsOk(true);
@@ -75,7 +82,7 @@ const Workloads = () => {
       <PieChartOutlined />
       <span>{type.totalItems} sự kiện</span>
     </div>,
-    userRole && userRole === "admin" ? (
+    userRole && userRole.includes("admin") ? (
       <>
         <div
           key="edit"
@@ -133,6 +140,7 @@ const Workloads = () => {
   };
   useEffect(() => {
     getListWorkloadTypes();
+    getRolesUser();
   }, []);
 
   useEffect(() => {
