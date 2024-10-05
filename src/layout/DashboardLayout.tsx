@@ -67,7 +67,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const levelKeys = getLevelKeys(itemsMenu as LevelKeysProps[]);
 
   useEffect(() => {
-    if (!session) router.push("/login");
     const fetchRoles = async () => {
       if (session && status) {
         const mail = session.user?.email || "";
@@ -155,6 +154,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       }
     };
     fetchRoles();
+    if (!session) router.push("/login");
   }, [session, router]);
 
   return (

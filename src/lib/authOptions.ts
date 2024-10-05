@@ -1,5 +1,9 @@
-import { NextAuthOptions } from "next-auth";
+import { NextAuthOptions, Profile } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+
+interface GoogleProfile extends Profile {
+    hd?: string;
+}
 
 export const authOptions: NextAuthOptions = {
     providers: [
@@ -17,8 +21,10 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
     callbacks: {
-        async signIn({ profile }) {
-            if (profile?.email?.endsWith('@uef.edu.vn')) {
+        async signIn({ account, profile }) {
+            const googleProfile = profile as GoogleProfile;
+            // Kiểm tra tài khoản có thuộc miền uef.edu.vn không
+            if (googleProfile?.hd === "uef.edu.vn") {
                 return true;
             } else {
                 return false;
