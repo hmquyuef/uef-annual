@@ -68,7 +68,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const fetchRoles = async (mail: string) => {
     const response = await getListRolesByEmail(mail);
-    if (response.items.length > 0) {
+    if (response.items && response.items.length > 0) {
       response.items.map((item: UserRole) => {
         const roles = item.roles.map((role) => role.name);
         const tempMenu: MenuItem[] = [];
