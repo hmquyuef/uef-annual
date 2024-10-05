@@ -66,94 +66,92 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const levelKeys = getLevelKeys(itemsMenu as LevelKeysProps[]);
 
-  useEffect(() => {
-    const fetchRoles = async () => {
-      if (session) {
-        const mail = session.user?.email || "";
-        const response = await getListRolesByEmail(mail);
-        if (response.items.length > 0) {
-          response.items.map((item: UserRole) => {
-            const roles = item.roles.map((role) => role.name);
-            const tempMenu: MenuItem[] = [];
-            if (roles.includes("user")) {
-              tempMenu.push({
-                key: "2",
-                icon: <AppstoreOutlined />,
-                label: "Khối lượng công tác",
-                children: [
-                  {
-                    key: "21",
-                    label: <Link href="/workloads">Biểu mẫu</Link>,
-                  },
-                ],
-              });
-            }
-            if (roles.includes("manager")) {
-              tempMenu.push({
-                key: "2",
-                icon: <AppstoreOutlined />,
-                label: "Khối lượng công tác",
-                children: [
-                  {
-                    key: "20",
-                    label: <Link href="/workloads/search">Tra cứu CBGVNV</Link>,
-                  },
-                  {
-                    key: "21",
-                    label: <Link href="/workloads">Biểu mẫu</Link>,
-                  },
-                ],
-              });
-            }
-            if (roles.includes("admin")) {
-              tempMenu.push(
-                {
-                  key: "2",
-                  icon: <AppstoreOutlined />,
-                  label: "Khối lượng công tác",
-                  children: [
-                    {
-                      key: "20",
-                      label: (
-                        <Link href="/workloads/search">Tra cứu CBGVNV</Link>
-                      ),
-                    },
-                    {
-                      key: "21",
-                      label: <Link href="/workloads">Biểu mẫu</Link>,
-                    },
-                    {
-                      key: "22",
-                      label: <Link href="/workloads/types">Loại biểu mẫu</Link>,
-                    },
-                    {
-                      key: "23",
-                      label: (
-                        <Link href="/workloads/groups">Nhóm biểu mẫu</Link>
-                      ),
-                    },
-                  ],
-                },
-                {
-                  key: "3",
-                  icon: <SettingOutlined />,
-                  label: "Cài đặt",
-                  children: [
-                    { key: "31", label: "Ứng dụng" },
-                    { key: "32", label: "Vai trò" },
-                    { key: "33", label: "Phân quyền" },
-                  ],
-                }
-              );
-            }
-            setItemsMenu(tempMenu);
+  const fetchRoles = async (mail: string) => {
+    const response = await getListRolesByEmail(mail);
+    if (response.items.length > 0) {
+      response.items.map((item: UserRole) => {
+        const roles = item.roles.map((role) => role.name);
+        const tempMenu: MenuItem[] = [];
+        if (roles.includes("user")) {
+          tempMenu.push({
+            key: "2",
+            icon: <AppstoreOutlined />,
+            label: "Khối lượng công tác",
+            children: [
+              {
+                key: "21",
+                label: <Link href="/workloads">Biểu mẫu</Link>,
+              },
+            ],
           });
         }
-        const currentPath = window.location.pathname;
-        router.push(currentPath);
-      } else router.push("/login");
-    };
-    fetchRoles();
+        if (roles.includes("manager")) {
+          tempMenu.push({
+            key: "2",
+            icon: <AppstoreOutlined />,
+            label: "Khối lượng công tác",
+            children: [
+              {
+                key: "20",
+                label: <Link href="/workloads/search">Tra cứu CBGVNV</Link>,
+              },
+              {
+                key: "21",
+                label: <Link href="/workloads">Biểu mẫu</Link>,
+              },
+            ],
+          });
+        }
+        if (roles.includes("admin")) {
+          tempMenu.push(
+            {
+              key: "2",
+              icon: <AppstoreOutlined />,
+              label: "Khối lượng công tác",
+              children: [
+                {
+                  key: "20",
+                  label: <Link href="/workloads/search">Tra cứu CBGVNV</Link>,
+                },
+                {
+                  key: "21",
+                  label: <Link href="/workloads">Biểu mẫu</Link>,
+                },
+                {
+                  key: "22",
+                  label: <Link href="/workloads/types">Loại biểu mẫu</Link>,
+                },
+                {
+                  key: "23",
+                  label: <Link href="/workloads/groups">Nhóm biểu mẫu</Link>,
+                },
+              ],
+            },
+            {
+              key: "3",
+              icon: <SettingOutlined />,
+              label: "Cài đặt",
+              children: [
+                { key: "31", label: "Ứng dụng" },
+                { key: "32", label: "Vai trò" },
+                { key: "33", label: "Phân quyền" },
+              ],
+            }
+          );
+        }
+        setItemsMenu(tempMenu);
+      });
+    }
+    const currentPath = window.location.pathname;
+    router.push(currentPath);
+  };
+  useEffect(() => {
+    if (session) {
+      const email = session.user?.email;
+      if (email) {
+        fetchRoles(email);
+      }
+    }
   }, [session, router]);
 
   return (
