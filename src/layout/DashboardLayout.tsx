@@ -68,7 +68,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   useEffect(() => {
     const fetchRoles = async () => {
-      if (session && status) {
+      if (session) {
         const mail = session.user?.email || "";
         const response = await getListRolesByEmail(mail);
         if (response.items.length > 0) {
@@ -151,10 +151,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         }
         const currentPath = window.location.pathname;
         router.push(currentPath);
-      }
+      } else router.push("/login");
     };
     fetchRoles();
-    if (!session) router.push("/login");
   }, [session, router]);
 
   return (
