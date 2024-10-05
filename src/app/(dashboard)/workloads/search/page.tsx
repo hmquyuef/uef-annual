@@ -17,8 +17,6 @@ import { Breadcrumb, Button, Collapse, GetProps, Input, Select } from "antd";
 import { Key, useEffect, useState } from "react";
 const { Search } = Input;
 type SearchProps = GetProps<typeof Input.Search>;
-const onSearch: SearchProps["onSearch"] = (value, _e, info) =>
-  console.log(info?.source, value);
 
 const SearchMembers = () => {
   const [selectedKey, setSelectedKey] = useState<Key | null>(null);

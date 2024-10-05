@@ -233,7 +233,6 @@ const FormActivity: React.FC<FormActivityProps> = ({
       })),
       documentNumber: documentNumber,
     };
-    console.log("FORM DATA", formData);
     onSubmit(formData);
   };
 
@@ -353,7 +352,6 @@ const FormActivity: React.FC<FormActivityProps> = ({
               label: unit.name,
             }))}
             onChange={(value) => {
-              console.log("Selected unit ID:", value);
               getAllUsersFromHRM(value);
             }}
           />

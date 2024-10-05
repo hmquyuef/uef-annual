@@ -40,16 +40,14 @@ const FormWorkloadType: React.FC<FormWorkloadTypeProps> = ({
       id: initialData?.id || "",
       name: name,
       shortName: shortName,
+      href: href,
       workloadGroupId: selectedGroupId,
       emails: emails,
       isActived: true,
     };
-    console.log("FORM DATA", formData);
     onSubmit(formData);
   };
   useEffect(() => {
-    console.log("initialData :>> ", initialData);
-    console.log("mode :>> ", mode);
     const loadUsers = async () => {
       if (mode === "edit" && initialData !== undefined) {
         setName(initialData.name || "");

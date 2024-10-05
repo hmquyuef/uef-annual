@@ -109,7 +109,7 @@ const Workloads = () => {
     ),
   ];
   const handleSubmit = async (formData: Partial<AddUpdateWorkloadType>) => {
-    console.log("formData :>> ", formData);
+    // console.log("formData :>> ", formData);
     try {
       if (mode === "edit" && selectedItem) {
         const response = await putUpdateWorkloadType(

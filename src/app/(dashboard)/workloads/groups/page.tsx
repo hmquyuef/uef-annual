@@ -316,9 +316,6 @@ const columns: TableColumnsType<WorkloadGroupItem> = [
 const onSearch: SearchProps["onSearch"] = (value, _e, info) =>
   console.log(info?.source, value);
 
-const onChange: InputNumberProps["onChange"] = (value) => {
-  console.log("changed", value);
-};
 const WorkloadGroups = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [data, setData] = useState<WorkloadGroupItem[]>([]);
@@ -329,7 +326,7 @@ const WorkloadGroups = () => {
   };
 
   const onSelectChange = (newSelectedRowKeys: Key[]) => {
-    console.log("selectedRowKeys changed: ", newSelectedRowKeys);
+    // console.log("selectedRowKeys changed: ", newSelectedRowKeys);
     setSelectedRowKeys(newSelectedRowKeys);
   };
   const rowSelection: TableRowSelection<WorkloadGroupItem> = {

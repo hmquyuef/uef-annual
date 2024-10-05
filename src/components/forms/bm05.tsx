@@ -67,7 +67,6 @@ const BM05 = () => {
     setNotificationOpen(false);
   };
   const onSelectChange = (newSelectedRowKeys: Key[]) => {
-    console.log("selectedRowKeys changed: ", newSelectedRowKeys);
     setSelectedRowKeys(newSelectedRowKeys);
   };
   const rowSelection: TableRowSelection<ActivityItem> = {
