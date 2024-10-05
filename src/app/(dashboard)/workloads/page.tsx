@@ -49,12 +49,6 @@ const Workloads = () => {
     setTypes(response.items);
   };
 
-  const getRolesUser = async () => {
-    const response = await getListRolesByEmail(emailUser);
-    const roles = response.items.map((item) => item.roles.map((role) => role.name));
-    setUserRole(roles[0]);
-  }
-
   const handleEllipsis = (type: WorkloadTypeItem) => {
     setIsOk(true);
     setMode("edit");
@@ -140,12 +134,19 @@ const Workloads = () => {
   };
   useEffect(() => {
     getListWorkloadTypes();
-    getRolesUser();
   }, []);
 
   useEffect(() => {
     if (session) {
-      setEmailUser(session.user?.email || "");
+      const getRolesUser = async () => {
+        const email = session.user?.email || "";
+        const response = await getListRolesByEmail(email);
+        const roles = response.items.map((item) =>
+          item.roles.map((role) => role.name)
+        );
+        setUserRole(roles[0]);
+      };
+      getRolesUser();
     }
     if (!session) {
       router.push("/login");
