@@ -141,6 +141,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         }
         setItemsMenu(tempMenu);
       });
+    } else {
+      router.push("/not-permission");
     }
     const currentPath = window.location.pathname;
     router.push(currentPath);
