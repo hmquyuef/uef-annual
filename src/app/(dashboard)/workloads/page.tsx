@@ -148,9 +148,6 @@ const Workloads = () => {
       };
       getRolesUser();
     }
-    if (!session) {
-      router.push("/login");
-    }
   }, [session]);
 
   return (
