@@ -22,7 +22,7 @@ interface LevelKeysProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const router = useRouter();
   type MenuItem = Required<MenuProps>["items"][number];
 
@@ -146,14 +146,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     router.push(currentPath);
   };
   useEffect(() => {
-    if (session) {
-      const email = session.user?.email;
-      if (email) {
-        fetchRoles(email);
+    const fetchData = async () => {
+      if (session) {
+        const email = await session.user?.email;
+        if (email) {
+          fetchRoles(email);
+        } else {
+          router.push("/login");
+        }
       }
-    }
+    };
+    fetchData();
   }, [session, router]);
-
   return (
     <React.Fragment>
       <div className="flex h-screen bg-gray-50">
