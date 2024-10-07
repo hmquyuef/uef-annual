@@ -149,14 +149,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   };
   useEffect(() => {
     const fetchData = async () => {
-      const ticket = await session;
-      if (ticket) {
-        const email = await ticket.user?.email;
+      if (session) {
+        const email = await session.user?.email;
         if (email) {
           fetchRoles(email);
-        } else {
-          router.push("/login");
-        }
+        } 
       } else {
         router.push("/login");
       }

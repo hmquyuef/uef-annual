@@ -35,7 +35,7 @@ import {
 } from "antd";
 import moment from "moment";
 import Link from "next/link";
-import { FormEvent, Key, useCallback, useEffect, useState } from "react";
+import { FC, FormEvent, Key, useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 
 interface FormActivityProps {
@@ -45,7 +45,7 @@ interface FormActivityProps {
   numberActivity?: number;
 }
 
-const FormActivity: React.FC<FormActivityProps> = ({
+const FormActivity: FC<FormActivityProps> = ({
   onSubmit,
   initialData,
   mode,

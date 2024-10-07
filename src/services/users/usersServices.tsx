@@ -1,20 +1,5 @@
 import apiClient from "../apiClient";
 
-export const columns = [
-    { name: "ID", uid: "id"},
-    { name: "Họ và tên", uid: "name" },
-    { name: "Đơn vị", uid: "unitName" },
-    { name: "Số tiết chuẩn", uid: "standard" },
-    { name: "Sự kiện", uid: "actions" },
-];
-
-export const columnsUserActivities = [
-    { uid: "name", label: "Họ và tên", sortable: true },
-    { uid: "email", label: "Email"},
-    { uid: "unitName", label: "Đơn vị" },
-    { uid: "activitiesIds", label: "Số sự kiện" },
-];
-
 export interface Users {
     id: string;
     userName: string;
