@@ -31,18 +31,11 @@ import {
   Select,
   Table,
   TableColumnsType,
-  Tooltip
+  Tooltip,
 } from "antd";
 import moment from "moment";
 import Link from "next/link";
-import {
-  FC,
-  FormEvent,
-  Key,
-  useCallback,
-  useEffect,
-  useState
-} from "react";
+import { FC, FormEvent, Key, useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 
 interface FormActivityProps {
@@ -175,7 +168,7 @@ const FormActivity: FC<FormActivityProps> = ({
       key: "description",
       render: (description: string, record: ActivityInput) => (
         <TextArea
-          autoSize={{minRows: 1, maxRows: 3}}
+          autoSize={{ minRows: 1, maxRows: 3 }}
           defaultValue={description}
           onChange={(e) => {
             const newDescription = e.target.value;
@@ -383,6 +376,51 @@ const FormActivity: FC<FormActivityProps> = ({
           onChange={(e) => setName(e.target.value)}
         />
       </div>
+      <div className="grid grid-cols-4 gap-6 mb-4">
+        <div className="flex flex-col gap-1">
+          <p className="font-medium text-neutral-600">Ngày nhập</p>
+          <DatePicker
+            placeholder="dd/mm/yyyy"
+            format={"DD/MM/YYYY"}
+            value={deterEntryDate ? moment(deterEntryDate) : null}
+            onChange={(date) => {
+              if (date) {
+                const timestamp = date.valueOf();
+                setDeterEntryDate(timestamp);
+              } else {
+                setDeterEntryDate(0);
+              }
+            }}
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <p className="font-medium text-neutral-600">Số VBHC</p>
+          <Input
+            value={documentNumber}
+            onChange={(e) => setDocumentNumber(e.target.value)}
+          />
+        </div>
+        {/* <div className="flex flex-col gap-1">
+          <p className="font-medium text-neutral-600">Số tiết chuẩn</p>
+          <InputNumber
+            min={0}
+            defaultValue={1}
+            value={standardValues}
+            onChange={(value) => setStandardValues(value ?? 0)}
+            style={{ width: "100%" }}
+          />
+        </div> */}
+        {/* <div className="flex flex-col justify-end">
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            iconPosition="start"
+            onClick={() => onAddUsers(selectedKey, standardValues)}
+          >
+            Thêm nhân viên
+          </Button>
+        </div> */}
+      </div>
       <div className="grid grid-cols-6 gap-6 mb-4">
         <div className="col-span-3 flex flex-col gap-1">
           <p className="font-medium text-neutral-600">Đơn vị</p>
@@ -423,63 +461,20 @@ const FormActivity: FC<FormActivityProps> = ({
             value={selectedKey}
             onChange={(value) => {
               setSelectedKey(value);
+              onAddUsers(value, standardValues);
             }}
           />
         </div>
       </div>
-      <div className="grid grid-cols-4 gap-6 mb-4">
-        <div className="flex flex-col gap-1">
-          <p className="font-medium text-neutral-600">Ngày nhập</p>
-          <DatePicker
-            placeholder="dd/mm/yyyy"
-            format={"DD/MM/YYYY"}
-            value={deterEntryDate ? moment(deterEntryDate) : null}
-            onChange={(date) => {
-              if (date) {
-                const timestamp = date.valueOf();
-                setDeterEntryDate(timestamp);
-              } else {
-                setDeterEntryDate(0);
-              }
-            }}
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <p className="font-medium text-neutral-600">Số VBHC</p>
-          <Input
-            value={documentNumber}
-            onChange={(e) => setDocumentNumber(e.target.value)}
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <p className="font-medium text-neutral-600">Số tiết chuẩn</p>
-          <InputNumber
-            min={0}
-            defaultValue={1}
-            value={standardValues}
-            onChange={(value) => setStandardValues(value ?? 0)}
-            style={{ width: "100%" }}
-          />
-        </div>
-        <div className="flex flex-col justify-end">
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            iconPosition="start"
-            onClick={() => onAddUsers(selectedKey, standardValues)}
-          >
-            Thêm nhân viên
-          </Button>
-        </div>
-      </div>
-      <div className="flex flex-col gap-1 mb-4">
+
+      {/* <div className="flex flex-col gap-1 mb-4">
         <p className="font-medium text-neutral-600">Ghi chú</p>
         <TextArea
           autoSize
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
-      </div>
+      </div> */}
       {tableUsers && tableUsers.length > 0 && (
         <>
           <div className="flex flex-col gap-1 mb-4">

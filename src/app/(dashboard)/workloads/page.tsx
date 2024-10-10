@@ -186,7 +186,9 @@ const Workloads = () => {
             >
               <div
                 onClick={() => {
-                  if (type.emails?.includes(emailUser)) {
+                  if (
+                    type.emails?.includes(emailUser.replace("@uef.edu.vn", ""))
+                  ) {
                     router.push("/workloads/" + type.href);
                   } else {
                     setIsAccess(false);
@@ -201,7 +203,9 @@ const Workloads = () => {
                   title={
                     <div className="flex justify-between items-center gap-2">
                       <p>{type.shortName}</p>
-                      {type.emails?.includes(emailUser) ? (
+                      {type.emails?.includes(
+                        emailUser.replace("@uef.edu.vn", "")
+                      ) ? (
                         <>
                           <Tooltip
                             placement="top"

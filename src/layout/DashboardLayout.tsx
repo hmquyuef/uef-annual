@@ -73,17 +73,23 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         const roles = item.roles.map((role) => role.name);
         const tempMenu: MenuItem[] = [];
         if (roles.includes("user")) {
-          tempMenu.push({
-            key: "2",
-            icon: <AppstoreOutlined />,
-            label: "Khối lượng công tác",
-            children: [
-              {
-                key: "21",
-                label: <Link href="/workloads">Biểu mẫu</Link>,
-              },
-            ],
-          });
+          tempMenu.push(
+            {
+              key: "20",
+              label: <Link href="/workloads/search">Tra cứu CBGVNV</Link>,
+            },
+            {
+              key: "2",
+              icon: <AppstoreOutlined />,
+              label: "Khối lượng công tác",
+              children: [
+                {
+                  key: "21",
+                  label: <Link href="/workloads">Biểu mẫu</Link>,
+                },
+              ],
+            }
+          );
         }
         if (roles.includes("manager")) {
           tempMenu.push({
@@ -153,7 +159,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         const email = await session.user?.email;
         if (email) {
           fetchRoles(email);
-        } 
+        }
       } else {
         router.push("/login");
       }

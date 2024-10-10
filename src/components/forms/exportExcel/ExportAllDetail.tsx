@@ -199,7 +199,7 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "Thời gian tham dự",
       "Ghi chú",
     ],
-    ...(detailUser?.qAs.items ?? []).map((item, index) => [
+    ...(detailUser?.activities.items ?? []).map((item, index) => [
       index + 1,
       item.activityName,
       "",

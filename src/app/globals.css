@@ -19,9 +19,14 @@
   text-align: center !important;
 }
 
+.custom-table-header .ant-table-tbody > tr:hover > td {
+  background-color: rgb(59 130 246 / 0.15) !important;
+}
+
 .custom-table-header > div > div > ul {
   padding-right: 1rem !important;
 }
+
 /* :root {
   --background: #ffffff;
   --foreground: #171717;

@@ -75,7 +75,6 @@ const BM05 = () => {
   const getAllUnitsFromHRM = async () => {
     const response = await getListUnitsFromHrm();
     setUnits(response.model);
-    console.log("response :>> ", response);
   };
   const onSelectChange = (newSelectedRowKeys: Key[]) => {
     setSelectedRowKeys(newSelectedRowKeys);
@@ -306,9 +305,11 @@ const BM05 = () => {
       setDescription("Đã có lỗi xảy ra!");
     }
   };
-  const handleExportExcel = useCallback(async () => {
+  const handleExportExcel = async () => {
+    const unit = units.find((unit) => unit.id === selectedKeyUnit);
     const results = await getDataExportById(
-      "b46ee628-bfe3-4d27-a10b-9d0c47145613"
+      "b46ee628-bfe3-4d27-a10b-9d0c47145613",
+      unit?.code ?? null
     );
     if (results) {
       const defaultInfo = [
@@ -584,7 +585,7 @@ const BM05 = () => {
       ).padStart(2, "0")}-${String(now.getMinutes()).padStart(2, "0")}`;
       saveAs(blob, "BM05-" + formattedDate + ".xlsx");
     }
-  }, []);
+  };
 
   useEffect(() => {
     getListActivities();
