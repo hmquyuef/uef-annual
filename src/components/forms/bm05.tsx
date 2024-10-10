@@ -362,7 +362,7 @@ const BM05 = () => {
       const dataArray = [
         [
           "STT",
-          "Mã số CBGVNV",
+          "Mã số CB-GV-NV",
           "Họ và chữ lót",
           "Tên",
           "Đơn vị",
@@ -447,7 +447,7 @@ const BM05 = () => {
       setCellStyle(worksheet, "G3", 11, true, "center", "center", false, false);
       setCellStyle(worksheet, "A4", 11, true, "center", "center", false, false);
       setCellStyle(worksheet, "A5", 16, true, "center", "center", false, false);
-      setCellStyle(worksheet, "A6", 11, true, "center", "center", false, false);
+      setCellStyle(worksheet, "A6", 11, true, "center", "center", true, false);
 
       // Merge các ô từ A6 đến M6
       worksheet["!merges"] = [];
@@ -583,7 +583,10 @@ const BM05 = () => {
       ).padStart(2, "0")}-${now.getFullYear()}-${String(
         now.getHours()
       ).padStart(2, "0")}-${String(now.getMinutes()).padStart(2, "0")}`;
-      saveAs(blob, "BM05-" + formattedDate + ".xlsx");
+      let filename = unit?.code
+        ? "BM05-" + unit?.code + "-" + formattedDate + ".xlsx"
+        : "BM05-" + formattedDate + ".xlsx";
+      saveAs(blob, filename);
     }
   };
 

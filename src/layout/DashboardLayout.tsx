@@ -75,14 +75,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         if (roles.includes("user")) {
           tempMenu.push(
             {
-              key: "20",
-              label: <Link href="/workloads/search">Tra cứu CBGVNV</Link>,
-            },
-            {
               key: "2",
               icon: <AppstoreOutlined />,
               label: "Khối lượng công tác",
               children: [
+                {
+                  key: "20",
+                  label: <Link href="/workloads/search">Tra cứu CB-GV-NV</Link>,
+                },
                 {
                   key: "21",
                   label: <Link href="/workloads">Biểu mẫu</Link>,
@@ -99,7 +99,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             children: [
               {
                 key: "20",
-                label: <Link href="/workloads/search">Tra cứu CBGVNV</Link>,
+                label: <Link href="/workloads/search">Tra cứu CB-GV-NV</Link>,
               },
               {
                 key: "21",
@@ -117,7 +117,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               children: [
                 {
                   key: "20",
-                  label: <Link href="/workloads/search">Tra cứu CBGVNV</Link>,
+                  label: <Link href="/workloads/search">Tra cứu CB-GV-NV</Link>,
                 },
                 {
                   key: "21",

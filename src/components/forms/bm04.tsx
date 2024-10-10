@@ -81,7 +81,7 @@ const BM04 = () => {
       className: "text-center w-[1rem]",
     },
     {
-      title: "Mã số CBGVNV",
+      title: "Mã số CB-GV-NV",
       dataIndex: "userName",
       key: "userName",
       className: "w-[3rem]",
@@ -277,7 +277,7 @@ const BM04 = () => {
       const dataArray = [
         [
           "STT",
-          "Mã số CBGVNV",
+          "Mã số CB-GV-NV",
           "Họ và chữ lót",
           "Tên",
           "Đơn vị",
