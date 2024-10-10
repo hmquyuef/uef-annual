@@ -2,18 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
-.no-scroll{
+.no-scroll {
   overflow: -moz-scrollbars-none;
   -ms-overflow-style: none;
 }
 
-.no-scroll::-webkit-scrollbar { 
+.no-scroll::-webkit-scrollbar {
   width: 0 !important;
-  display: none; 
+  display: none;
 }
 
 .custom-table-header .ant-table-thead > tr > th {
-  background-color: #1677FF !important;
+  background-color: #1677ff !important;
   color: white !important;
   font-size: 12px !important;
   text-align: center !important;
@@ -45,4 +45,3 @@ body {
     text-wrap: balance;
   }
 } */
-

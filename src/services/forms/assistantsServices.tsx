@@ -11,6 +11,7 @@ export interface ClassAssistantItem {
   activityName: string;
   classCode: string;
   standardNumber: number;
+  attendances: number;
   proof: string;
   note: string;
 }
@@ -25,6 +26,7 @@ export interface AddUpdateClassAssistantItem {
   activityName: string;
   classCode: string;
   standardNumber: number;
+  attendances: number;
   proof: string;
   note: string;
 }

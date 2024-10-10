@@ -8,8 +8,13 @@ import {
   deleteActivities,
   getAllActivitiesByTypesId,
   postAddActivity,
-  putUpdateActivity
+  putUpdateActivity,
 } from "@/services/forms/formsServices";
+import {
+  getListUnitsFromHrm,
+  UnitHRMItem,
+} from "@/services/units/unitsServices";
+import { convertTimestampToDate, setCellStyle } from "@/utility/Utilities";
 import {
   CheckOutlined,
   CloseOutlined,
@@ -23,6 +28,7 @@ import {
   GetProps,
   Input,
   PaginationProps,
+  Select,
   Table,
   TableColumnsType,
   Tag,
@@ -36,9 +42,6 @@ import * as XLSX from "sheetjs-style";
 import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
 import FormActivity from "./activity/formActivity";
-import { convertTimestampToDate } from "@/utility/Utilities";
-
-
 
 type SearchProps = GetProps<typeof Input.Search>;
 const { Search } = Input;
@@ -46,6 +49,8 @@ const { Search } = Input;
 const BM05 = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
+  const [units, setUnits] = useState<UnitHRMItem[]>([]);
+  const [selectedKeyUnit, setSelectedKeyUnit] = useState<Key | null>(null);
   const [data, setData] = useState<ActivityItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [mode, setMode] = useState<"add" | "edit">("add");
@@ -65,6 +70,12 @@ const BM05 = () => {
     setActivities(response.items);
     setData(response.items);
     setNotificationOpen(false);
+  };
+
+  const getAllUnitsFromHRM = async () => {
+    const response = await getListUnitsFromHrm();
+    setUnits(response.model);
+    console.log("response :>> ", response);
   };
   const onSelectChange = (newSelectedRowKeys: Key[]) => {
     setSelectedRowKeys(newSelectedRowKeys);
@@ -174,7 +185,7 @@ const BM05 = () => {
             <p className="ml-2">
               <Tag
                 color={`${
-                  path !== "" && path !== undefined ? "success" : "error"
+                  path !== "" && path !== undefined ? "blue" : "error"
                 }`}
               >
                 {number}
@@ -195,14 +206,32 @@ const BM05 = () => {
   ];
 
   const onSearch: SearchProps["onSearch"] = (value) => {
-    if (value === "") setData(activities);
-    const filteredData = activities.filter(
-      (item) =>
+    if (value === "" && (!selectedKeyUnit || selectedKeyUnit === "all")) {
+      setData(activities);
+      return;
+    }
+
+    const selectedUnit = units.find((unit) => unit.id === selectedKeyUnit);
+    const filteredData = activities.filter((item) => {
+      const matchesNameOrDocument =
         item.name.toLowerCase().includes(value.toLowerCase()) ||
-        item.documentNumber.toLowerCase().includes(value.toLowerCase())
-    );
+        item.documentNumber.toLowerCase().includes(value.toLowerCase());
+      const matchesUnit = selectedUnit
+        ? item.participants[0]?.unitName
+            .toString()
+            .includes(
+              selectedUnit.code.toString().replace(/&/g, "-").replace(/_/g, "")
+            )
+        : true;
+      return matchesNameOrDocument && matchesUnit;
+    });
+
     setData(filteredData);
   };
+
+  useEffect(() => {
+    onSearch("");
+  }, [selectedKeyUnit]);
 
   const handleDelete = useCallback(async () => {
     try {
@@ -229,7 +258,7 @@ const BM05 = () => {
         ...participant,
         unitName: participant.unitName.toString(),
         userName: participant.userName,
-        description: participant.description
+        description: participant.description,
       })),
     };
     setSelectedItem(updatedActivity);
@@ -411,88 +440,14 @@ const BM05 = () => {
           bottom: { style: "thin" },
         },
       };
-      worksheet["A2"].s = {
-        font: {
-          name: "Times New Roman",
-          sz: 11,
-        },
-        alignment: {
-          wrapText: true,
-          vertical: "center",
-          horizontal: "center",
-        },
-      };
-      worksheet["G2"].s = {
-        font: {
-          name: "Times New Roman",
-          sz: 11,
-          bold: true,
-        },
-        alignment: {
-          wrapText: true,
-          vertical: "center",
-          horizontal: "center",
-        },
-      };
-      worksheet["A3"].s = {
-        font: {
-          name: "Times New Roman",
-          sz: 11,
-        },
-        alignment: {
-          wrapText: true,
-          vertical: "center",
-          horizontal: "center",
-        },
-      };
-      worksheet["G3"].s = {
-        font: {
-          name: "Times New Roman",
-          sz: 11,
-          bold: true,
-        },
-        alignment: {
-          wrapText: true,
-          vertical: "center",
-          horizontal: "center",
-        },
-      };
-      worksheet["A4"].s = {
-        font: {
-          name: "Times New Roman",
-          sz: 11,
-          bold: true,
-        },
-        alignment: {
-          wrapText: true,
-          vertical: "center",
-          horizontal: "center",
-        },
-      };
-      worksheet["A5"].s = {
-        font: {
-          name: "Times New Roman",
-          sz: 15,
-          bold: true,
-        },
-        alignment: {
-          wrapText: true,
-          vertical: "center",
-          horizontal: "center",
-        },
-      };
-      worksheet["A6"].s = {
-        font: {
-          name: "Times New Roman",
-          sz: 13,
-          bold: true,
-        },
-        alignment: {
-          wrapText: true,
-          vertical: "center",
-          horizontal: "center",
-        },
-      };
+      setCellStyle(worksheet, "A2", 11, true, "center", "center", false, false);
+      setCellStyle(worksheet, "G2", 11, true, "center", "center", false, false);
+      setCellStyle(worksheet, "A3", 11, true, "center", "center", false, false);
+      setCellStyle(worksheet, "G3", 11, true, "center", "center", false, false);
+      setCellStyle(worksheet, "A4", 11, true, "center", "center", false, false);
+      setCellStyle(worksheet, "A5", 16, true, "center", "center", false, false);
+      setCellStyle(worksheet, "A6", 11, true, "center", "center", false, false);
+
       // Merge các ô từ A6 đến M6
       worksheet["!merges"] = [];
       const temp = [];
@@ -633,62 +588,84 @@ const BM05 = () => {
 
   useEffect(() => {
     getListActivities();
+    getAllUnitsFromHRM();
   }, []);
 
   return (
     <div>
-      <div className="grid grid-cols-4 mb-4">
-        <Search
-          placeholder="Tìm kiếm hoạt động..."
-          onSearch={onSearch}
-          size="large"
-          enterButton
-        />
-        <div className="col-span-3">
-          <div className="flex justify-end gap-4">
-            <Tooltip placement="top" title="Xuất dữ liệu Excel" arrow={true}>
-              <Button
-                icon={<FileExcelOutlined />}
-                onClick={handleExportExcel}
-                size="large"
-                iconPosition="start"
-                style={{
-                  backgroundColor: "#52c41a",
-                  borderColor: "#52c41a",
-                  color: "#fff",
-                }}
-              >
-                Xuất Excel
-              </Button>
-            </Tooltip>
-            <Tooltip placement="bottom" title="Thêm mới hoạt động" arrow={true}>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => {
-                  setIsOpen(true);
-                  setMode("add");
-                }}
-                size="large"
-                iconPosition="start"
-              >
-                Thêm mới
-              </Button>
-            </Tooltip>
-            <Tooltip placement="top" title="Xóa các hoạt động" arrow={true}>
-              <Button
-                type="dashed"
-                disabled={selectedRowKeys.length === 0}
-                danger
-                onClick={handleDelete}
-                icon={<DeleteOutlined />}
-                size="large"
-                iconPosition="start"
-              >
-                Xóa
-              </Button>
-            </Tooltip>
-          </div>
+      <div className="grid grid-cols-2 mb-4">
+        <div className="grid grid-cols-2 gap-4">
+          <Search
+            placeholder="Tìm kiếm hoạt động..."
+            onSearch={onSearch}
+            size="large"
+            enterButton
+          />
+          <Select
+            showSearch
+            allowClear
+            size="large"
+            placeholder="Tất cả đơn vị"
+            optionFilterProp="label"
+            filterSort={(optionA, optionB) =>
+              (optionA?.label ?? "")
+                .toLowerCase()
+                .localeCompare((optionB?.label ?? "").toLowerCase())
+            }
+            options={units.map((unit) => ({
+              value: unit.id,
+              label: unit.name,
+            }))}
+            value={selectedKeyUnit}
+            onChange={(value) => {
+              console.log("value :>> ", value);
+              setSelectedKeyUnit(value);
+            }}
+          />
+        </div>
+        <div className="flex justify-end gap-4">
+          <Tooltip placement="top" title="Xuất dữ liệu Excel" arrow={true}>
+            <Button
+              icon={<FileExcelOutlined />}
+              onClick={handleExportExcel}
+              size="large"
+              iconPosition="start"
+              style={{
+                backgroundColor: "#52c41a",
+                borderColor: "#52c41a",
+                color: "#fff",
+              }}
+            >
+              Xuất Excel
+            </Button>
+          </Tooltip>
+          <Tooltip placement="bottom" title="Thêm mới hoạt động" arrow={true}>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => {
+                setIsOpen(true);
+                setMode("add");
+              }}
+              size="large"
+              iconPosition="start"
+            >
+              Thêm mới
+            </Button>
+          </Tooltip>
+          <Tooltip placement="top" title="Xóa các hoạt động" arrow={true}>
+            <Button
+              type="dashed"
+              disabled={selectedRowKeys.length === 0}
+              danger
+              onClick={handleDelete}
+              icon={<DeleteOutlined />}
+              size="large"
+              iconPosition="start"
+            >
+              Xóa
+            </Button>
+          </Tooltip>
         </div>
         <CustomNotification
           message={message}

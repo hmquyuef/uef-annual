@@ -1,7 +1,10 @@
 "use client";
 
 import {
-  DetailsItem,
+  handleExportAll,
+  handleExportForBM,
+} from "@/components/forms/exportExcel/ExportAllDetail";
+import {
   DetailUserItem,
   getDataExportByUserName,
   Item,
@@ -14,7 +17,11 @@ import {
   getUsersFromHRMbyId,
   UsersFromHRMResponse,
 } from "@/services/users/usersServices";
+import { convertTimestampToDate } from "@/utility/Utilities";
 import {
+  DownloadOutlined,
+  FileProtectOutlined,
+  FilterOutlined,
   HomeOutlined,
   ProfileOutlined,
   SearchOutlined,
@@ -24,13 +31,14 @@ import {
   Button,
   Collapse,
   Divider,
+  Dropdown,
   Empty,
-  PaginationProps,
+  MenuProps,
   Select,
   Table,
   TableColumnsType,
+  Tooltip,
 } from "antd";
-import { TableRowSelection } from "antd/es/table/interface";
 import { Key, useEffect, useState } from "react";
 
 const SearchMembers = () => {
@@ -46,8 +54,6 @@ const SearchMembers = () => {
     undefined
   );
   const [dataClassLeaders, setDataClassLeaders] = useState<Item[]>([]);
-  const [selectedRowKeysClassLeaders, setSelectedRowKeysClassLeaders] =
-    useState<Key[]>([]);
   const [dataAssistants, setDataAssistants] = useState<Item[]>([]);
   const [dataQAEs, setDataQAEs] = useState<Item[]>([]);
   const [dataActivities, setDataActivities] = useState<Item[]>([]);
@@ -76,6 +82,94 @@ const SearchMembers = () => {
     }
   };
 
+  const items: MenuProps["items"] = [
+    {
+      key: "1",
+      label: (
+        <p onClick={() => detailUser && handleExportAll(detailUser)}>Tất cả</p>
+      ),
+      icon: <FileProtectOutlined />,
+      style: { color: "#1890ff" },
+    },
+    {
+      type: "divider",
+    },
+    {
+      key: "2",
+      label: "Biểu mẫu",
+      icon: <FilterOutlined />,
+      children: [
+        {
+          key: "2-1",
+          label: (
+            <p
+              onClick={() =>
+                handleExportForBM(
+                  selectedUnitKey as string,
+                  selectedUserName,
+                  year,
+                  "BM01"
+                )
+              }
+            >
+              BM01 - Chủ nhiệm lớp
+            </p>
+          ),
+        },
+        {
+          key: "2-2",
+          label: (
+            <p
+              onClick={() =>
+                handleExportForBM(
+                  selectedUnitKey as string,
+                  selectedUserName,
+                  year,
+                  "BM02"
+                )
+              }
+            >
+              BM02 - Cố vấn học tập, trợ giảng, phụ đạo
+            </p>
+          ),
+        },
+        {
+          key: "2-4",
+          label: (
+            <p
+              onClick={() =>
+                handleExportForBM(
+                  selectedUnitKey as string,
+                  selectedUserName,
+                  year,
+                  "BM04"
+                )
+              }
+            >
+              BM04 - Tham gia hỏi vấn đáp Tiếng Anh
+            </p>
+          ),
+        },
+        {
+          key: "2-5",
+          label: (
+            <p
+              onClick={() =>
+                handleExportForBM(
+                  selectedUnitKey as string,
+                  selectedUserName,
+                  year,
+                  "BM05"
+                )
+              }
+            >
+              BM05 - Các hoạt động khác được BGH phê duyệt
+            </p>
+          ),
+        },
+      ],
+    },
+  ];
   //render table InfoUser
   const columnsInfoUser: TableColumnsType<DetailUserItem> = [
     {
@@ -86,39 +180,67 @@ const SearchMembers = () => {
       className: "text-center w-[50px]",
     },
     {
-      title: "Mã số CB-GV-NV",
+      title: "Mã SỐ CB-GV-NV",
       dataIndex: "userName",
       key: "userName",
       render: (userName: string) => <p>{userName}</p>,
       className: "text-center w-[200px]",
     },
     {
-      title: "Họ và tên",
+      title: "HỌ VÀ TÊN",
       dataIndex: "fullName",
       key: "fullName",
       render: (fullName: string) => <p>{fullName}</p>,
       className: "text-center w-[200px]",
     },
     {
-      title: "Email",
+      title: "EMAIL",
       dataIndex: "email",
       key: "email",
       render: (email: string) => <p>{email}</p>,
       className: "text-center w-[200px]",
     },
     {
-      title: "Đơn vị",
+      title: "ĐƠN VỊ",
       dataIndex: "unitName",
       key: "unitName",
       render: (unitName: string) => <p>{unitName}</p>,
       className: "text-center w-[100px]",
     },
     {
-      title: "Tổng số tiết chuẩn được phê duyệt",
+      title: "TỔNG SỐ TIẾT CHUẨN",
       dataIndex: "totalStandarNumber",
       key: "totalStandarNumber",
       className: "text-center w-[15rem]",
       render: (totalStandarNumber: string) => <p>{totalStandarNumber}</p>,
+    },
+    {
+      title: "",
+      dataIndex: "actions",
+      key: "actions",
+      className: "text-center w-[15px]",
+      render: (record: DetailUserItem) => {
+        return (
+          <>
+            <Tooltip
+              placement="topRight"
+              title={"Tải xuống dữ liệu"}
+              arrow={true}
+            >
+              <Dropdown menu={{ items }} trigger={["click"]}>
+                <a onClick={(e) => e.preventDefault()}>
+                  <Button
+                    type="primary"
+                    shape="circle"
+                    icon={<DownloadOutlined />}
+                    size={"small"}
+                  />
+                </a>
+              </Dropdown>
+            </Tooltip>
+          </>
+        );
+      },
     },
   ];
 
@@ -139,11 +261,19 @@ const SearchMembers = () => {
       className: "w-[4/5]",
     },
     {
-      title: "Số tiết chuẩn được phê duyệt",
+      title: "Số tiết chuẩn",
       dataIndex: "standarNumber",
       key: "standarNumber",
       className: "text-center w-[15rem]",
       render: (standarNumber: string) => <p>{standarNumber}</p>,
+    },
+    {
+      title: "THỜI GIAN THAM DỰ",
+      dataIndex: "attendances",
+      key: "attendances",
+      render: (attendances: number) =>
+        attendances ? convertTimestampToDate(attendances) : "",
+      className: "text-center w-[150px]",
     },
     {
       title: "Ghi chú",
@@ -304,9 +434,11 @@ const SearchMembers = () => {
               <>
                 <div className="mb-4">
                   <Collapse
+                    key={Math.random().toString(36).substr(2, 9)}
                     collapsible="header"
                     defaultActiveKey={["1"]}
                     className="mb-4 uppercase"
+                    expandIconPosition="end"
                     items={[
                       {
                         key: "1",
@@ -314,10 +446,10 @@ const SearchMembers = () => {
                         children: (
                           <>
                             <Table<Item>
-                              key={"table-detail-class-leaders"}
+                              key={"table-for-classLeaders"}
                               className="custom-table-header shadow-md rounded-md"
                               bordered
-                              rowKey={(item) => item.activityName}
+                              rowKey={Math.random().toString(36).substr(2, 9)}
                               rowHoverable
                               size="small"
                               pagination={false}
@@ -364,9 +496,11 @@ const SearchMembers = () => {
               <>
                 <div className="mb-4">
                   <Collapse
+                    key={Math.random().toString(36).substr(2, 9)}
                     collapsible="header"
                     defaultActiveKey={["1"]}
                     className="mb-4 uppercase"
+                    expandIconPosition="end"
                     items={[
                       {
                         key: "2",
@@ -374,10 +508,10 @@ const SearchMembers = () => {
                         children: (
                           <>
                             <Table<Item>
-                              key={"table-detail-assistants"}
+                              key={"table-for-assistants"}
                               className="custom-table-header shadow-md rounded-md mb-4"
                               bordered
-                              rowKey={(item) => item.activityName}
+                              rowKey={Math.random().toString(36).substr(2, 9)}
                               rowHoverable
                               size="small"
                               pagination={false}
@@ -424,9 +558,11 @@ const SearchMembers = () => {
               <>
                 <div className="mb-4">
                   <Collapse
+                    key={Math.random().toString(36).substr(2, 9)}
                     collapsible="header"
                     defaultActiveKey={["1"]}
                     className="mb-4 uppercase"
+                    expandIconPosition="end"
                     items={[
                       {
                         key: "3",
@@ -434,10 +570,10 @@ const SearchMembers = () => {
                         children: (
                           <>
                             <Table<Item>
-                              key={"table-detail-qae"}
+                              key={"table-for-QAES"}
                               className="custom-table-header shadow-md rounded-md mb-4"
                               bordered
-                              rowKey={(item) => item.activityName}
+                              rowKey={Math.random().toString(36).substr(2, 9)}
                               rowHoverable
                               size="small"
                               pagination={false}
@@ -484,9 +620,11 @@ const SearchMembers = () => {
               <>
                 <div className="mb-4">
                   <Collapse
+                    key={Math.random().toString(36).substr(2, 9)}
                     collapsible="header"
                     defaultActiveKey={["1"]}
                     className="mb-4 uppercase"
+                    expandIconPosition="end"
                     items={[
                       {
                         key: "5",
@@ -494,10 +632,10 @@ const SearchMembers = () => {
                         children: (
                           <>
                             <Table<Item>
-                              key={"table-detail-activities"}
+                              key={"table-for-activities"}
                               className="custom-table-header shadow-md rounded-md mb-4"
                               bordered
-                              rowKey={(item) => item.activityName}
+                              rowKey={Math.random().toString(36).substr(2, 9)}
                               rowHoverable
                               size="small"
                               pagination={false}
@@ -542,30 +680,13 @@ const SearchMembers = () => {
             )}
           </>
         )}
-        {/* {!detailUser && (
+        {!detailUser && (
           <>
-            <Table<ClassLeaderItem>
-              key={"table-activity-bm01"}
-              className="custom-table-header shadow-md rounded-md"
-              bordered
-              rowKey={(item) => item.id}
-              rowHoverable
-              size="small"
-              pagination={{
-                total: data.length,
-                showTotal: showTotal,
-                showSizeChanger: true,
-                position: ["bottomRight"],
-                defaultPageSize: 15,
-                pageSizeOptions: ["15", "25", "50", "100"],
-              }}
-              rowSelection={rowSelection}
-              columns={columns}
-              dataSource={data}
-              locale={{ emptyText: <Empty description="No Data"></Empty> }}
-            />
+            <div className="h-[calc(100svh-300px)] flex justify-center items-center">
+              <Empty description="Chưa có dữ liệu thông tin nhân sự"></Empty>
+            </div>
           </>
-        )} */}
+        )}
       </div>
     </div>
   );

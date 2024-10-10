@@ -32,6 +32,7 @@ import saveAs from "file-saver";
 import * as XLSX from "sheetjs-style";
 import { TableRowSelection } from "antd/es/table/interface";
 import { getDataExportById } from "@/services/exports/exportsServices";
+import { convertTimestampToDate, setCellStyle } from "@/utility/Utilities";
 
 type SearchProps = GetProps<typeof Input.Search>;
 const { Search } = Input;
@@ -224,13 +225,10 @@ const BM04 = () => {
       setDescription("Đã có lỗi xảy ra!");
     }
   };
-  const handleExportExcel = useCallback(async () => {
-    const results = await getDataExportById(
-      "b46ee628-bfe3-4d27-a10b-9d0c47145613"
-    );
-    if (results) {
+  const handleExportExcel = async () => {
+    if (data) {
       const defaultInfo = [
-        ["", "", "", "", "", "", "", "", "", "", "", "", "BM-05"],
+        ["", "", "", "", "", "", "", "", "", "", "", "", "BM-04"],
         [
           "TRƯỜNG ĐẠI HỌC KINH TẾ - TÀI CHÍNH",
           "",
@@ -251,13 +249,13 @@ const BM04 = () => {
         ],
         ["(ĐƠN VỊ)", "", "", ""],
         ["TỔNG HỢP DANH SÁCH"],
-        [
-          "Tham gia Ban tổ chức các hoạt động báo cáo chuyên đề, Hội thảo khoa học; Các cuộc thi học thuật; Hướng dẫn/hỗ trợ sinh viên tham gia các cuộc thi, … được BĐH phê duyệt tiết chuẩn",
-        ],
-        [""], // Dòng 9 để trống
+        ["Giảng viên tham gia Hỏi vấn đáp thi xếp lớp Anh văn đầu vào"],
+        [""],
       ];
 
       const defaultFooterInfo = [
+        [""],
+        [""],
         ["Ghi chú:"],
         [
           "- Mã số CB-GV-NV yêu cầu cung cấp phải chính xác. Đơn vị có thể tra cứu Mã CB-GV-NV trên trang Portal UEF.",
@@ -273,7 +271,7 @@ const BM04 = () => {
           "- Việc quy đổi tiết chuẩn căn cứ theo Phụ lục III, Quyết định số 720/QĐ-UEF ngày 01 tháng 9 năm 2023.								",
         ],
         [""],
-        ["", "LÃNH ĐẠO ĐƠN VỊ", "", "", "", "", "", "", "", "NGƯỜI LẬP"],
+        ["LÃNH ĐẠO ĐƠN VỊ", "", "", "", "", "", "", "NGƯỜI LẬP"],
       ];
 
       const dataArray = [
@@ -283,28 +281,28 @@ const BM04 = () => {
           "Họ và chữ lót",
           "Tên",
           "Đơn vị",
-          "Tên hoạt động đã thực hiện",
+          "Nội dung",
           "",
           "",
           "",
-          "Số tiết chuẩn được BGH phê duyệt",
-          "Minh chứng",
           "",
+          "Số SV",
+          "Thời gian tham dự",
           "Ghi chú",
         ], // Tên cột ở dòng 10
-        ...results.data.map((item, index) => [
+        ...data.map((item, index) => [
           index + 1,
           item.userName,
           item.middleName,
           item.firstName,
-          item.faculityName,
-          item.activityName,
+          item.unitName,
+          item.contents,
           "",
           "",
           "",
-          item.standNumber,
-          item.determination,
           "",
+          item.totalStudent,
+          convertTimestampToDate(item.attendances),
           item.note,
         ]),
       ];
@@ -330,14 +328,10 @@ const BM04 = () => {
       };
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-      // Thiết lập chiều cao của hàng 6 (ô đã merge) thành 40 pixel
-      worksheet["!rows"] = [];
-      worksheet["!rows"][5] = { hpx: 40 }; // Chiều cao hàng thứ 6 là 40 pixel
       worksheet["!cols"] = [];
       worksheet["!cols"][0] = { wch: 4 };
       worksheet["!cols"][1] = { wch: 20 };
       worksheet["!cols"][2] = { wch: 20 };
-      worksheet["!cols"][4] = { wch: 13 };
       worksheet["M1"].s = {
         fill: {
           fgColor: { rgb: "FFFF00" },
@@ -358,131 +352,105 @@ const BM04 = () => {
           bottom: { style: "thin" },
         },
       };
-      worksheet["A2"].s = {
-        font: {
-          name: "Times New Roman",
-          sz: 11,
-        },
-        alignment: {
-          wrapText: true,
-          vertical: "center",
-          horizontal: "center",
-        },
-      };
-      worksheet["G2"].s = {
-        font: {
-          name: "Times New Roman",
-          sz: 11,
-          bold: true,
-        },
-        alignment: {
-          wrapText: true,
-          vertical: "center",
-          horizontal: "center",
-        },
-      };
-      worksheet["A3"].s = {
-        font: {
-          name: "Times New Roman",
-          sz: 11,
-        },
-        alignment: {
-          wrapText: true,
-          vertical: "center",
-          horizontal: "center",
-        },
-      };
-      worksheet["G3"].s = {
-        font: {
-          name: "Times New Roman",
-          sz: 11,
-          bold: true,
-        },
-        alignment: {
-          wrapText: true,
-          vertical: "center",
-          horizontal: "center",
-        },
-      };
-      worksheet["A4"].s = {
-        font: {
-          name: "Times New Roman",
-          sz: 11,
-          bold: true,
-        },
-        alignment: {
-          wrapText: true,
-          vertical: "center",
-          horizontal: "center",
-        },
-      };
-      worksheet["A5"].s = {
-        font: {
-          name: "Times New Roman",
-          sz: 15,
-          bold: true,
-        },
-        alignment: {
-          wrapText: true,
-          vertical: "center",
-          horizontal: "center",
-        },
-      };
-      worksheet["A6"].s = {
-        font: {
-          name: "Times New Roman",
-          sz: 13,
-          bold: true,
-        },
-        alignment: {
-          wrapText: true,
-          vertical: "center",
-          horizontal: "center",
-        },
-      };
+      setCellStyle(worksheet, "A2", 11, true, "center", "center", false, false);
+      setCellStyle(worksheet, "G2", 11, true, "center", "center", false, false);
+      setCellStyle(worksheet, "A3", 11, true, "center", "center", false, false);
+      setCellStyle(worksheet, "G3", 11, true, "center", "center", false, false);
+      setCellStyle(worksheet, "A4", 11, true, "center", "center", false, false);
+      setCellStyle(worksheet, "A5", 16, true, "center", "center", false, false);
+      setCellStyle(worksheet, "A6", 11, true, "center", "center", false, false);
+
       // Merge các ô từ A6 đến M6
       worksheet["!merges"] = [];
-      const temp = [];
+      const tempMerge = [];
       const range = XLSX.utils.decode_range(worksheet["!ref"]!);
-      for (let row = 7; row <= results.data.length + 7; row++) {
-        temp.push(
-          { s: { r: row, c: 5 }, e: { r: row, c: 8 } },
-          { s: { r: row, c: 10 }, e: { r: row, c: 11 } }
-        );
-        worksheet["!rows"][row + 1] = { hpx: 45 };
+      for (let row = 7; row <= data.length + 7; row++) {
+        tempMerge.push({ s: { r: row, c: 5 }, e: { r: row, c: 9 } });
         for (let col = range.s.c; col <= range.e.c; col++) {
           const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-          if (worksheet[cellRef]) {
-            worksheet[cellRef].s = {
-              font: {
-                name: "Times New Roman",
-                sz: 11,
-                bold:
-                  row === 7 || col === 1 || col === 2 || col === 3 || col === 4
-                    ? true
-                    : false,
-              },
-              alignment: {
-                wrapText: true,
-                vertical: "center",
-                horizontal:
-                  row > 7 &&
-                  (col === 1 ||
-                    col === 2 ||
-                    col === 3 ||
-                    col === 4 ||
-                    col === 5)
-                    ? "left"
-                    : "center",
-              },
-              border: {
-                top: { style: "thin" },
-                left: { style: "thin" },
-                right: { style: "thin" },
-                bottom: { style: "thin" },
-              },
-            };
+          if (row === 7) {
+            setCellStyle(
+              worksheet,
+              cellRef,
+              11,
+              true,
+              "center",
+              "center",
+              true,
+              true
+            );
+            continue;
           }
+          if (col === 0 || col === 4 || col === 9 || col === 10) {
+            setCellStyle(
+              worksheet,
+              cellRef,
+              11,
+              false,
+              "center",
+              "center",
+              true,
+              true
+            );
+          } else {
+            setCellStyle(
+              worksheet,
+              cellRef,
+              11,
+              false,
+              "left",
+              "center",
+              true,
+              true
+            );
+          }
+        }
+      }
+      for (
+        let row = range.e.r - defaultFooterInfo.length + 1;
+        row <= range.e.r;
+        row++
+      ) {
+        if (row < range.e.r)
+          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 12 } });
+        else {
+          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 4 } });
+          tempMerge.push({ s: { r: row, c: 7 }, e: { r: row, c: 10 } });
+        }
+        for (let col = range.s.c; col <= range.e.c; col++) {
+          const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            false,
+            "left",
+            "center",
+            true,
+            false
+          );
+          if (row === range.e.r - 6)
+            setCellStyle(
+              worksheet,
+              cellRef,
+              11,
+              true,
+              "left",
+              "center",
+              true,
+              false
+            );
+          if (row === range.e.r)
+            setCellStyle(
+              worksheet,
+              cellRef,
+              11,
+              true,
+              "center",
+              "center",
+              true,
+              false
+            );
         }
       }
 
@@ -494,72 +462,9 @@ const BM04 = () => {
         { s: { r: 3, c: 0 }, e: { r: 3, c: 3 } },
         { s: { r: 4, c: 0 }, e: { r: 4, c: 12 } },
         { s: { r: 5, c: 0 }, e: { r: 5, c: 12 } },
-        {
-          s: { r: results.data.length + 15, c: 1 },
-          e: { r: results.data.length + 15, c: 2 },
-        },
-        {
-          s: { r: results.data.length + 15, c: 9 },
-          e: { r: results.data.length + 15, c: 10 },
-        },
       ];
-      for (
-        let row = results.data.length + 8;
-        row < results.data.length + 14;
-        row++
-      ) {
-        const cellRef = XLSX.utils.encode_cell({ r: row, c: 0 });
-        if (worksheet[cellRef]) {
-          worksheet[cellRef].s = {
-            font: {
-              name: "Times New Roman",
-              sz: 11,
-            },
-          };
-        }
-      }
-      const cellNote = XLSX.utils.encode_cell({
-        r: results.data.length + 9,
-        c: 0,
-      });
-      const cellHeadUnit = XLSX.utils.encode_cell({
-        r: results.data.length + 15,
-        c: 1,
-      });
-      const cellPersionCreate = XLSX.utils.encode_cell({
-        r: results.data.length + 15,
-        c: 9,
-      });
-      worksheet[`${cellNote}`].s = {
-        font: {
-          name: "Times New Roman",
-          sz: 11,
-          bold: true,
-        },
-      };
-      worksheet[`${cellHeadUnit}`].s = {
-        font: {
-          name: "Times New Roman",
-          sz: 11,
-          bold: true,
-        },
-        alignment: {
-          vertical: "center",
-          horizontal: "center",
-        },
-      };
-      worksheet[`${cellPersionCreate}`].s = {
-        font: {
-          name: "Times New Roman",
-          sz: 11,
-          bold: true,
-        },
-        alignment: {
-          vertical: "center",
-          horizontal: "center",
-        },
-      };
-      worksheet["!merges"].push(...defaultMerges, ...temp);
+
+      worksheet["!merges"].push(...defaultMerges, ...tempMerge);
       // Xuất file Excel
       const excelBuffer = XLSX.write(workbook, {
         bookType: "xlsx",
@@ -574,9 +479,9 @@ const BM04 = () => {
       ).padStart(2, "0")}-${now.getFullYear()}-${String(
         now.getHours()
       ).padStart(2, "0")}-${String(now.getMinutes()).padStart(2, "0")}`;
-      saveAs(blob, "BM01-" + formattedDate + ".xlsx");
+      saveAs(blob, "BM04-" + formattedDate + ".xlsx");
     }
-  }, []);
+  };
 
   useEffect(() => {
     getListQAs();
@@ -651,8 +556,8 @@ const BM04 = () => {
           isOk={true}
           title={
             mode === "edit"
-              ? "Cập nhật thông tin chủ nhiệm lớp"
-              : "Thêm mới thông tin chủ nhiệm lớp"
+              ? "Cập nhật thông tin tham gia hỏi vấn đáp Tiếng Anh đầu vào"
+              : "Thêm mới thông tin tham gia hỏi vấn đáp Tiếng Anh đầu vào"
           }
           onOk={() => {
             const formElement = document.querySelector("form");

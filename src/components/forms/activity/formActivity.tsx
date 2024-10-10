@@ -31,11 +31,18 @@ import {
   Select,
   Table,
   TableColumnsType,
-  Tooltip,
+  Tooltip
 } from "antd";
 import moment from "moment";
 import Link from "next/link";
-import { FC, FormEvent, Key, useCallback, useEffect, useState } from "react";
+import {
+  FC,
+  FormEvent,
+  Key,
+  useCallback,
+  useEffect,
+  useState
+} from "react";
 import { useDropzone } from "react-dropzone";
 
 interface FormActivityProps {
@@ -60,12 +67,12 @@ const FormActivity: FC<FormActivityProps> = ({
   const [deterFromDate, setDeterFromDate] = useState<number | 0>(0);
   const [deterEntryDate, setDeterEntryDate] = useState<number | 0>(0);
   const [description, setDescription] = useState("");
-  const [moTa, setMoTa] = useState("");
   const [filteredUsersFromHRM, setFilteredUsersFromHRM] =
     useState<UsersFromHRMResponse | null>(null);
   const [filteredUnitsHRM, setFilteredUnitsHRM] = useState<UnitHRMItem[]>([]);
   const [tableUsers, setTableUsers] = useState<ActivityInput[]>([]);
   const [selectedKey, setSelectedKey] = useState<Key | null>(null);
+  const [selectedKeyUnit, setSelectedKeyUnit] = useState<Key | null>(null);
   const [standardValues, setStandardValues] = useState<number | 0>(0);
   const [listPicture, setListPicture] = useState<FileItem[]>([]);
   const [isUploaded, setIsUploaded] = useState<boolean>(false);
@@ -75,8 +82,8 @@ const FormActivity: FC<FormActivityProps> = ({
     setFilteredUnitsHRM(response.model);
   };
 
-  const getAllUsersFromHRM = async (id: string) => {
-    const response = await getUsersFromHRMbyId(id);
+  const getAllUsersFromHRM = async (id: Key) => {
+    const response = await getUsersFromHRMbyId(id.toString());
     setFilteredUsersFromHRM(response);
   };
 
@@ -112,9 +119,17 @@ const FormActivity: FC<FormActivityProps> = ({
       prevTableUsers.filter((user) => user.id !== id)
     );
   }, []);
+
   const columns: TableColumnsType<ActivityInput> = [
     {
-      title: "Mã số CB-GV-NV",
+      title: "STT",
+      dataIndex: "stt",
+      key: "stt",
+      render: (_, __, index) => <p>{index + 1}</p>,
+      className: "text-center w-[20px]",
+    },
+    {
+      title: "MÃ SỐ CB-GV-NV",
       dataIndex: "userName",
       key: "userName",
       render: (userName: string) => <p>{userName}</p>,
@@ -130,17 +145,54 @@ const FormActivity: FC<FormActivityProps> = ({
       dataIndex: "unitName",
       key: "unitName",
       render: (unitName: string) => <p>{unitName}</p>,
-      className: "w-36 text-center",
+      className: "max-w-[100px] text-center",
     },
     {
       title: "SỐ TIẾT CHUẨN",
       dataIndex: "standardNumber",
       key: "standardNumber",
-      render: (standardNumber: number) => <p>{standardNumber}</p>,
+      render: (standardNumber: number, record: ActivityInput) => (
+        <InputNumber
+          min={0}
+          defaultValue={standardNumber}
+          onChange={(value) => {
+            setTableUsers((prevTableUsers) =>
+              prevTableUsers.map((user) =>
+                user.id === record.id
+                  ? { ...user, standardNumber: value ?? 0 }
+                  : user
+              )
+            );
+          }}
+          style={{ width: "100%" }}
+        />
+      ),
       className: "w-32 text-center",
     },
     {
-      title: "SỰ KIỆN",
+      title: "GHI CHÚ",
+      dataIndex: "description",
+      key: "description",
+      render: (description: string, record: ActivityInput) => (
+        <TextArea
+          autoSize={{minRows: 1, maxRows: 3}}
+          defaultValue={description}
+          onChange={(e) => {
+            const newDescription = e.target.value;
+            setTableUsers((prevTableUsers) =>
+              prevTableUsers.map((user) =>
+                user.id === record.id
+                  ? { ...user, description: newDescription }
+                  : user
+              )
+            );
+          }}
+        />
+      ),
+      className: "w-30",
+    },
+    {
+      title: "",
       dataIndex: "id",
       key: "id",
       render: (id: string) => {
@@ -159,14 +211,7 @@ const FormActivity: FC<FormActivityProps> = ({
           </div>
         );
       },
-      className: "w-16",
-    },
-    {
-      title: "GHI CHÚ",
-      dataIndex: "description",
-      key: "description",
-      render: (description: string) => <p>{description}</p>,
-      className: "w-30",
+      className: "w-[10px]",
     },
   ];
   const handleDeletePicture = async () => {
@@ -283,6 +328,8 @@ const FormActivity: FC<FormActivityProps> = ({
       }
     };
     loadUsers();
+    setSelectedKey(null);
+    setSelectedKeyUnit(null);
   }, [initialData, mode, numberActivity]);
 
   return (
@@ -351,7 +398,9 @@ const FormActivity: FC<FormActivityProps> = ({
               value: unit.id,
               label: unit.name,
             }))}
+            value={selectedKeyUnit}
             onChange={(value) => {
+              setSelectedKeyUnit(value);
               getAllUsersFromHRM(value);
             }}
           />
@@ -361,6 +410,7 @@ const FormActivity: FC<FormActivityProps> = ({
           <Select
             showSearch
             optionFilterProp="label"
+            defaultValue={""}
             filterSort={(optionA, optionB) =>
               (optionA?.label ?? "")
                 .toLowerCase()
@@ -422,27 +472,25 @@ const FormActivity: FC<FormActivityProps> = ({
           </Button>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-6 ">
-        <div></div>
-        <div className="flex flex-col gap-1 mb-4">
-          <p className="font-medium text-neutral-600">
-            Thêm ghi chú cho CB-GV-NV
-          </p>
-          <TextArea
-            autoSize
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </div>
+      <div className="flex flex-col gap-1 mb-4">
+        <p className="font-medium text-neutral-600">Ghi chú</p>
+        <TextArea
+          autoSize
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
       </div>
       {tableUsers && tableUsers.length > 0 && (
         <>
           <div className="flex flex-col gap-1 mb-4">
-            <span>Danh sách nhân sự tham gia</span>
+            <p className="font-medium text-neutral-600">
+              Danh sách nhân sự tham gia
+            </p>
             <Table<ActivityInput>
               bordered
               rowKey={(item) => item.id}
               rowHoverable
+              rowClassName={() => "editable-row"}
               pagination={false}
               size="small"
               columns={columns}

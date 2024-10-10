@@ -10,6 +10,7 @@ export interface QAItem {
   contents: string;
   totalStudent: number;
   standardNumber: number;
+  attendances: number;
   note: string;
 }
 
@@ -22,6 +23,7 @@ export interface AddUpdateQAItem {
   contents: string;
   totalStudent: number;
   standardNumber: number;
+  attendances: number;
   note: string;
 }
 

@@ -10,8 +10,9 @@ import {
   UsersFromHRM,
   UsersFromHRMResponse,
 } from "@/services/users/usersServices";
-import { Input, InputNumber, Select, Table, TableColumnsType } from "antd";
-import { FC, FormEvent, Key, use, useEffect, useState } from "react";
+import { DatePicker, Input, InputNumber, Select } from "antd";
+import moment from "moment";
+import { FC, FormEvent, Key, useEffect, useState } from "react";
 
 interface FormBM01Props {
   onSubmit: (formData: Partial<AddUpdateClassLeaderItem>) => void;
@@ -32,6 +33,7 @@ const FormBM01: FC<FormBM01Props> = ({ onSubmit, initialData, mode }) => {
   const [standardValues, setStandardValues] = useState<number>(0);
   const [subject, setSubject] = useState<string>("");
   const [course, setCourse] = useState<string>("");
+  const [attendances, setAttendances] = useState<number>(0);
   const [classCode, setClassCode] = useState<string>("");
   const [evidence, setEvidence] = useState<string>("");
   const [description, setDescription] = useState<string>("");
@@ -65,6 +67,7 @@ const FormBM01: FC<FormBM01Props> = ({ onSubmit, initialData, mode }) => {
       unitName: mode !== "edit" ? tempUser?.unitName : defaultUsers[0].unitName,
       semester: semester,
       subject: subject,
+      attendances: attendances,
       course: course,
       classCode: classCode,
       standardNumber: standardValues,
@@ -79,6 +82,8 @@ const FormBM01: FC<FormBM01Props> = ({ onSubmit, initialData, mode }) => {
   }, []);
 
   useEffect(() => {
+    console.log('mode :>> ', mode);
+    console.log('initialData :>> ', initialData);
     const loadUsers = async () => {
       if (mode === "edit" && initialData !== undefined) {
         const units = await getListUnitsFromHrm();
@@ -99,6 +104,7 @@ const FormBM01: FC<FormBM01Props> = ({ onSubmit, initialData, mode }) => {
         setSubject(initialData.subject || "");
         setCourse(initialData.course || "");
         setClassCode(initialData.classCode || "");
+        setAttendances(initialData.attendances || 0);
         setStandardValues(initialData.standardNumber || 0);
         setEvidence(initialData.proof || "");
         setDescription(initialData.note || "");
@@ -109,6 +115,7 @@ const FormBM01: FC<FormBM01Props> = ({ onSubmit, initialData, mode }) => {
         setSubject("");
         setCourse("");
         setClassCode("");
+        setAttendances(0);
         setStandardValues(0);
         setEvidence("");
         setDescription("");
@@ -216,13 +223,29 @@ const FormBM01: FC<FormBM01Props> = ({ onSubmit, initialData, mode }) => {
           />
         </div>
         <div className="flex flex-col gap-1">
-          <p className="font-medium text-neutral-600">Ghi chú</p>
-          <TextArea
-            autoSize
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+          <p className="font-medium text-neutral-600">Ngày ký</p>
+          <DatePicker
+            placeholder="dd/mm/yyyy"
+            format={"DD/MM/YYYY"}
+            value={attendances ? moment(attendances) : null}
+            onChange={(date) => {
+              if (date) {
+                const timestamp = date.valueOf();
+                setAttendances(timestamp / 1000);
+              } else {
+                setAttendances(0);
+              }
+            }}
           />
         </div>
+      </div>
+      <div className="flex flex-col gap-1">
+        <p className="font-medium text-neutral-600">Ghi chú</p>
+        <TextArea
+          autoSize
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
       </div>
     </form>
   );

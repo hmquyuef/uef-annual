@@ -10,7 +10,8 @@ import {
   UsersFromHRM,
   UsersFromHRMResponse,
 } from "@/services/users/usersServices";
-import { Input, InputNumber, Select } from "antd";
+import { DatePicker, Input, InputNumber, Select } from "antd";
+import moment from "moment";
 import { FC, FormEvent, Key, useEffect, useState } from "react";
 
 interface FormBM04Props {
@@ -33,6 +34,7 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
   const [contents, setContents] = useState<string>("");
   const [totalStudent, setTotalStudent] = useState<number | 0>(0);
   const [classCode, setClassCode] = useState<string>("");
+  const [attendances, setAttendances] = useState<number>(0);
   const [evidence, setEvidence] = useState<string>("");
   const [description, setDescription] = useState<string>("");
 
@@ -66,6 +68,7 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
       contents: classCode,
       totalStudent: totalStudent,
       standardNumber: standardValues,
+      attendances: attendances,
       note: description,
     };
     onSubmit(formData);
@@ -94,6 +97,7 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
         }
         setContents(initialData.contents || "");
         setTotalStudent(initialData.totalStudent || 0);
+        setAttendances(initialData.attendances || 0);
         setStandardValues(initialData.standardNumber || 0);
         setDescription(initialData.note || "");
       } else {
@@ -103,6 +107,7 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
         setContents("");
         setTotalStudent(0);
         setStandardValues(0);
+        setAttendances(0);
         setDescription("");
       }
     };
@@ -188,12 +193,30 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
             />
           </div>
         </div>
+      </div>
+      <div className="grid grid-cols-2 gap-6 mb-4">
         <div className="flex flex-col gap-1">
           <p className="font-medium text-neutral-600">Minh chứng</p>
           <TextArea
             autoSize
             value={evidence}
             onChange={(e) => setEvidence(e.target.value)}
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <p className="font-medium text-neutral-600">Ngày ký</p>
+          <DatePicker
+            placeholder="dd/mm/yyyy"
+            format={"DD/MM/YYYY"}
+            value={attendances ? moment(attendances) : null}
+            onChange={(date) => {
+              if (date) {
+                const timestamp = date.valueOf();
+                setAttendances(timestamp / 1000);
+              } else {
+                setAttendances(0);
+              }
+            }}
           />
         </div>
       </div>

@@ -12,6 +12,7 @@ export interface ClassLeaderItem {
   subject: string;
   classCode: string;
   standardNumber: number;
+  attendances: number;
   proof: string;
   note: string;
 }
@@ -32,6 +33,7 @@ export interface AddUpdateClassLeaderItem {
   course: string;
   classCode: string;
   standardNumber: number;
+  attendances: number;
   proof: string;
   note: string;
 }

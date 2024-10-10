@@ -10,7 +10,8 @@ import {
   UsersFromHRM,
   UsersFromHRMResponse,
 } from "@/services/users/usersServices";
-import { Input, InputNumber, Select } from "antd";
+import { DatePicker, Input, InputNumber, Select } from "antd";
+import moment from "moment";
 import { act, FC, FormEvent, Key, useEffect, useState } from "react";
 
 interface FormBM02Props {
@@ -32,6 +33,7 @@ const FormBM02: FC<FormBM02Props> = ({ onSubmit, initialData, mode }) => {
   const [standardValues, setStandardValues] = useState<number>(0);
   const [activityName, setActivityName] = useState<string>("");
   const [classCode, setClassCode] = useState<string>("");
+  const [attendances, setAttendances] = useState<number>(0);
   const [evidence, setEvidence] = useState<string>("");
   const [description, setDescription] = useState<string>("");
 
@@ -64,6 +66,7 @@ const FormBM02: FC<FormBM02Props> = ({ onSubmit, initialData, mode }) => {
       unitName: mode !== "edit" ? tempUser?.unitName : defaultUsers[0].unitName,
       activityName: activityName,
       semester: semester,
+      attendances: attendances,
       classCode: classCode,
       standardNumber: standardValues,
       proof: evidence,
@@ -97,6 +100,7 @@ const FormBM02: FC<FormBM02Props> = ({ onSubmit, initialData, mode }) => {
         setClassCode(initialData.classCode || "");
         setActivityName(initialData.activityName || "");
         setStandardValues(initialData.standardNumber || 0);
+        setAttendances(initialData.attendances || 0);
         setEvidence(initialData.proof || "");
         setDescription(initialData.note || "");
       } else {
@@ -105,6 +109,7 @@ const FormBM02: FC<FormBM02Props> = ({ onSubmit, initialData, mode }) => {
         setSemester("");
         setClassCode("");
         setActivityName("");
+        setAttendances(0);
         setStandardValues(0);
         setEvidence("");
         setDescription("");
@@ -173,7 +178,7 @@ const FormBM02: FC<FormBM02Props> = ({ onSubmit, initialData, mode }) => {
         />
       </div>
       <div className="grid grid-cols-2 gap-6 mb-4">
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 gap-6">
           <div className="flex flex-col gap-1">
             <p className="font-medium text-neutral-600">Học kỳ</p>
             <Input
@@ -191,20 +196,38 @@ const FormBM02: FC<FormBM02Props> = ({ onSubmit, initialData, mode }) => {
               style={{ width: "100%" }}
             />
           </div>
-          <div className="flex flex-col gap-1">
-            <p className="font-medium text-neutral-600">Mã lớp</p>
-            <Input
-              value={classCode}
-              onChange={(e) => setClassCode(e.target.value)}
-            />
-          </div>
         </div>
+        <div className="flex flex-col gap-1">
+          <p className="font-medium text-neutral-600">Mã lớp</p>
+          <Input
+            value={classCode}
+            onChange={(e) => setClassCode(e.target.value)}
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-6 mb-4">
         <div className="flex flex-col gap-1">
           <p className="font-medium text-neutral-600">Minh chứng</p>
           <TextArea
             autoSize
             value={evidence}
             onChange={(e) => setEvidence(e.target.value)}
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <p className="font-medium text-neutral-600">Ngày ký</p>
+          <DatePicker
+            placeholder="dd/mm/yyyy"
+            format={"DD/MM/YYYY"}
+            value={attendances ? moment(attendances) : null}
+            onChange={(date) => {
+              if (date) {
+                const timestamp = date.valueOf();
+                setAttendances(timestamp / 1000);
+              } else {
+                setAttendances(0);
+              }
+            }}
           />
         </div>
       </div>
