@@ -211,15 +211,15 @@ const SearchMembers = () => {
       title: "TỔNG SỐ TIẾT CHUẨN",
       dataIndex: "totalStandarNumber",
       key: "totalStandarNumber",
-      className: "text-center w-[15rem]",
+      className: "text-center w-[8rem]",
       render: (totalStandarNumber: string) => <p>{totalStandarNumber}</p>,
     },
     {
       title: "",
       dataIndex: "actions",
       key: "actions",
-      className: "text-center w-[15px]",
-      render: (record: DetailUserItem) => {
+      className: "text-center w-[30px]",
+      render: () => {
         return (
           <>
             <Tooltip
@@ -254,17 +254,17 @@ const SearchMembers = () => {
       className: "text-center w-[50px]",
     },
     {
-      title: "Các hoạt động đã thực hiện",
+      title: "CÁC HOẠT ĐỘNG ĐÃ THỰC HIỆN",
       dataIndex: "activityName",
       key: "activityName",
       render: (activityName: string) => <p>{activityName}</p>,
       className: "w-[4/5]",
     },
     {
-      title: "Số tiết chuẩn",
+      title: "SỐ TIẾT CHUẨN",
       dataIndex: "standarNumber",
       key: "standarNumber",
-      className: "text-center w-[15rem]",
+      className: "text-center w-[10rem]",
       render: (standarNumber: string) => <p>{standarNumber}</p>,
     },
     {
@@ -276,7 +276,7 @@ const SearchMembers = () => {
       className: "text-center w-[150px]",
     },
     {
-      title: "Ghi chú",
+      title: "GHI CHÚ",
       dataIndex: "note",
       key: "note",
       render: (note: string) => <p>{note}</p>,
@@ -437,12 +437,12 @@ const SearchMembers = () => {
                     key={Math.random().toString(36).substr(2, 9)}
                     collapsible="header"
                     defaultActiveKey={["1"]}
-                    className="mb-4 uppercase"
+                    className="mb-4"
                     expandIconPosition="end"
                     items={[
                       {
                         key: "1",
-                        label: `${detailUser.classLeaders.shortName} - ${detailUser.classLeaders.name} (${detailUser.classLeaders.totalItems} sự kiện)`,
+                        label: `${String(detailUser.classLeaders.shortName).toUpperCase()} - ${String(detailUser.classLeaders.name).toUpperCase()} (${detailUser.classLeaders.totalItems} SỰ KIỆN)`,
                         children: (
                           <>
                             <Table<Item>
@@ -465,7 +465,7 @@ const SearchMembers = () => {
                                       index={0}
                                       className="text-end font-semibold"
                                     >
-                                      Tổng số tiết chuẩn
+                                      TỔNG SỐ TIẾT CHUẨN
                                     </Table.Summary.Cell>
                                     <Table.Summary.Cell
                                       index={2}
@@ -499,12 +499,12 @@ const SearchMembers = () => {
                     key={Math.random().toString(36).substr(2, 9)}
                     collapsible="header"
                     defaultActiveKey={["1"]}
-                    className="mb-4 uppercase"
+                    className="mb-4"
                     expandIconPosition="end"
                     items={[
                       {
                         key: "2",
-                        label: `${detailUser.assistants.shortName} - ${detailUser.assistants.name} (${detailUser.assistants.totalItems} sự kiện)`,
+                        label: `${String(detailUser.assistants.shortName).toUpperCase()} - ${String(detailUser.assistants.name).toUpperCase()} (${detailUser.assistants.totalItems} SỰ KIỆN)`,
                         children: (
                           <>
                             <Table<Item>
@@ -527,7 +527,7 @@ const SearchMembers = () => {
                                       index={0}
                                       className="text-end font-semibold"
                                     >
-                                      Tổng số tiết chuẩn
+                                      TỔNG SỐ TIẾT CHUẨN
                                     </Table.Summary.Cell>
                                     <Table.Summary.Cell
                                       index={2}
@@ -561,12 +561,12 @@ const SearchMembers = () => {
                     key={Math.random().toString(36).substr(2, 9)}
                     collapsible="header"
                     defaultActiveKey={["1"]}
-                    className="mb-4 uppercase"
+                    className="mb-4"
                     expandIconPosition="end"
                     items={[
                       {
                         key: "3",
-                        label: `${detailUser.qAs.shortName} - ${detailUser.qAs.name} (${detailUser.qAs.totalItems} sự kiện)`,
+                        label: `${String(detailUser.qAs.shortName).toUpperCase()} - ${String(detailUser.qAs.name).toUpperCase()} (${detailUser.qAs.totalItems} SỰ KIỆN)`,
                         children: (
                           <>
                             <Table<Item>
@@ -589,7 +589,7 @@ const SearchMembers = () => {
                                       index={0}
                                       className="text-end font-semibold"
                                     >
-                                      Tổng số tiết chuẩn
+                                      TỔNG SỐ TIẾT CHUẨN
                                     </Table.Summary.Cell>
                                     <Table.Summary.Cell
                                       index={2}
@@ -623,12 +623,12 @@ const SearchMembers = () => {
                     key={Math.random().toString(36).substr(2, 9)}
                     collapsible="header"
                     defaultActiveKey={["1"]}
-                    className="mb-4 uppercase"
+                    className="mb-4"
                     expandIconPosition="end"
                     items={[
                       {
                         key: "5",
-                        label: `${detailUser.activities.shortName} - ${detailUser.activities.name} (${detailUser.activities.totalItems} sự kiện)`,
+                        label: `${String(detailUser.activities.shortName).toUpperCase()} - ${String(detailUser.activities.name).toUpperCase()} (${detailUser.activities.totalItems} SỰ KIỆN)`,
                         children: (
                           <>
                             <Table<Item>
@@ -651,7 +651,7 @@ const SearchMembers = () => {
                                       index={0}
                                       className="text-end font-semibold"
                                     >
-                                      Tổng số tiết chuẩn
+                                      TỔNG SỐ TIẾT CHUẨN
                                     </Table.Summary.Cell>
                                     <Table.Summary.Cell
                                       index={2}

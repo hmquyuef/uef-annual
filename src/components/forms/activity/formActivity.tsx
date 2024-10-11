@@ -20,8 +20,7 @@ import {
 import {
   CloseCircleOutlined,
   CloudUploadOutlined,
-  MinusCircleOutlined,
-  PlusOutlined,
+  MinusCircleOutlined
 } from "@ant-design/icons";
 import {
   Button,
@@ -329,7 +328,17 @@ const FormActivity: FC<FormActivityProps> = ({
     <form onSubmit={handleSubmit}>
       <hr className="mt-1 mb-3" />
       <div className="grid grid-cols-2 gap-6 mb-4">
-        <div className="grid grid-cols-5 gap-6">
+        <div className="flex flex-col gap-1">
+          <p className="font-medium text-neutral-600">
+            Số Tờ trình/Kế hoạch/Quyết định{" "}
+            <span className="text-red-500">(*)</span>
+          </p>
+          <Input
+            value={deterNumber}
+            onChange={(e) => setDeterNumber(e.target.value)}
+          />
+        </div>
+        {/* <div className="grid grid-cols-5 gap-6">
           <div className="w-full flex flex-col gap-1">
             <p className="font-medium text-neutral-600">STT</p>
             <InputNumber
@@ -340,17 +349,7 @@ const FormActivity: FC<FormActivityProps> = ({
               style={{ width: "100%" }}
             />
           </div>
-          <div className="col-span-4 flex flex-col gap-1">
-            <p className="font-medium text-neutral-600">
-              Số Tờ trình/Kế hoạch/Quyết định{" "}
-              <span className="text-red-500">(*)</span>
-            </p>
-            <Input
-              value={deterNumber}
-              onChange={(e) => setDeterNumber(e.target.value)}
-            />
-          </div>
-        </div>
+        </div> */}
         <div className="grid grid-cols-3 gap-6">
           <div className="flex flex-col gap-1">
             <p className="font-medium text-neutral-600">Ngày ký</p>

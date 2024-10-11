@@ -1,4 +1,5 @@
 import apiClient from "../apiClient";
+import { ImportResponse } from "./formsServices";
 
 export interface QAItem {
   id: string;
@@ -62,4 +63,20 @@ export async function deleteQAs(ids: string[]): Promise<void> {
   await apiClient.delete("api/qae", {
     data: ids,
   });
+}
+
+export async function ImportQAs(
+  data: FormData
+): Promise<ImportResponse> {
+  const response = await apiClient.post<ImportResponse>(
+    "api/qae/import",
+    data,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+
+  return response.data;
 }

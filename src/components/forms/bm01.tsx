@@ -1,16 +1,19 @@
 "use client";
 
-import { getDataExportById } from "@/services/exports/exportsServices";
 import {
   AddUpdateClassLeaderItem,
   ClassLeaderItem,
   ClassLeadersResponse,
   deleteClassLeaders,
   getAllClassLeaders,
+  ImportClassLeaders,
   postAddClassLeader,
   putUpdateClassLeader,
 } from "@/services/forms/classLeadersServices";
-import { AddUpdateActivityItem } from "@/services/forms/formsServices";
+import {
+  AddUpdateActivityItem
+} from "@/services/forms/formsServices";
+import { setCellStyle } from "@/utility/Utilities";
 import {
   DeleteOutlined,
   FileExcelOutlined,
@@ -18,9 +21,11 @@ import {
 } from "@ant-design/icons";
 import {
   Button,
+  Dropdown,
   Empty,
   GetProps,
   Input,
+  MenuProps,
   PaginationProps,
   Table,
   TableColumnsType,
@@ -33,7 +38,7 @@ import * as XLSX from "sheetjs-style";
 import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
 import FormBM01 from "./activity/formBM01";
-import { setCellStyle } from "@/utility/Utilities";
+import FromUpload from "./activity/formUpload";
 
 type SearchProps = GetProps<typeof Input.Search>;
 const { Search } = Input;
@@ -44,6 +49,7 @@ const BM01 = () => {
   >(undefined);
   const [data, setData] = useState<ClassLeaderItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [isUpload, setIsUpload] = useState(false);
   const [mode, setMode] = useState<"add" | "edit">("add");
   const [isNotificationOpen, setNotificationOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<
@@ -171,6 +177,45 @@ const BM01 = () => {
     },
   ];
 
+  const items: MenuProps["items"] = [
+    {
+      key: "1",
+      label: (
+        <p
+          onClick={() => {
+            setIsOpen(true);
+            setMode("add");
+          }}
+          className="font-medium"
+        >
+          Thêm mới
+        </p>
+      ),
+      icon: <PlusOutlined />,
+      style: { color: "#1890ff" },
+    },
+    {
+      type: "divider",
+    },
+    {
+      key: "2",
+      label: (
+        <p
+          onClick={() => {
+            setIsOpen(true);
+            setMode("add");
+            setIsUpload(true);
+          }}
+          className="font-medium"
+        >
+          Import Excel
+        </p>
+      ),
+      icon: <FileExcelOutlined />,
+      style: { color: "#52c41a" },
+    },
+  ];
+
   const onSearch: SearchProps["onSearch"] = (value) => {
     if (value === "") setData(classLeaders?.items || []);
     const filteredData = classLeaders?.items.filter((item) =>
@@ -238,6 +283,33 @@ const BM01 = () => {
       setDescription("Đã có lỗi xảy ra!");
     }
   };
+
+  const handleSubmitUpload = async (file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await ImportClassLeaders(formData);
+      if (response) {
+        setNotificationOpen(true);
+        setStatus("success");
+        setMessage("Thông báo");
+        setDescription(`Tải lên thành công ${response.totalCount} hoạt động!`);
+      }
+      await getListClassLeaders();
+      setIsOpen(false);
+      setSelectedItem(undefined);
+      setMode("add");
+      setIsUpload(false);
+    } catch (error) {
+      setIsOpen(false);
+      setNotificationOpen(true);
+      setStatus("error");
+      setMessage("Thông báo");
+      setDescription("Đã có lỗi xảy ra!");
+      setIsUpload(false);
+    }
+  };
+
   const handleExportExcel = async () => {
     if (data) {
       const currentYear = new Date().getFullYear();
@@ -538,23 +610,14 @@ const BM01 = () => {
                 Xuất Excel
               </Button>
             </Tooltip>
-            <Tooltip
-              placement="bottom"
-              title="Thêm mới chủ nhiệm lớp"
-              arrow={true}
-            >
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => {
-                  setIsOpen(true);
-                  setMode("add");
-                }}
-                size="large"
-                iconPosition="start"
-              >
-                Thêm mới
-              </Button>
+            <Tooltip placement="top" title={"Thêm mới hoạt động"} arrow={true}>
+              <Dropdown menu={{ items }} trigger={["click"]}>
+                <a onClick={(e) => e.preventDefault()}>
+                  <Button type="primary" icon={<PlusOutlined />} size={"large"}>
+                    Thêm hoạt động
+                  </Button>
+                </a>
+              </Dropdown>
             </Tooltip>
             <Tooltip placement="top" title="Xóa các thông tin" arrow={true}>
               <Button
@@ -596,13 +659,22 @@ const BM01 = () => {
             setIsOpen(false);
             setSelectedItem(undefined);
             setMode("add");
+            setIsUpload(false);
           }}
           bodyContent={
-            <FormBM01
-              onSubmit={handleSubmit}
-              initialData={selectedItem as Partial<AddUpdateActivityItem>}
-              mode={mode}
-            />
+            isUpload ? (
+              <>
+                <FromUpload onSubmit={handleSubmitUpload} />
+              </>
+            ) : (
+              <>
+                <FormBM01
+                  onSubmit={handleSubmit}
+                  initialData={selectedItem as Partial<AddUpdateActivityItem>}
+                  mode={mode}
+                />
+              </>
+            )
           }
         />
       </div>

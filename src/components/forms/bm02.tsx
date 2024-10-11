@@ -1,38 +1,41 @@
 "use client";
 
 import {
+  AddUpdateClassAssistantItem,
+  ClassAssistantItem,
+  ClassAssistantResponse,
+  deleteClassAssistants,
+  getAllClassAssistants,
+  ImportClassAssistants,
+  postAddClassAssistant,
+  putUpdateClassAssistant,
+} from "@/services/forms/assistantsServices";
+import { setCellStyle } from "@/utility/Utilities";
+import {
   DeleteOutlined,
   FileExcelOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
 import {
   Button,
+  Dropdown,
   Empty,
   GetProps,
   Input,
+  MenuProps,
   PaginationProps,
   Table,
   TableColumnsType,
   Tooltip,
 } from "antd";
-import CustomNotification from "../CustomNotification";
-import CustomModal from "../CustomModal";
-import * as XLSX from "sheetjs-style";
-import { Key, useCallback, useEffect, useState } from "react";
-import {
-  AddUpdateClassAssistantItem,
-  ClassAssistantItem,
-  ClassAssistantResponse,
-  deleteClassAssistants,
-  getAllClassAssistants,
-  postAddClassAssistant,
-  putUpdateClassAssistant,
-} from "@/services/forms/assistantsServices";
 import { TableRowSelection } from "antd/es/table/interface";
-import { getDataExportById } from "@/services/exports/exportsServices";
-import FormBM02 from "./activity/formBM02";
 import saveAs from "file-saver";
-import { setCellStyle } from "@/utility/Utilities";
+import { Key, useCallback, useEffect, useState } from "react";
+import * as XLSX from "sheetjs-style";
+import CustomModal from "../CustomModal";
+import CustomNotification from "../CustomNotification";
+import FormBM02 from "./activity/formBM02";
+import FromUpload from "./activity/formUpload";
 
 type SearchProps = GetProps<typeof Input.Search>;
 const { Search } = Input;
@@ -44,6 +47,7 @@ const BM02 = () => {
   >(undefined);
   const [data, setData] = useState<ClassAssistantItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [isUpload, setIsUpload] = useState(false);
   const [mode, setMode] = useState<"add" | "edit">("add");
   const [isNotificationOpen, setNotificationOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<
@@ -164,6 +168,45 @@ const BM02 = () => {
     },
   ];
 
+  const items: MenuProps["items"] = [
+    {
+      key: "1",
+      label: (
+        <p
+          onClick={() => {
+            setIsOpen(true);
+            setMode("add");
+          }}
+          className="font-medium"
+        >
+          Thêm mới
+        </p>
+      ),
+      icon: <PlusOutlined />,
+      style: { color: "#1890ff" },
+    },
+    {
+      type: "divider",
+    },
+    {
+      key: "2",
+      label: (
+        <p
+          onClick={() => {
+            setIsOpen(true);
+            setMode("add");
+            setIsUpload(true);
+          }}
+          className="font-medium"
+        >
+          Import Excel
+        </p>
+      ),
+      icon: <FileExcelOutlined />,
+      style: { color: "#52c41a" },
+    },
+  ];
+
   const onSearch: SearchProps["onSearch"] = (value) => {
     if (value === "") setData(classAssistants?.items || []);
     const filteredData = classAssistants?.items.filter((item) =>
@@ -237,6 +280,33 @@ const BM02 = () => {
       setDescription("Đã có lỗi xảy ra!");
     }
   };
+
+  const handleSubmitUpload = async (file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await ImportClassAssistants(formData);
+      if (response) {
+        setNotificationOpen(true);
+        setStatus("success");
+        setMessage("Thông báo");
+        setDescription(`Tải lên thành công ${response.totalCount} hoạt động!`);
+      }
+      await getListClassAssistants();
+      setIsOpen(false);
+      setSelectedItem(undefined);
+      setMode("add");
+      setIsUpload(false);
+    } catch (error) {
+      setIsOpen(false);
+      setNotificationOpen(true);
+      setStatus("error");
+      setMessage("Thông báo");
+      setDescription("Đã có lỗi xảy ra!");
+      setIsUpload(false);
+    }
+  };
+
   const handleExportExcel = async () => {
     if (data) {
       const defaultInfo = [
@@ -535,23 +605,14 @@ const BM02 = () => {
                 Xuất Excel
               </Button>
             </Tooltip>
-            <Tooltip
-              placement="bottom"
-              title="Thêm mới cố vấn học tập, trợ giảng, phụ đạo"
-              arrow={true}
-            >
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => {
-                  setIsOpen(true);
-                  setMode("add");
-                }}
-                size="large"
-                iconPosition="start"
-              >
-                Thêm mới
-              </Button>
+            <Tooltip placement="top" title={"Thêm mới hoạt động"} arrow={true}>
+              <Dropdown menu={{ items }} trigger={["click"]}>
+                <a onClick={(e) => e.preventDefault()}>
+                  <Button type="primary" icon={<PlusOutlined />} size={"large"}>
+                    Thêm hoạt động
+                  </Button>
+                </a>
+              </Dropdown>
             </Tooltip>
             <Tooltip placement="top" title="Xóa các thông tin" arrow={true}>
               <Button
@@ -593,13 +654,24 @@ const BM02 = () => {
             setIsOpen(false);
             setSelectedItem(undefined);
             setMode("add");
+            setIsUpload(false);
           }}
           bodyContent={
-            <FormBM02
-              onSubmit={handleSubmit}
-              initialData={selectedItem as Partial<AddUpdateClassAssistantItem>}
-              mode={mode}
-            />
+            isUpload ? (
+              <>
+                <FromUpload onSubmit={handleSubmitUpload} />
+              </>
+            ) : (
+              <>
+                <FormBM02
+                  onSubmit={handleSubmit}
+                  initialData={
+                    selectedItem as Partial<AddUpdateClassAssistantItem>
+                  }
+                  mode={mode}
+                />
+              </>
+            )
           }
         />
       </div>
