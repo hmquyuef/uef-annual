@@ -283,6 +283,44 @@ const SearchMembers = () => {
     },
   ];
 
+  const columnsBM05: TableColumnsType<Item> = [
+    {
+      title: "STT",
+      dataIndex: "stt",
+      key: "stt",
+      render: (_, __, index) => <p>{index + 1}</p>,
+      className: "text-center w-[50px]",
+    },
+    {
+      title: "CÁC HOẠT ĐỘNG ĐÃ THỰC HIỆN",
+      dataIndex: "activityName",
+      key: "activityName",
+      render: (activityName: string) => <p>{activityName}</p>,
+      className: "w-[4/5]",
+    },
+    {
+      title: "SỐ TIẾT CHUẨN",
+      dataIndex: "standarNumber",
+      key: "standarNumber",
+      className: "text-center w-[10rem]",
+      render: (standarNumber: string) => <p>{standarNumber}</p>,
+    },
+    {
+      title: "THỜI GIAN THAM DỰ",
+      dataIndex: "attendances",
+      key: "attendances",
+      render: (attendances: number) => "",
+      className: "text-center w-[150px]",
+    },
+    {
+      title: "GHI CHÚ",
+      dataIndex: "note",
+      key: "note",
+      render: (note: string) => <p>{note}</p>,
+      className: "text-center w-[150px]",
+    },
+  ];
+
   useEffect(() => {
     getListUnisHRM();
   }, []);
@@ -446,13 +484,13 @@ const SearchMembers = () => {
                     items={[
                       {
                         key: "1",
-                        label: `${String(
+                        label: <strong>{String(
                           detailUser.classLeaders.shortName
-                        ).toUpperCase()} - ${String(
+                        ).toUpperCase()} - {String(
                           detailUser.classLeaders.name
-                        ).toUpperCase()} (${
+                        ).toUpperCase()} ({
                           detailUser.classLeaders.totalItems
-                        } SỰ KIỆN)`,
+                        } SỰ KIỆN)</strong>,
                         children: (
                           <>
                             <Table<Item>
@@ -514,13 +552,15 @@ const SearchMembers = () => {
                     items={[
                       {
                         key: "2",
-                        label: `${String(
-                          detailUser.assistants.shortName
-                        ).toUpperCase()} - ${String(
-                          detailUser.assistants.name
-                        ).toUpperCase()} (${
-                          detailUser.assistants.totalItems
-                        } SỰ KIỆN)`,
+                        label: (
+                          <strong>
+                            {String(
+                              detailUser.assistants.shortName
+                            ).toUpperCase()}{" "}
+                            - {String(detailUser.assistants.name).toUpperCase()}{" "}
+                            ({detailUser.assistants.totalItems} SỰ KIỆN)
+                          </strong>
+                        ),
                         children: (
                           <>
                             <Table<Item>
@@ -582,13 +622,13 @@ const SearchMembers = () => {
                     items={[
                       {
                         key: "3",
-                        label: `${String(
-                          detailUser.qAs.shortName
-                        ).toUpperCase()} - ${String(
-                          detailUser.qAs.name
-                        ).toUpperCase()} (${
-                          detailUser.qAs.totalItems
-                        } SỰ KIỆN)`,
+                        label: (
+                          <strong>
+                            {String(detailUser.qAs.shortName).toUpperCase()} -{" "}
+                            {String(detailUser.qAs.name).toUpperCase()} (
+                            {detailUser.qAs.totalItems} SỰ KIỆN)
+                          </strong>
+                        ),
                         children: (
                           <>
                             <Table<Item>
@@ -650,13 +690,15 @@ const SearchMembers = () => {
                     items={[
                       {
                         key: "5",
-                        label: `${String(
-                          detailUser.activities.shortName
-                        ).toUpperCase()} - ${String(
-                          detailUser.activities.name
-                        ).toUpperCase()} (${
-                          detailUser.activities.totalItems
-                        } SỰ KIỆN)`,
+                        label: (
+                          <strong>
+                            {String(
+                              detailUser.activities.shortName
+                            ).toUpperCase()}{" "}
+                            - {String(detailUser.activities.name).toUpperCase()}{" "}
+                            ({detailUser.activities.totalItems} SỰ KIỆN)
+                          </strong>
+                        ),
                         children: (
                           <>
                             <Table<Item>
@@ -690,7 +732,7 @@ const SearchMembers = () => {
                                   </Table.Summary.Row>
                                 );
                               }}
-                              columns={columns}
+                              columns={columnsBM05}
                               dataSource={dataActivities}
                               locale={{
                                 emptyText: (
