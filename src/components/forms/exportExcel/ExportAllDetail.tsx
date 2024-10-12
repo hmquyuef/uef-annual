@@ -34,12 +34,12 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
     [""],
     ["CÔNG TÁC CHUNG NĂM HỌC 2024-2025"],
     [""],
-    ["Họ và tên", "", `${detailUser?.fullName}`],
-    ["Mã CB-GV-NV", "", `${detailUser?.userName}`],
-    ["Học hàm/Học vị", "", ""],
-    ["Thâm niên công tác", "", ""],
-    ["Đơn vị", "", `${detailUser?.unitName}`],
-    ["Tổng số tiết chuẩn", "", `${detailUser?.totalStandarNumber}`],
+    ["Họ và tên:", "", `${detailUser?.fullName}`],
+    ["Mã CB-GV-NV:", "", `${detailUser?.userName}`],
+    ["Học hàm/Học vị:", "", ""],
+    ["Thâm niên công tác:", "", ""],
+    ["Đơn vị:", "", `${detailUser?.unitName}`],
+    ["Tổng số tiết chuẩn:", "", `${detailUser?.totalStandarNumber}`],
   ];
 
   const dataArrayClassLeader = [
