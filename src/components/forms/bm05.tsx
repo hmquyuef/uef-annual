@@ -408,7 +408,7 @@ const BM05 = () => {
         [
           "Tham gia Ban tổ chức các hoạt động báo cáo chuyên đề, Hội thảo khoa học; Các cuộc thi học thuật; Hướng dẫn/hỗ trợ sinh viên tham gia các cuộc thi, … được BĐH phê duyệt tiết chuẩn",
         ],
-        [""], // Dòng 9 để trống
+        [""],
       ];
 
       const defaultFooterInfo = [
@@ -424,7 +424,7 @@ const BM05 = () => {
           "- Mỗi cá nhân có thể có nhiều dòng dữ liệu tương ứng với các hoạt động đã thực hiện... được BĐH phê duyệt tiết chuẩn.",
         ],
         [
-          "- Việc quy đổi tiết chuẩn căn cứ theo Phụ lục III, Quyết định số 720/QĐ-UEF ngày 01 tháng 9 năm 2023.								",
+          "- Việc quy đổi tiết chuẩn căn cứ theo Phụ lục III, Quyết định số 720/QĐ-UEF ngày 01 tháng 9 năm 2023.",
         ],
         [""],
         ["", "LÃNH ĐẠO ĐƠN VỊ", "", "", "", "", "", "", "", "NGƯỜI LẬP"],
@@ -445,7 +445,7 @@ const BM05 = () => {
           "Minh chứng",
           "",
           "Ghi chú",
-        ], // Tên cột ở dòng 10
+        ], 
         ...results.data.map((item, index) => [
           index + 1,
           item.userName,
@@ -459,7 +459,7 @@ const BM05 = () => {
           item.standNumber,
           item.determination,
           "",
-          item.note,
+          item.note ?? "",
         ]),
       ];
 
@@ -484,7 +484,6 @@ const BM05 = () => {
       };
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-      // Thiết lập chiều cao của hàng 6 (ô đã merge) thành 40 pixel
       worksheet["!rows"] = [];
       worksheet["!rows"][5] = { hpx: 40 }; // Chiều cao hàng thứ 6 là 40 pixel
       worksheet["!cols"] = [];
@@ -714,20 +713,6 @@ const BM05 = () => {
               Xuất Excel
             </Button>
           </Tooltip>
-          {/* <Tooltip placement="bottom" title="Thêm mới hoạt động" arrow={true}>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => {
-                setIsOpen(true);
-                setMode("add");
-              }}
-              size="large"
-              iconPosition="start"
-            >
-              Thêm mới
-            </Button>
-          </Tooltip> */}
           <Tooltip placement="top" title={"Thêm mới hoạt động"} arrow={true}>
             <Dropdown menu={{ items }} trigger={["click"]}>
               <a onClick={(e) => e.preventDefault()}>

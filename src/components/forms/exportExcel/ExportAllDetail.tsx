@@ -9,7 +9,7 @@ import {
   ResultItemForBM04,
   ResultItemForBM05,
 } from "@/services/exports/exportDetailForUser";
-import { convertTimestampToDate } from "@/utility/Utilities";
+import { convertTimestampToDate, setCellStyle } from "@/utility/Utilities";
 
 export const handleExportAll = async (detailUser: DetailUserItem) => {
   const defaultInfo = [
@@ -44,7 +44,7 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
 
   const dataArrayClassLeader = [
     [""],
-    ["1. CHỦ NHIỆM LỚP"],
+    ["BIỂU MẪU 01 - CHỦ NHIỆM LỚP"],
     [
       "STT",
       "Tên hoạt động",
@@ -69,7 +69,7 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       item.standarNumber,
       convertTimestampToDate(item.attendances),
-      item.note,
+      item.note ?? "",
     ]),
     [
       "Tổng số tiết chuẩn",
@@ -91,7 +91,7 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
 
   const dataArrayAssistants = [
     [""],
-    ["2. CỐ VẤN HỌC TẬP, TRỢ GIẢNG, PHỤ ĐẠO"],
+    ["BIỂU MẪU 02 - CỐ VẤN HỌC TẬP, TRỢ GIẢNG, PHỤ ĐẠO"],
     [
       "STT",
       "Tên hoạt động",
@@ -116,7 +116,7 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       item.standarNumber,
       convertTimestampToDate(item.attendances),
-      item.note,
+      item.note ?? "",
     ]),
     [
       "Tổng số tiết chuẩn",
@@ -138,7 +138,7 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
 
   const dataArrayQAEs = [
     [""],
-    ["4. THAM GIA HỎI VẤN ĐÁP TIẾNG ANH ĐẦU VÀO"],
+    ["BIỂU MẪU 04 - THAM GIA HỎI VẤN ĐÁP TIẾNG ANH ĐẦU VÀO"],
     [
       "STT",
       "Tên hoạt động",
@@ -163,7 +163,7 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       item.standarNumber,
       convertTimestampToDate(item.attendances),
-      item.note,
+      item.note ?? "",
     ]),
     [
       "Tổng số tiết chuẩn",
@@ -185,7 +185,7 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
 
   const dataArrayActivities = [
     [""],
-    ["5. CÁC HOẠT ĐỘNG KHÁC ĐƯỢC BAN GIÁM HIỆU PHÊ DUYỆT"],
+    ["BIỂU MẪU 05 - CÁC HOẠT ĐỘNG KHÁC ĐƯỢC BAN GIÁM HIỆU PHÊ DUYỆT"],
     [
       "STT",
       "Tên hoạt động",
@@ -209,8 +209,9 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       "",
       item.standarNumber,
-      convertTimestampToDate(item.attendances),
-      item.note,
+      // convertTimestampToDate(item.attendances),
+      "",
+      item.note ?? "",
     ]),
     [
       "Tổng số tiết chuẩn",
@@ -260,200 +261,23 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
   worksheet["!rows"] = [];
   worksheet["!rows"][3] = { hpx: 40 };
 
-  const setCellStyle = (
-    cell: string,
-    fontSize: number,
-    isBold: boolean,
-    hAlign: string,
-    vAlign: string,
-    wrapText: boolean,
-    hasBorder: boolean
-  ) => {
-    const style: any = {
-      font: {
-        name: "Times New Roman",
-        sz: fontSize,
-        bold: isBold,
-      },
-      alignment: {
-        wrapText: wrapText,
-        vertical: vAlign,
-        horizontal: hAlign,
-      },
-    };
-    if (hasBorder) {
-      style.border = {
-        top: { style: "thin" },
-        bottom: { style: "thin" },
-        left: { style: "thin" },
-        right: { style: "thin" },
-      };
-    }
-    if (worksheet[cell]) {
-      worksheet[cell].s = style;
-    }
-  };
-  const cellStyles = [
-    {
-      cell: "A1",
-      fontSize: 11,
-      isBold: true,
-      hAlign: "center",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "G1",
-      fontSize: 11,
-      isBold: true,
-      hAlign: "center",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "A2",
-      fontSize: 11,
-      isBold: false,
-      hAlign: "center",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "G2",
-      fontSize: 11,
-      isBold: true,
-      hAlign: "center",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "A4",
-      fontSize: 16,
-      isBold: true,
-      hAlign: "center",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "A6",
-      fontSize: 11,
-      isBold: false,
-      hAlign: "left",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "C6",
-      fontSize: 11,
-      isBold: true,
-      hAlign: "left",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "A7",
-      fontSize: 11,
-      isBold: false,
-      hAlign: "left",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "C7",
-      fontSize: 11,
-      isBold: true,
-      hAlign: "left",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "A8",
-      fontSize: 11,
-      isBold: false,
-      hAlign: "left",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "C8",
-      fontSize: 11,
-      isBold: true,
-      hAlign: "left",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "A9",
-      fontSize: 11,
-      isBold: false,
-      hAlign: "left",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "C9",
-      fontSize: 11,
-      isBold: true,
-      hAlign: "left",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "A10",
-      fontSize: 11,
-      isBold: false,
-      hAlign: "left",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "C10",
-      fontSize: 11,
-      isBold: true,
-      hAlign: "left",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "A11",
-      fontSize: 11,
-      isBold: false,
-      hAlign: "left",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "C11",
-      fontSize: 11,
-      isBold: true,
-      hAlign: "left",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-  ];
-
-  cellStyles.forEach(
-    ({ cell, fontSize, isBold, hAlign, vAlign, wrapText, hasBorder }) => {
-      setCellStyle(cell, fontSize, isBold, hAlign, vAlign, wrapText, hasBorder);
-    }
-  );
+  setCellStyle(worksheet, "A1", 11, true, "center", "center", false, false);
+  setCellStyle(worksheet, "G1", 11, true, "center", "center", false, false);
+  setCellStyle(worksheet, "A2", 11, true, "center", "center", false, false);
+  setCellStyle(worksheet, "G2", 11, true, "center", "center", false, false);
+  setCellStyle(worksheet, "A4", 16, true, "center", "center", false, false);
+  setCellStyle(worksheet, "A6", 11, false, "left", "center", false, false);
+  setCellStyle(worksheet, "C6", 11, true, "left", "center", false, false);
+  setCellStyle(worksheet, "A7", 11, false, "left", "center", false, false);
+  setCellStyle(worksheet, "C7", 11, true, "left", "center", false, false);
+  setCellStyle(worksheet, "A8", 11, false, "left", "center", false, false);
+  setCellStyle(worksheet, "C8", 11, true, "left", "center", false, false);
+  setCellStyle(worksheet, "A9", 11, false, "left", "center", false, false);
+  setCellStyle(worksheet, "C9", 11, true, "left", "center", false, false);
+  setCellStyle(worksheet, "A10", 11, false, "left", "center", false, false);
+  setCellStyle(worksheet, "C10", 11, true, "left", "center", false, false);
+  setCellStyle(worksheet, "A11", 11, false, "left", "center", false, false);
+  setCellStyle(worksheet, "C11", 11, true, "left", "center", false, false);
 
   const range = XLSX.utils.decode_range(worksheet["!ref"]!);
   worksheet["!merges"] = [];
@@ -493,8 +317,8 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 10 } });
       const cellRefPre = XLSX.utils.encode_cell({ r: row - 1, c: 0 });
       const cellRef = XLSX.utils.encode_cell({ r: row, c: 0 });
-      setCellStyle(cellRefPre, 11, true, "left", "center", true, false);
-      setCellStyle(cellRef, 11, true, "left", "center", true, false);
+      setCellStyle( worksheet, cellRefPre, 11, true, "left", "center", true, false);
+      setCellStyle(worksheet, cellRef, 11, true, "left", "center", true, false);
       continue;
     } else if (
       row === countClassLeader - 2 ||
@@ -510,9 +334,9 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
     for (let col = range.s.c; col <= range.e.c; col++) {
       const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
       if (worksheet[cellRef] && (col === 0 || col === 8 || col === 9)) {
-        setCellStyle(cellRef, 11, false, "center", "center", true, true);
+        setCellStyle(worksheet, cellRef, 11, false, "center", "center", true, true);
       } else {
-        setCellStyle(cellRef, 11, false, "left", "center", true, true);
+        setCellStyle(worksheet, cellRef, 11, false, "left", "center", true, true);
       }
       if (
         row - 1 === countDefaultInfo ||
@@ -520,7 +344,7 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
         row - 1 === countAssistant ||
         row - 1 === countQAEs
       ) {
-        setCellStyle(cellRef, 11, true, "center", "center", true, true);
+        setCellStyle(worksheet, cellRef, 11, true, "center", "center", true, true);
       }
       if (
         row === countClassLeader - 2 ||
@@ -528,7 +352,7 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
         row === countQAEs - 2 ||
         row === countActivities - 2
       ) {
-        setCellStyle(cellRef, 11, true, "center", "center", true, true);
+        setCellStyle(worksheet, cellRef, 11, true, "center", "center", true, true);
       }
     }
   }
@@ -548,7 +372,16 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
     2,
     "0"
   )}-${String(now.getMinutes()).padStart(2, "0")}`;
-  saveAs(blob, "Export-All-BM-" + formattedDate + ".xlsx");
+  saveAs(
+    blob,
+    "Export-All-BM-" +
+      `${detailUser?.userName}` +
+      "-" +
+      `${detailUser?.unitName}` +
+      "-" +
+      formattedDate +
+      ".xlsx"
+  );
 };
 
 export const handleExportForBM = async (
@@ -664,7 +497,7 @@ export const handleExportForBM = async (
           item.classCode,
           convertTimestampToDate(item.attendances),
           item.proof,
-          item.note,
+          item.note ?? "",
         ]),
         [
           "Tổng số tiết chuẩn",
@@ -727,7 +560,7 @@ export const handleExportForBM = async (
           "",
           convertTimestampToDate(item.attendances),
           item.proof,
-          item.note,
+          item.note ?? "",
         ]),
         [
           "Tổng số tiết chuẩn",
@@ -789,7 +622,7 @@ export const handleExportForBM = async (
           "",
           convertTimestampToDate(item.attendances),
           item.proof,
-          item.note,
+          item.note ?? "",
         ]),
         [
           "Tổng số tiết chuẩn",
@@ -848,9 +681,10 @@ export const handleExportForBM = async (
           "",
           item.standarNumber,
           "",
-          convertTimestampToDate(item.attendances),
+          // convertTimestampToDate(item.attendances),
+          "",
           item.proof,
-          item.note,
+          item.note ?? "",
         ]),
         [
           "Tổng số tiết chuẩn",
@@ -873,190 +707,24 @@ export const handleExportForBM = async (
     ...resultsDataArray,
     ...defaultFooterInfo,
   ]);
-  const setCellStyle = (
-    cell: string,
-    fontSize: number,
-    isBold: boolean,
-    hAlign: string,
-    vAlign: string,
-    wrapText: boolean,
-    hasBorder: boolean
-  ) => {
-    const style: any = {
-      font: {
-        name: "Times New Roman",
-        sz: fontSize,
-        bold: isBold,
-      },
-      alignment: {
-        wrapText: wrapText,
-        vertical: vAlign,
-        horizontal: hAlign,
-      },
-    };
-    if (hasBorder) {
-      style.border = {
-        top: { style: "thin" },
-        bottom: { style: "thin" },
-        left: { style: "thin" },
-        right: { style: "thin" },
-      };
-    }
-    if (worksheet[cell]) {
-      worksheet[cell].s = style;
-    }
-  };
-  const cellStyles = [
-    {
-      cell: "A1",
-      fontSize: 11,
-      isBold: true,
-      hAlign: "center",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "G1",
-      fontSize: 11,
-      isBold: true,
-      hAlign: "center",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "A2",
-      fontSize: 11,
-      isBold: false,
-      hAlign: "center",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "G2",
-      fontSize: 11,
-      isBold: true,
-      hAlign: "center",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "A4",
-      fontSize: 16,
-      isBold: true,
-      hAlign: "center",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "A5",
-      fontSize: 11,
-      isBold: true,
-      hAlign: "center",
-      vAlign: "center",
-      wrapText: true,
-      hasBorder: false,
-    },
-    {
-      cell: "A7",
-      fontSize: 11,
-      isBold: false,
-      hAlign: "left",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "C7",
-      fontSize: 11,
-      isBold: true,
-      hAlign: "left",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "A8",
-      fontSize: 11,
-      isBold: false,
-      hAlign: "left",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "C8",
-      fontSize: 11,
-      isBold: true,
-      hAlign: "left",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "A9",
-      fontSize: 11,
-      isBold: false,
-      hAlign: "left",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "C9",
-      fontSize: 11,
-      isBold: true,
-      hAlign: "left",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "A10",
-      fontSize: 11,
-      isBold: false,
-      hAlign: "left",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "C10",
-      fontSize: 11,
-      isBold: true,
-      hAlign: "left",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "A11",
-      fontSize: 11,
-      isBold: false,
-      hAlign: "left",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-    {
-      cell: "C11",
-      fontSize: 11,
-      isBold: true,
-      hAlign: "left",
-      vAlign: "center",
-      wrapText: false,
-      hasBorder: false,
-    },
-  ];
-  cellStyles.forEach(
-    ({ cell, fontSize, isBold, hAlign, vAlign, wrapText, hasBorder }) => {
-      setCellStyle(cell, fontSize, isBold, hAlign, vAlign, wrapText, hasBorder);
-    }
-  );
+
+  setCellStyle(worksheet, "A1", 11, true, "center", "center", false, false);
+  setCellStyle(worksheet, "G1", 11, true, "center", "center", false, false);
+  setCellStyle(worksheet, "A2", 11, true, "center", "center", false, false);
+  setCellStyle(worksheet, "G2", 11, true, "center", "center", false, false);
+  setCellStyle(worksheet, "A4", 16, true, "center", "center", false, false);
+  setCellStyle(worksheet, "A5", 11, true, "center", "center", true, false);
+  setCellStyle(worksheet, "A7", 11, false, "left", "center", false, false);
+  setCellStyle(worksheet, "C7", 11, true, "left", "center", false, false);
+  setCellStyle(worksheet, "A8", 11, false, "left", "center", false, false);
+  setCellStyle(worksheet, "C8", 11, true, "left", "center", false, false);
+  setCellStyle(worksheet, "A9", 11, false, "left", "center", false, false);
+  setCellStyle(worksheet, "C9", 11, true, "left", "center", false, false);
+  setCellStyle(worksheet, "A10", 11, false, "left", "center", false, false);
+  setCellStyle(worksheet, "C10", 11, true, "left", "center", false, false);
+  setCellStyle(worksheet, "A11", 11, false, "left", "center", false, false);
+  setCellStyle(worksheet, "C11", 11, true, "left", "center", false, false);
+
   worksheet["!pageSetup"] = {
     paperSize: 9,
     orientation: "landscape",
@@ -1116,10 +784,28 @@ export const handleExportForBM = async (
           row === defaultInfo.length + 1 ||
           row === range.e.r - defaultFooterInfo.length
         ) {
-          setCellStyle(cellRef, 11, true, "center", "center", true, true);
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            true,
+            "center",
+            "center",
+            true,
+            true
+          );
           continue;
         }
-        setCellStyle(cellRef, 11, false, "center", "center", true, true);
+        setCellStyle(
+          worksheet,
+          cellRef,
+          11,
+          false,
+          "center",
+          "center",
+          true,
+          true
+        );
       }
     }
   }
@@ -1143,13 +829,40 @@ export const handleExportForBM = async (
           row === defaultInfo.length + 1 ||
           row === range.e.r - defaultFooterInfo.length
         ) {
-          setCellStyle(cellRef, 11, true, "center", "center", true, true);
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            true,
+            "center",
+            "center",
+            true,
+            true
+          );
           continue;
         }
         if (col === 1 || col === 9 || col === 10) {
-          setCellStyle(cellRef, 11, false, "left", "center", true, true);
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            false,
+            "left",
+            "center",
+            true,
+            true
+          );
         } else {
-          setCellStyle(cellRef, 11, false, "center", "center", true, true);
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            false,
+            "center",
+            "center",
+            true,
+            true
+          );
         }
       }
     }
@@ -1175,13 +888,40 @@ export const handleExportForBM = async (
           row === defaultInfo.length + 1 ||
           row === range.e.r - defaultFooterInfo.length
         ) {
-          setCellStyle(cellRef, 11, true, "center", "center", true, true);
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            true,
+            "center",
+            "center",
+            true,
+            true
+          );
           continue;
         }
         if (col === 1 || col === 9 || col === 10) {
-          setCellStyle(cellRef, 11, false, "left", "center", true, true);
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            false,
+            "left",
+            "center",
+            true,
+            true
+          );
         } else {
-          setCellStyle(cellRef, 11, false, "center", "center", true, true);
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            false,
+            "center",
+            "center",
+            true,
+            true
+          );
         }
       }
     }
@@ -1206,13 +946,40 @@ export const handleExportForBM = async (
           row === defaultInfo.length + 1 ||
           row === range.e.r - defaultFooterInfo.length
         ) {
-          setCellStyle(cellRef, 11, true, "center", "center", true, true);
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            true,
+            "center",
+            "center",
+            true,
+            true
+          );
           continue;
         }
         if (col === 1 || col === 9 || col === 10) {
-          setCellStyle(cellRef, 11, false, "left", "center", true, true);
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            false,
+            "left",
+            "center",
+            true,
+            true
+          );
         } else {
-          setCellStyle(cellRef, 11, false, "center", "center", true, true);
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            false,
+            "center",
+            "center",
+            true,
+            true
+          );
         }
       }
     }
@@ -1232,9 +999,27 @@ export const handleExportForBM = async (
 
     for (let col = range.s.c; col <= range.e.c; col++) {
       const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-      setCellStyle(cellRef, 11, false, "left", "center", true, false);
+      setCellStyle(
+        worksheet,
+        cellRef,
+        11,
+        false,
+        "left",
+        "center",
+        true,
+        false
+      );
       if (row === range.e.r)
-        setCellStyle(cellRef, 11, true, "center", "center", true, false);
+        setCellStyle(
+          worksheet,
+          cellRef,
+          11,
+          true,
+          "center",
+          "center",
+          true,
+          false
+        );
       if (row === range.e.r - 4) {
         worksheet["!rows"] = [];
         worksheet["!rows"][range.e.r - 4] = { hpx: 35 };

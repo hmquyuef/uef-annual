@@ -73,7 +73,6 @@ const SearchMembers = () => {
       year
     );
     if (response) {
-      console.log("response :>> ", response);
       setDetailUser(response);
       setDataClassLeaders(response.classLeaders.items);
       setDataAssistants(response.assistants.items);
@@ -331,6 +330,11 @@ const SearchMembers = () => {
             }))}
             onChange={(value) => {
               setSelectedUnitKey(value);
+              setDetailUser(undefined);
+              setDataClassLeaders([]);
+              setDataAssistants([]);
+              setDataQAEs([]);
+              setDataActivities([]);
               getUsersHRMByUnitId(value);
             }}
           />
@@ -442,7 +446,13 @@ const SearchMembers = () => {
                     items={[
                       {
                         key: "1",
-                        label: `${String(detailUser.classLeaders.shortName).toUpperCase()} - ${String(detailUser.classLeaders.name).toUpperCase()} (${detailUser.classLeaders.totalItems} SỰ KIỆN)`,
+                        label: `${String(
+                          detailUser.classLeaders.shortName
+                        ).toUpperCase()} - ${String(
+                          detailUser.classLeaders.name
+                        ).toUpperCase()} (${
+                          detailUser.classLeaders.totalItems
+                        } SỰ KIỆN)`,
                         children: (
                           <>
                             <Table<Item>
@@ -504,7 +514,13 @@ const SearchMembers = () => {
                     items={[
                       {
                         key: "2",
-                        label: `${String(detailUser.assistants.shortName).toUpperCase()} - ${String(detailUser.assistants.name).toUpperCase()} (${detailUser.assistants.totalItems} SỰ KIỆN)`,
+                        label: `${String(
+                          detailUser.assistants.shortName
+                        ).toUpperCase()} - ${String(
+                          detailUser.assistants.name
+                        ).toUpperCase()} (${
+                          detailUser.assistants.totalItems
+                        } SỰ KIỆN)`,
                         children: (
                           <>
                             <Table<Item>
@@ -566,7 +582,13 @@ const SearchMembers = () => {
                     items={[
                       {
                         key: "3",
-                        label: `${String(detailUser.qAs.shortName).toUpperCase()} - ${String(detailUser.qAs.name).toUpperCase()} (${detailUser.qAs.totalItems} SỰ KIỆN)`,
+                        label: `${String(
+                          detailUser.qAs.shortName
+                        ).toUpperCase()} - ${String(
+                          detailUser.qAs.name
+                        ).toUpperCase()} (${
+                          detailUser.qAs.totalItems
+                        } SỰ KIỆN)`,
                         children: (
                           <>
                             <Table<Item>
@@ -628,7 +650,13 @@ const SearchMembers = () => {
                     items={[
                       {
                         key: "5",
-                        label: `${String(detailUser.activities.shortName).toUpperCase()} - ${String(detailUser.activities.name).toUpperCase()} (${detailUser.activities.totalItems} SỰ KIỆN)`,
+                        label: `${String(
+                          detailUser.activities.shortName
+                        ).toUpperCase()} - ${String(
+                          detailUser.activities.name
+                        ).toUpperCase()} (${
+                          detailUser.activities.totalItems
+                        } SỰ KIỆN)`,
                         children: (
                           <>
                             <Table<Item>

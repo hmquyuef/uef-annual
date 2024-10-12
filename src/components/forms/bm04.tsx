@@ -365,15 +365,15 @@ const BM04 = () => {
           item.userName,
           item.middleName,
           item.firstName,
-          item.unitName,
-          item.contents,
+          item.unitName ?? "",
+          item.contents ?? "",
           "",
           "",
           "",
           "",
           item.totalStudent,
           convertTimestampToDate(item.attendances),
-          item.note,
+          item.note ?? "",
         ]),
       ];
 
