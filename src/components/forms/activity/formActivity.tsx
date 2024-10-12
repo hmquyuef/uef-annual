@@ -250,8 +250,8 @@ const FormActivity: FC<FormActivityProps> = ({
       workloadTypeId: selectedWorkloadType,
       determinations: {
         number: deterNumber,
-        fromDate: deterFromDate / 1000,
-        entryDate: deterEntryDate / 1000,
+        fromDate: deterFromDate,
+        entryDate: deterEntryDate,
         file: {
           type: listPicture[0]?.type ?? "",
           path: listPicture[0]?.path ?? "",

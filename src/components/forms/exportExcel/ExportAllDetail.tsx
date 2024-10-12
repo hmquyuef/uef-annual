@@ -68,7 +68,7 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       "",
       item.standarNumber,
-      convertTimestampToDate(item.attendances),
+      convertTimestampToDate(item.attendances) ?? "",
       item.note ?? "",
     ]),
     [
@@ -115,7 +115,7 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       "",
       item.standarNumber,
-      convertTimestampToDate(item.attendances),
+      convertTimestampToDate(item.attendances) ?? "",
       item.note ?? "",
     ]),
     [
@@ -162,7 +162,7 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       "",
       item.standarNumber,
-      convertTimestampToDate(item.attendances),
+      convertTimestampToDate(item.attendances) ?? "",
       item.note ?? "",
     ]),
     [
@@ -317,7 +317,16 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 10 } });
       const cellRefPre = XLSX.utils.encode_cell({ r: row - 1, c: 0 });
       const cellRef = XLSX.utils.encode_cell({ r: row, c: 0 });
-      setCellStyle( worksheet, cellRefPre, 11, true, "left", "center", true, false);
+      setCellStyle(
+        worksheet,
+        cellRefPre,
+        11,
+        true,
+        "left",
+        "center",
+        true,
+        false
+      );
       setCellStyle(worksheet, cellRef, 11, true, "left", "center", true, false);
       continue;
     } else if (
@@ -334,9 +343,27 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
     for (let col = range.s.c; col <= range.e.c; col++) {
       const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
       if (worksheet[cellRef] && (col === 0 || col === 8 || col === 9)) {
-        setCellStyle(worksheet, cellRef, 11, false, "center", "center", true, true);
+        setCellStyle(
+          worksheet,
+          cellRef,
+          11,
+          false,
+          "center",
+          "center",
+          true,
+          true
+        );
       } else {
-        setCellStyle(worksheet, cellRef, 11, false, "left", "center", true, true);
+        setCellStyle(
+          worksheet,
+          cellRef,
+          11,
+          false,
+          "left",
+          "center",
+          true,
+          true
+        );
       }
       if (
         row - 1 === countDefaultInfo ||
@@ -344,7 +371,16 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
         row - 1 === countAssistant ||
         row - 1 === countQAEs
       ) {
-        setCellStyle(worksheet, cellRef, 11, true, "center", "center", true, true);
+        setCellStyle(
+          worksheet,
+          cellRef,
+          11,
+          true,
+          "center",
+          "center",
+          true,
+          true
+        );
       }
       if (
         row === countClassLeader - 2 ||
@@ -352,7 +388,16 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
         row === countQAEs - 2 ||
         row === countActivities - 2
       ) {
-        setCellStyle(worksheet, cellRef, 11, true, "center", "center", true, true);
+        setCellStyle(
+          worksheet,
+          cellRef,
+          11,
+          true,
+          "center",
+          "center",
+          true,
+          true
+        );
       }
     }
   }
@@ -424,11 +469,11 @@ export const handleExportForBM = async (
     ["TỔNG HỢP DANH SÁCH"],
     [`${response?.title}`],
     [""],
-    ["Họ và tên", "", `${response?.fullName}`],
-    ["Mã CB-GV-NV", "", `${response?.userName}`],
-    ["Học hàm/Học vị", "", ""],
-    ["Thâm niên công tác", "", ""],
-    ["Đơn vị", "", `${response?.unitName}`],
+    ["Họ và tên:", "", `${response?.fullName}`],
+    ["Mã CB-GV-NV:", "", `${response?.userName}`],
+    ["Học hàm/Học vị:", "", ""],
+    ["Thâm niên công tác:", "", ""],
+    ["Đơn vị:", "", `${response?.unitName}`],
   ];
   const defaultFooterInfo = [
     [""],
@@ -495,7 +540,7 @@ export const handleExportForBM = async (
           item.subject,
           item.course,
           item.classCode,
-          convertTimestampToDate(item.attendances),
+          convertTimestampToDate(item.attendances) ?? "",
           item.proof,
           item.note ?? "",
         ]),
@@ -513,7 +558,11 @@ export const handleExportForBM = async (
           "",
         ],
       ];
-      resultsDataArray = [...defaultInfo, ...dataArrayClassLeader];
+      resultsDataArray = [
+        ...[["BM01"]],
+        ...defaultInfo,
+        ...dataArrayClassLeader,
+      ];
       break;
     case "BM02":
       const exportBM02: ExportDetailForUser = {
@@ -558,7 +607,7 @@ export const handleExportForBM = async (
           item.semester,
           item.standarNumber,
           "",
-          convertTimestampToDate(item.attendances),
+          convertTimestampToDate(item.attendances) ?? "",
           item.proof,
           item.note ?? "",
         ]),
@@ -576,7 +625,7 @@ export const handleExportForBM = async (
           "",
         ],
       ];
-      resultsDataArray = [...defaultInfo, ...dataArrayAssistant];
+      resultsDataArray = [...[["BM02"]], ...defaultInfo, ...dataArrayAssistant];
       break;
     case "BM04":
       const exportBM04: ExportDetailForUser = {
@@ -620,7 +669,7 @@ export const handleExportForBM = async (
           "",
           item.standarNumber,
           "",
-          convertTimestampToDate(item.attendances),
+          convertTimestampToDate(item.attendances) ?? "",
           item.proof,
           item.note ?? "",
         ]),
@@ -631,14 +680,14 @@ export const handleExportForBM = async (
           "",
           "",
           "",
-          "",
           `${exportBM04?.totalStandarNumber as Number}`,
+          "",
           "",
           "",
           "",
         ],
       ];
-      resultsDataArray = [...defaultInfo, ...dataArrayQaes];
+      resultsDataArray = [...[["BM04"]], ...defaultInfo, ...dataArrayQaes];
       break;
     case "BM05":
       const exportBM05: ExportDetailForUser = {
@@ -700,22 +749,24 @@ export const handleExportForBM = async (
           "",
         ],
       ];
-      resultsDataArray = [...defaultInfo, ...dataArrayActivities];
+      resultsDataArray = [
+        ...[["BM05"]],
+        ...defaultInfo,
+        ...dataArrayActivities,
+      ];
       break;
   }
   const worksheet = XLSX.utils.aoa_to_sheet([
     ...resultsDataArray,
     ...defaultFooterInfo,
   ]);
-
-  setCellStyle(worksheet, "A1", 11, true, "center", "center", false, false);
-  setCellStyle(worksheet, "G1", 11, true, "center", "center", false, false);
+  setCellStyle(worksheet, "A1", 11, true, "right", "center", false, false);
   setCellStyle(worksheet, "A2", 11, true, "center", "center", false, false);
   setCellStyle(worksheet, "G2", 11, true, "center", "center", false, false);
-  setCellStyle(worksheet, "A4", 16, true, "center", "center", false, false);
-  setCellStyle(worksheet, "A5", 11, true, "center", "center", true, false);
-  setCellStyle(worksheet, "A7", 11, false, "left", "center", false, false);
-  setCellStyle(worksheet, "C7", 11, true, "left", "center", false, false);
+  setCellStyle(worksheet, "A3", 11, true, "center", "center", false, false);
+  setCellStyle(worksheet, "G3", 11, true, "center", "center", false, false);
+  setCellStyle(worksheet, "A5", 16, true, "center", "center", false, false);
+  setCellStyle(worksheet, "A6", 11, true, "center", "center", true, false);
   setCellStyle(worksheet, "A8", 11, false, "left", "center", false, false);
   setCellStyle(worksheet, "C8", 11, true, "left", "center", false, false);
   setCellStyle(worksheet, "A9", 11, false, "left", "center", false, false);
@@ -724,6 +775,8 @@ export const handleExportForBM = async (
   setCellStyle(worksheet, "C10", 11, true, "left", "center", false, false);
   setCellStyle(worksheet, "A11", 11, false, "left", "center", false, false);
   setCellStyle(worksheet, "C11", 11, true, "left", "center", false, false);
+  setCellStyle(worksheet, "A12", 11, false, "left", "center", false, false);
+  setCellStyle(worksheet, "C12", 11, true, "left", "center", false, false);
 
   worksheet["!pageSetup"] = {
     paperSize: 9,
@@ -738,8 +791,8 @@ export const handleExportForBM = async (
     right: 0.1,
     top: 0.1,
     bottom: 0.1,
-    header: 0,
-    footer: 0,
+    header: 0.1,
+    footer: 0.1,
   };
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
@@ -747,15 +800,14 @@ export const handleExportForBM = async (
   worksheet["!merges"] = [];
   const tempMerge: any[] = [];
   const defaultMerges = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } },
-    { s: { r: 0, c: 6 }, e: { r: 0, c: 10 } },
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 10 } },
     { s: { r: 1, c: 0 }, e: { r: 1, c: 4 } },
     { s: { r: 1, c: 6 }, e: { r: 1, c: 10 } },
-    { s: { r: 2, c: 0 }, e: { r: 2, c: 3 } },
-    { s: { r: 3, c: 0 }, e: { r: 3, c: 10 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 4 } },
+    { s: { r: 2, c: 6 }, e: { r: 2, c: 10 } },
+    { s: { r: 3, c: 0 }, e: { r: 3, c: 3 } },
     { s: { r: 4, c: 0 }, e: { r: 4, c: 10 } },
-    { s: { r: 5, c: 0 }, e: { r: 5, c: 1 } },
-    { s: { r: 5, c: 2 }, e: { r: 5, c: 4 } },
+    { s: { r: 5, c: 0 }, e: { r: 5, c: 10 } },
     { s: { r: 6, c: 0 }, e: { r: 6, c: 1 } },
     { s: { r: 6, c: 2 }, e: { r: 6, c: 4 } },
     { s: { r: 7, c: 0 }, e: { r: 7, c: 1 } },
@@ -766,6 +818,8 @@ export const handleExportForBM = async (
     { s: { r: 9, c: 2 }, e: { r: 9, c: 4 } },
     { s: { r: 10, c: 0 }, e: { r: 10, c: 1 } },
     { s: { r: 10, c: 2 }, e: { r: 10, c: 4 } },
+    { s: { r: 11, c: 0 }, e: { r: 11, c: 1 } },
+    { s: { r: 11, c: 2 }, e: { r: 11, c: 4 } },
   ];
 
   if (forms.toUpperCase() === "BM01") {
@@ -781,7 +835,7 @@ export const handleExportForBM = async (
       for (let col = range.s.c; col <= range.e.c; col++) {
         const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
         if (
-          row === defaultInfo.length + 1 ||
+          row === defaultInfo.length + 2 ||
           row === range.e.r - defaultFooterInfo.length
         ) {
           setCellStyle(
@@ -793,6 +847,19 @@ export const handleExportForBM = async (
             "center",
             true,
             true
+          );
+          continue;
+        }
+        if (row === defaultInfo.length + 1) {
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            false,
+            "center",
+            "center",
+            true,
+            false
           );
           continue;
         }
@@ -812,7 +879,7 @@ export const handleExportForBM = async (
 
   if (forms.toUpperCase() === "BM02") {
     for (
-      let row = defaultInfo.length + 1;
+      let row = defaultInfo.length + 2;
       row <= range.e.r - defaultFooterInfo.length;
       row++
     ) {
@@ -826,7 +893,7 @@ export const handleExportForBM = async (
       for (let col = range.s.c; col <= range.e.c; col++) {
         const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
         if (
-          row === defaultInfo.length + 1 ||
+          row === defaultInfo.length + 2 ||
           row === range.e.r - defaultFooterInfo.length
         ) {
           setCellStyle(
@@ -838,6 +905,19 @@ export const handleExportForBM = async (
             "center",
             true,
             true
+          );
+          continue;
+        }
+        if (row === defaultInfo.length + 1) {
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            false,
+            "center",
+            "center",
+            true,
+            false
           );
           continue;
         }
@@ -870,7 +950,7 @@ export const handleExportForBM = async (
 
   if (forms.toUpperCase() === "BM04") {
     for (
-      let row = defaultInfo.length + 1;
+      let row = defaultInfo.length + 2;
       row <= range.e.r - defaultFooterInfo.length;
       row++
     ) {
@@ -885,7 +965,7 @@ export const handleExportForBM = async (
       for (let col = range.s.c; col <= range.e.c; col++) {
         const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
         if (
-          row === defaultInfo.length + 1 ||
+          row === defaultInfo.length + 2 ||
           row === range.e.r - defaultFooterInfo.length
         ) {
           setCellStyle(
@@ -897,6 +977,19 @@ export const handleExportForBM = async (
             "center",
             true,
             true
+          );
+          continue;
+        }
+        if (row === defaultInfo.length + 1) {
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            false,
+            "center",
+            "center",
+            true,
+            false
           );
           continue;
         }
@@ -929,7 +1022,7 @@ export const handleExportForBM = async (
 
   if (forms.toUpperCase() === "BM05") {
     for (
-      let row = defaultInfo.length + 1;
+      let row = defaultInfo.length + 2;
       row <= range.e.r - defaultFooterInfo.length;
       row++
     ) {
@@ -943,7 +1036,7 @@ export const handleExportForBM = async (
       for (let col = range.s.c; col <= range.e.c; col++) {
         const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
         if (
-          row === defaultInfo.length + 1 ||
+          row === defaultInfo.length + 2 ||
           row === range.e.r - defaultFooterInfo.length
         ) {
           setCellStyle(
@@ -955,6 +1048,19 @@ export const handleExportForBM = async (
             "center",
             true,
             true
+          );
+          continue;
+        }
+        if (row === defaultInfo.length + 1) {
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            false,
+            "center",
+            "center",
+            true,
+            false
           );
           continue;
         }
@@ -1024,7 +1130,7 @@ export const handleExportForBM = async (
         worksheet["!rows"] = [];
         worksheet["!rows"][range.e.r - 4] = { hpx: 35 };
         if (forms.toUpperCase() === "BM05") {
-          worksheet["!rows"][4] = { hpx: 40 };
+          worksheet["!rows"][5] = { hpx: 40 };
         }
       }
     }

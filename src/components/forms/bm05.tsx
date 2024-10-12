@@ -427,7 +427,7 @@ const BM05 = () => {
           "- Việc quy đổi tiết chuẩn căn cứ theo Phụ lục III, Quyết định số 720/QĐ-UEF ngày 01 tháng 9 năm 2023.",
         ],
         [""],
-        ["", "LÃNH ĐẠO ĐƠN VỊ", "", "", "", "", "", "", "", "NGƯỜI LẬP"],
+        ["LÃNH ĐẠO ĐƠN VỊ", "", "", "", "", "", "", "", "", "NGƯỜI LẬP"],
       ];
 
       const dataArray = [
@@ -445,7 +445,7 @@ const BM05 = () => {
           "Minh chứng",
           "",
           "Ghi chú",
-        ], 
+        ],
         ...results.data.map((item, index) => [
           index + 1,
           item.userName,
@@ -461,6 +461,21 @@ const BM05 = () => {
           "",
           item.note ?? "",
         ]),
+        [
+          "TỔNG SỐ TIẾT CHUẨN",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          `${results.data.reduce((acc, x) => acc + x.standNumber, 0)}`,
+          "",
+          "",
+          "",
+        ],
       ];
 
       const combinedData = [...defaultInfo, ...dataArray];
@@ -521,13 +536,18 @@ const BM05 = () => {
 
       // Merge các ô từ A6 đến M6
       worksheet["!merges"] = [];
-      const temp = [];
+      const tempMerge = [];
       const range = XLSX.utils.decode_range(worksheet["!ref"]!);
-      for (let row = 7; row <= results.data.length + 7; row++) {
-        temp.push(
-          { s: { r: row, c: 5 }, e: { r: row, c: 8 } },
-          { s: { r: row, c: 10 }, e: { r: row, c: 11 } }
-        );
+      for (let row = 7; row <= results.data.length + 8; row++) {
+        if (row < results.data.length + 8) {
+          tempMerge.push(
+            { s: { r: row, c: 5 }, e: { r: row, c: 8 } },
+            { s: { r: row, c: 10 }, e: { r: row, c: 11 } }
+          );
+        } else {
+          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 8 } });
+          tempMerge.push({ s: { r: row, c: 10 }, e: { r: row, c: 11 } });
+        }
         worksheet["!rows"][row + 1] = { hpx: 45 };
         for (let col = range.s.c; col <= range.e.c; col++) {
           const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
@@ -562,6 +582,18 @@ const BM05 = () => {
               },
             };
           }
+          if (row === results.data.length + 8) {
+            setCellStyle(
+              worksheet,
+              cellRef,
+              11,
+              true,
+              "center",
+              "center",
+              true,
+              true
+            );
+          }
         }
       }
 
@@ -573,72 +605,47 @@ const BM05 = () => {
         { s: { r: 3, c: 0 }, e: { r: 3, c: 3 } },
         { s: { r: 4, c: 0 }, e: { r: 4, c: 12 } },
         { s: { r: 5, c: 0 }, e: { r: 5, c: 12 } },
-        {
-          s: { r: results.data.length + 15, c: 1 },
-          e: { r: results.data.length + 15, c: 2 },
-        },
-        {
-          s: { r: results.data.length + 15, c: 9 },
-          e: { r: results.data.length + 15, c: 10 },
-        },
       ];
+
       for (
-        let row = results.data.length + 8;
-        row < results.data.length + 14;
+        let row = range.e.r - defaultFooterInfo.length + 1;
+        row <= range.e.r;
         row++
       ) {
-        const cellRef = XLSX.utils.encode_cell({ r: row, c: 0 });
-        if (worksheet[cellRef]) {
-          worksheet[cellRef].s = {
-            font: {
-              name: "Times New Roman",
-              sz: 11,
-            },
-          };
+        if (row < range.e.r)
+          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 12 } });
+        else {
+          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 3 } });
+          tempMerge.push({ s: { r: row, c: 9 }, e: { r: row, c: 10 } });
+        }
+
+        for (let col = range.s.c; col <= range.e.c; col++) {
+          const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            false,
+            "left",
+            "center",
+            true,
+            false
+          );
+          if (row === range.e.r)
+            setCellStyle(
+              worksheet,
+              cellRef,
+              11,
+              true,
+              "center",
+              "center",
+              true,
+              false
+            );
         }
       }
-      const cellNote = XLSX.utils.encode_cell({
-        r: results.data.length + 9,
-        c: 0,
-      });
-      const cellHeadUnit = XLSX.utils.encode_cell({
-        r: results.data.length + 15,
-        c: 1,
-      });
-      const cellPersionCreate = XLSX.utils.encode_cell({
-        r: results.data.length + 15,
-        c: 9,
-      });
-      worksheet[`${cellNote}`].s = {
-        font: {
-          name: "Times New Roman",
-          sz: 11,
-          bold: true,
-        },
-      };
-      worksheet[`${cellHeadUnit}`].s = {
-        font: {
-          name: "Times New Roman",
-          sz: 11,
-          bold: true,
-        },
-        alignment: {
-          vertical: "center",
-          horizontal: "center",
-        },
-      };
-      worksheet[`${cellPersionCreate}`].s = {
-        font: {
-          name: "Times New Roman",
-          sz: 11,
-          bold: true,
-        },
-        alignment: {
-          vertical: "center",
-          horizontal: "center",
-        },
-      };
-      worksheet["!merges"].push(...defaultMerges, ...temp);
+
+      worksheet["!merges"].push(...defaultMerges, ...tempMerge);
       // Xuất file Excel
       const excelBuffer = XLSX.write(workbook, {
         bookType: "xlsx",
