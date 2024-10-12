@@ -309,7 +309,6 @@ const BM05 = () => {
     setIsOpen(true);
   };
   const handleSubmit = async (formData: Partial<AddUpdateActivityItem>) => {
-    console.log('formData :>> ', formData);
     try {
       if (mode === "edit" && selectedItem) {
         const updatedFormData: Partial<AddUpdateActivityItem> = {
@@ -718,7 +717,7 @@ const BM05 = () => {
             }))}
             value={selectedKeyUnit}
             onChange={(value) => {
-              console.log("value :>> ", value);
+              // console.log("value :>> ", value);
               setSelectedKeyUnit(value);
             }}
           />

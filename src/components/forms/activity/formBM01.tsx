@@ -82,8 +82,8 @@ const FormBM01: FC<FormBM01Props> = ({ onSubmit, initialData, mode }) => {
   }, []);
 
   useEffect(() => {
-    console.log('mode :>> ', mode);
-    console.log('initialData :>> ', initialData);
+    // console.log('mode :>> ', mode);
+    // console.log('initialData :>> ', initialData);
     const loadUsers = async () => {
       if (mode === "edit" && initialData !== undefined) {
         const units = await getListUnitsFromHrm();
