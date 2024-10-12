@@ -309,6 +309,7 @@ const BM05 = () => {
     setIsOpen(true);
   };
   const handleSubmit = async (formData: Partial<AddUpdateActivityItem>) => {
+    console.log('formData :>> ', formData);
     try {
       if (mode === "edit" && selectedItem) {
         const updatedFormData: Partial<AddUpdateActivityItem> = {

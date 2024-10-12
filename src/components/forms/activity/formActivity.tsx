@@ -250,8 +250,8 @@ const FormActivity: FC<FormActivityProps> = ({
       workloadTypeId: selectedWorkloadType,
       determinations: {
         number: deterNumber,
-        fromDate: deterFromDate,
-        entryDate: deterEntryDate,
+        fromDate: deterFromDate / 1000,
+        entryDate: deterEntryDate / 1000,
         file: {
           type: listPicture[0]?.type ?? "",
           path: listPicture[0]?.path ?? "",
@@ -338,18 +338,6 @@ const FormActivity: FC<FormActivityProps> = ({
             onChange={(e) => setDeterNumber(e.target.value)}
           />
         </div>
-        {/* <div className="grid grid-cols-5 gap-6">
-          <div className="w-full flex flex-col gap-1">
-            <p className="font-medium text-neutral-600">STT</p>
-            <InputNumber
-              min={0}
-              defaultValue={1}
-              value={stt}
-              onChange={(value) => setStt(value ?? 0)}
-              style={{ width: "100%" }}
-            />
-          </div>
-        </div> */}
         <div className="grid grid-cols-3 gap-6">
           <div className="flex flex-col gap-1">
             <p className="font-medium text-neutral-600">Ngày ký</p>
