@@ -68,6 +68,10 @@ const BM05 = () => {
   const [status, setStatus] = useState<
     "success" | "error" | "info" | "warning"
   >("success");
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 15,
+  });
   const getListActivities = async () => {
     const response = await getAllActivitiesByTypesId(
       "b46ee628-bfe3-4d27-a10b-9d0c47145613"
@@ -101,7 +105,10 @@ const BM05 = () => {
       title: "STT",
       dataIndex: "stt",
       key: "stt",
-      render: (_, __, index) => <p>{index + 1}</p>,
+      render: (_, __, index) => (
+        <p>{pagination.pageSize * (pagination.current - 1) + index + 1}</p>
+      ),
+      // render: (_, __, index) => <p>{index + 1}</p>,
       className: "text-center w-[20px]",
     },
     {
@@ -685,6 +692,12 @@ const BM05 = () => {
     }
   };
 
+  const handleTableChange = (pagination: PaginationProps) => {
+    setPagination({
+      current: pagination.current || 1,
+      pageSize: pagination.pageSize || 15,
+    });
+  };
   useEffect(() => {
     getListActivities();
     getAllUnitsFromHRM();
@@ -810,6 +823,7 @@ const BM05 = () => {
         rowHoverable
         size="small"
         pagination={{
+          ...pagination,
           total: data.length,
           showTotal: showTotal,
           showSizeChanger: true,
@@ -821,6 +835,7 @@ const BM05 = () => {
         columns={columns}
         dataSource={data}
         locale={{ emptyText: <Empty description="No Data"></Empty> }}
+        onChange={handleTableChange}
       />
     </div>
   );

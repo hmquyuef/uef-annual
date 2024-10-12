@@ -60,6 +60,10 @@ const BM01 = () => {
   const [status, setStatus] = useState<
     "success" | "error" | "info" | "warning"
   >("success");
+  const [pagination, setPagination] = useState({
+    current: 1, 
+    pageSize: 15,
+  });
   const getListClassLeaders = async () => {
     const response = await getAllClassLeaders();
     setClassLeaders(response);
@@ -580,7 +584,12 @@ const BM01 = () => {
       saveAs(blob, "BM01-" + formattedDate + ".xlsx");
     }
   };
-
+  const handleTableChange = (pagination: PaginationProps) => {
+    setPagination({
+      current: pagination.current || 1,
+      pageSize: pagination.pageSize || 15,
+    });
+  };
   useEffect(() => {
     getListClassLeaders();
   }, []);
@@ -686,6 +695,7 @@ const BM01 = () => {
         rowHoverable
         size="small"
         pagination={{
+          ...pagination,
           total: data.length,
           showTotal: showTotal,
           showSizeChanger: true,
@@ -697,6 +707,7 @@ const BM01 = () => {
         columns={columns}
         dataSource={data}
         locale={{ emptyText: <Empty description="No Data"></Empty> }}
+        onChange={handleTableChange}
       />
     </div>
   );
