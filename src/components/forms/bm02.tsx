@@ -10,7 +10,7 @@ import {
   postAddClassAssistant,
   putUpdateClassAssistant,
 } from "@/services/forms/assistantsServices";
-import { setCellStyle } from "@/utility/Utilities";
+import { convertTimestampToDate, setCellStyle } from "@/utility/Utilities";
 import {
   DeleteOutlined,
   FileExcelOutlined,
@@ -89,10 +89,10 @@ const BM02 = () => {
       className: "text-center w-[1rem]",
     },
     {
-      title: "Mã số CB-GV-NV",
+      title: "MÃ SỐ CB-GV-NV",
       dataIndex: "userName",
       key: "userName",
-      className: "w-[3rem]",
+      className: "w-[2rem]",
       render: (userName: string, record: ClassAssistantItem) => {
         return (
           <p
@@ -108,63 +108,71 @@ const BM02 = () => {
       },
     },
     {
-      title: "Họ và chữ lót",
+      title: "HỌ VÀ CHỮ LÓT",
       dataIndex: "middleName",
       key: "middleName",
       render: (middleName: string) => <p>{middleName}</p>,
       className: "w-[5rem]",
     },
     {
-      title: "Tên",
+      title: "TÊN",
       dataIndex: "firstName",
       key: "firstName",
       render: (firstName: string) => <p>{firstName}</p>,
       className: "text-center w-[3rem]",
     },
     {
-      title: "Đơn vị",
+      title: "ĐƠN VỊ",
       dataIndex: "unitName",
       key: "unitName",
       className: "text-center w-[5rem]",
       render: (unitName: string) => <p>{unitName}</p>,
     },
     {
-      title: "Tên công tác sư phạm đã thực hiện",
+      title: "TÊN CÔNG TÁC SƯ PHẠM ĐÃ THỰC HIỆN",
       dataIndex: "activityName",
       key: "activityName",
       render: (activityName: string) => <p>{activityName}</p>,
-      className: "text-center w-[5rem]",
+      className: "text-center w-[10rem]",
     },
     {
-      title: "Mã lớp",
+      title: "MÃ LỚP",
       dataIndex: "classCode",
       key: "classCode",
       render: (classCode: string) => <p>{classCode}</p>,
       className: "text-center w-[2rem]",
     },
     {
-      title: "Học kỳ",
+      title: "HỌC KỲ",
       dataIndex: "semester",
       key: "semester",
       render: (semester: string) => <p>{semester}</p>,
       className: "text-center w-[2rem]",
     },
     {
-      title: "Số tiết chuẩn được phê duyệt",
+      title: "SỐ TIẾT CHUẨN ĐƯỢC PHÊ DUYỆT",
       dataIndex: "standardNumber",
       key: "standardNumber",
-      className: "text-center w-[4rem]",
+      className: "text-center w-[5rem]",
       render: (standardNumber: string) => <p>{standardNumber}</p>,
     },
     {
-      title: "Minh chứng",
+      title: "THỜI GIAN THAM DỰ",
+      dataIndex: "attendances",
+      key: "attendances",
+      render: (attendances: number) =>
+        attendances ? convertTimestampToDate(attendances) : "",
+      className: "text-center w-[4rem]",
+    },
+    {
+      title: "MINH CHỨNG",
       dataIndex: "proof",
       key: "proof",
       render: (proof: string) => <p>{proof}</p>,
-      className: "w-[13rem]",
+      className: "w-[10rem]",
     },
     {
-      title: "Ghi chú",
+      title: "GHI CHÚ",
       dataIndex: "note",
       key: "note",
       render: (note: string) => <p>{note}</p>,

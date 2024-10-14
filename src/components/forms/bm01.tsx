@@ -10,10 +10,8 @@ import {
   postAddClassLeader,
   putUpdateClassLeader,
 } from "@/services/forms/classLeadersServices";
-import {
-  AddUpdateActivityItem
-} from "@/services/forms/formsServices";
-import { setCellStyle } from "@/utility/Utilities";
+import { AddUpdateActivityItem } from "@/services/forms/formsServices";
+import { convertTimestampToDate, setCellStyle } from "@/utility/Utilities";
 import {
   DeleteOutlined,
   FileExcelOutlined,
@@ -61,7 +59,7 @@ const BM01 = () => {
     "success" | "error" | "info" | "warning"
   >("success");
   const [pagination, setPagination] = useState({
-    current: 1, 
+    current: 1,
     pageSize: 15,
   });
   const getListClassLeaders = async () => {
@@ -91,7 +89,7 @@ const BM01 = () => {
       className: "text-center w-[1rem]",
     },
     {
-      title: "Mã số CB-GV-NV",
+      title: "MÃ SỐ CB-GV-NV",
       dataIndex: "userName",
       key: "userName",
       className: "w-[3rem]",
@@ -110,70 +108,78 @@ const BM01 = () => {
       },
     },
     {
-      title: "Họ và chữ lót",
+      title: "HỌ VÀ CHỮ LÓT",
       dataIndex: "middleName",
       key: "middleName",
       render: (middleName: string) => <p>{middleName}</p>,
       className: "w-[5rem]",
     },
     {
-      title: "Tên",
+      title: "TÊN",
       dataIndex: "firstName",
       key: "firstName",
       render: (firstName: string) => <p>{firstName}</p>,
       className: "text-center w-[3rem]",
     },
     {
-      title: "Đơn vị",
+      title: "ĐƠN VỊ",
       dataIndex: "unitName",
       key: "unitName",
       className: "text-center w-[5rem]",
       render: (unitName: string) => <p>{unitName}</p>,
     },
     {
-      title: "Học kỳ",
+      title: "HỌC KỲ",
       dataIndex: "semester",
       key: "semester",
       className: "text-center w-[3rem]",
       render: (semester: string) => <p>{semester}</p>,
     },
     {
-      title: "Số tiết chuẩn được phê duyệt",
+      title: "SỐ TIẾT CHUẨN ĐƯỢC PHÊ DUYỆT",
       dataIndex: "standardNumber",
       key: "standardNumber",
-      className: "text-center w-[4rem]",
+      className: "text-center w-[5rem]",
       render: (standardNumber: string) => <p>{standardNumber}</p>,
     },
     {
-      title: "Ngành",
+      title: "NGÀNH",
       dataIndex: "subject",
       key: "subject",
       render: (subject: string) => <p>{subject}</p>,
       className: "text-center w-[5rem]",
     },
     {
-      title: "Khóa",
+      title: "KHÓA",
       dataIndex: "course",
       key: "course",
       render: (course: string) => <p>{course}</p>,
       className: "text-center w-[2rem]",
     },
     {
-      title: "Mã lớp",
+      title: "MÃ LỚP",
       dataIndex: "classCode",
       key: "classCode",
       render: (classCode: string) => <p>{classCode}</p>,
       className: "text-center w-[2rem]",
     },
     {
-      title: "Minh chứng",
+      title: "THỜI GIAN THAM DỰ",
+      dataIndex: "attendances",
+      key: "attendances",
+      render: (attendances: number) =>
+        attendances ? convertTimestampToDate(attendances) : "",
+      className: "text-center w-[4rem]",
+    },
+    {
+      title: "MINH CHỨNG",
       dataIndex: "proof",
       key: "proof",
       render: (proof: string) => <p>{proof}</p>,
-      className: "w-[13rem]",
+      className: "w-[10rem]",
     },
     {
-      title: "Ghi chú",
+      title: "GHI CHÚ",
       dataIndex: "note",
       key: "note",
       render: (note: string) => <p>{note}</p>,

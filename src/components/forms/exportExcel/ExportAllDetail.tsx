@@ -68,7 +68,9 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       "",
       item.standarNumber,
-      convertTimestampToDate(item.attendances) ?? "",
+      convertTimestampToDate(item.attendances) === "01/01/1970"
+        ? ""
+        : convertTimestampToDate(item.attendances),
       item.note ?? "",
     ]),
     [
@@ -115,7 +117,9 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       "",
       item.standarNumber,
-      convertTimestampToDate(item.attendances) ?? "",
+      convertTimestampToDate(item.attendances) === "01/01/1970"
+        ? ""
+        : convertTimestampToDate(item.attendances),
       item.note ?? "",
     ]),
     [
@@ -162,7 +166,9 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       "",
       item.standarNumber,
-      convertTimestampToDate(item.attendances) ?? "",
+      convertTimestampToDate(item.attendances) === "01/01/1970"
+        ? ""
+        : convertTimestampToDate(item.attendances),
       item.note ?? "",
     ]),
     [
@@ -540,7 +546,9 @@ export const handleExportForBM = async (
           item.subject,
           item.course,
           item.classCode,
-          convertTimestampToDate(item.attendances) ?? "",
+          convertTimestampToDate(item.attendances) === "01/01/1970"
+            ? ""
+            : convertTimestampToDate(item.attendances),
           item.proof,
           item.note ?? "",
         ]),
@@ -607,7 +615,9 @@ export const handleExportForBM = async (
           item.semester,
           item.standarNumber,
           "",
-          convertTimestampToDate(item.attendances) ?? "",
+          convertTimestampToDate(item.attendances) === "01/01/1970"
+            ? ""
+            : convertTimestampToDate(item.attendances),
           item.proof,
           item.note ?? "",
         ]),
@@ -669,7 +679,9 @@ export const handleExportForBM = async (
           "",
           item.standarNumber,
           "",
-          convertTimestampToDate(item.attendances) ?? "",
+          convertTimestampToDate(item.attendances) === "01/01/1970"
+            ? ""
+            : convertTimestampToDate(item.attendances),
           item.proof,
           item.note ?? "",
         ]),

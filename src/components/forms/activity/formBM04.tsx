@@ -29,11 +29,9 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
   );
   const [defaultUsers, setDefaultUsers] = useState<UsersFromHRM[]>([]);
   const [selectedKey, setSelectedKey] = useState<Key | null>(null);
-  const [semester, setSemester] = useState<string>("");
   const [standardValues, setStandardValues] = useState<number>(0);
   const [contents, setContents] = useState<string>("");
   const [totalStudent, setTotalStudent] = useState<number | 0>(0);
-  const [classCode, setClassCode] = useState<string>("");
   const [attendances, setAttendances] = useState<number>(0);
   const [evidence, setEvidence] = useState<string>("");
   const [description, setDescription] = useState<string>("");
@@ -65,10 +63,11 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
       firstName:
         mode !== "edit" ? tempUser?.firstName : defaultUsers[0].firstName,
       unitName: mode !== "edit" ? tempUser?.unitName : defaultUsers[0].unitName,
-      contents: classCode,
+      contents: contents,
       totalStudent: totalStudent,
       standardNumber: standardValues,
       attendances: attendances,
+      proof: evidence,
       note: description,
     };
     onSubmit(formData);
@@ -103,7 +102,6 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
       } else {
         setDefaultUnits([]);
         setDefaultUsers([]);
-        setSemester("");
         setContents("");
         setTotalStudent(0);
         setStandardValues(0);
@@ -193,22 +191,12 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
             />
           </div>
         </div>
-      </div>
-      <div className="grid grid-cols-2 gap-6 mb-4">
         <div className="flex flex-col gap-1">
-          <p className="font-medium text-neutral-600">Minh chứng</p>
-          <TextArea
-            autoSize
-            value={evidence}
-            onChange={(e) => setEvidence(e.target.value)}
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <p className="font-medium text-neutral-600">Ngày ký</p>
+          <p className="font-medium text-neutral-600">Thời gian tham dự</p>
           <DatePicker
             placeholder="dd/mm/yyyy"
             format={"DD/MM/YYYY"}
-            value={attendances ? moment(attendances) : null}
+            value={attendances ? moment(attendances * 1000) : null}
             onChange={(date) => {
               if (date) {
                 const timestamp = date.valueOf();
@@ -219,6 +207,14 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
             }}
           />
         </div>
+      </div>
+      <div className="flex flex-col gap-1 mb-4">
+        <p className="font-medium text-neutral-600">Minh chứng</p>
+        <TextArea
+          autoSize
+          value={evidence}
+          onChange={(e) => setEvidence(e.target.value)}
+        />
       </div>
       <div className="flex flex-col gap-1 mb-4">
         <p className="font-medium text-neutral-600">Ghi chú</p>

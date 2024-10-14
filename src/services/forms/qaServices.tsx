@@ -25,6 +25,7 @@ export interface AddUpdateQAItem {
   totalStudent: number;
   standardNumber: number;
   attendances: number;
+  proof: string;
   note: string;
 }
 

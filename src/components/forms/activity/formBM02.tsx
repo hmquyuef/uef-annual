@@ -215,11 +215,11 @@ const FormBM02: FC<FormBM02Props> = ({ onSubmit, initialData, mode }) => {
           />
         </div>
         <div className="flex flex-col gap-1">
-          <p className="font-medium text-neutral-600">Ngày ký</p>
+          <p className="font-medium text-neutral-600">Thời gian tham dự</p>
           <DatePicker
             placeholder="dd/mm/yyyy"
             format={"DD/MM/YYYY"}
-            value={attendances ? moment(attendances) : null}
+            value={attendances ? moment(attendances * 1000) : null}
             onChange={(date) => {
               if (date) {
                 const timestamp = date.valueOf();
