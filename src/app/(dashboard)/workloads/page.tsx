@@ -49,13 +49,14 @@ const Workloads = () => {
     setTypes(response.items);
   };
 
-  const handleEllipsis = (type: WorkloadTypeItem) => {
+  const handleEllipsis = async (type: WorkloadTypeItem) => {
     setIsOk(true);
     setMode("edit");
     setIsAccess(true);
     setSelectedItem(type);
     setTitle(`Chỉnh sửa ${type.name}`);
     setIsOpened(true);
+    await getListWorkloadTypes();
   };
 
   const actions = (type: WorkloadTypeItem): React.ReactNode[] => [
@@ -145,6 +146,7 @@ const Workloads = () => {
           item.roles.map((role) => role.name)
         );
         setUserRole(roles[0]);
+        setEmailUser(email);
       };
       getRolesUser();
     }
