@@ -24,6 +24,7 @@ import {
   Input,
   MenuProps,
   PaginationProps,
+  Select,
   Table,
   TableColumnsType,
   Tooltip,
@@ -36,6 +37,10 @@ import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
 import FormBM02 from "./activity/formBM02";
 import FromUpload from "./activity/formUpload";
+import {
+  getListUnitsFromHrm,
+  UnitHRMItem,
+} from "@/services/units/unitsServices";
 
 type SearchProps = GetProps<typeof Input.Search>;
 const { Search } = Input;
@@ -53,13 +58,16 @@ const BM02 = () => {
   const [selectedItem, setSelectedItem] = useState<
     Partial<AddUpdateClassAssistantItem> | undefined
   >(undefined);
+  const [units, setUnits] = useState<UnitHRMItem[]>([]);
+  const [selectedKeyUnit, setSelectedKeyUnit] = useState<Key | null>(null);
   const [message, setMessage] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<
     "success" | "error" | "info" | "warning"
   >("success");
+
   const [pagination, setPagination] = useState({
-    current: 1, 
+    current: 1,
     pageSize: 15,
   });
   const getListClassAssistants = async () => {
@@ -68,6 +76,11 @@ const BM02 = () => {
     setData(response.items);
     setNotificationOpen(false);
   };
+  const getAllUnitsFromHRM = async () => {
+    const response = await getListUnitsFromHrm();
+    setUnits(response.model);
+  };
+
   const onSelectChange = (newSelectedRowKeys: Key[]) => {
     setSelectedRowKeys(newSelectedRowKeys);
   };
@@ -396,7 +409,7 @@ const BM02 = () => {
           "",
           "",
           item.classCode ?? "",
-          item.semester ?? "" ,
+          item.semester ?? "",
           item.standardNumber,
           item.proof ?? "",
           item.note ?? "",
@@ -595,56 +608,78 @@ const BM02 = () => {
   };
   useEffect(() => {
     getListClassAssistants();
+    getAllUnitsFromHRM();
   }, []);
   return (
     <div>
-      <div className="grid grid-cols-4 mb-4">
-        <Search
-          placeholder="Tìm kiếm hoạt động..."
-          onSearch={onSearch}
-          size="large"
-          enterButton
-        />
-        <div className="col-span-3">
-          <div className="flex justify-end gap-4">
-            <Tooltip placement="top" title="Xuất dữ liệu Excel" arrow={true}>
-              <Button
-                icon={<FileExcelOutlined />}
-                onClick={handleExportExcel}
-                size="large"
-                iconPosition="start"
-                style={{
-                  backgroundColor: "#52c41a",
-                  borderColor: "#52c41a",
-                  color: "#fff",
-                }}
-              >
-                Xuất Excel
-              </Button>
-            </Tooltip>
-            <Tooltip placement="top" title={"Thêm mới hoạt động"} arrow={true}>
-              <Dropdown menu={{ items }} trigger={["click"]}>
-                <a onClick={(e) => e.preventDefault()}>
-                  <Button type="primary" icon={<PlusOutlined />} size={"large"}>
-                    Thêm hoạt động
-                  </Button>
-                </a>
-              </Dropdown>
-            </Tooltip>
-            <Tooltip placement="top" title="Xóa các thông tin" arrow={true}>
-              <Button
-                type="dashed"
-                disabled={selectedRowKeys.length === 0}
-                danger
-                onClick={handleDelete}
-                icon={<DeleteOutlined />}
-                size="large"
-                iconPosition="start"
-              >
-                Xóa
-              </Button>
-            </Tooltip>
-          </div>
+      <div className="grid grid-cols-2 mb-4">
+        <div className="grid grid-cols-2 gap-4">
+          <Search
+            placeholder="Tìm kiếm hoạt động..."
+            onSearch={onSearch}
+            size="large"
+            enterButton
+          />
+          <Select
+            showSearch
+            allowClear
+            size="large"
+            placeholder="Tất cả đơn vị"
+            optionFilterProp="label"
+            filterSort={(optionA, optionB) =>
+              (optionA?.label ?? "")
+                .toLowerCase()
+                .localeCompare((optionB?.label ?? "").toLowerCase())
+            }
+            options={units.map((unit) => ({
+              value: unit.id,
+              label: unit.name,
+            }))}
+            value={selectedKeyUnit}
+            onChange={(value) => {
+              // console.log("value :>> ", value);
+              setSelectedKeyUnit(value);
+            }}
+          />
+        </div>
+        <div className="flex justify-end gap-4">
+          <Tooltip placement="top" title="Xuất dữ liệu Excel" arrow={true}>
+            <Button
+              icon={<FileExcelOutlined />}
+              onClick={handleExportExcel}
+              size="large"
+              iconPosition="start"
+              style={{
+                backgroundColor: "#52c41a",
+                borderColor: "#52c41a",
+                color: "#fff",
+              }}
+            >
+              Xuất Excel
+            </Button>
+          </Tooltip>
+          <Tooltip placement="top" title={"Thêm mới hoạt động"} arrow={true}>
+            <Dropdown menu={{ items }} trigger={["click"]}>
+              <a onClick={(e) => e.preventDefault()}>
+                <Button type="primary" icon={<PlusOutlined />} size={"large"}>
+                  Thêm hoạt động
+                </Button>
+              </a>
+            </Dropdown>
+          </Tooltip>
+          <Tooltip placement="top" title="Xóa các thông tin" arrow={true}>
+            <Button
+              type="dashed"
+              disabled={selectedRowKeys.length === 0}
+              danger
+              onClick={handleDelete}
+              icon={<DeleteOutlined />}
+              size="large"
+              iconPosition="start"
+            >
+              Xóa
+            </Button>
+          </Tooltip>
         </div>
         <CustomNotification
           message={message}
