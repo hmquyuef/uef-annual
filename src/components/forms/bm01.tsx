@@ -724,6 +724,7 @@ const BM01 = () => {
         <CustomModal
           isOpen={isOpen}
           isOk={true}
+          width="900px"
           title={
             mode === "edit"
               ? "Cập nhật thông tin chủ nhiệm lớp"

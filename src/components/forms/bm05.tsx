@@ -840,6 +840,7 @@ const BM05 = () => {
         <CustomModal
           isOpen={isOpen}
           isOk={true}
+          width="95vw"
           title={mode === "edit" ? "Cập nhật hoạt động" : "Thêm mới hoạt động"}
           onOk={() => {
             const formElement = document.querySelector("form");

@@ -720,6 +720,7 @@ const BM02 = () => {
         <CustomModal
           isOpen={isOpen}
           isOk={true}
+          width="900px"
           title={
             mode === "edit"
               ? "Cập nhật thông tin cố vấn học tập, trợ giảng, phụ đạo"

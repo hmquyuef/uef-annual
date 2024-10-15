@@ -253,6 +253,7 @@ const Workloads = () => {
       <CustomModal
         isOpen={isOpened}
         title={title}
+        width="900px"
         isOk={isOk}
         onOk={() => {
           const formElement = document.querySelector("form");

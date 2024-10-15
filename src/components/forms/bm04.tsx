@@ -697,6 +697,7 @@ const BM04 = () => {
         <CustomModal
           isOpen={isOpen}
           isOk={true}
+          width="900px"
           title={
             mode === "edit"
               ? "Cập nhật thông tin tham gia hỏi vấn đáp Tiếng Anh đầu vào"
