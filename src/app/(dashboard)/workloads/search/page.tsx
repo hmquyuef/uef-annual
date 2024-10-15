@@ -26,6 +26,8 @@ import {
   Breadcrumb,
   Button,
   Collapse,
+  ConfigProvider,
+  DatePicker,
   Divider,
   Dropdown,
   Empty,
@@ -36,7 +38,11 @@ import {
   Tooltip,
 } from "antd";
 import { Key, useEffect, useState } from "react";
-
+import locale from "antd/locale/vi_VN";
+import dayjs from "dayjs";
+import "dayjs/locale/vi";
+dayjs.locale("vi");
+const { RangePicker } = DatePicker;
 const SearchMembers = () => {
   const [selectedKey, setSelectedKey] = useState<Key | null>(null);
   const [usersHRM, setUsersHRM] = useState<UsersFromHRMResponse | undefined>(
@@ -51,13 +57,19 @@ const SearchMembers = () => {
   const [dataAssistants, setDataAssistants] = useState<Item[]>([]);
   const [dataQAEs, setDataQAEs] = useState<Item[]>([]);
   const [dataActivities, setDataActivities] = useState<Item[]>([]);
+  const [startDate, setStartDate] = useState<number | null>(null);
+  const [endDate, setEndDate] = useState<number | null>(null);
   const getUsersHRM = async () => {
     const response = await getUsersFromHRM();
     setUsersHRM(response);
   };
 
   const handleSearch = async () => {
-    const response = await getDataExportByUserName(selectedUserName, year);
+    const response = await getDataExportByUserName(
+      selectedUserName,
+      startDate,
+      endDate
+    );
     if (response) {
       setDetailUser(response);
       setDataClassLeaders(response.classLeaders.items);
@@ -88,7 +100,9 @@ const SearchMembers = () => {
           key: "2-1",
           label: (
             <p
-              onClick={() => handleExportForBM(selectedUserName, year, "BM01")}
+              onClick={() =>
+                handleExportForBM(selectedUserName, startDate, endDate, "BM01")
+              }
             >
               BM01 - Chủ nhiệm lớp
             </p>
@@ -98,7 +112,9 @@ const SearchMembers = () => {
           key: "2-2",
           label: (
             <p
-              onClick={() => handleExportForBM(selectedUserName, year, "BM02")}
+              onClick={() =>
+                handleExportForBM(selectedUserName, startDate, endDate, "BM02")
+              }
             >
               BM02 - Cố vấn học tập, trợ giảng, phụ đạo
             </p>
@@ -108,7 +124,9 @@ const SearchMembers = () => {
           key: "2-4",
           label: (
             <p
-              onClick={() => handleExportForBM(selectedUserName, year, "BM04")}
+              onClick={() =>
+                handleExportForBM(selectedUserName, startDate, endDate, "BM04")
+              }
             >
               BM04 - Tham gia hỏi vấn đáp Tiếng Anh
             </p>
@@ -118,7 +136,9 @@ const SearchMembers = () => {
           key: "2-5",
           label: (
             <p
-              onClick={() => handleExportForBM(selectedUserName, year, "BM05")}
+              onClick={() =>
+                handleExportForBM(selectedUserName, startDate, endDate, "BM05")
+              }
             >
               BM05 - Các hoạt động khác được BGH phê duyệt
             </p>
@@ -310,7 +330,7 @@ const SearchMembers = () => {
       </div>
       <div className="grid grid-cols-4 gap-6 mb-4">
         <div className="w-full flex flex-col gap-2">
-          <p className="font-medium text-neutral-600 text-sm">Mã số CB-GV-NV</p>
+          <p className="font-medium text-neutral-500 text-sm">MÃ SỐ CB-GV-NV</p>
           <Select
             showSearch
             placeholder="Tìm kiếm CB-GV-NV"
@@ -332,28 +352,33 @@ const SearchMembers = () => {
             }}
           />
         </div>
-        <div className="grid grid-cols-2 gap-6">
-          <div className="flex flex-col gap-2">
-            <p className="font-medium text-neutral-600 text-sm">Năm học</p>
-            <Select
-              showSearch
-              optionFilterProp="label"
-              filterSort={(optionA, optionB) =>
-                (optionA?.label ?? "")
-                  .toLowerCase()
-                  .localeCompare((optionB?.label ?? "").toLowerCase())
-              }
-              options={[
-                {
-                  value: "2024",
-                  label: "2024-2025",
-                },
-              ]}
-              value={year || "2024"}
-              onChange={(value) => {
-                setYear(value);
-              }}
-            />
+        <div className="grid grid-cols-3 gap-6">
+          <div className="col-span-2 flex flex-col gap-2">
+            <p className="font-medium text-neutral-500 text-sm">
+              THỜI GIAN SỰ KIỆN
+            </p>
+            <ConfigProvider locale={locale}>
+              <RangePicker
+                placeholder={["Từ ngày", "Đến ngày"]}
+                format={"DD/MM/YYYY"}
+                onChange={(dates, dateStrings) => {
+                  const [startDate, endDate] = dateStrings;
+                  const startTimestamp = startDate
+                    ? new Date(
+                        startDate.split("/").reverse().join("-")
+                      ).valueOf() / 1000
+                    : null;
+                  const endTimestamp = endDate
+                    ? new Date(
+                        endDate.split("/").reverse().join("-")
+                      ).valueOf() / 1000
+                    : null;
+                  setStartDate(startTimestamp);
+                  setEndDate(endTimestamp);
+                }}
+                className="col-span-2"
+              />
+            </ConfigProvider>
           </div>
           <div className="flex items-end">
             <Button

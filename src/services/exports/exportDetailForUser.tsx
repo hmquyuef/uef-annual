@@ -79,46 +79,29 @@ export interface ResultItemForBM05 {
   note: string;
 }
 
-// export async function getDataExportByUserName(
-//   unitId: string,
-//   userName: string,
-//   year: string
-// ): Promise<DetailUserItem> {
-//   const response = await apiClient.get<DetailUserItem>(
-//     `api/export/${unitId}/${userName}/${year}`
-//   );
-//   return response.data;
-// }
-
 export async function getDataExportByUserName(
   userName: string,
-  year: string
+  startDate: number | null,
+  endDate: number | null
 ): Promise<DetailUserItem> {
-  const response = await apiClient.get<DetailUserItem>(
-    `api/export/${userName}/${year}`
-  );
+  let url = `api/export/${userName}`;
+  if (startDate !== null && endDate !== null) {
+    url += `?startDate=${startDate}&endDate=${endDate}`;
+  }
+  const response = await apiClient.get<DetailUserItem>(url);
   return response.data;
 }
 
-// export async function getDataExportByUserNameWithForms(
-//   unitId: string,
-//   userName: string,
-//   year: string,
-//   forms:string
-// ): Promise<ExportDetailForUser> {
-//   const response = await apiClient.get<ExportDetailForUser>(
-//     `api/export/${unitId}/${userName}/${year}/${forms}`
-//   );
-//   return response.data;
-// }
-
 export async function getDataExportByUserNameWithForms(
   userName: string,
-  year: string,
-  forms:string
+  startDate: number | null,
+  endDate: number | null,
+  forms: string
 ): Promise<ExportDetailForUser> {
-  const response = await apiClient.get<ExportDetailForUser>(
-    `api/export/${userName}/${year}/${forms}`
-  );
+  let url = `api/export/${userName}/${forms}`;
+  if (startDate !== null && endDate !== null) {
+    url += `?startDate=${startDate}&endDate=${endDate}`;
+  }
+  const response = await apiClient.get<ExportDetailForUser>(url);
   return response.data;
 }

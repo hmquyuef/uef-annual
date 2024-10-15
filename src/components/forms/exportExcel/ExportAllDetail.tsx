@@ -437,12 +437,14 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
 
 export const handleExportForBM = async (
   userName: string,
-  year: string,
+  startDate: number | null,
+  endDate: number | null,
   forms: string
 ) => {
   const response = await getDataExportByUserNameWithForms(
     userName,
-    year,
+    startDate,
+    endDate,
     forms
   );
   if (response === null) {

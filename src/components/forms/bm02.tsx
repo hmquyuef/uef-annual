@@ -18,6 +18,8 @@ import {
 } from "@ant-design/icons";
 import {
   Button,
+  ConfigProvider,
+  DatePicker,
   Dropdown,
   Empty,
   GetProps,
@@ -42,8 +44,14 @@ import {
   UnitHRMItem,
 } from "@/services/units/unitsServices";
 
+import locale from "antd/locale/vi_VN";
+import dayjs from "dayjs";
+import "dayjs/locale/vi";
+dayjs.locale("vi");
+
 type SearchProps = GetProps<typeof Input.Search>;
 const { Search } = Input;
+const { RangePicker } = DatePicker;
 
 const BM02 = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
@@ -65,7 +73,8 @@ const BM02 = () => {
   const [status, setStatus] = useState<
     "success" | "error" | "info" | "warning"
   >("success");
-
+  const [startDate, setStartDate] = useState<number | null>(null);
+  const [endDate, setEndDate] = useState<number | null>(null);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 15,
@@ -612,32 +621,58 @@ const BM02 = () => {
   }, []);
   return (
     <div>
-      <div className="grid grid-cols-2 mb-4">
-        <div className="grid grid-cols-2 gap-4">
-          <Search
-            placeholder="Tìm kiếm hoạt động..."
-            onSearch={onSearch}
-            enterButton
-          />
-          <Select
-            showSearch
-            allowClear
-            placeholder="Tất cả đơn vị"
-            optionFilterProp="label"
-            filterSort={(optionA, optionB) =>
-              (optionA?.label ?? "")
-                .toLowerCase()
-                .localeCompare((optionB?.label ?? "").toLowerCase())
-            }
-            options={units.map((unit) => ({
-              value: unit.id,
-              label: unit.name,
-            }))}
-            value={selectedKeyUnit}
-            onChange={(value) => {
-              setSelectedKeyUnit(value);
-            }}
-          />
+      <div className="grid grid-cols-3 mb-4">
+        <div className="col-span-2">
+          <div className="grid grid-cols-3 gap-4">
+            <Search
+              placeholder="Tìm kiếm hoạt động..."
+              onSearch={onSearch}
+              enterButton
+            />
+            <Select
+              showSearch
+              allowClear
+              placeholder="Tất cả đơn vị"
+              optionFilterProp="label"
+              filterSort={(optionA, optionB) =>
+                (optionA?.label ?? "")
+                  .toLowerCase()
+                  .localeCompare((optionB?.label ?? "").toLowerCase())
+              }
+              options={units.map((unit) => ({
+                value: unit.id,
+                label: unit.name,
+              }))}
+              value={selectedKeyUnit}
+              onChange={(value) => {
+                setSelectedKeyUnit(value);
+              }}
+            />
+            <div className="grid grid-cols-3 gap-4">
+              <ConfigProvider locale={locale}>
+                <RangePicker
+                  placeholder={["Từ ngày", "Đến ngày"]}
+                  format={"DD/MM/YYYY"}
+                  onChange={(dates, dateStrings) => {
+                    const [startDate, endDate] = dateStrings;
+                    const startTimestamp = startDate
+                      ? new Date(
+                          startDate.split("/").reverse().join("-")
+                        ).valueOf() / 1000
+                      : null;
+                    const endTimestamp = endDate
+                      ? new Date(
+                          endDate.split("/").reverse().join("-")
+                        ).valueOf() / 1000
+                      : null;
+                    setStartDate(startTimestamp);
+                    setEndDate(endTimestamp);
+                  }}
+                  className="col-span-2"
+                />
+              </ConfigProvider>
+            </div>
+          </div>
         </div>
         <div className="flex justify-end gap-4">
           <Tooltip placement="top" title="Xuất dữ liệu Excel" arrow={true}>

@@ -20,10 +20,11 @@ import {
 import {
   CloseCircleOutlined,
   CloudUploadOutlined,
-  MinusCircleOutlined
+  MinusCircleOutlined,
 } from "@ant-design/icons";
 import {
   Button,
+  ConfigProvider,
   DatePicker,
   Input,
   InputNumber,
@@ -36,7 +37,10 @@ import moment from "moment";
 import Link from "next/link";
 import { FC, FormEvent, Key, useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
-
+import locale from "antd/locale/vi_VN";
+import dayjs from "dayjs";
+import "dayjs/locale/vi";
+dayjs.locale("vi");
 interface FormActivityProps {
   onSubmit: (formData: Partial<AddUpdateActivityItem>) => void;
   initialData?: Partial<AddUpdateActivityItem>;
@@ -302,7 +306,6 @@ const FormActivity: FC<FormActivityProps> = ({
         if (initialData.determinations?.file.type === "") setIsUploaded(false);
         setDocumentNumber(initialData.documentNumber || "");
       } else {
-        // Lấy ngày ngày giờ hiện tại theo định dạng dd/MM/yyyy và convert sang timestamp
         const formattedDate = moment(new Date()).format("DD/MM/YYYY");
         const timestamp = moment(formattedDate, "DD/MM/YYYY").valueOf();
         setDeterEntryDate(timestamp);
@@ -337,20 +340,24 @@ const FormActivity: FC<FormActivityProps> = ({
         </div>
         <div className="grid grid-cols-2 gap-6">
           <div className="flex flex-col gap-1">
-            <p className="font-medium text-neutral-600">Ngày lập TTr/KH/QĐ</p>
-            <DatePicker
-              placeholder="dd/mm/yyyy"
-              format={"DD/MM/YYYY"}
-              value={deterFromDate ? moment(deterFromDate) : null}
-              onChange={(date) => {
-                if (date) {
-                  const timestamp = date.valueOf();
-                  setDeterFromDate(timestamp);
-                } else {
-                  setDeterFromDate(0);
-                }
-              }}
-            />
+            <p className="font-medium text-neutral-600">
+              Ngày lập <span className="text-red-500">(*)</span>
+            </p>
+            <ConfigProvider locale={locale}>
+              <DatePicker
+                placeholder="dd/mm/yyyy"
+                format={"DD/MM/YYYY"}
+                value={deterFromDate ? moment(deterFromDate) : null}
+                onChange={(date) => {
+                  if (date) {
+                    const timestamp = date.valueOf();
+                    setDeterFromDate(timestamp);
+                  } else {
+                    setDeterFromDate(0);
+                  }
+                }}
+              />
+            </ConfigProvider>
           </div>
           <div className="flex flex-col gap-1">
             <p className="font-medium text-neutral-600">Số VBHC</p>
