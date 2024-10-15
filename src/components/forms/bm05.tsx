@@ -1,12 +1,12 @@
 "use client";
 
-import { getDataExportById } from "@/services/exports/exportsServices";
+import { getDataExportByUnitCode } from "@/services/exports/exportsServices";
 import {
   ActivityInput,
   ActivityItem,
   AddUpdateActivityItem,
   deleteActivities,
-  getAllActivitiesByTypesId,
+  getAllActivities,
   ImportActivities,
   postAddActivity,
   putUpdateActivity,
@@ -21,6 +21,7 @@ import {
   CloseOutlined,
   DeleteOutlined,
   FileExcelOutlined,
+  PlusCircleOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
 import {
@@ -73,9 +74,7 @@ const BM05 = () => {
     pageSize: 15,
   });
   const getListActivities = async () => {
-    const response = await getAllActivitiesByTypesId(
-      "b46ee628-bfe3-4d27-a10b-9d0c47145613"
-    );
+    const response = await getAllActivities();
     setActivities(response.items);
     setData(response.items);
     setNotificationOpen(false);
@@ -108,15 +107,12 @@ const BM05 = () => {
       render: (_, __, index) => (
         <p>{pagination.pageSize * (pagination.current - 1) + index + 1}</p>
       ),
-      // render: (_, __, index) => <p>{index + 1}</p>,
       className: "text-center w-[20px]",
     },
     {
       title: "TÊN HOẠT ĐỘNG ĐÃ THỰC HIỆN",
       dataIndex: "name",
       key: "name",
-      onFilter: (value, record) => record.name.includes(value as string),
-      filterSearch: true,
       className: "max-w-24",
       render: (name: string, record: ActivityItem) => {
         const path = record.determinations?.file?.path;
@@ -136,6 +132,15 @@ const BM05 = () => {
       },
     },
     {
+      title: "SỐ TTr/KH/QĐ",
+      dataIndex: ["determinations", "number"],
+      key: "number",
+      className: "w-[9rem]",
+      render: (number: string) => {
+        return <p className="text-center">{number}</p>;
+      },
+    },
+    {
       title: "ĐƠN VỊ",
       dataIndex: ["participants", 0, "unitName"],
       key: "unitName",
@@ -144,7 +149,7 @@ const BM05 = () => {
           .toString()
           .localeCompare(b.participants[0]?.unitName.toString()),
       render: (unitName: string) => <p>{unitName}</p>,
-      className: "text-center w-[7rem]",
+      className: "text-center w-[6rem]",
     },
     {
       title: "NGÀY KÝ",
@@ -230,7 +235,7 @@ const BM05 = () => {
           Thêm mới
         </p>
       ),
-      icon: <PlusOutlined />,
+      icon: <PlusCircleOutlined />,
       style: { color: "#1890ff" },
     },
     {
@@ -265,7 +270,10 @@ const BM05 = () => {
     const filteredData = activities.filter((item) => {
       const matchesNameOrDocument =
         item.name.toLowerCase().includes(value.toLowerCase()) ||
-        item.documentNumber.toLowerCase().includes(value.toLowerCase());
+        item.documentNumber.toLowerCase().includes(value.toLowerCase()) ||
+        item.determinations.number
+          .toLocaleLowerCase()
+          .includes(value.toLocaleLowerCase());
       const matchesUnit = selectedUnit
         ? item.participants[0]?.unitName
             .toString()
@@ -385,10 +393,7 @@ const BM05 = () => {
 
   const handleExportExcel = async () => {
     const unit = units.find((unit) => unit.id === selectedKeyUnit);
-    const results = await getDataExportById(
-      "b46ee628-bfe3-4d27-a10b-9d0c47145613",
-      unit?.code ?? null
-    );
+    const results = await getDataExportByUnitCode(unit?.code ?? null);
     if (results) {
       const defaultInfo = [
         ["", "", "", "", "", "", "", "", "", "", "", "", "BM-05"],
@@ -710,13 +715,13 @@ const BM05 = () => {
           <Search
             placeholder="Tìm kiếm hoạt động..."
             onSearch={onSearch}
-            size="large"
+            // size="large"
             enterButton
           />
           <Select
             showSearch
             allowClear
-            size="large"
+            // size="large"
             placeholder="Tất cả đơn vị"
             optionFilterProp="label"
             filterSort={(optionA, optionB) =>
@@ -740,7 +745,7 @@ const BM05 = () => {
             <Button
               icon={<FileExcelOutlined />}
               onClick={handleExportExcel}
-              size="large"
+              // size="large"
               iconPosition="start"
               style={{
                 backgroundColor: "#52c41a",
@@ -754,7 +759,11 @@ const BM05 = () => {
           <Tooltip placement="top" title={"Thêm mới hoạt động"} arrow={true}>
             <Dropdown menu={{ items }} trigger={["click"]}>
               <a onClick={(e) => e.preventDefault()}>
-                <Button type="primary" icon={<PlusOutlined />} size={"large"}>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  // size={"large"}
+                >
                   Thêm hoạt động
                 </Button>
               </a>
@@ -767,7 +776,7 @@ const BM05 = () => {
               danger
               onClick={handleDelete}
               icon={<DeleteOutlined />}
-              size="large"
+              // size="large"
               iconPosition="start"
             >
               Xóa

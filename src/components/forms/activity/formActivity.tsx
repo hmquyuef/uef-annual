@@ -50,9 +50,7 @@ const FormActivity: FC<FormActivityProps> = ({
   mode,
   numberActivity,
 }) => {
-  const selectedWorkloadType = "b46ee628-bfe3-4d27-a10b-9d0c47145613";
   const { TextArea } = Input;
-  const [stt, setStt] = useState<number>(0);
   const [documentNumber, setDocumentNumber] = useState<string>("");
   const [name, setName] = useState("");
   const [deterNumber, setDeterNumber] = useState("");
@@ -245,9 +243,7 @@ const FormActivity: FC<FormActivityProps> = ({
     e.preventDefault();
     const formData: Partial<AddUpdateActivityItem> = {
       id: initialData?.id || "",
-      stt: stt,
       name: name,
-      workloadTypeId: selectedWorkloadType,
       determinations: {
         number: deterNumber,
         fromDate: deterFromDate / 1000,
@@ -280,7 +276,6 @@ const FormActivity: FC<FormActivityProps> = ({
   useEffect(() => {
     const loadUsers = async () => {
       if (mode === "edit" && initialData !== undefined) {
-        setStt(initialData.stt || 0);
         setName(initialData.name || "");
         setDeterNumber(initialData.determinations?.number || "");
         setDeterEntryDate(
@@ -307,10 +302,12 @@ const FormActivity: FC<FormActivityProps> = ({
         if (initialData.determinations?.file.type === "") setIsUploaded(false);
         setDocumentNumber(initialData.documentNumber || "");
       } else {
-        setStt(Number(numberActivity) + 1);
+        // Lấy ngày ngày giờ hiện tại theo định dạng dd/MM/yyyy và convert sang timestamp
+        const formattedDate = moment(new Date()).format("DD/MM/YYYY");
+        const timestamp = moment(formattedDate, "DD/MM/YYYY").valueOf();
+        setDeterEntryDate(timestamp);
         setName("");
         setDeterNumber("");
-        setDeterEntryDate(0);
         setDeterFromDate(0);
         setTableUsers([]);
         setListPicture([]);
@@ -338,9 +335,9 @@ const FormActivity: FC<FormActivityProps> = ({
             onChange={(e) => setDeterNumber(e.target.value)}
           />
         </div>
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 gap-6">
           <div className="flex flex-col gap-1">
-            <p className="font-medium text-neutral-600">Ngày ký</p>
+            <p className="font-medium text-neutral-600">Ngày lập TTr/KH/QĐ</p>
             <DatePicker
               placeholder="dd/mm/yyyy"
               format={"DD/MM/YYYY"}
@@ -351,22 +348,6 @@ const FormActivity: FC<FormActivityProps> = ({
                   setDeterFromDate(timestamp);
                 } else {
                   setDeterFromDate(0);
-                }
-              }}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <p className="font-medium text-neutral-600">Ngày nhập</p>
-            <DatePicker
-              placeholder="dd/mm/yyyy"
-              format={"DD/MM/YYYY"}
-              value={deterEntryDate ? moment(deterEntryDate) : null}
-              onChange={(date) => {
-                if (date) {
-                  const timestamp = date.valueOf();
-                  setDeterEntryDate(timestamp);
-                } else {
-                  setDeterEntryDate(0);
                 }
               }}
             />
@@ -390,7 +371,6 @@ const FormActivity: FC<FormActivityProps> = ({
           onChange={(e) => setName(e.target.value)}
         />
       </div>
-
       <div className="grid grid-cols-6 gap-6 mb-4">
         <div className="col-span-3 flex flex-col gap-1">
           <p className="font-medium text-neutral-600">Đơn vị</p>

@@ -227,11 +227,11 @@ const FormBM01: FC<FormBM01Props> = ({ onSubmit, initialData, mode }) => {
           <DatePicker
             placeholder="dd/mm/yyyy"
             format={"DD/MM/YYYY"}
-            value={attendances ? moment(attendances * 1000) : null}
+            value={attendances ? moment(attendances) : null}
             onChange={(date) => {
               if (date) {
                 const timestamp = date.valueOf();
-                setAttendances(timestamp / 1000);
+                setAttendances(timestamp);
               } else {
                 setAttendances(0);
               }

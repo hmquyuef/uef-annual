@@ -79,25 +79,46 @@ export interface ResultItemForBM05 {
   note: string;
 }
 
+// export async function getDataExportByUserName(
+//   unitId: string,
+//   userName: string,
+//   year: string
+// ): Promise<DetailUserItem> {
+//   const response = await apiClient.get<DetailUserItem>(
+//     `api/export/${unitId}/${userName}/${year}`
+//   );
+//   return response.data;
+// }
+
 export async function getDataExportByUserName(
-  unitId: string,
   userName: string,
   year: string
 ): Promise<DetailUserItem> {
   const response = await apiClient.get<DetailUserItem>(
-    `api/export/${unitId}/${userName}/${year}`
+    `api/export/${userName}/${year}`
   );
   return response.data;
 }
 
+// export async function getDataExportByUserNameWithForms(
+//   unitId: string,
+//   userName: string,
+//   year: string,
+//   forms:string
+// ): Promise<ExportDetailForUser> {
+//   const response = await apiClient.get<ExportDetailForUser>(
+//     `api/export/${unitId}/${userName}/${year}/${forms}`
+//   );
+//   return response.data;
+// }
+
 export async function getDataExportByUserNameWithForms(
-  unitId: string,
   userName: string,
   year: string,
   forms:string
 ): Promise<ExportDetailForUser> {
   const response = await apiClient.get<ExportDetailForUser>(
-    `api/export/${unitId}/${userName}/${year}/${forms}`
+    `api/export/${userName}/${year}/${forms}`
   );
   return response.data;
 }

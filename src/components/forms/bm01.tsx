@@ -619,13 +619,11 @@ const BM01 = () => {
           <Search
             placeholder="Tìm kiếm hoạt động..."
             onSearch={onSearch}
-            size="large"
             enterButton
           />
           <Select
             showSearch
             allowClear
-            size="large"
             placeholder="Tất cả đơn vị"
             optionFilterProp="label"
             filterSort={(optionA, optionB) =>
@@ -649,7 +647,6 @@ const BM01 = () => {
             <Button
               icon={<FileExcelOutlined />}
               onClick={handleExportExcel}
-              size="large"
               iconPosition="start"
               style={{
                 backgroundColor: "#52c41a",
@@ -663,7 +660,7 @@ const BM01 = () => {
           <Tooltip placement="top" title={"Thêm mới hoạt động"} arrow={true}>
             <Dropdown menu={{ items }} trigger={["click"]}>
               <a onClick={(e) => e.preventDefault()}>
-                <Button type="primary" icon={<PlusOutlined />} size={"large"}>
+                <Button type="primary" icon={<PlusOutlined />}>
                   Thêm hoạt động
                 </Button>
               </a>
@@ -676,7 +673,6 @@ const BM01 = () => {
               danger
               onClick={handleDelete}
               icon={<DeleteOutlined />}
-              size="large"
               iconPosition="start"
             >
               Xóa

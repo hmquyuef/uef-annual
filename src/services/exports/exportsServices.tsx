@@ -17,8 +17,8 @@ export interface ExportResponse {
     data: DataExport[];
 }
 
-export async function getDataExportById(id: string, code: string|null): Promise<ExportResponse> {
-    let url = code !== null ? `api/export/${id}?unitCode=${code}` : `api/export/${id}`;
+export async function getDataExportByUnitCode(code: string|null): Promise<ExportResponse> {
+    let url = code !== null ? `api/export?unitCode=${code}` : `api/export`;
     const response = await apiClient.get<ExportResponse>(url);
     return response.data;
 }

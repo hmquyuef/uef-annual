@@ -10,11 +10,7 @@ import {
   Item,
 } from "@/services/exports/exportDetailForUser";
 import {
-  getListUnitsFromHrm,
-  UnitHRMItem,
-} from "@/services/units/unitsServices";
-import {
-  getUsersFromHRMbyId,
+  getUsersFromHRM,
   UsersFromHRMResponse,
 } from "@/services/users/usersServices";
 import { convertTimestampToDate } from "@/utility/Utilities";
@@ -43,11 +39,9 @@ import { Key, useEffect, useState } from "react";
 
 const SearchMembers = () => {
   const [selectedKey, setSelectedKey] = useState<Key | null>(null);
-  const [unitsHRM, setUnitsHRM] = useState<UnitHRMItem[]>([]);
   const [usersHRM, setUsersHRM] = useState<UsersFromHRMResponse | undefined>(
     undefined
   );
-  const [selectedUnitKey, setSelectedUnitKey] = useState<Key | null>(null);
   const [selectedUserName, setSelectedUserName] = useState("");
   const [year, setYear] = useState("2024");
   const [detailUser, setDetailUser] = useState<DetailUserItem | undefined>(
@@ -57,21 +51,13 @@ const SearchMembers = () => {
   const [dataAssistants, setDataAssistants] = useState<Item[]>([]);
   const [dataQAEs, setDataQAEs] = useState<Item[]>([]);
   const [dataActivities, setDataActivities] = useState<Item[]>([]);
-  const getListUnisHRM = async () => {
-    const response = await getListUnitsFromHrm();
-    setUnitsHRM(response.model);
-  };
-  const getUsersHRMByUnitId = async (unitId: string) => {
-    const response = await getUsersFromHRMbyId(unitId);
+  const getUsersHRM = async () => {
+    const response = await getUsersFromHRM();
     setUsersHRM(response);
   };
 
   const handleSearch = async () => {
-    const response = await getDataExportByUserName(
-      selectedUnitKey as string,
-      selectedUserName,
-      year
-    );
+    const response = await getDataExportByUserName(selectedUserName, year);
     if (response) {
       setDetailUser(response);
       setDataClassLeaders(response.classLeaders.items);
@@ -102,14 +88,7 @@ const SearchMembers = () => {
           key: "2-1",
           label: (
             <p
-              onClick={() =>
-                handleExportForBM(
-                  selectedUnitKey as string,
-                  selectedUserName,
-                  year,
-                  "BM01"
-                )
-              }
+              onClick={() => handleExportForBM(selectedUserName, year, "BM01")}
             >
               BM01 - Chủ nhiệm lớp
             </p>
@@ -119,14 +98,7 @@ const SearchMembers = () => {
           key: "2-2",
           label: (
             <p
-              onClick={() =>
-                handleExportForBM(
-                  selectedUnitKey as string,
-                  selectedUserName,
-                  year,
-                  "BM02"
-                )
-              }
+              onClick={() => handleExportForBM(selectedUserName, year, "BM02")}
             >
               BM02 - Cố vấn học tập, trợ giảng, phụ đạo
             </p>
@@ -136,14 +108,7 @@ const SearchMembers = () => {
           key: "2-4",
           label: (
             <p
-              onClick={() =>
-                handleExportForBM(
-                  selectedUnitKey as string,
-                  selectedUserName,
-                  year,
-                  "BM04"
-                )
-              }
+              onClick={() => handleExportForBM(selectedUserName, year, "BM04")}
             >
               BM04 - Tham gia hỏi vấn đáp Tiếng Anh
             </p>
@@ -153,14 +118,7 @@ const SearchMembers = () => {
           key: "2-5",
           label: (
             <p
-              onClick={() =>
-                handleExportForBM(
-                  selectedUnitKey as string,
-                  selectedUserName,
-                  year,
-                  "BM05"
-                )
-              }
+              onClick={() => handleExportForBM(selectedUserName, year, "BM05")}
             >
               BM05 - Các hoạt động khác được BGH phê duyệt
             </p>
@@ -322,7 +280,7 @@ const SearchMembers = () => {
   ];
 
   useEffect(() => {
-    getListUnisHRM();
+    getUsersHRM();
   }, []);
 
   return (
@@ -352,33 +310,7 @@ const SearchMembers = () => {
       </div>
       <div className="grid grid-cols-4 gap-6 mb-4">
         <div className="w-full flex flex-col gap-2">
-          <p className="font-medium text-neutral-600 text-sm">Đơn vị</p>
-          <Select
-            showSearch
-            placeholder="Chọn đơn vị"
-            optionFilterProp="label"
-            filterSort={(optionA, optionB) =>
-              (optionA?.label ?? "")
-                .toLowerCase()
-                .localeCompare((optionB?.label ?? "").toLowerCase())
-            }
-            options={unitsHRM.map((unit) => ({
-              value: unit.id,
-              label: unit.name,
-            }))}
-            onChange={(value) => {
-              setSelectedUnitKey(value);
-              setDetailUser(undefined);
-              setDataClassLeaders([]);
-              setDataAssistants([]);
-              setDataQAEs([]);
-              setDataActivities([]);
-              getUsersHRMByUnitId(value);
-            }}
-          />
-        </div>
-        <div className="w-full flex flex-col gap-2">
-          <p className="font-medium text-neutral-600 text-sm">Mã CB-GV-NV</p>
+          <p className="font-medium text-neutral-600 text-sm">Mã số CB-GV-NV</p>
           <Select
             showSearch
             placeholder="Tìm kiếm CB-GV-NV"
@@ -478,19 +410,21 @@ const SearchMembers = () => {
                   <Collapse
                     key={Math.random().toString(36).substr(2, 9)}
                     collapsible="header"
-                    defaultActiveKey={["1"]}
                     className="mb-4"
                     expandIconPosition="end"
                     items={[
                       {
                         key: "1",
-                        label: <strong>{String(
-                          detailUser.classLeaders.shortName
-                        ).toUpperCase()} - {String(
-                          detailUser.classLeaders.name
-                        ).toUpperCase()} ({
-                          detailUser.classLeaders.totalItems
-                        } SỰ KIỆN)</strong>,
+                        label: (
+                          <strong>
+                            {String(
+                              detailUser.classLeaders.shortName
+                            ).toUpperCase()}{" "}
+                            -{" "}
+                            {String(detailUser.classLeaders.name).toUpperCase()}{" "}
+                            ({detailUser.classLeaders.totalItems} SỰ KIỆN)
+                          </strong>
+                        ),
                         children: (
                           <>
                             <Table<Item>
