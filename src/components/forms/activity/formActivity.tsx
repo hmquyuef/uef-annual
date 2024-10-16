@@ -627,7 +627,7 @@ const FormActivity: FC<FormActivityProps> = ({
                   }
                   error={
                     <div
-                      className="h-full flex flex-col items-center justify-center"
+                      className="flex flex-col items-center justify-center"
                       style={{
                         maxHeight:
                           (document.querySelector("form")?.clientHeight || 0) -
@@ -644,7 +644,6 @@ const FormActivity: FC<FormActivityProps> = ({
                       <p>Không tìm thấy tệp tin phù hợp</p>
                     </div>
                   }
-                  className={"h-fit"}
                 >
                   {Array.from(new Array(numPages), (_, index) => (
                     <Page
