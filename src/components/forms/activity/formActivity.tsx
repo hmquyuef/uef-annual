@@ -626,7 +626,15 @@ const FormActivity: FC<FormActivityProps> = ({
                     </div>
                   }
                   error={
-                    <div className="h-full flex flex-col items-center justify-center">
+                    <div
+                      className="h-full flex flex-col items-center justify-center"
+                      style={{
+                        maxHeight:
+                          (document.querySelector("form")?.clientHeight || 0) -
+                          44 +
+                          "px",
+                      }}
+                    >
                       <img
                         src="/review.svg"
                         width={"100px"}
@@ -645,36 +653,6 @@ const FormActivity: FC<FormActivityProps> = ({
                       scale={scale}
                     />
                   ))}
-                  {/* <div className="absolute top-14 right-11 z-10 flex flex-col justify-end gap-2 p-2">
-                    <Tooltip title="Phóng to" placement="left">
-                      <Button
-                        type="primary"
-                        shape="circle"
-                        icon={<ZoomInOutlined />}
-                        onClick={() => setScale((prevScale) => prevScale + 0.1)}
-                      />
-                    </Tooltip>
-                    <Tooltip title="Thu nhỏ" placement="left">
-                      <Button
-                        type="primary"
-                        shape="circle"
-                        icon={<ZoomOutOutlined />}
-                        onClick={() =>
-                          setScale((prevScale) =>
-                            Math.max(prevScale - 0.1, 0.1)
-                          )
-                        }
-                      />
-                    </Tooltip>
-                    <Tooltip title="Đóng" placement="left">
-                      <Button
-                        type="primary"
-                        shape="circle"
-                        icon={<CloseOutlined />}
-                        onClick={() => setShowPDF(!showPDF)}
-                      />
-                    </Tooltip>
-                  </div> */}
                 </Document>
               </div>
             </>
