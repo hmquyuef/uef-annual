@@ -833,7 +833,7 @@ const BM05 = () => {
         <CustomModal
           isOpen={isOpen}
           isOk={true}
-          width={isShowPdf ? "95vw" : ""}
+          width={isShowPdf ? "80vw" : ""}
           title={mode === "edit" ? "Cập nhật hoạt động" : "Thêm mới hoạt động"}
           onOk={() => {
             const formElement = document.querySelector("form");

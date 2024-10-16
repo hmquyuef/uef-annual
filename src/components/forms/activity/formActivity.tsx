@@ -34,6 +34,7 @@ import {
   Select,
   Table,
   TableColumnsType,
+  Tag,
   Tooltip,
 } from "antd";
 import moment from "moment";
@@ -179,10 +180,10 @@ const FormActivity: FC<FormActivityProps> = ({
               )
             );
           }}
-          style={{ width: "100%" }}
+          style={{ width: "70%" }}
         />
       ),
-      className: "w-[70px] text-center",
+      className: "w-[110px] text-center",
     },
     {
       title: "GHI CHÚ",
@@ -357,12 +358,12 @@ const FormActivity: FC<FormActivityProps> = ({
 
   return (
     <div
-      className={`grid ${showPDF ? "grid-cols-2 gap-6 " : "grid-cols-1"} mb-4`}
+      className={`grid ${showPDF ? "grid-cols-2 gap-6 " : "grid-cols-1"} mb-2`}
     >
       <form onSubmit={handleSubmit}>
-        <hr className="mt-1 mb-3" />
-        <div className="grid grid-cols-2 gap-6 mb-4">
-          <div className="flex flex-col gap-1">
+        <hr className="mt-1 mb-2" />
+        <div className="grid grid-cols-2 gap-6 mb-2">
+          <div className="flex flex-col gap-[2px]">
             <p className="font-medium text-neutral-600">
               Số Tờ trình/Kế hoạch/Quyết định{" "}
               <span className="text-red-500">(*)</span>
@@ -373,7 +374,7 @@ const FormActivity: FC<FormActivityProps> = ({
             />
           </div>
           <div className="grid grid-cols-2 gap-6">
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-[2px]">
               <p className="font-medium text-neutral-600">
                 Ngày lập <span className="text-red-500">(*)</span>
               </p>
@@ -393,7 +394,7 @@ const FormActivity: FC<FormActivityProps> = ({
                 />
               </ConfigProvider>
             </div>
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-[2px]">
               <p className="font-medium text-neutral-600">Số VBHC</p>
               <Input
                 value={documentNumber}
@@ -402,7 +403,7 @@ const FormActivity: FC<FormActivityProps> = ({
             </div>
           </div>
         </div>
-        <div className="flex flex-col gap-1 mb-4">
+        <div className="flex flex-col gap-[2px] mb-2">
           <p className="font-medium text-neutral-600">
             Tên hoạt động đã thực hiện <span className="text-red-500">(*)</span>
           </p>
@@ -412,8 +413,8 @@ const FormActivity: FC<FormActivityProps> = ({
             onChange={(e) => setName(e.target.value)}
           />
         </div>
-        <div className="grid grid-cols-6 gap-6 mb-4">
-          <div className="col-span-3 flex flex-col gap-1">
+        <div className="grid grid-cols-6 gap-6 mb-2">
+          <div className="col-span-3 flex flex-col gap-[2px]">
             <p className="font-medium text-neutral-600">Đơn vị</p>
             <Select
               showSearch
@@ -434,7 +435,7 @@ const FormActivity: FC<FormActivityProps> = ({
               }}
             />
           </div>
-          <div className="col-span-3 flex flex-col gap-1">
+          <div className="col-span-3 flex flex-col gap-[2px]">
             <p className="font-medium text-neutral-600">Tìm mã CB-GV-NV</p>
             <Select
               showSearch
@@ -459,7 +460,7 @@ const FormActivity: FC<FormActivityProps> = ({
         </div>
         {tableUsers && tableUsers.length > 0 && (
           <>
-            <div className="flex flex-col gap-1 mb-4">
+            <div className="flex flex-col gap-[2px] mb-2">
               <p className="font-medium text-neutral-600">
                 Danh sách nhân sự tham gia
               </p>
@@ -477,7 +478,7 @@ const FormActivity: FC<FormActivityProps> = ({
             </div>
           </>
         )}
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-[2px]">
           <p className="font-medium text-neutral-600">Minh chứng</p>
           <div
             {...getRootProps()}
@@ -486,13 +487,7 @@ const FormActivity: FC<FormActivityProps> = ({
             <input {...getInputProps()} />
             {!isUploaded ? (
               <>
-                <img
-                  src="/upload.svg"
-                  width={40}
-                  height={40}
-                  loading="lazy"
-                  alt="upload"
-                />
+                <img src="/upload.svg" width={50} loading="lazy" alt="upload" />
                 <p className="text-sm">
                   Kéo và thả một tập tin vào đây hoặc nhấp để chọn một tập tin
                 </p>
@@ -502,7 +497,7 @@ const FormActivity: FC<FormActivityProps> = ({
                 {listPicture &&
                   listPicture.map((item) => (
                     <>
-                      <div className="flex flex-col items-center gap-2 py-3">
+                      <div className="flex flex-col items-center gap-1 py-2">
                         <div className="grid grid-cols-3 gap-2">
                           <img
                             src={
@@ -512,8 +507,7 @@ const FormActivity: FC<FormActivityProps> = ({
                                   listPicture[0].path
                                 : "/file-pdf.svg"
                             }
-                            width={60}
-                            height={60}
+                            width={50}
                             loading="lazy"
                             alt="file-preview"
                           />
@@ -577,35 +571,37 @@ const FormActivity: FC<FormActivityProps> = ({
           <hr className="mt-1 mb-2" />
           {pathPDF && pathPDF !== "" && (
             <>
-              <div className="grid grid-cols-2 cente">
+              <div className="grid grid-cols-2 mb-[3px]">
                 <p className="font-medium text-neutral-600">
                   Chế độ xem chi tiết
                 </p>
                 <div className="flex justify-end items-center">
-                  <Button
-                    type="link"
+                  <Tag
                     icon={<ZoomInOutlined />}
+                    color="processing"
+                    className="cursor-pointer"
                     onClick={() => setScale((prevScale) => prevScale + 0.1)}
                   >
                     Phóng to
-                  </Button>
-                  <Button
-                    type="link"
+                  </Tag>
+                  <Tag
                     icon={<ZoomOutOutlined />}
+                    color="processing"
+                    className="cursor-pointer"
                     onClick={() =>
                       setScale((prevScale) => Math.max(prevScale - 0.1, 0.1))
                     }
                   >
                     Thu nhỏ
-                  </Button>
-                  <Button
-                    color="danger"
-                    variant="link"
+                  </Tag>
+                  <Tag
                     icon={<CloseOutlined />}
+                    color="error"
+                    className="cursor-pointer"
                     onClick={() => setShowPDF(!showPDF)}
                   >
                     Đóng
-                  </Button>
+                  </Tag>
                 </div>
               </div>
               <div
@@ -613,7 +609,7 @@ const FormActivity: FC<FormActivityProps> = ({
                 style={{
                   maxHeight:
                     (document.querySelector("form")?.clientHeight || 0) -
-                    44 +
+                    42 +
                     "px",
                 }}
               >
