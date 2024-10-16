@@ -76,6 +76,7 @@ const BM05 = () => {
   >("success");
   const [startDate, setStartDate] = useState<number | null>(null);
   const [endDate, setEndDate] = useState<number | null>(null);
+  const [isShowPdf, setIsShowPdf] = useState(false);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 15,
@@ -307,8 +308,6 @@ const BM05 = () => {
 
   useEffect(() => {
     onSearch("");
-    console.log("startDate :>> ", startDate);
-    console.log("endDate :>> ", endDate);
   }, [selectedKeyUnit, startDate, endDate]);
 
   const handleDelete = useCallback(async () => {
@@ -734,59 +733,53 @@ const BM05 = () => {
 
   return (
     <div>
-      <div className="grid grid-cols-3 mb-4">
-        <div className="col-span-2">
-          <div className="grid grid-cols-3 gap-4">
-            <Search
-              placeholder="Tìm kiếm hoạt động..."
-              onSearch={onSearch}
-              enterButton
-            />
-            <Select
-              showSearch
-              allowClear
-              // size="large"
-              placeholder="Tất cả đơn vị"
-              optionFilterProp="label"
-              filterSort={(optionA, optionB) =>
-                (optionA?.label ?? "")
-                  .toLowerCase()
-                  .localeCompare((optionB?.label ?? "").toLowerCase())
-              }
-              options={units.map((unit) => ({
-                value: unit.id,
-                label: unit.name,
-              }))}
-              value={selectedKeyUnit}
-              onChange={(value) => {
-                setSelectedKeyUnit(value);
+      <div className="grid grid-cols-2 mb-4">
+        <div className="grid grid-cols-3 gap-4">
+          <Search
+            placeholder="Tìm kiếm hoạt động..."
+            onSearch={onSearch}
+            enterButton
+          />
+          <Select
+            showSearch
+            allowClear
+            // size="large"
+            placeholder="Tất cả đơn vị"
+            optionFilterProp="label"
+            filterSort={(optionA, optionB) =>
+              (optionA?.label ?? "")
+                .toLowerCase()
+                .localeCompare((optionB?.label ?? "").toLowerCase())
+            }
+            options={units.map((unit) => ({
+              value: unit.id,
+              label: unit.name,
+            }))}
+            value={selectedKeyUnit}
+            onChange={(value) => {
+              setSelectedKeyUnit(value);
+            }}
+          />
+          <ConfigProvider locale={locale}>
+            <RangePicker
+              placeholder={["Từ ngày", "Đến ngày"]}
+              format={"DD/MM/YYYY"}
+              onChange={(dates, dateStrings) => {
+                const [startDate, endDate] = dateStrings;
+                const startTimestamp = startDate
+                  ? new Date(
+                      startDate.split("/").reverse().join("-")
+                    ).valueOf() / 1000
+                  : null;
+                const endTimestamp = endDate
+                  ? new Date(endDate.split("/").reverse().join("-")).valueOf() /
+                    1000
+                  : null;
+                setStartDate(startTimestamp);
+                setEndDate(endTimestamp);
               }}
             />
-            <div className="grid grid-cols-3 gap-4">
-              <ConfigProvider locale={locale}>
-                <RangePicker
-                  placeholder={["Từ ngày", "Đến ngày"]}
-                  format={"DD/MM/YYYY"}
-                  onChange={(dates, dateStrings) => {
-                    const [startDate, endDate] = dateStrings;
-                    const startTimestamp = startDate
-                      ? new Date(
-                          startDate.split("/").reverse().join("-")
-                        ).valueOf() / 1000
-                      : null;
-                    const endTimestamp = endDate
-                      ? new Date(
-                          endDate.split("/").reverse().join("-")
-                        ).valueOf() / 1000
-                      : null;
-                    setStartDate(startTimestamp);
-                    setEndDate(endTimestamp);
-                  }}
-                  className="col-span-2"
-                />
-              </ConfigProvider>
-            </div>
-          </div>
+          </ConfigProvider>
         </div>
         <div className="flex justify-end gap-4">
           <Tooltip placement="top" title="Xuất dữ liệu Excel" arrow={true}>
@@ -840,7 +833,7 @@ const BM05 = () => {
         <CustomModal
           isOpen={isOpen}
           isOk={true}
-          width="95vw"
+          width={isShowPdf ? "95vw" : ""}
           title={mode === "edit" ? "Cập nhật hoạt động" : "Thêm mới hoạt động"}
           onOk={() => {
             const formElement = document.querySelector("form");
@@ -854,6 +847,7 @@ const BM05 = () => {
             setSelectedItem(undefined);
             setMode("add");
             setIsUpload(false);
+            setIsShowPdf(false);
           }}
           bodyContent={
             isUpload ? (
@@ -864,6 +858,7 @@ const BM05 = () => {
               <>
                 <FormActivity
                   onSubmit={handleSubmit}
+                  handleShowPDF={setIsShowPdf}
                   initialData={selectedItem as Partial<AddUpdateActivityItem>}
                   mode={mode}
                   numberActivity={data.length}

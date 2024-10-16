@@ -330,7 +330,7 @@ const SearchMembers = () => {
       </div>
       <div className="grid grid-cols-4 gap-6 mb-4">
         <div className="w-full flex flex-col gap-2">
-          <p className="font-medium text-neutral-500 text-sm">MÃ SỐ CB-GV-NV</p>
+          {/* <p className="font-medium text-neutral-500 text-sm">MÃ SỐ CB-GV-NV</p> */}
           <Select
             showSearch
             placeholder="Tìm kiếm CB-GV-NV"
@@ -354,9 +354,9 @@ const SearchMembers = () => {
         </div>
         <div className="grid grid-cols-3 gap-6">
           <div className="col-span-2 flex flex-col gap-2">
-            <p className="font-medium text-neutral-500 text-sm">
-              THỜI GIAN SỰ KIỆN
-            </p>
+            {/* <p className="font-medium text-neutral-500 text-sm">
+              MỐC THỜI GIAN
+            </p> */}
             <ConfigProvider locale={locale}>
               <RangePicker
                 placeholder={["Từ ngày", "Đến ngày"]}

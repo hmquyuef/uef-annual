@@ -3,7 +3,7 @@ import { Button, Modal, ModalProps } from "antd";
 interface CustomModalProps extends ModalProps {
   title: string;
   bodyContent: React.ReactNode;
-  width: string;
+  width?: string;
   isOpen: boolean;
   isOk: boolean;
   onOk: () => void;
@@ -23,14 +23,14 @@ const CustomModal: React.FC<CustomModalProps> = ({
     <Modal
       open={isOpen}
       title={title}
-      style={{ top: 20 }}
+      style={{ top: 10 }}
       onOk={onOk}
       onCancel={onCancel}
       okText="Xác nhận"
       cancelText="Quay lại"
-      width={width ? width : "900px"}
+      width={width ? width : "800px"}
       footer={(_, { OkBtn, CancelBtn }) => (
-      console.log("isOk", isOk),
+      // console.log("isOk", isOk),
       (
         <>
         <CancelBtn />

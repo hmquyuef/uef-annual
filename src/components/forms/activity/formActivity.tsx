@@ -19,6 +19,7 @@ import {
 } from "@/services/users/usersServices";
 import {
   CloseCircleOutlined,
+  CloseOutlined,
   CloudUploadOutlined,
   MinusCircleOutlined,
   ZoomInOutlined,
@@ -50,6 +51,7 @@ import "dayjs/locale/vi";
 dayjs.locale("vi");
 interface FormActivityProps {
   onSubmit: (formData: Partial<AddUpdateActivityItem>) => void;
+  handleShowPDF: (isVisible: boolean) => void;
   initialData?: Partial<AddUpdateActivityItem>;
   mode: "add" | "edit";
   numberActivity?: number;
@@ -59,6 +61,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/l
 
 const FormActivity: FC<FormActivityProps> = ({
   onSubmit,
+  handleShowPDF,
   initialData,
   mode,
   numberActivity,
@@ -81,7 +84,8 @@ const FormActivity: FC<FormActivityProps> = ({
   const [isUploaded, setIsUploaded] = useState<boolean>(false);
   const [pathPDF, setPathPDF] = useState<string>("");
   const [numPages, setNumPages] = useState<number>(1);
-  const [scale, setScale] = useState<number>(1.1);
+  const [scale, setScale] = useState<number>(1.0);
+  const [showPDF, setShowPDF] = useState<boolean>(false);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }): void {
     setNumPages(numPages);
@@ -141,13 +145,15 @@ const FormActivity: FC<FormActivityProps> = ({
       title: "MÃ SỐ CB-GV-NV",
       dataIndex: "userName",
       key: "userName",
-      render: (userName: string) => <p>{userName}</p>,
-    },
-    {
-      title: "HỌ VÀ TÊN",
-      dataIndex: "fullName",
-      key: "fullName",
-      render: (fullName: string) => <p>{fullName}</p>,
+      render: (userName: string, record: ActivityInput) => {
+        const fullName = record.fullName;
+        return (
+          <div>
+            <p className="font-medium ">{fullName}</p>
+            <p className="text-[13px]">{userName}</p>
+          </div>
+        );
+      },
     },
     {
       title: "ĐƠN VỊ",
@@ -176,7 +182,7 @@ const FormActivity: FC<FormActivityProps> = ({
           style={{ width: "100%" }}
         />
       ),
-      className: "w-32 text-center",
+      className: "w-[70px] text-center",
     },
     {
       title: "GHI CHÚ",
@@ -198,7 +204,7 @@ const FormActivity: FC<FormActivityProps> = ({
           }}
         />
       ),
-      className: "w-30",
+      className: "max-w-32",
     },
     {
       title: "",
@@ -296,6 +302,10 @@ const FormActivity: FC<FormActivityProps> = ({
   }, []);
 
   useEffect(() => {
+    handleShowPDF(showPDF);
+  }, [showPDF]);
+
+  useEffect(() => {
     const loadUsers = async () => {
       if (mode === "edit" && initialData !== undefined) {
         setName(initialData.name || "");
@@ -342,10 +352,13 @@ const FormActivity: FC<FormActivityProps> = ({
     loadUsers();
     setSelectedKey(null);
     setSelectedKeyUnit(null);
+    setShowPDF(false);
   }, [initialData, mode, numberActivity]);
 
   return (
-    <div className="grid grid-cols-2 gap-6 mb-4">
+    <div
+      className={`grid ${showPDF ? "grid-cols-2 gap-6 " : "grid-cols-1"} mb-4`}
+    >
       <form onSubmit={handleSubmit}>
         <hr className="mt-1 mb-3" />
         <div className="grid grid-cols-2 gap-6 mb-4">
@@ -444,15 +457,6 @@ const FormActivity: FC<FormActivityProps> = ({
             />
           </div>
         </div>
-
-        {/* <div className="flex flex-col gap-1 mb-4">
-        <p className="font-medium text-neutral-600">Ghi chú</p>
-        <TextArea
-          autoSize
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-      </div> */}
         {tableUsers && tableUsers.length > 0 && (
           <>
             <div className="flex flex-col gap-1 mb-4">
@@ -517,16 +521,15 @@ const FormActivity: FC<FormActivityProps> = ({
                             <p className="text-sm">{listPicture[0].name}</p>
                             <p className="text-sm flex">
                               ({(item.size / (1024 * 1024)).toFixed(2)} MB -
-                              <Link
-                                href={`${
-                                  "https://api-annual.uef.edu.vn/" +
-                                  listPicture[0].path
-                                }`}
-                                target="__blank"
-                                onClick={(e) => e.stopPropagation()}
+                              <p
+                                className="text-sm ms-1 cursor-pointer text-blue-500 hover:text-blue-600"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setShowPDF(!showPDF);
+                                }}
                               >
-                                <p className="text-sm ms-1">xem chi tiết</p>
-                              </Link>
+                                xem chi tiết
+                              </p>
                               )
                             </p>
                           </div>
@@ -569,64 +572,115 @@ const FormActivity: FC<FormActivityProps> = ({
           </div>
         </div>
       </form>
-      <div
-        className="flex flex-col overflow-x-auto overflow-y-auto rounded-md shadow-md"
-        style={{
-          maxHeight: document.querySelector("form")?.clientHeight || "auto",
-        }}
-      >
-        {pathPDF && pathPDF !== "" ? (
-          <>
-            <Document
-              file={`https://api-annual.uef.edu.vn/${pathPDF}`}
-              onLoadSuccess={onDocumentLoadSuccess}
-              className={"h-fit"}
-            >
-              {Array.from(new Array(numPages), (_, index) => (
-                <Page
-                  key={`page_${index + 1}`}
-                  pageNumber={index + 1}
-                  scale={scale}
-                />
-              ))}
-              <div className="absolute top-14 right-11 z-10 flex flex-col justify-end gap-2 p-2">
-                <Tooltip title="Phóng to" placement="left">
+      {showPDF === true && (
+        <div>
+          <hr className="mt-1 mb-2" />
+          {pathPDF && pathPDF !== "" && (
+            <>
+              <div className="grid grid-cols-2 cente">
+                <p className="font-medium text-neutral-600">
+                  Chế độ xem chi tiết
+                </p>
+                <div className="flex justify-end items-center">
                   <Button
-                    type="primary"
-                    shape="circle"
+                    type="link"
                     icon={<ZoomInOutlined />}
                     onClick={() => setScale((prevScale) => prevScale + 0.1)}
-                  />
-                </Tooltip>
-                <Tooltip title="Thu nhỏ" placement="left">
+                  >
+                    Phóng to
+                  </Button>
                   <Button
-                    type="primary"
-                    shape="circle"
+                    type="link"
                     icon={<ZoomOutOutlined />}
                     onClick={() =>
                       setScale((prevScale) => Math.max(prevScale - 0.1, 0.1))
                     }
-                  />
-                </Tooltip>
+                  >
+                    Thu nhỏ
+                  </Button>
+                  <Button
+                    color="danger"
+                    variant="link"
+                    icon={<CloseOutlined />}
+                    onClick={() => setShowPDF(!showPDF)}
+                  >
+                    Đóng
+                  </Button>
+                </div>
               </div>
-            </Document>
-          </>
-        ) : (
-          <>
-            <div
-              className="h-full flex flex-col items-center justify-center"
-            >
-              <img
-                src="/review.svg"
-                width={"100px"}
-                alt="review"
-                className="mb-4"
-              />
-              <p>Không tìm thấy tệp tin phù hợp</p>
-            </div>
-          </>
-        )}
-      </div>
+              <div
+                className="flex flex-col overflow-x-auto overflow-y-auto rounded-md shadow-md"
+                style={{
+                  maxHeight:
+                    (document.querySelector("form")?.clientHeight || 0) -
+                    44 +
+                    "px",
+                }}
+              >
+                <Document
+                  file={`https://api-annual.uef.edu.vn/${pathPDF}`}
+                  onLoadSuccess={onDocumentLoadSuccess}
+                  loading={
+                    <div className="flex justify-center items-center h-full">
+                      <p>Đang tải...</p>
+                    </div>
+                  }
+                  error={
+                    <div className="h-full flex flex-col items-center justify-center">
+                      <img
+                        src="/review.svg"
+                        width={"100px"}
+                        alt="review"
+                        className="mb-4"
+                      />
+                      <p>Không tìm thấy tệp tin phù hợp</p>
+                    </div>
+                  }
+                  className={"h-fit"}
+                >
+                  {Array.from(new Array(numPages), (_, index) => (
+                    <Page
+                      key={`page_${index + 1}`}
+                      pageNumber={index + 1}
+                      scale={scale}
+                    />
+                  ))}
+                  {/* <div className="absolute top-14 right-11 z-10 flex flex-col justify-end gap-2 p-2">
+                    <Tooltip title="Phóng to" placement="left">
+                      <Button
+                        type="primary"
+                        shape="circle"
+                        icon={<ZoomInOutlined />}
+                        onClick={() => setScale((prevScale) => prevScale + 0.1)}
+                      />
+                    </Tooltip>
+                    <Tooltip title="Thu nhỏ" placement="left">
+                      <Button
+                        type="primary"
+                        shape="circle"
+                        icon={<ZoomOutOutlined />}
+                        onClick={() =>
+                          setScale((prevScale) =>
+                            Math.max(prevScale - 0.1, 0.1)
+                          )
+                        }
+                      />
+                    </Tooltip>
+                    <Tooltip title="Đóng" placement="left">
+                      <Button
+                        type="primary"
+                        shape="circle"
+                        icon={<CloseOutlined />}
+                        onClick={() => setShowPDF(!showPDF)}
+                      />
+                    </Tooltip>
+                  </div> */}
+                </Document>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 };
