@@ -733,53 +733,56 @@ const BM05 = () => {
 
   return (
     <div>
-      <div className="grid grid-cols-2 mb-4">
-        <div className="grid grid-cols-3 gap-4">
-          <Search
-            placeholder="Tìm kiếm hoạt động..."
-            onSearch={onSearch}
-            enterButton
-          />
-          <Select
-            showSearch
-            allowClear
-            // size="large"
-            placeholder="Tất cả đơn vị"
-            optionFilterProp="label"
-            filterSort={(optionA, optionB) =>
-              (optionA?.label ?? "")
-                .toLowerCase()
-                .localeCompare((optionB?.label ?? "").toLowerCase())
-            }
-            options={units.map((unit) => ({
-              value: unit.id,
-              label: unit.name,
-            }))}
-            value={selectedKeyUnit}
-            onChange={(value) => {
-              setSelectedKeyUnit(value);
-            }}
-          />
-          <ConfigProvider locale={locale}>
-            <RangePicker
-              placeholder={["Từ ngày", "Đến ngày"]}
-              format={"DD/MM/YYYY"}
-              onChange={(dates, dateStrings) => {
-                const [startDate, endDate] = dateStrings;
-                const startTimestamp = startDate
-                  ? new Date(
-                      startDate.split("/").reverse().join("-")
-                    ).valueOf() / 1000
-                  : null;
-                const endTimestamp = endDate
-                  ? new Date(endDate.split("/").reverse().join("-")).valueOf() /
-                    1000
-                  : null;
-                setStartDate(startTimestamp);
-                setEndDate(endTimestamp);
+      <div className="grid grid-cols-3 mb-4">
+        <div className="col-span-2">
+          <div className="grid grid-cols-3 gap-4">
+            <Search
+              placeholder="Tìm kiếm hoạt động..."
+              onSearch={onSearch}
+              enterButton
+            />
+            <Select
+              showSearch
+              allowClear
+              // size="large"
+              placeholder="Tất cả đơn vị"
+              optionFilterProp="label"
+              filterSort={(optionA, optionB) =>
+                (optionA?.label ?? "")
+                  .toLowerCase()
+                  .localeCompare((optionB?.label ?? "").toLowerCase())
+              }
+              options={units.map((unit) => ({
+                value: unit.id,
+                label: unit.name,
+              }))}
+              value={selectedKeyUnit}
+              onChange={(value) => {
+                setSelectedKeyUnit(value);
               }}
             />
-          </ConfigProvider>
+            <ConfigProvider locale={locale}>
+              <RangePicker
+                placeholder={["Từ ngày", "Đến ngày"]}
+                format={"DD/MM/YYYY"}
+                onChange={(dates, dateStrings) => {
+                  const [startDate, endDate] = dateStrings;
+                  const startTimestamp = startDate
+                    ? new Date(
+                        startDate.split("/").reverse().join("-")
+                      ).valueOf() / 1000
+                    : null;
+                  const endTimestamp = endDate
+                    ? new Date(
+                        endDate.split("/").reverse().join("-")
+                      ).valueOf() / 1000
+                    : null;
+                  setStartDate(startTimestamp);
+                  setEndDate(endTimestamp);
+                }}
+              />
+            </ConfigProvider>
+          </div>
         </div>
         <div className="flex justify-end gap-4">
           <Tooltip placement="top" title="Xuất dữ liệu Excel" arrow={true}>
