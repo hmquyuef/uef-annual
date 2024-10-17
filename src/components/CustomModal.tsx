@@ -28,15 +28,13 @@ const CustomModal: React.FC<CustomModalProps> = ({
       onCancel={onCancel}
       okText="Xác nhận"
       cancelText="Quay lại"
-      width={width ? width : "800px"}
+      width={width ? width : "900px"}
+      bodyStyle={{ height: width ? "78vh" : "auto", overflowY: "auto" }}
       footer={(_, { OkBtn, CancelBtn }) => (
-      // console.log("isOk", isOk),
-      (
         <>
-        <CancelBtn />
-        {isOk && <OkBtn />}
+          <CancelBtn />
+          {isOk && <OkBtn />}
         </>
-      )
       )}
     >
       {bodyContent}

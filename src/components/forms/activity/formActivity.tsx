@@ -72,6 +72,7 @@ const FormActivity: FC<FormActivityProps> = ({
   const [name, setName] = useState("");
   const [deterNumber, setDeterNumber] = useState("");
   const [deterFromDate, setDeterFromDate] = useState<number | 0>(0);
+  const [deterEventDate, setDeterEventDate] = useState<number | 0>(0);
   const [deterEntryDate, setDeterEntryDate] = useState<number | 0>(0);
   const [description, setDescription] = useState("");
   const [filteredUsersFromHRM, setFilteredUsersFromHRM] =
@@ -136,7 +137,7 @@ const FormActivity: FC<FormActivityProps> = ({
 
   const columns: TableColumnsType<ActivityInput> = [
     {
-      title: "STT",
+      title: <div className="p-2">STT</div>,
       dataIndex: "stt",
       key: "stt",
       render: (_, __, index) => <p>{index + 1}</p>,
@@ -277,6 +278,7 @@ const FormActivity: FC<FormActivityProps> = ({
         number: deterNumber,
         fromDate: deterFromDate / 1000,
         entryDate: deterEntryDate / 1000,
+        eventDate: deterFromDate / 1000,
         file: {
           type: listPicture[0]?.type ?? "",
           path: listPicture[0]?.path ?? "",
@@ -316,6 +318,11 @@ const FormActivity: FC<FormActivityProps> = ({
             ? new Date(initialData.determinations.entryDate * 1000).getTime()
             : 0
         );
+        setDeterEventDate(
+          initialData.determinations?.eventDate
+            ? new Date(initialData.determinations.eventDate * 1000).getTime()
+            : 0
+        );
         setDeterFromDate(
           initialData.determinations?.fromDate
             ? new Date(initialData.determinations.fromDate * 1000).getTime()
@@ -342,6 +349,7 @@ const FormActivity: FC<FormActivityProps> = ({
         setName("");
         setDeterNumber("");
         setDeterFromDate(0);
+        setDeterEventDate(0);
         setTableUsers([]);
         setListPicture([]);
         setIsUploaded(false);
@@ -358,49 +366,76 @@ const FormActivity: FC<FormActivityProps> = ({
 
   return (
     <div
-      className={`grid ${showPDF ? "grid-cols-2 gap-6 " : "grid-cols-1"} mb-2`}
+      className={`grid ${showPDF ? "grid-cols-2 gap-4" : "grid-cols-1"} mb-2`}
     >
       <form onSubmit={handleSubmit}>
         <hr className="mt-1 mb-2" />
-        <div className="grid grid-cols-2 gap-6 mb-2">
+        <div className={`grid grid-cols-5 mb-2 ${showPDF ? "gap-3" : "gap-6"}`}>
           <div className="flex flex-col gap-[2px]">
             <p className="font-medium text-neutral-600">
-              Số Tờ trình/Kế hoạch/Quyết định{" "}
-              <span className="text-red-500">(*)</span>
+              Số văn bản <span className="text-red-500">(*)</span>
             </p>
             <Input
               value={deterNumber}
               onChange={(e) => setDeterNumber(e.target.value)}
             />
           </div>
-          <div className="grid grid-cols-2 gap-6">
-            <div className="flex flex-col gap-[2px]">
-              <p className="font-medium text-neutral-600">
-                Ngày lập <span className="text-red-500">(*)</span>
-              </p>
-              <ConfigProvider locale={locale}>
-                <DatePicker
-                  placeholder="dd/mm/yyyy"
-                  format={"DD/MM/YYYY"}
-                  value={deterFromDate ? moment(deterFromDate) : null}
-                  onChange={(date) => {
-                    if (date) {
-                      const timestamp = date.valueOf();
-                      setDeterFromDate(timestamp);
-                    } else {
-                      setDeterFromDate(0);
-                    }
-                  }}
-                />
-              </ConfigProvider>
-            </div>
-            <div className="flex flex-col gap-[2px]">
-              <p className="font-medium text-neutral-600">Số VBHC</p>
-              <Input
-                value={documentNumber}
-                onChange={(e) => setDocumentNumber(e.target.value)}
+
+          <div className="flex flex-col gap-[2px]">
+            <p className="font-medium text-neutral-600">
+              Ngày lập <span className="text-red-500">(*)</span>
+            </p>
+            <ConfigProvider locale={locale}>
+              <DatePicker
+                placeholder="dd/mm/yyyy"
+                format={"DD/MM/YYYY"}
+                value={deterFromDate ? moment(deterFromDate) : null}
+                onChange={(date) => {
+                  if (date) {
+                    const timestamp = date.valueOf();
+                    setDeterFromDate(timestamp);
+                  } else {
+                    setDeterFromDate(0);
+                  }
+                }}
               />
-            </div>
+            </ConfigProvider>
+          </div>
+          <div className="flex flex-col gap-[2px]">
+            <p className="font-medium text-neutral-600">Ngày hoạt động</p>
+            <ConfigProvider locale={locale}>
+              <DatePicker
+                placeholder="dd/mm/yyyy"
+                format={"DD/MM/YYYY"}
+                value={deterEventDate ? moment(deterEventDate) : null}
+                onChange={(date) => {
+                  if (date) {
+                    const timestamp = date.valueOf();
+                    setDeterEventDate(timestamp);
+                  } else {
+                    setDeterEventDate(0);
+                  }
+                }}
+              />
+            </ConfigProvider>
+          </div>
+          <div className="flex flex-col gap-[2px]">
+            <p className="font-medium text-neutral-600">Số lưu văn bản</p>
+            <Input
+              value={documentNumber}
+              onChange={(e) => setDocumentNumber(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-[2px]">
+            <p className="font-medium text-neutral-600">Ngày nhập</p>
+            <ConfigProvider locale={locale}>
+              <DatePicker
+                disabled
+                placeholder="dd/mm/yyyy"
+                format={"DD/MM/YYYY"}
+                value={deterEntryDate ? moment(deterEntryDate) : null}
+              />
+            </ConfigProvider>
           </div>
         </div>
         <div className="flex flex-col gap-[2px] mb-2">
@@ -607,10 +642,7 @@ const FormActivity: FC<FormActivityProps> = ({
               <div
                 className="flex flex-col overflow-x-auto overflow-y-auto rounded-md shadow-md"
                 style={{
-                  maxHeight:
-                    (document.querySelector("form")?.clientHeight || 0) -
-                    42 +
-                    "px",
+                  maxHeight: "72vh",
                 }}
               >
                 <Document
@@ -625,10 +657,7 @@ const FormActivity: FC<FormActivityProps> = ({
                     <div
                       className="flex flex-col items-center justify-center"
                       style={{
-                        maxHeight:
-                          (document.querySelector("form")?.clientHeight || 0) -
-                          44 +
-                          "px",
+                        maxHeight: `calc(100vh - ${document.querySelector("form")?.getBoundingClientRect().top}px - 42px)`,
                       }}
                     >
                       <img

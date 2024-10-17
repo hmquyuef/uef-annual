@@ -18,6 +18,7 @@ export interface Determinations {
     number: string;
     fromDate: number;
     entryDate: number;
+    eventDate: number;
     file: InfoFile;
 }
 

@@ -118,7 +118,7 @@ const BM05 = () => {
       className: "text-center w-[20px]",
     },
     {
-      title: "TÊN HOẠT ĐỘNG ĐÃ THỰC HIỆN",
+      title: "TÊN HOẠT ĐỘNG",
       dataIndex: "name",
       key: "name",
       className: "max-w-24",
@@ -140,38 +140,62 @@ const BM05 = () => {
       },
     },
     {
-      title: "SỐ TTr/KH/QĐ",
+      title: (
+        <>
+          SỐ VĂN BẢN <br /> NGÀY LẬP
+        </>
+      ),
       dataIndex: ["determinations", "number"],
       key: "number",
       className: "w-[9rem]",
-      render: (number: string) => {
-        return <p className="text-center">{number}</p>;
+      render: (number: string, record: ActivityItem) => {
+        const ngayLap = record.determinations?.fromDate;
+        return (
+          <>
+            <p className="text-center font-medium">{number}</p>
+            <p className="text-center text-[13px]">
+              {convertTimestampToDate(ngayLap)}
+            </p>
+          </>
+        );
       },
     },
     {
       title: "ĐƠN VỊ",
       dataIndex: ["participants", 0, "unitName"],
       key: "unitName",
-      sorter: (a, b) =>
-        a.participants[0]?.unitName
-          .toString()
-          .localeCompare(b.participants[0]?.unitName.toString()),
       render: (unitName: string) => <p>{unitName}</p>,
       className: "text-center w-[6rem]",
     },
+    // {
+    //   title: "NGÀY LẬP",
+    //   dataIndex: ["determinations", "fromDate"],
+    //   key: "fromDate",
+    //   render: (fromDate: number) =>
+    //     fromDate ? convertTimestampToDate(fromDate) : "",
+    //   className: "text-center w-[2rem]",
+    // },
     {
-      title: "NGÀY LẬP",
-      dataIndex: ["determinations", "fromDate"],
-      key: "fromDate",
-      render: (fromDate: number) =>
-        fromDate ? convertTimestampToDate(fromDate) : "",
-      className: "text-center w-[2rem]",
+      title: (
+        <>
+          THỜI GIAN <br /> HOẠT ĐỘNG
+        </>
+      ),
+      dataIndex: ["determinations", "eventDate"],
+      key: "eventDate",
+      render: (eventDate: number) =>
+        eventDate ? convertTimestampToDate(eventDate) : " ",
+      className: "text-center w-[110px]",
     },
     {
-      title: "MINH CHỨNG",
+      title: (
+        <div className="p-1">
+          TÀI LIỆU <br /> ĐÍNH KÈM
+        </div>
+      ),
       dataIndex: ["determinations", "file", "path"],
       key: "path",
-      className: "text-center w-[3rem]",
+      className: "text-center w-[95px]",
       sorter: (a, b) =>
         a.determinations?.file?.path.localeCompare(
           b.determinations?.file?.path
@@ -198,7 +222,11 @@ const BM05 = () => {
       },
     },
     {
-      title: "SỐ VBHC",
+      title: (
+        <div className="bg-orange-400 p-1">
+          SỐ LƯU <br /> VĂN BẢN
+        </div>
+      ),
       dataIndex: "documentNumber",
       key: "documentNumber",
       className: "text-center w-[5rem]",
@@ -220,7 +248,9 @@ const BM05 = () => {
       },
     },
     {
-      title: "NGÀY NHẬP",
+      title: (
+        <div className="bg-orange-400 p-1 rounded-tr-lg">NGÀY NHẬP VĂN BẢN</div>
+      ),
       dataIndex: ["determinations", "entryDate"],
       key: "entryDate",
       render: (fromDate: number) =>
@@ -836,7 +866,7 @@ const BM05 = () => {
         <CustomModal
           isOpen={isOpen}
           isOk={true}
-          width={isShowPdf ? "80vw" : ""}
+          width={isShowPdf ? "85vw" : ""}
           title={mode === "edit" ? "Cập nhật hoạt động" : "Thêm mới hoạt động"}
           onOk={() => {
             const formElement = document.querySelector("form");
