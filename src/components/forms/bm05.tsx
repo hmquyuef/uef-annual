@@ -185,7 +185,7 @@ const BM05 = () => {
       key: "eventDate",
       render: (eventDate: number) =>
         eventDate ? convertTimestampToDate(eventDate) : " ",
-      className: "text-center w-[110px]",
+      className: "text-center w-[80px]",
     },
     {
       title: (
@@ -449,7 +449,7 @@ const BM05 = () => {
     );
     if (results) {
       const defaultInfo = [
-        ["", "", "", "", "", "", "", "", "", "", "", "", "BM-05"],
+        ["", "", "", "", "", "", "", "", "", "", "", "", "", "BM-05"],
         [
           "TRƯỜNG ĐẠI HỌC KINH TẾ - TÀI CHÍNH",
           "",
@@ -499,49 +499,59 @@ const BM05 = () => {
         [
           "STT",
           "Mã số CB-GV-NV",
-          "Họ và chữ lót",
-          "Tên",
+          "Họ và Tên",
+          "",
           "Đơn vị",
-          "Tên hoạt động đã thực hiện",
+          "Tên hoạt động",
           "",
           "",
           "",
-          "Số tiết chuẩn được BGH phê duyệt",
-          "Minh chứng",
+          "Số tiết chuẩn",
+          "Số văn bản, ngày lập",
           "",
+          "Thời gian hoạt động",
           "Ghi chú",
         ],
         ...(unit?.code === undefined || unit?.code === null
           ? results.data.map((item: any, index: number) => [
               index + 1,
               item.userName,
-              item.middleName,
-              item.firstName,
+              item.middleName + " " + item.firstName,
+              "",
               item.faculityName,
               item.activityName,
               "",
               "",
               "",
               item.standNumber,
-              item.determination,
+              item.determination + ", " + convertTimestampToDate(item.fromDate),
               "",
+              item.eventDate ? convertTimestampToDate(item.eventDate) : "",
               item.note ?? "",
             ])
           : results.data
-              .sort((a: any, b: any) => a.userName.localeCompare(b.userName))
+              .sort((a: any, b: any) => {
+                if (a.eventDate === b.eventDate) {
+                  return a.userName.localeCompare(b.userName);
+                }
+                return a.eventDate - b.eventDate;
+              })
               .map((item: any, index: number) => [
                 index + 1,
                 item.userName,
-                item.middleName,
-                item.firstName,
+                item.middleName + " " + item.firstName,
+                "",
                 item.faculityName,
                 item.activityName,
                 "",
                 "",
                 "",
                 item.standNumber,
-                item.determination,
+                item.determination +
+                  ", " +
+                  convertTimestampToDate(item.fromDate),
                 "",
+                item.eventDate ? convertTimestampToDate(item.eventDate) : "",
                 item.note ?? "",
               ])),
         [
@@ -555,6 +565,7 @@ const BM05 = () => {
           "",
           "",
           `${results.data.reduce((acc, x) => acc + x.standNumber, 0)}`,
+          "",
           "",
           "",
           "",
@@ -589,7 +600,7 @@ const BM05 = () => {
       worksheet["!cols"][1] = { wch: 20 };
       worksheet["!cols"][2] = { wch: 20 };
       worksheet["!cols"][4] = { wch: 13 };
-      worksheet["M1"].s = {
+      worksheet["N1"].s = {
         fill: {
           fgColor: { rgb: "FFFF00" },
         },
@@ -624,6 +635,7 @@ const BM05 = () => {
       for (let row = 7; row <= results.data.length + 8; row++) {
         if (row < results.data.length + 8) {
           tempMerge.push(
+            { s: { r: row, c: 2 }, e: { r: row, c: 3 } },
             { s: { r: row, c: 5 }, e: { r: row, c: 8 } },
             { s: { r: row, c: 10 }, e: { r: row, c: 11 } }
           );
@@ -696,7 +708,7 @@ const BM05 = () => {
         row++
       ) {
         if (row < range.e.r)
-          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 12 } });
+          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 13 } });
         else {
           tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 3 } });
           tempMerge.push({ s: { r: row, c: 9 }, e: { r: row, c: 10 } });

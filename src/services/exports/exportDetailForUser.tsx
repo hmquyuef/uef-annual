@@ -26,6 +26,7 @@ export interface Item {
   activityName: string;
   standarNumber: number;
   attendances: number;
+  fromDate: number;
   proof: string;
   note: string;
 }
@@ -48,6 +49,7 @@ export interface ResultItemForBM01 {
   classCode: string;
   standarNumber: number;
   attendances: number;
+  fromDate: number;
   proof: string;
   note: string;
 }
@@ -58,6 +60,7 @@ export interface ResultItemForBM02 {
   classCode: string;
   standarNumber: number;
   attendances: number;
+  fromDate: number;
   proof: string;
   note: string;
 }
@@ -67,6 +70,7 @@ export interface ResultItemForBM04 {
   totalStudents: number;
   standarNumber: number;
   attendances: number;
+  fromDate: number;
   proof: string;
   note: string;
 }
@@ -75,6 +79,7 @@ export interface ResultItemForBM05 {
   activityName: string;
   standarNumber: number;
   attendances: number;
+  fromDate: number;
   proof: string;
   note: string;
 }

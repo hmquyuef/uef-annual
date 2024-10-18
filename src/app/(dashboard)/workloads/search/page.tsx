@@ -61,6 +61,7 @@ const SearchMembers = () => {
   const [endDate, setEndDate] = useState<number | null>(null);
   const getUsersHRM = async () => {
     const response = await getUsersFromHRM();
+    console.log('response :>> ', response);
     setUsersHRM(response);
   };
 
@@ -70,6 +71,7 @@ const SearchMembers = () => {
       startDate,
       endDate
     );
+    console.log('response :>> ', response);
     if (response) {
       setDetailUser(response);
       setDataClassLeaders(response.classLeaders.items);
@@ -150,7 +152,7 @@ const SearchMembers = () => {
   //render table InfoUser
   const columnsInfoUser: TableColumnsType<DetailUserItem> = [
     {
-      title: "STT",
+      title: <div className="p-2">STT</div>,
       dataIndex: "stt",
       key: "stt",
       render: (_, __, index) => <p>{index + 1}</p>,
@@ -224,14 +226,14 @@ const SearchMembers = () => {
   //render table Classleaders
   const columns: TableColumnsType<Item> = [
     {
-      title: "STT",
+      title: <div className="p-2">STT</div>,
       dataIndex: "stt",
       key: "stt",
       render: (_, __, index) => <p>{index + 1}</p>,
       className: "text-center w-[50px]",
     },
     {
-      title: "CÁC HOẠT ĐỘNG ĐÃ THỰC HIỆN",
+      title: "CÁC HOẠT ĐỘNG",
       dataIndex: "activityName",
       key: "activityName",
       render: (activityName: string) => <p>{activityName}</p>,
@@ -245,7 +247,7 @@ const SearchMembers = () => {
       render: (standarNumber: string) => <p>{standarNumber}</p>,
     },
     {
-      title: "THỜI GIAN THAM DỰ",
+      title: "THỜI GIAN HOẠT ĐỘNG",
       dataIndex: "attendances",
       key: "attendances",
       render: (attendances: number) =>
@@ -263,14 +265,14 @@ const SearchMembers = () => {
 
   const columnsBM05: TableColumnsType<Item> = [
     {
-      title: "STT",
+      title: <div className="p-2">STT</div>,
       dataIndex: "stt",
       key: "stt",
       render: (_, __, index) => <p>{index + 1}</p>,
       className: "text-center w-[50px]",
     },
     {
-      title: "CÁC HOẠT ĐỘNG ĐÃ THỰC HIỆN",
+      title: "CÁC HOẠT ĐỘNG",
       dataIndex: "activityName",
       key: "activityName",
       render: (activityName: string) => <p>{activityName}</p>,
@@ -284,10 +286,11 @@ const SearchMembers = () => {
       render: (standarNumber: string) => <p>{standarNumber}</p>,
     },
     {
-      title: "THỜI GIAN THAM DỰ",
+      title: "THỜI GIAN HOẠT ĐỘNG",
       dataIndex: "attendances",
       key: "attendances",
-      render: (attendances: number) => "",
+      render: (attendances: number) =>
+        attendances ? convertTimestampToDate(attendances) : "",
       className: "text-center w-[150px]",
     },
     {

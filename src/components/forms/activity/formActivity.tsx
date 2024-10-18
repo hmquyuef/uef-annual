@@ -140,7 +140,7 @@ const FormActivity: FC<FormActivityProps> = ({
       title: <div className="p-2">STT</div>,
       dataIndex: "stt",
       key: "stt",
-      render: (_, __, index) => <p>{index + 1}</p>,
+      render: (_, __, index) => <>{index + 1}</>,
       className: "text-center w-[20px]",
     },
     {
@@ -150,10 +150,12 @@ const FormActivity: FC<FormActivityProps> = ({
       render: (userName: string, record: ActivityInput) => {
         const fullName = record.fullName;
         return (
-          <div>
-            <p className="font-medium ">{fullName}</p>
-            <p className="text-[13px]">{userName}</p>
-          </div>
+          <>
+            <div className="flex flex-col">
+              <span className="font-medium ">{fullName}</span>
+              <span className="text-[13px]">{userName}</span>
+            </div>
+          </>
         );
       },
     },
@@ -161,7 +163,7 @@ const FormActivity: FC<FormActivityProps> = ({
       title: "ĐƠN VỊ",
       dataIndex: "unitName",
       key: "unitName",
-      render: (unitName: string) => <p>{unitName}</p>,
+      render: (unitName: string) => <>{unitName}</>,
       className: "max-w-[100px] text-center",
     },
     {
@@ -216,13 +218,17 @@ const FormActivity: FC<FormActivityProps> = ({
         return (
           <div>
             <Tooltip placement="right" title="Xóa dữ liệu" arrow={true}>
-              <Button color="danger" variant="text">
-                <p
+              <Button
+                color="danger"
+                variant="text"
+                onClick={() => onRemoveUsers(id)}
+              >
+                {/* <span
                   className="text-center cursor-pointer text-red-500"
                   onClick={() => onRemoveUsers(id)}
                 >
-                  <CloseCircleOutlined />
-                </p>
+                </span> */}
+                <CloseCircleOutlined />
               </Button>
             </Tooltip>
           </div>
@@ -372,9 +378,9 @@ const FormActivity: FC<FormActivityProps> = ({
         <hr className="mt-1 mb-2" />
         <div className={`grid grid-cols-5 mb-2 ${showPDF ? "gap-3" : "gap-6"}`}>
           <div className="flex flex-col gap-[2px]">
-            <p className="font-medium text-neutral-600">
+            <span className="font-medium text-neutral-600">
               Số văn bản <span className="text-red-500">(*)</span>
-            </p>
+            </span>
             <Input
               value={deterNumber}
               onChange={(e) => setDeterNumber(e.target.value)}
@@ -382,9 +388,9 @@ const FormActivity: FC<FormActivityProps> = ({
           </div>
 
           <div className="flex flex-col gap-[2px]">
-            <p className="font-medium text-neutral-600">
+            <span className="font-medium text-neutral-600">
               Ngày lập <span className="text-red-500">(*)</span>
-            </p>
+            </span>
             <ConfigProvider locale={locale}>
               <DatePicker
                 placeholder="dd/mm/yyyy"
@@ -402,7 +408,7 @@ const FormActivity: FC<FormActivityProps> = ({
             </ConfigProvider>
           </div>
           <div className="flex flex-col gap-[2px]">
-            <p className="font-medium text-neutral-600">Ngày hoạt động</p>
+            <span className="font-medium text-neutral-600">Ngày hoạt động</span>
             <ConfigProvider locale={locale}>
               <DatePicker
                 placeholder="dd/mm/yyyy"
@@ -420,14 +426,14 @@ const FormActivity: FC<FormActivityProps> = ({
             </ConfigProvider>
           </div>
           <div className="flex flex-col gap-[2px]">
-            <p className="font-medium text-neutral-600">Số lưu văn bản</p>
+            <span className="font-medium text-neutral-600">Số lưu văn bản</span>
             <Input
               value={documentNumber}
               onChange={(e) => setDocumentNumber(e.target.value)}
             />
           </div>
           <div className="flex flex-col gap-[2px]">
-            <p className="font-medium text-neutral-600">Ngày nhập</p>
+            <span className="font-medium text-neutral-600">Ngày nhập</span>
             <ConfigProvider locale={locale}>
               <DatePicker
                 disabled
@@ -439,9 +445,9 @@ const FormActivity: FC<FormActivityProps> = ({
           </div>
         </div>
         <div className="flex flex-col gap-[2px] mb-2">
-          <p className="font-medium text-neutral-600">
-            Tên hoạt động đã thực hiện <span className="text-red-500">(*)</span>
-          </p>
+          <span className="font-medium text-neutral-600">
+            Tên hoạt động <span className="text-red-500">(*)</span>
+          </span>
           <TextArea
             autoSize
             value={name}
@@ -450,7 +456,7 @@ const FormActivity: FC<FormActivityProps> = ({
         </div>
         <div className="grid grid-cols-6 gap-6 mb-2">
           <div className="col-span-3 flex flex-col gap-[2px]">
-            <p className="font-medium text-neutral-600">Đơn vị</p>
+            <span className="font-medium text-neutral-600">Đơn vị</span>
             <Select
               showSearch
               optionFilterProp="label"
@@ -471,7 +477,9 @@ const FormActivity: FC<FormActivityProps> = ({
             />
           </div>
           <div className="col-span-3 flex flex-col gap-[2px]">
-            <p className="font-medium text-neutral-600">Tìm mã CB-GV-NV</p>
+            <span className="font-medium text-neutral-600">
+              Tìm mã CB-GV-NV
+            </span>
             <Select
               showSearch
               optionFilterProp="label"
@@ -496,9 +504,9 @@ const FormActivity: FC<FormActivityProps> = ({
         {tableUsers && tableUsers.length > 0 && (
           <>
             <div className="flex flex-col gap-[2px] mb-2">
-              <p className="font-medium text-neutral-600">
+              <span className="font-medium text-neutral-600">
                 Danh sách nhân sự tham gia
-              </p>
+              </span>
               <Table<ActivityInput>
                 bordered
                 rowKey={(item) => item.id}
@@ -514,7 +522,7 @@ const FormActivity: FC<FormActivityProps> = ({
           </>
         )}
         <div className="flex flex-col gap-[2px]">
-          <p className="font-medium text-neutral-600">Minh chứng</p>
+          <span className="font-medium text-neutral-600">Tài liệu đính kèm</span>
           <div
             {...getRootProps()}
             className="w-full min-h-20 h-fit border-2 border-dashed border-neutral-300 cursor-pointer flex justify-center items-center gap-3 rounded-xl"
@@ -523,9 +531,9 @@ const FormActivity: FC<FormActivityProps> = ({
             {!isUploaded ? (
               <>
                 <img src="/upload.svg" width={50} loading="lazy" alt="upload" />
-                <p className="text-sm">
+                <span className="text-sm">
                   Kéo và thả một tập tin vào đây hoặc nhấp để chọn một tập tin
-                </p>
+                </span>
               </>
             ) : (
               <>
@@ -547,10 +555,12 @@ const FormActivity: FC<FormActivityProps> = ({
                             alt="file-preview"
                           />
                           <div className="col-span-2 text-center content-center">
-                            <p className="text-sm">{listPicture[0].name}</p>
-                            <p className="text-sm flex">
+                            <span className="text-sm">
+                              {listPicture[0].name}
+                            </span>
+                            <span className="text-sm flex">
                               ({(item.size / (1024 * 1024)).toFixed(2)} MB -
-                              <p
+                              <span
                                 className="text-sm ms-1 cursor-pointer text-blue-500 hover:text-blue-600"
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -558,9 +568,9 @@ const FormActivity: FC<FormActivityProps> = ({
                                 }}
                               >
                                 xem chi tiết
-                              </p>
+                              </span>
                               )
-                            </p>
+                            </span>
                           </div>
                         </div>
                         <div className="flex gap-3 items-center mt-2">
@@ -607,9 +617,9 @@ const FormActivity: FC<FormActivityProps> = ({
           {pathPDF && pathPDF !== "" && (
             <>
               <div className="grid grid-cols-2 mb-[3px]">
-                <p className="font-medium text-neutral-600">
+                <span className="font-medium text-neutral-600">
                   Chế độ xem chi tiết
-                </p>
+                </span>
                 <div className="flex justify-end items-center">
                   <Tag
                     icon={<ZoomInOutlined />}
@@ -650,14 +660,18 @@ const FormActivity: FC<FormActivityProps> = ({
                   onLoadSuccess={onDocumentLoadSuccess}
                   loading={
                     <div className="flex justify-center items-center h-full">
-                      <p>Đang tải...</p>
+                      <span>Đang tải...</span>
                     </div>
                   }
                   error={
                     <div
                       className="flex flex-col items-center justify-center"
                       style={{
-                        maxHeight: `calc(100vh - ${document.querySelector("form")?.getBoundingClientRect().top}px - 42px)`,
+                        maxHeight: `calc(100vh - ${
+                          document
+                            .querySelector("form")
+                            ?.getBoundingClientRect().top
+                        }px - 42px)`,
                       }}
                     >
                       <img
@@ -666,7 +680,7 @@ const FormActivity: FC<FormActivityProps> = ({
                         alt="review"
                         className="mb-4"
                       />
-                      <p>Không tìm thấy tệp tin phù hợp</p>
+                      <span>Không tìm thấy tệp tin phù hợp</span>
                     </div>
                   }
                 >

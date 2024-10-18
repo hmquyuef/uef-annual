@@ -138,9 +138,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               icon: <SettingOutlined />,
               label: "Cài đặt",
               children: [
-                { key: "31", label: "Ứng dụng" },
-                { key: "32", label: "Vai trò" },
-                { key: "33", label: "Phân quyền" },
+                { key: "31", label: <Link href="/settings/applications">Ứng dụng</Link> },
+                { key: "32", label: <Link href="/settings/roles">Vai trò</Link> },
+                { key: "33", label: <Link href="/settings/permissions">Phân quyền</Link> },
+                { key: "34", label: <Link href="/settings/menus">Chức năng</Link> },
               ],
             }
           );

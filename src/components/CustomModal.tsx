@@ -29,7 +29,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
       okText="Xác nhận"
       cancelText="Quay lại"
       width={width ? width : "900px"}
-      bodyStyle={{ height: width ? "78vh" : "auto", overflowY: "auto" }}
+      height={width ? "80vh" : "auto"}
       footer={(_, { OkBtn, CancelBtn }) => (
         <>
           <CancelBtn />
@@ -37,7 +37,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
         </>
       )}
     >
-      {bodyContent}
+      <div className="overflow-y-auto">{bodyContent}</div>
     </Modal>
   );
 };
