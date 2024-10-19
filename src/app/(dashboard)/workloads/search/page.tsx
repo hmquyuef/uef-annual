@@ -61,7 +61,6 @@ const SearchMembers = () => {
   const [endDate, setEndDate] = useState<number | null>(null);
   const getUsersHRM = async () => {
     const response = await getUsersFromHRM();
-    console.log('response :>> ', response);
     setUsersHRM(response);
   };
 
@@ -71,7 +70,6 @@ const SearchMembers = () => {
       startDate,
       endDate
     );
-    console.log('response :>> ', response);
     if (response) {
       setDetailUser(response);
       setDataClassLeaders(response.classLeaders.items);
@@ -226,14 +224,14 @@ const SearchMembers = () => {
   //render table Classleaders
   const columns: TableColumnsType<Item> = [
     {
-      title: <div className="p-2">STT</div>,
+      title: <div className="px-2 py-3">STT</div>,
       dataIndex: "stt",
       key: "stt",
       render: (_, __, index) => <p>{index + 1}</p>,
       className: "text-center w-[50px]",
     },
     {
-      title: "CÁC HOẠT ĐỘNG",
+      title: "TÊN HOẠT ĐỘNG",
       dataIndex: "activityName",
       key: "activityName",
       render: (activityName: string) => <p>{activityName}</p>,
@@ -243,8 +241,25 @@ const SearchMembers = () => {
       title: "SỐ TIẾT CHUẨN",
       dataIndex: "standarNumber",
       key: "standarNumber",
-      className: "text-center w-[10rem]",
+      className: "text-center w-[100px]",
       render: (standarNumber: string) => <p>{standarNumber}</p>,
+    },
+    {
+      title: "SỐ VĂN BẢN, NGÀY LẬP",
+      dataIndex: "proof",
+      key: "proof",
+      render: (proof: string, record: Item) => {
+        const fromDate = record.fromDate
+          ? convertTimestampToDate(record.fromDate)
+          : "";
+        return (
+          <div className="flex flex-col">
+            <span className="font-medium">{proof}</span>
+            <span className="text-[13px]">{fromDate}</span>
+          </div>
+        );
+      },
+      className: "text-center w-[100px]",
     },
     {
       title: "THỜI GIAN HOẠT ĐỘNG",
@@ -252,27 +267,27 @@ const SearchMembers = () => {
       key: "attendances",
       render: (attendances: number) =>
         attendances ? convertTimestampToDate(attendances) : "",
-      className: "text-center w-[150px]",
+      className: "text-center w-[80px]",
     },
     {
       title: "GHI CHÚ",
       dataIndex: "note",
       key: "note",
       render: (note: string) => <p>{note}</p>,
-      className: "text-center w-[150px]",
+      className: "w-[200px]",
     },
   ];
 
   const columnsBM05: TableColumnsType<Item> = [
     {
-      title: <div className="p-2">STT</div>,
+      title: <div className="px-2 py-3">STT</div>,
       dataIndex: "stt",
       key: "stt",
       render: (_, __, index) => <p>{index + 1}</p>,
       className: "text-center w-[50px]",
     },
     {
-      title: "CÁC HOẠT ĐỘNG",
+      title: "TÊN HOẠT ĐỘNG",
       dataIndex: "activityName",
       key: "activityName",
       render: (activityName: string) => <p>{activityName}</p>,
@@ -282,8 +297,25 @@ const SearchMembers = () => {
       title: "SỐ TIẾT CHUẨN",
       dataIndex: "standarNumber",
       key: "standarNumber",
-      className: "text-center w-[10rem]",
+      className: "text-center w-[100px]",
       render: (standarNumber: string) => <p>{standarNumber}</p>,
+    },
+    {
+      title: "SỐ VĂN BẢN, NGÀY LẬP",
+      dataIndex: "proof",
+      key: "proof",
+      render: (proof: string, record: Item) => {
+        const fromDate = record.fromDate
+          ? convertTimestampToDate(record.fromDate)
+          : "";
+        return (
+          <div className="flex flex-col">
+            <span className="font-medium">{proof}</span>
+            <span className="text-[13px]">{fromDate}</span>
+          </div>
+        );
+      },
+      className: "text-center w-[100px]",
     },
     {
       title: "THỜI GIAN HOẠT ĐỘNG",
@@ -291,14 +323,14 @@ const SearchMembers = () => {
       key: "attendances",
       render: (attendances: number) =>
         attendances ? convertTimestampToDate(attendances) : "",
-      className: "text-center w-[150px]",
+      className: "text-center w-[80px]",
     },
     {
       title: "GHI CHÚ",
       dataIndex: "note",
       key: "note",
       render: (note: string) => <p>{note}</p>,
-      className: "text-center w-[150px]",
+      className: "w-[200px]",
     },
   ];
 
@@ -355,34 +387,30 @@ const SearchMembers = () => {
             }}
           />
         </div>
+        <ConfigProvider locale={locale}>
+          <RangePicker
+            placeholder={["Từ ngày", "Đến ngày"]}
+            format={"DD/MM/YYYY"}
+            defaultValue={[
+              dayjs(`01/09/${dayjs().year()}`, "DD/MM/YYYY"),
+              dayjs(`31/08/${dayjs().year() + 1}`, "DD/MM/YYYY"),
+            ]}
+            onChange={(dates, dateStrings) => {
+              const [startDate, endDate] = dateStrings;
+              const startTimestamp = startDate
+                ? new Date(startDate.split("/").reverse().join("-")).valueOf() /
+                  1000
+                : null;
+              const endTimestamp = endDate
+                ? new Date(endDate.split("/").reverse().join("-")).valueOf() /
+                  1000
+                : null;
+              setStartDate(startTimestamp);
+              setEndDate(endTimestamp);
+            }}
+          />
+        </ConfigProvider>
         <div className="grid grid-cols-3 gap-6">
-          <div className="col-span-2 flex flex-col gap-2">
-            {/* <p className="font-medium text-neutral-500 text-sm">
-              MỐC THỜI GIAN
-            </p> */}
-            <ConfigProvider locale={locale}>
-              <RangePicker
-                placeholder={["Từ ngày", "Đến ngày"]}
-                format={"DD/MM/YYYY"}
-                onChange={(dates, dateStrings) => {
-                  const [startDate, endDate] = dateStrings;
-                  const startTimestamp = startDate
-                    ? new Date(
-                        startDate.split("/").reverse().join("-")
-                      ).valueOf() / 1000
-                    : null;
-                  const endTimestamp = endDate
-                    ? new Date(
-                        endDate.split("/").reverse().join("-")
-                      ).valueOf() / 1000
-                    : null;
-                  setStartDate(startTimestamp);
-                  setEndDate(endTimestamp);
-                }}
-                className="col-span-2"
-              />
-            </ConfigProvider>
-          </div>
           <div className="flex items-end">
             <Button
               type="primary"

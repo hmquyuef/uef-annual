@@ -55,8 +55,8 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       "",
       "Số tiết chuẩn",
+      "Số văn bản, ngày lập",
       "Thời gian hoạt động",
-      "Tài liệu đính kèm",
       "Ghi chú",
     ],
     ...(detailUser?.classLeaders.items ?? []).map((item, index) => [
@@ -69,10 +69,10 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       "",
       item.standarNumber,
+      item.proof + ", " + convertTimestampToDate(item.fromDate),
       convertTimestampToDate(item.attendances) === "01/01/1970"
         ? ""
         : convertTimestampToDate(item.attendances),
-      item.proof + ", " + convertTimestampToDate(item.fromDate),
       item.note ?? "",
     ]),
     [
@@ -107,8 +107,8 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       "",
       "Số tiết chuẩn",
+      "Số văn bản, ngày lập",
       "Thời gian hoạt động",
-      "Tài liệu đính kèm",
       "Ghi chú",
     ],
     ...(detailUser?.assistants.items ?? []).map((item, index) => [
@@ -121,10 +121,10 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       "",
       item.standarNumber,
+      item.proof + ", " + convertTimestampToDate(item.fromDate),
       convertTimestampToDate(item.attendances) === "01/01/1970"
         ? ""
         : convertTimestampToDate(item.attendances),
-      item.proof + ", " + convertTimestampToDate(item.fromDate),
       item.note ?? "",
     ]),
     [
@@ -159,8 +159,8 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       "",
       "Số tiết chuẩn",
+      "Số văn bản, ngày lập",
       "Thời gian hoạt động",
-      "Tài liệu đính kèm",
       "Ghi chú",
     ],
     ...(detailUser?.qAs.items ?? []).map((item, index) => [
@@ -173,10 +173,10 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       "",
       item.standarNumber,
+      item.proof + ", " + convertTimestampToDate(item.fromDate),
       convertTimestampToDate(item.attendances) === "01/01/1970"
         ? ""
         : convertTimestampToDate(item.attendances),
-      item.proof + ", " + convertTimestampToDate(item.fromDate),
       item.note ?? "",
     ]),
     [
@@ -211,8 +211,8 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       "",
       "Số tiết chuẩn",
+      "Số văn bản, ngày lập",
       "Thời gian hoạt động",
-      "Tài liệu đính kèm",
       "Ghi chú",
     ],
     ...(detailUser?.activities.items ?? []).map((item, index) => [
@@ -225,8 +225,10 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       "",
       item.standarNumber,
-      convertTimestampToDate(item.attendances),
       item.proof + ", " + convertTimestampToDate(item.fromDate),
+      convertTimestampToDate(item.attendances) === "01/01/1970"
+        ? ""
+        : convertTimestampToDate(item.attendances),
       item.note ?? "",
     ]),
     [
@@ -277,7 +279,8 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
   XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
   worksheet["!rows"] = [];
   worksheet["!rows"][3] = { hpx: 40 };
-
+  worksheet["!cols"] = [];
+  worksheet["!cols"][9] = { wpx: 70 };
   setCellStyle(worksheet, "A1", 11, true, "center", "center", false, false);
   setCellStyle(worksheet, "G1", 11, true, "center", "center", false, false);
   setCellStyle(worksheet, "A2", 11, true, "center", "center", false, false);
@@ -544,8 +547,8 @@ export const handleExportForBM = async (
           "Ngành",
           "Khóa",
           "Mã lớp",
+          "Số văn bản, ngày lập",
           "Thời gian hoạt động",
-          "Tài liệu đính kèm",
           "Ghi chú",
         ],
         ...exportBM01.results.map((item: ResultItemForBM01, index: number) => [
@@ -557,10 +560,10 @@ export const handleExportForBM = async (
           item.subject,
           item.course,
           item.classCode,
+          item.proof + ", " + convertTimestampToDate(item.fromDate),
           convertTimestampToDate(item.attendances) === "01/01/1970"
             ? ""
             : convertTimestampToDate(item.attendances),
-          item.proof + ", " + convertTimestampToDate(item.fromDate),
           item.note ?? "",
         ]),
         [
@@ -613,8 +616,8 @@ export const handleExportForBM = async (
           "Học kỳ",
           "Số tiết chuẩn",
           "",
+          "Số văn bản, ngày lập",
           "Thời gian hoạt động",
-          "Tài liệu đính kèm",
           "Ghi chú",
         ],
         ...exportBM02.results.map((item: ResultItemForBM02, index: number) => [
@@ -626,10 +629,10 @@ export const handleExportForBM = async (
           item.semester,
           item.standarNumber,
           "",
+          item.proof + ", " + convertTimestampToDate(item.fromDate),
           convertTimestampToDate(item.attendances) === "01/01/1970"
             ? ""
             : convertTimestampToDate(item.attendances),
-          item.proof + ", " + convertTimestampToDate(item.fromDate),
           item.note ?? "",
         ]),
         [
@@ -677,8 +680,8 @@ export const handleExportForBM = async (
           "",
           "Số tiết chuẩn",
           "",
+          "Số văn bản, ngày lập",
           "Thời gian hoạt động",
-          "Tài liệu đính kèm",
           "Ghi chú",
         ],
         ...exportBM04.results.map((item: ResultItemForBM04, index: number) => [
@@ -690,10 +693,10 @@ export const handleExportForBM = async (
           "",
           item.standarNumber,
           "",
+          item.proof + ", " + convertTimestampToDate(item.fromDate),
           convertTimestampToDate(item.attendances) === "01/01/1970"
             ? ""
             : convertTimestampToDate(item.attendances),
-          item.proof + ", " + convertTimestampToDate(item.fromDate),
           item.note ?? "",
         ]),
         [
@@ -740,8 +743,8 @@ export const handleExportForBM = async (
           "",
           "Số tiết chuẩn",
           "",
+          "Số văn bản, ngày lập",
           "Thời gian hoạt động",
-          "Tài liệu đính kèm",
           "Ghi chú",
         ],
         ...exportBM05.results.map((item: ResultItemForBM05, index: number) => [
@@ -753,8 +756,10 @@ export const handleExportForBM = async (
           "",
           item.standarNumber,
           "",
-          convertTimestampToDate(item.attendances),
           item.proof + ", " + convertTimestampToDate(item.fromDate),
+          convertTimestampToDate(item.attendances) === "01/01/1970"
+            ? ""
+            : convertTimestampToDate(item.attendances),
           item.note ?? "",
         ]),
         [

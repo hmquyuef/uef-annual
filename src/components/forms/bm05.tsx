@@ -56,6 +56,7 @@ dayjs.locale("vi");
 
 const { Search } = Input;
 const { RangePicker } = DatePicker;
+
 const BM05 = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
@@ -326,8 +327,8 @@ const BM05 = () => {
 
       const matchesDate =
         startDate && endDate
-          ? item.determinations.fromDate >= startDate &&
-            item.determinations.fromDate <= endDate
+          ? item.determinations.eventDate >= startDate &&
+            item.determinations.eventDate <= endDate
           : true;
 
       return matchesNameOrDocument && matchesUnit && matchesDate;
@@ -805,23 +806,27 @@ const BM05 = () => {
             />
             <ConfigProvider locale={locale}>
               <RangePicker
-                placeholder={["Từ ngày", "Đến ngày"]}
-                format={"DD/MM/YYYY"}
-                onChange={(dates, dateStrings) => {
-                  const [startDate, endDate] = dateStrings;
-                  const startTimestamp = startDate
-                    ? new Date(
-                        startDate.split("/").reverse().join("-")
-                      ).valueOf() / 1000
-                    : null;
-                  const endTimestamp = endDate
-                    ? new Date(
-                        endDate.split("/").reverse().join("-")
-                      ).valueOf() / 1000
-                    : null;
-                  setStartDate(startTimestamp);
-                  setEndDate(endTimestamp);
-                }}
+              placeholder={["Từ ngày", "Đến ngày"]}
+              format={"DD/MM/YYYY"}
+              defaultValue={[
+                dayjs(`01/09/${dayjs().year()}`, "DD/MM/YYYY"),
+                dayjs(`31/08/${dayjs().year() + 1}`, "DD/MM/YYYY"),
+              ]}
+              onChange={(dates, dateStrings) => {
+                const [startDate, endDate] = dateStrings;
+                const startTimestamp = startDate
+                ? new Date(
+                  startDate.split("/").reverse().join("-")
+                  ).valueOf() / 1000
+                : null;
+                const endTimestamp = endDate
+                ? new Date(
+                  endDate.split("/").reverse().join("-")
+                  ).valueOf() / 1000
+                : null;
+                setStartDate(startTimestamp);
+                setEndDate(endTimestamp);
+              }}
               />
             </ConfigProvider>
           </div>
