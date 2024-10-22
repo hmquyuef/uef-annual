@@ -17,6 +17,7 @@ export interface RolePermissionItem {
 }
 
 export interface AddUpdatePermissionItem {
+  id?: string;
   userId: string;
   appId: string;
   roleIds: string[];
@@ -32,24 +33,16 @@ export async function getAllPermissions(): Promise<PermissionResponses> {
   const response = await apiClient.get<PermissionResponses>("api/permission");
   return response.data;
 }
-export async function postAddPermission(
-  data: Partial<AddUpdatePermissionItem>
-): Promise<AddUpdatePermissionItem> {
-  const response = await apiClient.post<AddUpdatePermissionItem>(
-    "api/permission",
-    data
-  );
+export async function postAddPermission(data: Partial<any>): Promise<any> {
+  const response = await apiClient.post<any>("api/permission", data);
   return response.data;
 }
 
 export async function putUpdatePermission(
   id: string,
-  data: Partial<AddUpdatePermissionItem>
-): Promise<AddUpdatePermissionItem> {
-  const response = await apiClient.put<AddUpdatePermissionItem>(
-    `api/permission/${id}`,
-    data
-  );
+  data: Partial<any>
+): Promise<any> {
+  const response = await apiClient.put<any>(`api/permission/${id}`, data);
   return response.data;
 }
 

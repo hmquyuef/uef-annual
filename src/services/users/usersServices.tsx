@@ -19,6 +19,7 @@ export interface UsersFromHRM {
   firstName: string;
   fullName: string;
   fullNameUnsigned: string;
+  email: string;
   unitId: string;
   unitName: string;
 }

@@ -50,7 +50,7 @@ import FormActivity from "./activity/formActivity";
 import FromUpload from "./activity/formUpload";
 
 import locale from "antd/locale/vi_VN";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/vi";
 dayjs.locale("vi");
 
@@ -78,6 +78,9 @@ const BM05 = () => {
   const [startDate, setStartDate] = useState<number | null>(null);
   const [endDate, setEndDate] = useState<number | null>(null);
   const [isShowPdf, setIsShowPdf] = useState(false);
+  const [selectedDates, setSelectedDates] = useState<
+    [Dayjs | null, Dayjs | null] | null
+  >(null);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 15,
@@ -333,7 +336,6 @@ const BM05 = () => {
 
       return matchesNameOrDocument && matchesUnit && matchesDate;
     });
-    console.log("filteredData :>> ", filteredData);
     setData(filteredData);
   };
 
@@ -359,6 +361,7 @@ const BM05 = () => {
       console.error("Error deleting selected items:", error);
     }
   }, [selectedRowKeys]);
+  
   const handleEdit = (activity: ActivityItem) => {
     const updatedActivity: Partial<AddUpdateActivityItem> = {
       ...activity,
@@ -806,27 +809,45 @@ const BM05 = () => {
             />
             <ConfigProvider locale={locale}>
               <RangePicker
-              placeholder={["Từ ngày", "Đến ngày"]}
-              format={"DD/MM/YYYY"}
-              defaultValue={[
-                dayjs(`01/09/${dayjs().year()}`, "DD/MM/YYYY"),
-                dayjs(`31/08/${dayjs().year() + 1}`, "DD/MM/YYYY"),
-              ]}
-              onChange={(dates, dateStrings) => {
-                const [startDate, endDate] = dateStrings;
-                const startTimestamp = startDate
-                ? new Date(
-                  startDate.split("/").reverse().join("-")
-                  ).valueOf() / 1000
-                : null;
-                const endTimestamp = endDate
-                ? new Date(
-                  endDate.split("/").reverse().join("-")
-                  ).valueOf() / 1000
-                : null;
-                setStartDate(startTimestamp);
-                setEndDate(endTimestamp);
-              }}
+                placeholder={["Từ ngày", "Đến ngày"]}
+                format={"DD/MM/YYYY"}
+                // defaultValue={[
+                //   dayjs(`01/09/${dayjs().year()}`, "DD/MM/YYYY"),
+                //   dayjs(`31/08/${dayjs().year() + 1}`, "DD/MM/YYYY"),
+                // ]}
+                value={
+                  selectedDates || [
+                    dayjs(`01/09/${dayjs().year()}`, "DD/MM/YYYY"),
+                    dayjs(`31/08/${dayjs().year() + 1}`, "DD/MM/YYYY"),
+                  ]
+                }
+                onChange={(dates, dateStrings) => {
+                  if (dates) {
+                    const [startDate, endDate] = dateStrings;
+                    const startTimestamp = startDate
+                      ? new Date(
+                          startDate.split("/").reverse().join("-")
+                        ).valueOf() / 1000
+                      : null;
+                    const endTimestamp = endDate
+                      ? new Date(
+                          endDate.split("/").reverse().join("-")
+                        ).valueOf() / 1000
+                      : null;
+                    setStartDate(startTimestamp);
+                    setEndDate(endTimestamp);
+                    setSelectedDates(dates); // Lưu giá trị được chọn
+                  } else {
+                    // Khi nhấn nút X, đặt lại giá trị mặc định
+                    setSelectedDates(null);
+                    setStartDate(
+                      new Date(`01/09/${dayjs().year()}`).valueOf() / 1000
+                    );
+                    setEndDate(
+                      new Date(`31/08/${dayjs().year() + 1}`).valueOf() / 1000
+                    );
+                  }
+                }}
               />
             </ConfigProvider>
           </div>
@@ -920,7 +941,7 @@ const BM05 = () => {
       </div>
       <Table<ActivityItem>
         key={"table-activity-bm05"}
-        className="custom-table-header shadow-md rounded-md"
+        className="custom-table-header shadow-md rounded-md bg-white"
         bordered
         rowKey={(item) => item.id}
         rowHoverable

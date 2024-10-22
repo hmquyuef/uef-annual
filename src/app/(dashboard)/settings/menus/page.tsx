@@ -2,30 +2,27 @@
 
 import CustomModal from "@/components/CustomModal";
 import CustomNotification from "@/components/CustomNotification";
-import FormPermission from "@/components/forms/permissions/formPermission";
+import FormMenu from "@/components/forms/menus/formMenu";
 import {
+  AddUpdateMenu,
   AddUpdateMenuItem,
   deleteMenus,
   getAllMenus,
   MenuItem,
+  postAddMenu,
+  putUpdateMenu,
 } from "@/services/menus/menuServices";
-import { AddUpdatePermissionItem } from "@/services/permissions/permissionServices";
-import { convertTimestampToDate } from "@/utility/Utilities";
 import {
   ContactsOutlined,
   DeleteOutlined,
-  FileExcelOutlined,
   HomeOutlined,
-  PlusCircleOutlined,
   PlusOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
 import {
   Breadcrumb,
   Button,
-  Dropdown,
   Empty,
-  MenuProps,
   PaginationProps,
   Table,
   TableColumnsType,
@@ -33,9 +30,9 @@ import {
   Tag,
   Tooltip,
 } from "antd";
-// import { TableRowSelection } from "antd/es/table/interface";
-import { Key, useCallback, useEffect, useState } from "react";
-type TableRowSelection<T extends object = object> = TableProps<T>['rowSelection'];
+import { Key, useEffect, useState } from "react";
+type TableRowSelection<T extends object = object> =
+  TableProps<T>["rowSelection"];
 const Menus = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -60,51 +57,56 @@ const Menus = () => {
     setData(response.items);
   };
 
+  const handleEdit = (menu: MenuItem) => {
+    const updatedMenu: Partial<AddUpdateMenuItem> = {
+      ...menu,
+    };
+    setSelectedItem(updatedMenu);
+    setMode("edit");
+    setIsOpen(true);
+  };
+
   const columns: TableColumnsType<MenuItem> = [
-    // {
-    //   title: <div className="p-2">STT</div>,
-    //   dataIndex: "stt",
-    //   key: "stt",
-    //   render: (_, __, index) => (
-    //     <></>
-    //     // <p>{pagination.pageSize * (pagination.current - 1) + index + 1}</p>
-    //   ),
-    //   className: "text-center w-[20px]",
-    // },
     {
       title: <div className="p-2">CHỨC NĂNG</div>,
       dataIndex: "label",
       key: "label",
       className: "max-w-24",
-      render: (label: string) => <>{label}</>,
+      render: (label: string, record: MenuItem) => (
+        <span
+          className="text-blue-500 cursor-pointer"
+          onClick={() => {
+            setMode("edit");
+            handleEdit(record);
+          }}
+        >
+          {label}
+        </span>
+      ),
     },
     {
       title: "VỊ TRÍ",
       dataIndex: "position",
       key: "position",
-      className: "text-center w-[60px]",
+      className: "w-[60px]",
       render: (position: string) => <>{position}</>,
     },
     {
       title: "BIỂU TƯỢNG",
       dataIndex: "icon",
       key: "icon",
-      className: "max-w-24",
-      render: (icon: string) => <>{icon}</>,
+      className: "text-center w-[100px]",
+      render: (icon: string) => {
+        const IconComponent = icon ? require(`@ant-design/icons`)[icon] : null;
+        return IconComponent ? <IconComponent /> : null;
+      },
     },
     {
-      title: "ỨNG DỤNG",
-      dataIndex: "appName",
-      key: "appName",
-      render: (appName: string) => <>{appName}</>,
-    },
-    {
-      title: "NGÀY KHỞI TẠO",
-      dataIndex: "creationTime",
-      key: "creationTime",
-      render: (creationTime: number) =>
-        creationTime ? convertTimestampToDate(creationTime) : "",
-      className: "text-center w-[10rem]",
+      title: "ĐƯỜNG DẪN",
+      dataIndex: "href",
+      key: "href",
+      className: "w-[15rem]",
+      render: (href: string) => <>{href}</>,
     },
     {
       title: "TRẠNG THÁI",
@@ -132,14 +134,9 @@ const Menus = () => {
   const onSelectChange = (newSelectedRowKeys: Key[]) => {
     setSelectedRowKeys(newSelectedRowKeys);
   };
-  // const rowSelection: TableRowSelection<MenuItem> = {
-  //   selectedRowKeys,
-  //   onChange: onSelectChange,
-  // };
+
   const rowSelection: TableRowSelection<MenuItem> = {
-    onChange: (selectedRowKeys, selectedRows) => {
-      console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
-    },
+    onChange: onSelectChange,
     onSelect: (record, selected, selectedRows) => {
       console.log(record, selected, selectedRows);
     },
@@ -160,103 +157,61 @@ const Menus = () => {
     });
   };
 
-  const items: MenuProps["items"] = [
-    {
-      key: "1",
-      label: (
-        <p
-          onClick={() => {
-            setIsOpen(true);
-            setMode("add");
-          }}
-          className="font-medium"
-        >
-          Thêm mới
-        </p>
-      ),
-      icon: <PlusCircleOutlined />,
-      style: { color: "#1890ff" },
-    },
-    {
-      type: "divider",
-    },
-    {
-      key: "2",
-      label: (
-        <p
-          onClick={() => {
-            setIsOpen(true);
-            setMode("add");
-          }}
-          className="font-medium"
-        >
-          Import Excel
-        </p>
-      ),
-      icon: <FileExcelOutlined />,
-      style: { color: "#52c41a" },
-    },
-  ];
-  const handleSubmit = async (formData: Partial<MenuItem>) => {
-    console.log("object :>> ", formData);
-    // try {
-    //   if (mode === "edit" && selectedItem) {
-    //     const updatedFormData: Partial<AddUpdateActivityItem> = {
-    //       ...formData,
-    //       participants: formData.participants as ActivityInput[],
-    //     };
-    //     const response = await putUpdateActivity(
-    //       formData.id as string,
-    //       updatedFormData
-    //     );
-    //     if (response) {
-    //       setNotificationOpen(true);
-    //       setStatus("success");
-    //       setMessage("Thông báo");
-    //       setDescription("Cập nhật hoạt động thành công!");
-    //     }
-    //   } else {
-    //     const newFormData: Partial<AddUpdateActivityItem> = {
-    //       ...formData,
-    //       participants: formData.participants as ActivityInput[],
-    //     };
-    //     const response = await postAddActivity(newFormData);
-    //     if (response) {
-    //       setNotificationOpen(true);
-    //       setStatus("success");
-    //       setMessage("Thông báo");
-    //       setDescription("Thêm mới hoạt động thành công!");
-    //     }
-    //   }
-    //   await getListActivities();
-    //   setIsOpen(false);
-    //   setSelectedItem(undefined);
-    //   setMode("add");
-    // } catch (error) {
-    //   setNotificationOpen(true);
-    //   setStatus("error");
-    //   setMessage("Thông báo");
-    //   setDescription("Đã có lỗi xảy ra!");
-    // }
+  const handleSubmit = async (formData: Partial<AddUpdateMenu>) => {
+    try {
+      if (mode === "edit" && selectedItem) {
+        const response = await putUpdateMenu(formData.id as string, formData);
+        console.log("response :>> ", response);
+        if (response) {
+          setNotificationOpen(true);
+          setStatus("success");
+          setMessage("Thông báo");
+          setDescription("Cập nhật chức năng thành công!");
+        }
+      } else {
+        const response = await postAddMenu(formData);
+        console.log("response :>> ", response);
+        if (response) {
+          setNotificationOpen(true);
+          setStatus("success");
+          setMessage("Thông báo");
+          setDescription("Thêm mới chức năng thành công!");
+        }
+      }
+      await getListMenus();
+      setIsOpen(false);
+      setNotificationOpen(false);
+      setSelectedItem(undefined);
+      setMode("add");
+    } catch (error) {
+      setNotificationOpen(true);
+      setStatus("error");
+      setMessage("Thông báo");
+      setDescription("Đã có lỗi xảy ra!");
+    }
   };
-  const handleDelete = useCallback(async () => {
+  const handleDelete = async () => {
     try {
       const selectedKeysArray = Array.from(selectedRowKeys) as string[];
-      if (selectedKeysArray.length > 0) {
-        await deleteMenus(selectedKeysArray);
+      const idsToDelete = selectedKeysArray
+        .map((key) => {
+          const menuItem = data.find((item) => item.position === key);
+          return menuItem ? menuItem.id : null;
+        })
+        .filter((id) => id !== null);
+      if (idsToDelete.length > 0) {
+        await deleteMenus(idsToDelete);
         setNotificationOpen(true);
         setStatus("success");
         setMessage("Thông báo");
-        setDescription(
-          `Đã xóa thành công ${selectedKeysArray.length} hoạt động!`
-        );
+        setDescription(`Đã xóa thành công ${idsToDelete.length} chức năng!`);
         await getListMenus();
         setSelectedRowKeys([]);
       }
     } catch (error) {
       console.error("Error deleting selected items:", error);
     }
-  }, [selectedRowKeys]);
+  };
   useEffect(() => {
     getListMenus();
   }, []);
@@ -297,13 +252,17 @@ const Menus = () => {
       </div>
       <div className="flex justify-end gap-4 mb-4">
         <Tooltip placement="top" title={"Thêm mới hoạt động"} arrow={true}>
-          <Dropdown menu={{ items }} trigger={["click"]}>
-            <a onClick={(e) => e.preventDefault()}>
-              <Button type="primary" icon={<PlusOutlined />}>
-                Thêm hoạt động
-              </Button>
-            </a>
-          </Dropdown>
+          <Button
+            type="primary"
+            onClick={() => {
+              setIsOpen(true);
+              setMode("add");
+            }}
+            icon={<PlusOutlined />}
+            iconPosition="start"
+          >
+            Thêm chức năng
+          </Button>
         </Tooltip>
         <Tooltip placement="top" title="Xóa các hoạt động" arrow={true}>
           <Button
@@ -329,8 +288,8 @@ const Menus = () => {
         <CustomModal
           isOpen={isOpen}
           isOk={true}
-          width={"30vw"}
-          title={mode === "edit" ? "Cập nhật vai trò" : "Thêm mới vai trò"}
+          width={"50vw"}
+          title={mode === "edit" ? "Cập nhật chức năng" : "Thêm mới chức năng"}
           onOk={() => {
             const formElement = document.querySelector("form");
             formElement?.dispatchEvent(
@@ -344,18 +303,18 @@ const Menus = () => {
             setMode("add");
           }}
           bodyContent={
-            <FormPermission
+            <FormMenu
               onSubmit={handleSubmit}
-              initialData={selectedItem as Partial<AddUpdatePermissionItem>}
+              initialData={selectedItem as Partial<AddUpdateMenu>}
               mode={mode}
             />
           }
         />
         <Table<MenuItem>
-          key={"table-activity-bm05"}
+          key={"table-menus"}
           className="custom-table-header shadow-md rounded-md"
           bordered
-          rowKey={(item) => item.id}
+          rowKey={(item) => item.position}
           rowHoverable
           size="small"
           pagination={{
@@ -367,7 +326,7 @@ const Menus = () => {
             defaultPageSize: 15,
             pageSizeOptions: ["15", "25", "50", "100"],
           }}
-          rowSelection={{...rowSelection, checkStrictly: true}}
+          rowSelection={{ ...rowSelection, checkStrictly: false }}
           columns={columns}
           dataSource={data}
           locale={{ emptyText: <Empty description="No Data"></Empty> }}

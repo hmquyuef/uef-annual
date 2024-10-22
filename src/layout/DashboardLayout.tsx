@@ -169,7 +169,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [session, router]);
   return (
     <React.Fragment>
-      <div className="flex h-screen bg-gray-50">
+      <div className="flex h-screen bg-[#fcfaf6]">
         <div className="h-full fixed top-0 left-0 z-30">
           <aside
             className={`flex flex-col transition-all duration-300 ${

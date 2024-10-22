@@ -38,11 +38,9 @@ import {
   Tooltip,
 } from "antd";
 import moment from "moment";
-import Link from "next/link";
 import { FC, FormEvent, Key, useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { pdfjs } from "react-pdf";
-import { Document, Page } from "react-pdf";
+import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 

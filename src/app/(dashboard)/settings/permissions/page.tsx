@@ -4,10 +4,16 @@ import CustomModal from "@/components/CustomModal";
 import CustomNotification from "@/components/CustomNotification";
 import FormPermission from "@/components/forms/permissions/formPermission";
 import {
+  getAllPermissionsForMenuByUserName,
+  PermissionForMenuResponses,
+} from "@/services/permissions/permissionForMenu";
+import {
   AddUpdatePermissionItem,
   deletePermissions,
   getAllPermissions,
   PermissionItem,
+  postAddPermission,
+  putUpdatePermission,
 } from "@/services/permissions/permissionServices";
 import { convertTimestampToDate } from "@/utility/Utilities";
 import {
@@ -40,6 +46,9 @@ const Permissions = () => {
   const [mode, setMode] = useState<"add" | "edit">("add");
   const [isNotificationOpen, setNotificationOpen] = useState(false);
   const [data, setData] = useState<PermissionItem[]>([]);
+  const [dataForMenu, setDataForMenu] = useState<
+    PermissionForMenuResponses | undefined
+  >(undefined);
   const [message, setMessage] = useState("");
   const [description, setDescription] = useState("");
   const [selectedItem, setSelectedItem] = useState<
@@ -53,9 +62,27 @@ const Permissions = () => {
     pageSize: 15,
   });
 
+  const color = [
+    "magenta",
+    "red",
+    "volcano",
+    "orange",
+    "gold",
+    "lime",
+    "green",
+    "cyan",
+    "blue",
+    "geekblue",
+    "purple",
+  ];
   const getListPermissions = async () => {
     const response = await getAllPermissions();
     setData(response.items);
+  };
+
+  const getListPermissionsForMenu = async () => {
+    const response = await getAllPermissionsForMenuByUserName();
+    setDataForMenu(response);
   };
 
   const columns: TableColumnsType<PermissionItem> = [
@@ -73,7 +100,18 @@ const Permissions = () => {
       dataIndex: "userName",
       key: "userName",
       className: "max-w-24",
-      render: (userName: string) => <>{userName}</>,
+      render: (userName: string) => (
+        <span
+          className="text-blue-600 font-medium cursor-pointer"
+          onClick={() => {
+            setMode("edit");
+            setIsOpen(true);
+            setSelectedItem(data.find((item) => item.userName === userName));
+          }}
+        >
+          {userName}
+        </span>
+      ),
     },
     {
       title: "HỌ VÀ TÊN",
@@ -83,19 +121,38 @@ const Permissions = () => {
       render: (fullName: string) => <>{fullName}</>,
     },
     {
-      title: "ỨNG DỤNG",
-      dataIndex: "appName",
-      key: "appName",
-      render: (appName: string) => <>{appName}</>,
-    },
-    {
-      title: "QUYỀN ỨNG DỤNG",
+      title: "QUYỀN CHỨC NĂNG",
       dataIndex: ["roles", "appName"],
       key: "name",
       render: (name: string, record: PermissionItem) => {
         const roles = record.roles.map((role) => role.name).join(", ");
         return <>{roles}</>;
       },
+    },
+    {
+      title: "QUYỀN ỨNG DỤNG",
+      dataIndex: "roleMenus",
+      key: "roleMenus",
+      render: (roleMenus: string, record: PermissionItem) => {
+        const userName = record.userName;
+        const menus =
+          dataForMenu?.items.find((item) => item.userName === userName)
+            ?.permissions ?? [];
+        return (
+          <>
+            {menus &&
+              menus.map((menu) => (
+                <Tag
+                  key={menu.position}
+                  color={color[Math.floor(Math.random() * color.length)]}
+                >
+                  {menu.position}. {menu.label} ({menu.children.length})
+                </Tag>
+              ))}
+          </>
+        );
+      },
+      className: "max-w-[15rem] text-center",
     },
     {
       title: "NGÀY KHỞI TẠO",
@@ -148,84 +205,36 @@ const Permissions = () => {
     });
   };
 
-  const items: MenuProps["items"] = [
-    {
-      key: "1",
-      label: (
-        <p
-          onClick={() => {
-            setIsOpen(true);
-            setMode("add");
-          }}
-          className="font-medium"
-        >
-          Thêm mới
-        </p>
-      ),
-      icon: <PlusCircleOutlined />,
-      style: { color: "#1890ff" },
-    },
-    {
-      type: "divider",
-    },
-    {
-      key: "2",
-      label: (
-        <p
-          onClick={() => {
-            setIsOpen(true);
-            setMode("add");
-          }}
-          className="font-medium"
-        >
-          Import Excel
-        </p>
-      ),
-      icon: <FileExcelOutlined />,
-      style: { color: "#52c41a" },
-    },
-  ];
-  const handleSubmit = async (formData: Partial<AddUpdatePermissionItem>) => {
+  const handleSubmit = async (formData: Partial<any>) => {
     console.log("object :>> ", formData);
-    // try {
-    //   if (mode === "edit" && selectedItem) {
-    //     const updatedFormData: Partial<AddUpdateActivityItem> = {
-    //       ...formData,
-    //       participants: formData.participants as ActivityInput[],
-    //     };
-    //     const response = await putUpdateActivity(
-    //       formData.id as string,
-    //       updatedFormData
-    //     );
-    //     if (response) {
-    //       setNotificationOpen(true);
-    //       setStatus("success");
-    //       setMessage("Thông báo");
-    //       setDescription("Cập nhật hoạt động thành công!");
-    //     }
-    //   } else {
-    //     const newFormData: Partial<AddUpdateActivityItem> = {
-    //       ...formData,
-    //       participants: formData.participants as ActivityInput[],
-    //     };
-    //     const response = await postAddActivity(newFormData);
-    //     if (response) {
-    //       setNotificationOpen(true);
-    //       setStatus("success");
-    //       setMessage("Thông báo");
-    //       setDescription("Thêm mới hoạt động thành công!");
-    //     }
-    //   }
-    //   await getListActivities();
-    //   setIsOpen(false);
-    //   setSelectedItem(undefined);
-    //   setMode("add");
-    // } catch (error) {
-    //   setNotificationOpen(true);
-    //   setStatus("error");
-    //   setMessage("Thông báo");
-    //   setDescription("Đã có lỗi xảy ra!");
-    // }
+    try {
+      if (mode === "edit" && selectedItem) {
+        const response = await putUpdatePermission(
+          formData.id as string,
+          formData
+        );
+        if (response) {
+          setDescription("Cập nhật phân quyền thành công!");
+        }
+      } else {
+        const response = await postAddPermission(formData);
+        if (response) {
+          setDescription("Thêm mới phân quyền thành công!");
+        }
+      }
+      setNotificationOpen(true);
+      setStatus("success");
+      setMessage("Thông báo");
+      await fetchData();
+      setIsOpen(false);
+      setSelectedItem(undefined);
+      setMode("add");
+    } catch (error) {
+      setNotificationOpen(true);
+      setStatus("error");
+      setMessage("Thông báo");
+      setDescription("Đã có lỗi xảy ra!");
+    }
   };
   const handleDelete = useCallback(async () => {
     try {
@@ -236,18 +245,24 @@ const Permissions = () => {
         setStatus("success");
         setMessage("Thông báo");
         setDescription(
-          `Đã xóa thành công ${selectedKeysArray.length} hoạt động!`
+          `Đã xóa thành công ${selectedKeysArray.length} phân quyền ứng dụng!`
         );
-        await getListPermissions();
+        await fetchData();
         setSelectedRowKeys([]);
       }
     } catch (error) {
       console.error("Error deleting selected items:", error);
     }
   }, [selectedRowKeys]);
+
+  const fetchData = async () => {
+    await Promise.all([getListPermissions(), getListPermissionsForMenu()]);
+  };
+
   useEffect(() => {
-    getListPermissions();
+    fetchData();
   }, []);
+
   return (
     <div>
       <div className="mb-3">
@@ -283,14 +298,18 @@ const Permissions = () => {
         />
       </div>
       <div className="flex justify-end gap-4 mb-4">
-        <Tooltip placement="top" title={"Thêm mới hoạt động"} arrow={true}>
-          <Dropdown menu={{ items }} trigger={["click"]}>
-            <a onClick={(e) => e.preventDefault()}>
-              <Button type="primary" icon={<PlusOutlined />}>
-                Thêm hoạt động
-              </Button>
-            </a>
-          </Dropdown>
+        <Tooltip placement="top" title={"Thêm mới phân quyền"} arrow={true}>
+          <Button
+            type="primary"
+            onClick={() => {
+              setIsOpen(true);
+              setMode("add");
+            }}
+            icon={<PlusOutlined />}
+            iconPosition="start"
+          >
+            Thêm phân quyền
+          </Button>
         </Tooltip>
         <Tooltip placement="top" title="Xóa các hoạt động" arrow={true}>
           <Button
@@ -316,8 +335,10 @@ const Permissions = () => {
         <CustomModal
           isOpen={isOpen}
           isOk={true}
-          width={"30vw"}
-          title={mode === "edit" ? "Cập nhật vai trò" : "Thêm mới vai trò"}
+          width={"40vw"}
+          title={
+            mode === "edit" ? "Cập nhật phân quyền" : "Thêm mới phân quyền"
+          }
           onOk={() => {
             const formElement = document.querySelector("form");
             formElement?.dispatchEvent(
@@ -333,7 +354,7 @@ const Permissions = () => {
           bodyContent={
             <FormPermission
               onSubmit={handleSubmit}
-              initialData={selectedItem as Partial<AddUpdatePermissionItem>}
+              initialData={selectedItem as Partial<PermissionItem>}
               mode={mode}
             />
           }

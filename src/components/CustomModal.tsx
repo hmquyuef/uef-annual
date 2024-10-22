@@ -23,7 +23,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
     <Modal
       open={isOpen}
       title={title}
-      style={{ top: 10 }}
+      style={{ top: 20 }}
       onOk={onOk}
       onCancel={onCancel}
       okText="Xác nhận"
