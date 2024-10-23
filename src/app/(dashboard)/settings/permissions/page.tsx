@@ -4,7 +4,8 @@ import CustomModal from "@/components/CustomModal";
 import CustomNotification from "@/components/CustomNotification";
 import FormPermission from "@/components/forms/permissions/formPermission";
 import {
-  getAllPermissionsForMenuByUserName,
+  deletePermissionsForMenu,
+  getAllPermissionsForMenu,
   PermissionForMenuResponses,
 } from "@/services/permissions/permissionForMenu";
 import {
@@ -81,7 +82,7 @@ const Permissions = () => {
   };
 
   const getListPermissionsForMenu = async () => {
-    const response = await getAllPermissionsForMenuByUserName();
+    const response = await getAllPermissionsForMenu();
     setDataForMenu(response);
   };
 
@@ -146,7 +147,8 @@ const Permissions = () => {
                   key={menu.position}
                   color={color[Math.floor(Math.random() * color.length)]}
                 >
-                  {menu.position}. {menu.label} ({menu.children.length})
+                  {menu.position}. {menu.label}
+                  {menu.isChildren && ` (${menu.children.length})`}
                 </Tag>
               ))}
           </>
@@ -160,7 +162,7 @@ const Permissions = () => {
       key: "creationTime",
       render: (creationTime: number) =>
         creationTime ? convertTimestampToDate(creationTime) : "",
-      className: "text-center w-[10rem]",
+      className: "text-center w-[120px]",
     },
     {
       title: "TRẠNG THÁI",
@@ -206,7 +208,6 @@ const Permissions = () => {
   };
 
   const handleSubmit = async (formData: Partial<any>) => {
-    console.log("object :>> ", formData);
     try {
       if (mode === "edit" && selectedItem) {
         const response = await putUpdatePermission(
@@ -235,12 +236,21 @@ const Permissions = () => {
       setMessage("Thông báo");
       setDescription("Đã có lỗi xảy ra!");
     }
+    setNotificationOpen(false);
   };
   const handleDelete = useCallback(async () => {
     try {
       const selectedKeysArray = Array.from(selectedRowKeys) as string[];
+
+      const selectedUserNames = data
+        .filter((item) => selectedRowKeys.includes(item.id))
+        .map((item) => item.userName);
+
       if (selectedKeysArray.length > 0) {
-        await deletePermissions(selectedKeysArray);
+        await Promise.all([
+          deletePermissions(selectedKeysArray),
+          deletePermissionsForMenu(selectedUserNames),
+        ]);
         setNotificationOpen(true);
         setStatus("success");
         setMessage("Thông báo");
@@ -253,6 +263,7 @@ const Permissions = () => {
     } catch (error) {
       console.error("Error deleting selected items:", error);
     }
+    setNotificationOpen(false);
   }, [selectedRowKeys]);
 
   const fetchData = async () => {

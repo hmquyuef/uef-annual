@@ -37,8 +37,9 @@ const FormPermission: FC<FormPermissionProps> = ({
   initialData,
   mode,
 }) => {
+  const [loading, setLoading] = useState(true);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
-  const [selectedKey, setSelectedKey] = useState<Key | null>(null);
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [selectedKeyRoles, setSelectedKeyRoles] = useState<Key | null>(null);
   const [selectedKeyApp, setSelectedKeyApp] = useState<Key | null>(
     "059cee9c-45cc-4433-b22d-b3a1a83d88c1"
@@ -52,9 +53,6 @@ const FormPermission: FC<FormPermissionProps> = ({
   const [dataRoles, setDataRoles] = useState<RoleResponses | undefined>(
     undefined
   );
-  const [dataForMenu, setDataForMenu] = useState<
-    PermissionForMenuResponses | undefined
-  >(undefined);
 
   const getUsersHRM = async () => {
     const response = await getUsersFromHRM();
@@ -71,29 +69,18 @@ const FormPermission: FC<FormPermissionProps> = ({
     setData(response.items);
   };
 
-  const getListPermissionsForMenu = async () => {
-    const response = await getAllPermissionsForMenuByUserName();
-    setDataForMenu(response);
-  };
-
   const getListApplications = async () => {
     const response = await getAllApplications();
     setDataApplications(response.items);
   };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      await Promise.all([
-        getUsersHRM(),
-        getListRoles(),
-        getListMenus(),
-        getListPermissionsForMenu(),
-        getListApplications(),
-      ]);
-    };
-
-    fetchData();
-  }, []);
+  const fetchData = async () => {
+    await Promise.all([
+      getUsersHRM(),
+      getListRoles(),
+      getListMenus(),
+      getListApplications(),
+    ]);
+  };
 
   const columns: TableColumnsType<MenuItem> = [
     {
@@ -133,6 +120,11 @@ const FormPermission: FC<FormPermissionProps> = ({
     },
   ];
 
+  const getPermissionForMenuIdByUserName = async (userName: string) => {
+    const response = await getAllPermissionsForMenuByUserName(userName);
+    return response.items;
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const formData: Partial<any> = {
@@ -161,56 +153,58 @@ const FormPermission: FC<FormPermissionProps> = ({
       roleIds: [selectedKeyRoles],
       isActived: isActived,
     };
-    const permissionForMenuId = dataForMenu?.items?.find(
-      (item) => item.userName === selectedKey
-    )?.id;
-    const response = permissionForMenuId
-      ? await putUpdatePermissionForMenu(permissionForMenuId, formData)
-      : await postAddPermissionForMenu(formData);
-    if (response) onSubmit(permissionForm);
+
+    const permissionForMenu = selectedKey
+      ? await getPermissionForMenuIdByUserName(selectedKey)
+      : null;
+
+    if (permissionForMenu) {
+      const permissionForMenuId = permissionForMenu[0]?.id;
+      const response = permissionForMenuId
+        ? await putUpdatePermissionForMenu(permissionForMenuId, formData)
+        : await postAddPermissionForMenu(formData);
+      if (response) onSubmit(permissionForm);
+    }
   };
 
   useEffect(() => {
-    if (mode === "edit" && initialData) {
-      if (initialData.userName) {
-        const user = dataUsers?.items?.find(
-          (user) => user.userName === initialData.userName
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const fetchDataAsync = async () => {
+      setLoading(true);
+      if (mode === "edit" && initialData) {
+        setSelectedKey(initialData.userName || null);
+        setSelectedKeyRoles(initialData.roles?.[0]?.id || null);
+        setSelectedKeyApp("059cee9c-45cc-4433-b22d-b3a1a83d88c1");
+        setIsActived(initialData.isActived || false);
+        const userPermissions = await getAllPermissionsForMenuByUserName(
+          initialData.userName || ""
         );
-        if (user) {
-          setSelectedKey(user ? user.userName : null);
-          const userPermissions = dataForMenu?.items?.find(
-            (item) => item.userName === user.userName
-          );
-          if (userPermissions) {
-            const positions = userPermissions.permissions.flatMap(
-              (permission) => permission.children.map((child) => child.position)
-            );
-            setSelectedRowKeys(positions);
-          } else {
-            setSelectedRowKeys([]);
-          }
-        }
+        const positions = userPermissions.items.map((item) =>
+          item.permissions.flatMap((permission) =>
+            permission.children.map((child) => child.position)
+          )
+        );
+        setSelectedRowKeys(positions[0]);
+        setLoading(false);
       } else {
+        setSelectedKeyApp("059cee9c-45cc-4433-b22d-b3a1a83d88c1");
         setSelectedKey(null);
-      }
-      if (initialData.roles && initialData.roles[0]?.id) {
-        const role = dataRoles?.items?.find(
-          (role) => role.id === initialData.roles?.[0]?.id
-        );
-        setSelectedKeyRoles(role ? role.id : null);
-      } else {
         setSelectedKeyRoles(null);
+        setIsActived(false);
+        setSelectedRowKeys([]);
       }
-      setSelectedKeyApp("059cee9c-45cc-4433-b22d-b3a1a83d88c1");
-      setIsActived(initialData.isActived || false);
-    } else {
-      setSelectedKeyApp("059cee9c-45cc-4433-b22d-b3a1a83d88c1");
-      setSelectedKey(null);
-      setSelectedKeyRoles(null);
-      setIsActived(false);
-      setSelectedRowKeys([]);
-    }
+      setLoading(false);
+    };
+
+    fetchDataAsync();
   }, [initialData, mode]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <form onSubmit={handleSubmit}>

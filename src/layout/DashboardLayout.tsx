@@ -1,18 +1,15 @@
 "use client";
 
 import TopHeaders from "@/components/TopHeader";
-import { getListRolesByEmail, UserRole } from "@/services/users/usersServices";
-import {
-  AppstoreOutlined,
-  ArrowLeftOutlined,
-  ArrowRightOutlined,
-  SettingOutlined,
-} from "@ant-design/icons";
+import { getAllPermissionsForMenuByUserName } from "@/services/permissions/permissionForMenu";
+import { getUserNameByEmail } from "@/services/users/usersServices";
+import { ArrowLeftOutlined, ArrowRightOutlined } from "@ant-design/icons";
 import { Image, Menu, MenuProps } from "antd";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import Cookies from "js-cookie";
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
@@ -25,9 +22,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { data: session } = useSession();
   const router = useRouter();
   type MenuItem = Required<MenuProps>["items"][number];
-
   const [isOpened, setIsOpened] = useState(true);
-  const [stateOpenKeys, setStateOpenKeys] = useState(["2", "21"]);
+  const [stateOpenKeys, setStateOpenKeys] = useState(["1", "12"]);
   const [itemsMenu, setItemsMenu] = useState<MenuItem[]>([]);
   const getLevelKeys = (items1: LevelKeysProps[]) => {
     const key: Record<string, number> = {};
@@ -65,101 +61,47 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   const levelKeys = getLevelKeys(itemsMenu as LevelKeysProps[]);
-
-  const fetchRoles = async (mail: string) => {
-    const response = await getListRolesByEmail(mail);
-    if (response.items && response.items.length > 0) {
-      response.items.map((item: UserRole) => {
-        const roles = item.roles.map((role) => role.name);
-        const tempMenu: MenuItem[] = [];
-        if (roles.includes("user")) {
-          tempMenu.push(
-            {
-              key: "2",
-              icon: <AppstoreOutlined />,
-              label: "Khối lượng công tác",
-              children: [
-                {
-                  key: "20",
-                  label: <Link href="/workloads/search">Tra cứu CB-GV-NV</Link>,
-                },
-                {
-                  key: "21",
-                  label: <Link href="/workloads">Biểu mẫu</Link>,
-                },
-              ],
-            }
-          );
-        }
-        if (roles.includes("manager")) {
-          tempMenu.push({
-            key: "2",
-            icon: <AppstoreOutlined />,
-            label: "Khối lượng công tác",
-            children: [
-              {
-                key: "20",
-                label: <Link href="/workloads/search">Tra cứu CB-GV-NV</Link>,
-              },
-              {
-                key: "21",
-                label: <Link href="/workloads">Biểu mẫu</Link>,
-              },
-            ],
-          });
-        }
-        if (roles.includes("admin")) {
-          tempMenu.push(
-            {
-              key: "2",
-              icon: <AppstoreOutlined />,
-              label: "Khối lượng công tác",
-              children: [
-                {
-                  key: "20",
-                  label: <Link href="/workloads/search">Tra cứu CB-GV-NV</Link>,
-                },
-                {
-                  key: "21",
-                  label: <Link href="/workloads">Biểu mẫu</Link>,
-                },
-                {
-                  key: "22",
-                  label: <Link href="/workloads/types">Loại biểu mẫu</Link>,
-                },
-                {
-                  key: "23",
-                  label: <Link href="/workloads/groups">Nhóm biểu mẫu</Link>,
-                },
-              ],
-            },
-            {
-              key: "3",
-              icon: <SettingOutlined />,
-              label: "Cài đặt",
-              children: [
-                { key: "31", label: <Link href="/settings/applications">Ứng dụng</Link> },
-                { key: "32", label: <Link href="/settings/roles">Vai trò</Link> },
-                { key: "33", label: <Link href="/settings/permissions">Phân quyền</Link> },
-                { key: "34", label: <Link href="/settings/menus">Chức năng</Link> },
-              ],
-            }
-          );
-        }
-        setItemsMenu(tempMenu);
-      });
-    } else {
-      router.push("/not-permission");
-    }
-    const currentPath = window.location.pathname;
-    router.push(currentPath);
+  const handleClick = (e: any) => {
+    Cookies.set("m_k", e.key);
+    Cookies.set(
+      "m_i",
+      JSON.stringify([e.keyPath[1], e.keyPath[0], e.domEvent.target.href])
+    );
   };
+  const getMenuByUserName = async (email: string) => {
+    const response = await getUserNameByEmail(email);
+    if (!response) return router.push("/not-permission");
+
+    const listmenus = await getAllPermissionsForMenuByUserName(
+      response.userName
+    );
+    if (!listmenus.items[0].permissions.length)
+      return router.push("/not-permission");
+
+    const tempMenu: MenuItem[] = listmenus.items[0].permissions.map((item) => {
+      const tempChildren: MenuItem[] = item.children.map((child) => ({
+        key: child.position,
+        label: <Link href={child.href}>{child.label}</Link>,
+      }));
+      const IconComponent = item.icon
+        ? require(`@ant-design/icons`)[item.icon]
+        : null;
+      return {
+        key: item.position,
+        icon: IconComponent ? <IconComponent /> : null,
+        label: item.label,
+        children: tempChildren,
+      };
+    });
+    setItemsMenu(tempMenu);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       if (session) {
-        const email = await session.user?.email;
+        const email = session.user?.email;
         if (email) {
-          fetchRoles(email);
+          await getMenuByUserName(email);
         }
       } else {
         router.push("/login");
@@ -167,6 +109,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     };
     fetchData();
   }, [session, router]);
+
+  useEffect(() => {
+    const menuOpen = Cookies.get("m_i");
+    if (menuOpen) {
+      const openKeys = JSON.parse(menuOpen);
+      const menuPath = openKeys[2];
+      setStateOpenKeys([openKeys[0], openKeys[1]]);
+      router.push(menuPath);
+    }
+  }, []);
+
   return (
     <React.Fragment>
       <div className="flex h-screen bg-[#fcfaf6]">
@@ -186,9 +139,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   width: "100%",
                   height: "calc(100svh - 104px)",
                 }}
-                defaultSelectedKeys={["21"]}
+                defaultSelectedKeys={[
+                  Cookies.get("m_k") || String(itemsMenu[0]?.key),
+                ]}
                 openKeys={stateOpenKeys}
                 onOpenChange={onOpenChange}
+                onClick={handleClick}
                 mode={"inline"}
                 theme={"dark"}
                 inlineCollapsed={!isOpened}

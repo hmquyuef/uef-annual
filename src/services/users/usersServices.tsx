@@ -95,6 +95,12 @@ export async function getUsers(code: string): Promise<UsersResponse> {
   return response.data;
 }
 
+export async function getUserNameByEmail(email: string): Promise<any> {
+  let url = `api/users/hrm/findby/${email}`;
+  const response = await apiClient.get<any>(url);
+  return response.data;
+}
+
 export async function getUsersFromHRMbyId(
   id: string
 ): Promise<UsersFromHRMResponse> {
