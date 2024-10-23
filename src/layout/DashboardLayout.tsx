@@ -75,7 +75,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     const listmenus = await getAllPermissionsForMenuByUserName(
       response.userName
     );
-    if (!listmenus.items[0].permissions.length)
+    if (listmenus.items.length === 0 && !listmenus.items[0].permissions.length)
       return router.push("/not-permission");
 
     const tempMenu: MenuItem[] = listmenus.items[0].permissions.map((item) => {
