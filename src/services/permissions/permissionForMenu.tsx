@@ -35,7 +35,7 @@ export async function getAllPermissionsForMenu(): Promise<PermissionForMenuRespo
 }
 
 export async function getAllPermissionsForMenuByUserName(userName: string): Promise<PermissionForMenuResponses> {
-  let url = `api/permission-menu?Filters=${userName}`;
+  let url = `api/permission-menu?Filters=${userName}&Active=true`;
   const response = await apiClient.get<PermissionForMenuResponses>(url);
   return response.data;
 }

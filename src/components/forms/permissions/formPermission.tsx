@@ -130,6 +130,7 @@ const FormPermission: FC<FormPermissionProps> = ({
     const formData: Partial<any> = {
       userName: selectedKey,
       roleId: selectedKeyRoles,
+      isActived: isActived,
       permissions: data.map((item) => {
         return {
           position: item.position,
