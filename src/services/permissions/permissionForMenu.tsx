@@ -29,7 +29,7 @@ export interface PermissionForMenuResponses {
   items: PermissionForMenu[];
 }
 export async function getAllPermissionsForMenu(): Promise<PermissionForMenuResponses> {
-  let url = "api/permission-menu";
+  let url = "api/permission-menu?Active=true";
   const response = await apiClient.get<PermissionForMenuResponses>(url);
   return response.data;
 }
