@@ -12,6 +12,7 @@ import {
   postAddMenu,
   putUpdateMenu,
 } from "@/services/menus/menuServices";
+import PageTitles from "@/utility/Constraints";
 import {
   ContactsOutlined,
   DeleteOutlined,
@@ -74,7 +75,7 @@ const Menus = () => {
       className: "max-w-24",
       render: (label: string, record: MenuItem) => (
         <span
-          className="text-blue-500 cursor-pointer"
+          className="text-blue-500 font-medium cursor-pointer"
           onClick={() => {
             setMode("edit");
             handleEdit(record);
@@ -163,21 +164,19 @@ const Menus = () => {
         const response = await putUpdateMenu(formData.id as string, formData);
         console.log("response :>> ", response);
         if (response) {
-          setNotificationOpen(true);
-          setStatus("success");
-          setMessage("Thông báo");
+         
           setDescription("Cập nhật chức năng thành công!");
         }
       } else {
         const response = await postAddMenu(formData);
         console.log("response :>> ", response);
         if (response) {
-          setNotificationOpen(true);
-          setStatus("success");
-          setMessage("Thông báo");
           setDescription("Thêm mới chức năng thành công!");
         }
       }
+      setNotificationOpen(true);
+      setStatus("success");
+      setMessage("Thông báo");
       await getListMenus();
       setIsOpen(false);
       setNotificationOpen(false);
@@ -189,6 +188,7 @@ const Menus = () => {
       setMessage("Thông báo");
       setDescription("Đã có lỗi xảy ra!");
     }
+    setNotificationOpen(false);
   };
   const handleDelete = async () => {
     try {
@@ -211,8 +211,10 @@ const Menus = () => {
     } catch (error) {
       console.error("Error deleting selected items:", error);
     }
+    setNotificationOpen(false);
   };
   useEffect(() => {
+    document.title = PageTitles.MENUS;
     getListMenus();
   }, []);
 
@@ -277,7 +279,6 @@ const Menus = () => {
           </Button>
         </Tooltip>
       </div>
-
       <div>
         <CustomNotification
           message={message}

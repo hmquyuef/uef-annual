@@ -11,6 +11,7 @@ import {
   putUpdateWorkloadType,
   WorkloadTypeItem,
 } from "@/services/workloads/typesServices";
+import PageTitles from "@/utility/Constraints";
 import {
   CheckOutlined,
   EditOutlined,
@@ -19,10 +20,18 @@ import {
   PieChartOutlined,
   ProfileOutlined,
 } from "@ant-design/icons";
-import { Breadcrumb, Button, Card, Tooltip } from "antd";
+import {
+  Breadcrumb,
+  Button,
+  Card,
+  Statistic,
+  StatisticProps,
+  Tooltip,
+} from "antd";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import CountUp from "react-countup";
 
 const Workloads = () => {
   const { data: session } = useSession();
@@ -48,6 +57,10 @@ const Workloads = () => {
     const response = await getWorkloadTypes();
     setTypes(response.items);
   };
+
+  const formatter: StatisticProps["formatter"] = (value) => (
+    <CountUp end={value as number} duration={5} separator="," />
+  );
 
   const handleEllipsis = async (type: WorkloadTypeItem) => {
     setIsOk(true);
@@ -75,7 +88,13 @@ const Workloads = () => {
       className="flex justify-center gap-1"
     >
       <PieChartOutlined />
-      <span>{type.totalItems} sự kiện</span>
+      <Statistic
+        value={type.totalItems}
+        formatter={formatter}
+        suffix="sự kiện"
+        valueStyle={{ fontSize: "14px" }}
+      />
+      {/* {type.totalItems} sự kiện</span> */}
     </div>,
     userRole && userRole.includes("admin") ? (
       <>
@@ -134,6 +153,8 @@ const Workloads = () => {
     }
   };
   useEffect(() => {
+    document.title = PageTitles.BM;
+    
     getListWorkloadTypes();
   }, []);
 

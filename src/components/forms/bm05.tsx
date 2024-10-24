@@ -52,6 +52,7 @@ import FromUpload from "./activity/formUpload";
 import locale from "antd/locale/vi_VN";
 import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/vi";
+import PageTitles from "@/utility/Constraints";
 dayjs.locale("vi");
 
 const { Search } = Input;
@@ -171,14 +172,6 @@ const BM05 = () => {
       render: (unitName: string) => <p>{unitName}</p>,
       className: "text-center w-[6rem]",
     },
-    // {
-    //   title: "NGÀY LẬP",
-    //   dataIndex: ["determinations", "fromDate"],
-    //   key: "fromDate",
-    //   render: (fromDate: number) =>
-    //     fromDate ? convertTimestampToDate(fromDate) : "",
-    //   className: "text-center w-[2rem]",
-    // },
     {
       title: (
         <>
@@ -361,7 +354,7 @@ const BM05 = () => {
       console.error("Error deleting selected items:", error);
     }
   }, [selectedRowKeys]);
-  
+
   const handleEdit = (activity: ActivityItem) => {
     const updatedActivity: Partial<AddUpdateActivityItem> = {
       ...activity,
@@ -773,8 +766,8 @@ const BM05 = () => {
     });
   };
   useEffect(() => {
-    getListActivities();
-    getAllUnitsFromHRM();
+    document.title = PageTitles.BM05;
+    Promise.all([getListActivities(), getAllUnitsFromHRM()]);
   }, []);
 
   return (
@@ -811,10 +804,6 @@ const BM05 = () => {
               <RangePicker
                 placeholder={["Từ ngày", "Đến ngày"]}
                 format={"DD/MM/YYYY"}
-                // defaultValue={[
-                //   dayjs(`01/09/${dayjs().year()}`, "DD/MM/YYYY"),
-                //   dayjs(`31/08/${dayjs().year() + 1}`, "DD/MM/YYYY"),
-                // ]}
                 value={
                   selectedDates || [
                     dayjs(`01/09/${dayjs().year()}`, "DD/MM/YYYY"),
@@ -836,9 +825,8 @@ const BM05 = () => {
                       : null;
                     setStartDate(startTimestamp);
                     setEndDate(endTimestamp);
-                    setSelectedDates(dates); // Lưu giá trị được chọn
+                    setSelectedDates(dates);
                   } else {
-                    // Khi nhấn nút X, đặt lại giá trị mặc định
                     setSelectedDates(null);
                     setStartDate(
                       new Date(`01/09/${dayjs().year()}`).valueOf() / 1000
@@ -857,7 +845,6 @@ const BM05 = () => {
             <Button
               icon={<FileExcelOutlined />}
               onClick={handleExportExcel}
-              // size="large"
               iconPosition="start"
               style={{
                 backgroundColor: "#52c41a",
@@ -871,11 +858,7 @@ const BM05 = () => {
           <Tooltip placement="top" title={"Thêm mới hoạt động"} arrow={true}>
             <Dropdown menu={{ items }} trigger={["click"]}>
               <a onClick={(e) => e.preventDefault()}>
-                <Button
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  // size={"large"}
-                >
+                <Button type="primary" icon={<PlusOutlined />}>
                   Thêm hoạt động
                 </Button>
               </a>
@@ -888,10 +871,11 @@ const BM05 = () => {
               danger
               onClick={handleDelete}
               icon={<DeleteOutlined />}
-              // size="large"
-              iconPosition="start"
             >
-              Xóa
+              Xóa{" "}
+              {selectedRowKeys.length !== 0
+                ? `(${selectedRowKeys.length})`
+                : ""}
             </Button>
           </Tooltip>
         </div>
@@ -899,7 +883,7 @@ const BM05 = () => {
           message={message}
           description={description}
           status={status}
-          isOpen={isNotificationOpen} // Truyền trạng thái mở
+          isOpen={isNotificationOpen}
         />
         <CustomModal
           isOpen={isOpen}

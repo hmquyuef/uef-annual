@@ -3,6 +3,8 @@ import apiClient from "../apiClient";
 export interface ApplicationItem {
     id: string;
     name: string;
+    publicKey: string;
+    secretKey: string;
     description: string;
     isActived: boolean;
 }

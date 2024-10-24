@@ -4,12 +4,13 @@ import TopHeaders from "@/components/TopHeader";
 import { getAllPermissionsForMenuByUserName } from "@/services/permissions/permissionForMenu";
 import { getUserNameByEmail } from "@/services/users/usersServices";
 import { ArrowLeftOutlined, ArrowRightOutlined } from "@ant-design/icons";
-import { Image, Menu, MenuProps } from "antd";
+import { Alert, Image, Menu, MenuProps } from "antd";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
+import Marquee from "react-fast-marquee";
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
@@ -19,6 +20,8 @@ interface LevelKeysProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  const [isOnline, setIsOnline] = useState(true);
+  const [isSlowConnection, setIsSlowConnection] = useState(false);
   const { data: session } = useSession();
   const router = useRouter();
   type MenuItem = Required<MenuProps>["items"][number];
@@ -75,8 +78,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     const listmenus = await getAllPermissionsForMenuByUserName(
       response.userName
     );
-    if (listmenus.items.length === 0)
-      return router.push("/not-permission");
+    if (listmenus.items.length === 0) return router.push("/not-permission");
 
     const tempMenu: MenuItem[] = listmenus.items[0].permissions.map((item) => {
       const tempChildren: MenuItem[] = item.children.map((child) => ({
@@ -120,6 +122,57 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, []);
 
+  useEffect(() => {
+    const checkConnectionSpeed = () => {
+      const connection =
+        (navigator as any).connection ||
+        (navigator as any).mozConnection ||
+        (navigator as any).webkitConnection;
+      if (connection) {
+        const effectiveType = connection.effectiveType;
+        // Kiểm tra xem kết nối mạng có chậm không (2g hoặc slow-3g)
+        if (
+          effectiveType === "2g" ||
+          effectiveType === "slow-2g" ||
+          effectiveType === "3g"
+        ) {
+          setIsSlowConnection(true);
+        } else {
+          setIsSlowConnection(false);
+        }
+      }
+    };
+
+    const handleNetworkChange = () => {
+      setIsOnline(navigator.onLine);
+      checkConnectionSpeed();
+    };
+
+    // Kiểm tra ngay khi component được mount
+    handleNetworkChange();
+
+    // Lắng nghe sự kiện online, offline, và thay đổi trạng thái mạng
+    window.addEventListener("online", handleNetworkChange);
+    window.addEventListener("offline", handleNetworkChange);
+
+    // Lắng nghe sự kiện thay đổi kết nối
+    const connection =
+      (navigator as any).connection ||
+      (navigator as any).mozConnection ||
+      (navigator as any).webkitConnection;
+    if (connection) {
+      connection.addEventListener("change", checkConnectionSpeed);
+    }
+
+    return () => {
+      window.removeEventListener("online", handleNetworkChange);
+      window.removeEventListener("offline", handleNetworkChange);
+      if (connection) {
+        connection.removeEventListener("change", checkConnectionSpeed);
+      }
+    };
+  }, []);
+
   return (
     <React.Fragment>
       <div className="flex h-screen bg-[#fcfaf6]">
@@ -139,9 +192,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   width: "100%",
                   height: "calc(100svh - 104px)",
                 }}
-                defaultSelectedKeys={[
-                  Cookies.get("m_k") || String(itemsMenu[0]?.key),
-                ]}
+                defaultSelectedKeys={[Cookies.get("m_k") || "12"]}
                 openKeys={stateOpenKeys}
                 onOpenChange={onOpenChange}
                 onClick={handleClick}
@@ -172,6 +223,36 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 name={session?.user?.name || ""}
                 email={session?.user?.email || ""}
               />
+              {!isOnline && (
+                <div className="mx-4 pt-4">
+                  <Alert
+                    banner
+                    message={
+                      <Marquee pauseOnHover gradient={false}>
+                        Kết nối mạng hiện tại của bạn không khả dụng. Vui lòng
+                        kiểm tra lại.
+                      </Marquee>
+                    }
+                    type="error"
+                    showIcon
+                  />
+                </div>
+              )}
+              {isSlowConnection && isOnline && (
+                <div className="mx-4 pt-4">
+                  <Alert
+                    banner
+                    message={
+                      <Marquee pauseOnHover gradient={false}>
+                        Tốc độ mạng của bạn hiện tại đang rất chậm. Điều này có
+                        thể ảnh hưởng đến trải nghiệm của bạn.
+                      </Marquee>
+                    }
+                    type="warning"
+                    showIcon
+                  />
+                </div>
+              )}
               {children}
             </>
           )}

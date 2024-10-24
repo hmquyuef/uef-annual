@@ -47,6 +47,7 @@ import {
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
+import PageTitles from "@/utility/Constraints";
 dayjs.locale("vi");
 
 type SearchProps = GetProps<typeof Input.Search>;
@@ -616,8 +617,8 @@ const BM02 = () => {
     });
   };
   useEffect(() => {
-    getListClassAssistants();
-    getAllUnitsFromHRM();
+    document.title = PageTitles.BM02;
+    Promise.all([getListClassAssistants(), getAllUnitsFromHRM()]);
   }, []);
   return (
     <div>

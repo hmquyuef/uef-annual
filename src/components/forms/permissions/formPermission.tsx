@@ -4,9 +4,8 @@ import { getAllApplications } from "@/services/applications/applicationServices"
 import { getAllMenus, MenuItem } from "@/services/menus/menuServices";
 import {
   getAllPermissionsForMenuByUserName,
-  PermissionForMenuResponses,
   postAddPermissionForMenu,
-  putUpdatePermissionForMenu,
+  putUpdatePermissionForMenu
 } from "@/services/permissions/permissionForMenu";
 import { PermissionItem } from "@/services/permissions/permissionServices";
 import { getAllRoles, RoleResponses } from "@/services/roles/rolesServices";
@@ -20,8 +19,7 @@ import {
   Select,
   Table,
   TableColumnsType,
-  TableProps,
-  Tag,
+  Tag
 } from "antd";
 import { FC, FormEvent, Key, useEffect, useState } from "react";
 
@@ -30,8 +28,7 @@ interface FormPermissionProps {
   initialData?: Partial<PermissionItem>;
   mode: "add" | "edit";
 }
-type TableRowSelection<T extends object = object> =
-  TableProps<T>["rowSelection"];
+
 const FormPermission: FC<FormPermissionProps> = ({
   onSubmit,
   initialData,

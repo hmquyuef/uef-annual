@@ -1,9 +1,11 @@
 "use client";
 
+import CustomNotification from "@/components/CustomNotification";
 import {
   ApplicationItem,
   getAllApplications,
 } from "@/services/applications/applicationServices";
+import PageTitles from "@/utility/Constraints";
 import { convertTimestampToDate } from "@/utility/Utilities";
 import {
   AppstoreOutlined,
@@ -24,6 +26,12 @@ import { Key, useEffect, useState } from "react";
 const Applications = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [data, setData] = useState<ApplicationItem[]>([]);
+  const [isNotificationOpen, setNotificationOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState<
+    "success" | "error" | "info" | "warning"
+  >("success");
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 15,
@@ -33,7 +41,24 @@ const Applications = () => {
     const response = await getAllApplications();
     setData(response.items);
   };
-
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text).then(
+      () => {
+        setNotificationOpen(true);
+        setStatus("success");
+        setMessage("Thông báo");
+        setDescription("Sao chép thông tin thành công!");
+      },
+      (err) => {
+        setNotificationOpen(true);
+        setStatus("error");
+        setMessage("Thông báo");
+        setDescription("Sao chép thông tin thành công!");
+        console.error("Lỗi sao chép:", err);
+      }
+    );
+    setNotificationOpen(false);
+  };
   const columns: TableColumnsType<ApplicationItem> = [
     {
       title: <div className="p-2">STT</div>,
@@ -56,6 +81,35 @@ const Applications = () => {
       dataIndex: "description",
       key: "description",
       render: (description: string) => <>{description}</>,
+    },
+    {
+      title: "KHÓA CÔNG KHAI",
+      dataIndex: "publicKey",
+      key: "publicKey",
+      render: (publicKey: string) => (
+        <div
+          className="text-center w-[20rem] bg-gray-200 rounded-md p-1 whitespace-nowrap overflow-hidden text-ellipsis"
+          onClick={() => handleCopy(publicKey)}
+        >
+          {publicKey}
+        </div>
+      ),
+      className: "text-center w-[20rem]",
+    },
+    {
+      title: "KHÓA BÍ MẬT",
+      dataIndex: "secretKey",
+      key: "secretKey",
+      render: (secretKey: string) => (
+        <div
+          className="text-center w-[20rem] bg-gray-200 rounded-md p-1 whitespace-nowrap overflow-hidden text-ellipsis"
+          title={secretKey}
+          onClick={() => handleCopy(secretKey)}
+        >
+          {secretKey}
+        </div>
+      ),
+      className: "text-center w-[20rem]",
     },
     {
       title: "NGÀY KHỞI TẠO",
@@ -109,6 +163,7 @@ const Applications = () => {
   };
 
   useEffect(() => {
+    document.title = PageTitles.APPLICATIONS;
     getListApplications();
   }, []);
 
@@ -146,6 +201,12 @@ const Applications = () => {
           ]}
         />
       </div>
+      <CustomNotification
+        message={message}
+        description={description}
+        status={status}
+        isOpen={isNotificationOpen} // Truyền trạng thái mở
+      />
       <div>
         <Table<ApplicationItem>
           key={"table-activity-bm05"}

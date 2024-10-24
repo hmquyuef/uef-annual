@@ -4,8 +4,8 @@ import DashboardLayout from "../../layout/DashboardLayout";
 
 
 export const metadata = {
-    title: 'Dashboard',
-    description: 'Dashboard',
+    title: 'Dashboard - UEF',
+    description: 'Dashboard - Standard Plan Management Software',
 };
 
 export default function DashboardServerLayout({ children }: { children: React.ReactNode }) {

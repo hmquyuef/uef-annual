@@ -41,6 +41,7 @@ import { Key, useEffect, useState } from "react";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
+import PageTitles from "@/utility/Constraints";
 dayjs.locale("vi");
 const { RangePicker } = DatePicker;
 const SearchMembers = () => {
@@ -335,6 +336,7 @@ const SearchMembers = () => {
   ];
 
   useEffect(() => {
+    document.title = PageTitles.SEARCH;
     getUsersHRM();
   }, []);
 

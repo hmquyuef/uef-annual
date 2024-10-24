@@ -4,27 +4,25 @@ import CustomModal from "@/components/CustomModal";
 import CustomNotification from "@/components/CustomNotification";
 import FormRole from "@/components/forms/roles/formRole";
 import {
-  AddUpdateRoleItem,
   deleteRoles,
   getAllRoles,
+  postAddRole,
+  putUpdateRole,
   RoleItem,
 } from "@/services/roles/rolesServices";
+import PageTitles from "@/utility/Constraints";
 import { convertTimestampToDate } from "@/utility/Utilities";
 import {
   ContactsOutlined,
   DeleteOutlined,
-  FileExcelOutlined,
   HomeOutlined,
-  PlusCircleOutlined,
   PlusOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
 import {
   Breadcrumb,
   Button,
-  Dropdown,
   Empty,
-  MenuProps,
   PaginationProps,
   Table,
   TableColumnsType,
@@ -43,7 +41,7 @@ const Roles = () => {
   const [message, setMessage] = useState("");
   const [description, setDescription] = useState("");
   const [selectedItem, setSelectedItem] = useState<
-    Partial<AddUpdateRoleItem> | undefined
+    Partial<RoleItem> | undefined
   >(undefined);
   const [status, setStatus] = useState<
     "success" | "error" | "info" | "warning"
@@ -69,11 +67,22 @@ const Roles = () => {
       className: "text-center w-[20px]",
     },
     {
-      title: "TÊN VAI TRÒ",
+      title: "VAI TRÒ",
       dataIndex: "name",
       key: "name",
       className: "max-w-24",
-      render: (name: string) => <>{name}</>,
+      render: (name: string) => (
+        <span
+          className="text-blue-500 font-medium cursor-pointer"
+          onClick={() => {
+            setMode("edit");
+            setIsOpen(true);
+            setSelectedItem(data.find((item) => item.name === name));
+          }}
+        >
+          {name}
+        </span>
+      ),
     },
     {
       title: "ỨNG DỤNG",
@@ -132,84 +141,34 @@ const Roles = () => {
     });
   };
 
-  const items: MenuProps["items"] = [
-    {
-      key: "1",
-      label: (
-        <p
-          onClick={() => {
-            setIsOpen(true);
-            setMode("add");
-          }}
-          className="font-medium"
-        >
-          Thêm mới
-        </p>
-      ),
-      icon: <PlusCircleOutlined />,
-      style: { color: "#1890ff" },
-    },
-    {
-      type: "divider",
-    },
-    {
-      key: "2",
-      label: (
-        <p
-          onClick={() => {
-            setIsOpen(true);
-            setMode("add");
-          }}
-          className="font-medium"
-        >
-          Import Excel
-        </p>
-      ),
-      icon: <FileExcelOutlined />,
-      style: { color: "#52c41a" },
-    },
-  ];
-  const handleSubmit = async (formData: Partial<AddUpdateRoleItem>) => {
-    console.log("object :>> ", formData);
-    // try {
-    //   if (mode === "edit" && selectedItem) {
-    //     const updatedFormData: Partial<AddUpdateActivityItem> = {
-    //       ...formData,
-    //       participants: formData.participants as ActivityInput[],
-    //     };
-    //     const response = await putUpdateActivity(
-    //       formData.id as string,
-    //       updatedFormData
-    //     );
-    //     if (response) {
-    //       setNotificationOpen(true);
-    //       setStatus("success");
-    //       setMessage("Thông báo");
-    //       setDescription("Cập nhật hoạt động thành công!");
-    //     }
-    //   } else {
-    //     const newFormData: Partial<AddUpdateActivityItem> = {
-    //       ...formData,
-    //       participants: formData.participants as ActivityInput[],
-    //     };
-    //     const response = await postAddActivity(newFormData);
-    //     if (response) {
-    //       setNotificationOpen(true);
-    //       setStatus("success");
-    //       setMessage("Thông báo");
-    //       setDescription("Thêm mới hoạt động thành công!");
-    //     }
-    //   }
-    //   await getListActivities();
-    //   setIsOpen(false);
-    //   setSelectedItem(undefined);
-    //   setMode("add");
-    // } catch (error) {
-    //   setNotificationOpen(true);
-    //   setStatus("error");
-    //   setMessage("Thông báo");
-    //   setDescription("Đã có lỗi xảy ra!");
-    // }
+  const handleSubmit = async (formData: Partial<RoleItem>) => {
+    console.log('formData :>> ', formData);
+    try {
+      if (mode === "edit" && selectedItem) {
+        const response = await putUpdateRole(formData.id as string, formData);
+        if (response) {
+          setDescription("Cập nhật vai trò thành công!");
+        }
+      } else {
+        const response = await postAddRole(formData);
+        if (response) {
+          setDescription("Thêm mới vai trò thành công!");
+        }
+      }
+      setNotificationOpen(true);
+      setStatus("success");
+      setMessage("Thông báo");
+      await getListRoles();
+      setIsOpen(false);
+      setSelectedItem(undefined);
+      setMode("add");
+    } catch (error) {
+      setNotificationOpen(true);
+      setStatus("error");
+      setMessage("Thông báo");
+      setDescription("Đã có lỗi xảy ra!");
+    }
+    setNotificationOpen(false);
   };
   const handleDelete = useCallback(async () => {
     try {
@@ -228,8 +187,10 @@ const Roles = () => {
     } catch (error) {
       console.error("Error deleting selected items:", error);
     }
+    setNotificationOpen(false);
   }, [selectedRowKeys]);
   useEffect(() => {
+    document.title = PageTitles.ROLES;
     getListRoles();
   }, []);
   return (
@@ -267,14 +228,18 @@ const Roles = () => {
         />
       </div>
       <div className="flex justify-end gap-4 mb-4">
-        <Tooltip placement="top" title={"Thêm mới hoạt động"} arrow={true}>
-          <Dropdown menu={{ items }} trigger={["click"]}>
-            <a onClick={(e) => e.preventDefault()}>
-              <Button type="primary" icon={<PlusOutlined />}>
-                Thêm hoạt động
-              </Button>
-            </a>
-          </Dropdown>
+        <Tooltip placement="top" title={"Thêm mới vai trò"} arrow={true}>
+          <Button
+            type="primary"
+            onClick={() => {
+              setIsOpen(true);
+              setMode("add");
+            }}
+            icon={<PlusOutlined />}
+            iconPosition="start"
+          >
+            Thêm vai trò
+          </Button>
         </Tooltip>
         <Tooltip placement="top" title="Xóa các hoạt động" arrow={true}>
           <Button
@@ -300,7 +265,7 @@ const Roles = () => {
         <CustomModal
           isOpen={isOpen}
           isOk={true}
-          width={"30vw"}
+          width={"25vw"}
           title={mode === "edit" ? "Cập nhật vai trò" : "Thêm mới vai trò"}
           onOk={() => {
             const formElement = document.querySelector("form");
@@ -317,7 +282,7 @@ const Roles = () => {
           bodyContent={
             <FormRole
               onSubmit={handleSubmit}
-              initialData={selectedItem as Partial<AddUpdateRoleItem>}
+              initialData={selectedItem as Partial<RoleItem>}
               mode={mode}
             />
           }

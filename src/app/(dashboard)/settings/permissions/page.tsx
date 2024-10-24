@@ -16,27 +16,24 @@ import {
   postAddPermission,
   putUpdatePermission,
 } from "@/services/permissions/permissionServices";
+import PageTitles from "@/utility/Constraints";
 import { convertTimestampToDate } from "@/utility/Utilities";
 import {
   ContactsOutlined,
   DeleteOutlined,
-  FileExcelOutlined,
   HomeOutlined,
-  PlusCircleOutlined,
   PlusOutlined,
-  SettingOutlined,
+  SettingOutlined
 } from "@ant-design/icons";
 import {
   Breadcrumb,
   Button,
-  Dropdown,
   Empty,
-  MenuProps,
   PaginationProps,
   Table,
   TableColumnsType,
   Tag,
-  Tooltip,
+  Tooltip
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import { Key, useCallback, useEffect, useState } from "react";
@@ -103,7 +100,7 @@ const Permissions = () => {
       className: "max-w-24",
       render: (userName: string) => (
         <span
-          className="text-blue-600 font-medium cursor-pointer"
+          className="text-blue-500 font-medium cursor-pointer"
           onClick={() => {
             setMode("edit");
             setIsOpen(true);
@@ -271,6 +268,7 @@ const Permissions = () => {
   };
 
   useEffect(() => {
+    document.title = PageTitles.PERMISSIONS;
     fetchData();
   }, []);
 
