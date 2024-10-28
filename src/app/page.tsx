@@ -18,8 +18,7 @@ const Home = () => {
       formData.append("provider", Providers.GOOGLE);
       const response = await postInfoToGetToken(formData);
       if (response.accessToken) {
-        const expiresAt = new Date(response.expiresAt * 1000);
-        Cookies.set("s_t", response.accessToken, { expires: expiresAt });
+        Cookies.set("s_t", response.accessToken);
         Cookies.set("s_r", response.refreshToken);
       }
     }
