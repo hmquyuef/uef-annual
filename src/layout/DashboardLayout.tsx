@@ -135,8 +135,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         }
       };
       getExpiresInToken();
-    } else {
-      signOut({ callbackUrl: "/login" });
     }
     const menuOpen = Cookies.get("m_i");
     if (menuOpen) {
