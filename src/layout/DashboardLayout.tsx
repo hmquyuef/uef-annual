@@ -10,7 +10,7 @@ import { getUserNameByEmail } from "@/services/users/usersServices";
 import { ArrowLeftOutlined, ArrowRightOutlined } from "@ant-design/icons";
 import { Alert, Image, Menu, MenuProps } from "antd";
 import Cookies from "js-cookie";
-import { signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -117,7 +117,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [session, router]);
 
   useEffect(() => {
-    const refreshToken = sessionStorage.getItem("s_r");
+    const refreshToken = Cookies.get("s_r");
     if (refreshToken) {
       const getExpiresInToken = async () => {
         const responseCheckExpirseInToken = await getExpiresInTokenByRefresh(
@@ -129,8 +129,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         ) {
           const responseRefreshToken = await putTokenByRefresh(refreshToken);
           if (responseRefreshToken.accessToken) {
-            sessionStorage.setItem("s_t", responseRefreshToken.accessToken);
-            sessionStorage.setItem("s_r", responseRefreshToken.refreshToken);
+            const expiresAt = new Date(responseRefreshToken.expiresAt * 1000);
+            Cookies.set("s_t", responseRefreshToken.accessToken, {
+              expires: expiresAt,
+            });
+            Cookies.set("s_r", responseRefreshToken.refreshToken);
           }
         }
       };

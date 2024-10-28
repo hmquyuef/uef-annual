@@ -6,6 +6,7 @@ import {
 import type { MenuProps } from "antd";
 import { Avatar, Dropdown } from "antd";
 import { signOut } from "next-auth/react";
+import Cookies from "js-cookie";
 
 interface TopHeadersProps {
   name: string;
@@ -14,8 +15,8 @@ interface TopHeadersProps {
 
 const handleMenuClick: MenuProps["onClick"] = async (e) => {
   if (e.key === "3") {
-    sessionStorage.removeItem("s_t");
-    sessionStorage.removeItem("s_r");
+    Cookies.remove("s_t");
+    Cookies.remove("s_r");
     await signOut({ callbackUrl: "/login" });
   }
 };

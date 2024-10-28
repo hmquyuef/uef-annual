@@ -4,6 +4,7 @@ import Providers from "@/utility/Providers";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import Cookies from "js-cookie";
 
 const Home = () => {
   const { data: session } = useSession();
@@ -17,8 +18,9 @@ const Home = () => {
       formData.append("provider", Providers.GOOGLE);
       const response = await postInfoToGetToken(formData);
       if (response.accessToken) {
-        sessionStorage.setItem("s_t", response.accessToken);
-        sessionStorage.setItem("s_r", response.refreshToken);
+        const expiresAt = new Date(response.expiresAt * 1000);
+        Cookies.set("s_t", response.accessToken, { expires: expiresAt });
+        Cookies.set("s_r", response.refreshToken);
       }
     }
   };
@@ -29,7 +31,8 @@ const Home = () => {
         const email = session.user?.email;
         if (email !== undefined) {
           await getToken(email as string);
-          if (sessionStorage.getItem("s_t")) {
+          const token = Cookies.get("s_t");
+          if (token) {
             router.push("/workloads");
           } else {
             router.push("/login");
