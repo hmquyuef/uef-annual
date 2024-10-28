@@ -39,13 +39,14 @@ import * as XLSX from "sheetjs-style";
 import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
 import FormBM01 from "./activity/formBM01";
+import Cookies from "js-cookie";
 import FromUpload from "./activity/formUpload";
 import {
   getListUnitsFromHrm,
   UnitHRMItem,
 } from "@/services/units/unitsServices";
 import locale from "antd/locale/vi_VN";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/vi";
 import PageTitles from "@/utility/Constraints";
 dayjs.locale("vi");
@@ -76,6 +77,9 @@ const BM01 = () => {
   >("success");
   const [startDate, setStartDate] = useState<number | null>(null);
   const [endDate, setEndDate] = useState<number | null>(null);
+  const [selectedDates, setSelectedDates] = useState<
+    [Dayjs | null, Dayjs | null] | null
+  >(null);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 15,
@@ -105,10 +109,10 @@ const BM01 = () => {
   );
   const columns: TableColumnsType<ClassLeaderItem> = [
     {
-      title: "STT",
+      title: <div className="py-3">STT</div>,
       dataIndex: "stt",
       key: "stt",
-      render: (_, __, index) => <p>{index + 1}</p>,
+      render: (_, __, index) => <>{index + 1}</>,
       className: "text-center w-[1rem]",
     },
     {
@@ -131,18 +135,11 @@ const BM01 = () => {
       },
     },
     {
-      title: "HỌ VÀ CHỮ LÓT",
-      dataIndex: "middleName",
-      key: "middleName",
-      render: (middleName: string) => <p>{middleName}</p>,
-      className: "w-[5rem]",
-    },
-    {
-      title: "TÊN",
-      dataIndex: "firstName",
-      key: "firstName",
-      render: (firstName: string) => <p>{firstName}</p>,
-      className: "text-center w-[3rem]",
+      title: "HỌ VÀ TÊN",
+      dataIndex: "fullName",
+      key: "fullName",
+      render: (fullName: string) => <p>{fullName}</p>,
+      className: "w-[10rem]",
     },
     {
       title: "ĐƠN VỊ",
@@ -159,7 +156,7 @@ const BM01 = () => {
       render: (semester: string) => <p>{semester}</p>,
     },
     {
-      title: "SỐ TIẾT CHUẨN ĐƯỢC PHÊ DUYỆT",
+      title: "SỐ TIẾT CHUẨN",
       dataIndex: "standardNumber",
       key: "standardNumber",
       className: "text-center w-[5rem]",
@@ -187,26 +184,34 @@ const BM01 = () => {
       className: "text-center w-[2rem]",
     },
     {
-      title: "THỜI GIAN THAM DỰ",
+      title: (
+        <>
+          THỜI GIAN <br /> HOẠT ĐỘNG
+        </>
+      ),
       dataIndex: "attendances",
       key: "attendances",
       render: (attendances: number) =>
         attendances ? convertTimestampToDate(attendances) : "",
-      className: "text-center w-[4rem]",
+      className: "text-center w-[80px]",
     },
     {
-      title: "MINH CHỨNG",
+      title: (
+        <>
+          SỐ VĂN BẢN <br /> NGÀY LẬP
+        </>
+      ),
       dataIndex: "proof",
       key: "proof",
       render: (proof: string) => <p>{proof}</p>,
-      className: "w-[10rem]",
+      className: "w-[9rem]",
     },
     {
       title: "GHI CHÚ",
       dataIndex: "note",
       key: "note",
       render: (note: string) => <p>{note}</p>,
-      className: "text-center w-[2rem]",
+      className: "text-center w-[5rem]",
     },
   ];
 
@@ -291,20 +296,17 @@ const BM01 = () => {
           formData
         );
         if (response) {
-          setNotificationOpen(true);
-          setStatus("success");
-          setMessage("Thông báo");
           setDescription("Cập nhật thông tin chủ nhiệm lớp thành công!");
         }
       } else {
         const response = await postAddClassLeader(formData);
         if (response) {
-          setNotificationOpen(true);
-          setStatus("success");
-          setMessage("Thông báo");
           setDescription("Thêm mới thông tin chủ nhiệm lớp thành công!");
         }
       }
+      setNotificationOpen(true);
+      setStatus("success");
+      setMessage("Thông báo");
       await getListClassLeaders();
       setIsOpen(false);
       setSelectedItem(undefined);
@@ -618,9 +620,21 @@ const BM01 = () => {
       current: pagination.current || 1,
       pageSize: pagination.pageSize || 15,
     });
+    Cookies.set(
+      "p_s",
+      JSON.stringify([pagination.current, pagination.pageSize])
+    );
   };
   useEffect(() => {
     document.title = PageTitles.BM01;
+    const pageState = Cookies.get("p_s");
+    if (pageState) {
+      const [current, pageSize] = JSON.parse(pageState);
+      setPagination({
+        current,
+        pageSize,
+      });
+    }
     Promise.all([getListClassLeaders(), getAllUnitsFromHRM()]);
   }, []);
   return (
@@ -629,7 +643,7 @@ const BM01 = () => {
         <div className="col-span-2">
           <div className="grid grid-cols-3 gap-4">
             <Search
-              placeholder="Tìm kiếm hoạt động..."
+              placeholder="Tìm kiếm thông tin..."
               onSearch={onSearch}
               enterButton
             />
@@ -653,12 +667,18 @@ const BM01 = () => {
                 setSelectedKeyUnit(value);
               }}
             />
-            <div className="grid grid-cols-3 gap-4">
-              <ConfigProvider locale={locale}>
-                <RangePicker
-                  placeholder={["Từ ngày", "Đến ngày"]}
-                  format={"DD/MM/YYYY"}
-                  onChange={(dates, dateStrings) => {
+            <ConfigProvider locale={locale}>
+              <RangePicker
+                placeholder={["Từ ngày", "Đến ngày"]}
+                format={"DD/MM/YYYY"}
+                value={
+                  selectedDates || [
+                    dayjs(`01/09/${dayjs().year()}`, "DD/MM/YYYY"),
+                    dayjs(`31/08/${dayjs().year() + 1}`, "DD/MM/YYYY"),
+                  ]
+                }
+                onChange={(dates, dateStrings) => {
+                  if (dates) {
                     const [startDate, endDate] = dateStrings;
                     const startTimestamp = startDate
                       ? new Date(
@@ -672,11 +692,19 @@ const BM01 = () => {
                       : null;
                     setStartDate(startTimestamp);
                     setEndDate(endTimestamp);
-                  }}
-                  className="col-span-2"
-                />
-              </ConfigProvider>
-            </div>
+                    setSelectedDates(dates);
+                  } else {
+                    setSelectedDates(null);
+                    setStartDate(
+                      new Date(`01/09/${dayjs().year()}`).valueOf() / 1000
+                    );
+                    setEndDate(
+                      new Date(`31/08/${dayjs().year() + 1}`).valueOf() / 1000
+                    );
+                  }
+                }}
+              />
+            </ConfigProvider>
           </div>
         </div>
         <div className="flex justify-end gap-4">
@@ -712,7 +740,10 @@ const BM01 = () => {
               icon={<DeleteOutlined />}
               iconPosition="start"
             >
-              Xóa
+              Xóa{" "}
+              {selectedRowKeys.length !== 0
+                ? `(${selectedRowKeys.length})`
+                : ""}
             </Button>
           </Tooltip>
         </div>

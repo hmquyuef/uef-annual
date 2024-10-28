@@ -26,6 +26,7 @@ import {
 } from "@ant-design/icons";
 import {
   Button,
+  Card,
   ConfigProvider,
   DatePicker,
   Dropdown,
@@ -34,6 +35,7 @@ import {
   MenuProps,
   PaginationProps,
   Select,
+  Skeleton,
   Table,
   TableColumnsType,
   Tag,
@@ -48,7 +50,7 @@ import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
 import FormActivity from "./activity/formActivity";
 import FromUpload from "./activity/formUpload";
-
+import Cookies from "js-cookie";
 import locale from "antd/locale/vi_VN";
 import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/vi";
@@ -59,6 +61,7 @@ const { Search } = Input;
 const { RangePicker } = DatePicker;
 
 const BM05 = () => {
+  const [loading, setLoading] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [units, setUnits] = useState<UnitHRMItem[]>([]);
@@ -381,9 +384,6 @@ const BM05 = () => {
           updatedFormData
         );
         if (response) {
-          setNotificationOpen(true);
-          setStatus("success");
-          setMessage("Thông báo");
           setDescription("Cập nhật hoạt động thành công!");
         }
       } else {
@@ -393,12 +393,12 @@ const BM05 = () => {
         };
         const response = await postAddActivity(newFormData);
         if (response) {
-          setNotificationOpen(true);
-          setStatus("success");
-          setMessage("Thông báo");
           setDescription("Thêm mới hoạt động thành công!");
         }
       }
+      setNotificationOpen(true);
+      setStatus("success");
+      setMessage("Thông báo");
       await getListActivities();
       setIsOpen(false);
       setSelectedItem(undefined);
@@ -764,10 +764,24 @@ const BM05 = () => {
       current: pagination.current || 1,
       pageSize: pagination.pageSize || 15,
     });
+    Cookies.set(
+      "p_s",
+      JSON.stringify([pagination.current, pagination.pageSize])
+    );
   };
   useEffect(() => {
+    setLoading(true);
     document.title = PageTitles.BM05;
+    const pageState = Cookies.get("p_s");
+    if (pageState) {
+      const [current, pageSize] = JSON.parse(pageState);
+      setPagination({
+        current,
+        pageSize,
+      });
+    }
     Promise.all([getListActivities(), getAllUnitsFromHRM()]);
+    setLoading(false);
   }, []);
 
   return (
@@ -775,109 +789,134 @@ const BM05 = () => {
       <div className="grid grid-cols-3 mb-4">
         <div className="col-span-2">
           <div className="grid grid-cols-3 gap-4">
-            <Search
-              placeholder="Tìm kiếm hoạt động..."
-              onSearch={onSearch}
-              enterButton
-            />
-            <Select
-              showSearch
-              allowClear
-              // size="large"
-              placeholder="Tất cả đơn vị"
-              optionFilterProp="label"
-              filterSort={(optionA, optionB) =>
-                (optionA?.label ?? "")
-                  .toLowerCase()
-                  .localeCompare((optionB?.label ?? "").toLowerCase())
-              }
-              options={units.map((unit) => ({
-                value: unit.id,
-                label: unit.name,
-              }))}
-              value={selectedKeyUnit}
-              onChange={(value) => {
-                setSelectedKeyUnit(value);
-              }}
-            />
-            <ConfigProvider locale={locale}>
-              <RangePicker
-                placeholder={["Từ ngày", "Đến ngày"]}
-                format={"DD/MM/YYYY"}
-                value={
-                  selectedDates || [
-                    dayjs(`01/09/${dayjs().year()}`, "DD/MM/YYYY"),
-                    dayjs(`31/08/${dayjs().year() + 1}`, "DD/MM/YYYY"),
-                  ]
-                }
-                onChange={(dates, dateStrings) => {
-                  if (dates) {
-                    const [startDate, endDate] = dateStrings;
-                    const startTimestamp = startDate
-                      ? new Date(
-                          startDate.split("/").reverse().join("-")
-                        ).valueOf() / 1000
-                      : null;
-                    const endTimestamp = endDate
-                      ? new Date(
-                          endDate.split("/").reverse().join("-")
-                        ).valueOf() / 1000
-                      : null;
-                    setStartDate(startTimestamp);
-                    setEndDate(endTimestamp);
-                    setSelectedDates(dates);
-                  } else {
-                    setSelectedDates(null);
-                    setStartDate(
-                      new Date(`01/09/${dayjs().year()}`).valueOf() / 1000
-                    );
-                    setEndDate(
-                      new Date(`31/08/${dayjs().year() + 1}`).valueOf() / 1000
-                    );
+            {loading ? (
+              <>
+                <Skeleton.Input active size="small" style={{ width: "100%" }} />
+                <Skeleton.Input active size="small" style={{ width: "100%" }} />
+                <Skeleton.Input active size="small" style={{ width: "100%" }} />
+              </>
+            ) : (
+              <>
+                <Search
+                  placeholder="Tìm kiếm hoạt động..."
+                  onSearch={onSearch}
+                  enterButton
+                />
+                <Select
+                  showSearch
+                  allowClear
+                  // size="large"
+                  placeholder="Tất cả đơn vị"
+                  optionFilterProp="label"
+                  filterSort={(optionA, optionB) =>
+                    (optionA?.label ?? "")
+                      .toLowerCase()
+                      .localeCompare((optionB?.label ?? "").toLowerCase())
                   }
-                }}
-              />
-            </ConfigProvider>
+                  options={units.map((unit) => ({
+                    value: unit.id,
+                    label: unit.name,
+                  }))}
+                  value={selectedKeyUnit}
+                  onChange={(value) => {
+                    setSelectedKeyUnit(value);
+                  }}
+                />
+                <ConfigProvider locale={locale}>
+                  <RangePicker
+                    placeholder={["Từ ngày", "Đến ngày"]}
+                    format={"DD/MM/YYYY"}
+                    value={
+                      selectedDates || [
+                        dayjs(`01/09/${dayjs().year()}`, "DD/MM/YYYY"),
+                        dayjs(`31/08/${dayjs().year() + 1}`, "DD/MM/YYYY"),
+                      ]
+                    }
+                    onChange={(dates, dateStrings) => {
+                      if (dates) {
+                        const [startDate, endDate] = dateStrings;
+                        const startTimestamp = startDate
+                          ? new Date(
+                              startDate.split("/").reverse().join("-")
+                            ).valueOf() / 1000
+                          : null;
+                        const endTimestamp = endDate
+                          ? new Date(
+                              endDate.split("/").reverse().join("-")
+                            ).valueOf() / 1000
+                          : null;
+                        setStartDate(startTimestamp);
+                        setEndDate(endTimestamp);
+                        setSelectedDates(dates);
+                      } else {
+                        setSelectedDates(null);
+                        setStartDate(
+                          new Date(`01/09/${dayjs().year()}`).valueOf() / 1000
+                        );
+                        setEndDate(
+                          new Date(`31/08/${dayjs().year() + 1}`).valueOf() /
+                            1000
+                        );
+                      }
+                    }}
+                  />
+                </ConfigProvider>
+              </>
+            )}
           </div>
         </div>
         <div className="flex justify-end gap-4">
-          <Tooltip placement="top" title="Xuất dữ liệu Excel" arrow={true}>
-            <Button
-              icon={<FileExcelOutlined />}
-              onClick={handleExportExcel}
-              iconPosition="start"
-              style={{
-                backgroundColor: "#52c41a",
-                borderColor: "#52c41a",
-                color: "#fff",
-              }}
-            >
-              Xuất Excel
-            </Button>
-          </Tooltip>
-          <Tooltip placement="top" title={"Thêm mới hoạt động"} arrow={true}>
-            <Dropdown menu={{ items }} trigger={["click"]}>
-              <a onClick={(e) => e.preventDefault()}>
-                <Button type="primary" icon={<PlusOutlined />}>
-                  Thêm hoạt động
+          {loading ? (
+            <>
+              <Skeleton.Input active size="small" />
+              <Skeleton.Input active size="small" />
+              <Skeleton.Input active size="small" />
+            </>
+          ) : (
+            <>
+              <Tooltip placement="top" title="Xuất dữ liệu Excel" arrow={true}>
+                <Button
+                  icon={<FileExcelOutlined />}
+                  onClick={handleExportExcel}
+                  iconPosition="start"
+                  style={{
+                    backgroundColor: "#52c41a",
+                    borderColor: "#52c41a",
+                    color: "#fff",
+                  }}
+                >
+                  Xuất Excel
                 </Button>
-              </a>
-            </Dropdown>
-          </Tooltip>
-          <Tooltip placement="top" title="Xóa các hoạt động" arrow={true}>
-            <Button
-              type="dashed"
-              disabled={selectedRowKeys.length === 0}
-              danger
-              onClick={handleDelete}
-              icon={<DeleteOutlined />}
-            >
-              Xóa{" "}
-              {selectedRowKeys.length !== 0
-                ? `(${selectedRowKeys.length})`
-                : ""}
-            </Button>
-          </Tooltip>
+              </Tooltip>
+              <Tooltip
+                placement="top"
+                title={"Thêm mới hoạt động"}
+                arrow={true}
+              >
+                <Dropdown menu={{ items }} trigger={["click"]}>
+                  <a onClick={(e) => e.preventDefault()}>
+                    <Button type="primary" icon={<PlusOutlined />}>
+                      Thêm hoạt động
+                    </Button>
+                  </a>
+                </Dropdown>
+              </Tooltip>
+              <Tooltip placement="top" title="Xóa các hoạt động" arrow={true}>
+                <Button
+                  type="dashed"
+                  disabled={selectedRowKeys.length === 0}
+                  danger
+                  onClick={handleDelete}
+                  icon={<DeleteOutlined />}
+                >
+                  Xóa{" "}
+                  {selectedRowKeys.length !== 0
+                    ? `(${selectedRowKeys.length})`
+                    : ""}
+                </Button>
+              </Tooltip>
+            </>
+          )}
         </div>
         <CustomNotification
           message={message}
@@ -923,28 +962,38 @@ const BM05 = () => {
           }
         />
       </div>
-      <Table<ActivityItem>
-        key={"table-activity-bm05"}
-        className="custom-table-header shadow-md rounded-md bg-white"
-        bordered
-        rowKey={(item) => item.id}
-        rowHoverable
-        size="small"
-        pagination={{
-          ...pagination,
-          total: data.length,
-          showTotal: showTotal,
-          showSizeChanger: true,
-          position: ["bottomRight"],
-          defaultPageSize: 15,
-          pageSizeOptions: ["15", "25", "50", "100"],
-        }}
-        rowSelection={rowSelection}
-        columns={columns}
-        dataSource={data}
-        locale={{ emptyText: <Empty description="No Data"></Empty> }}
-        onChange={handleTableChange}
-      />
+      {loading ? (
+        <>
+          <Card>
+            <Skeleton active />
+          </Card>
+        </>
+      ) : (
+        <>
+          <Table<ActivityItem>
+            key={"table-activity-bm05"}
+            className="custom-table-header shadow-md rounded-md bg-white"
+            bordered
+            rowKey={(item) => item.id}
+            rowHoverable
+            size="small"
+            pagination={{
+              ...pagination,
+              total: data.length,
+              showTotal: showTotal,
+              showSizeChanger: true,
+              position: ["bottomRight"],
+              defaultPageSize: 15,
+              pageSizeOptions: ["15", "25", "50", "100"],
+            }}
+            rowSelection={rowSelection}
+            columns={columns}
+            dataSource={data}
+            locale={{ emptyText: <Empty description="No Data"></Empty> }}
+            onChange={handleTableChange}
+          />
+        </>
+      )}
     </div>
   );
 };

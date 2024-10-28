@@ -7,7 +7,7 @@ interface NotPermissionProps {
 }
 
 export const metadata: Metadata = {
-  title: "Phân quyền",
+  title: "Từ chối truy cập - UEF",
   description: "Phân quyền sử dụng hệ thống",
 };
 

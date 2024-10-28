@@ -10,6 +10,8 @@ enum PageTitles {
     ROLES = "Vai trò - UEF",
     PERMISSIONS = "Phân quyền - UEF",
     MENUS = "Chức năng - UEF",
+    NOT_FOUND = "Không tìm thấy trang - UEF",
+    NOT_PERMISSIONS = "Từ chối truy cập - UEF",
 }
 
 export default PageTitles;

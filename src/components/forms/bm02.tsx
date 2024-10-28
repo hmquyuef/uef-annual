@@ -38,6 +38,7 @@ import * as XLSX from "sheetjs-style";
 import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
 import FormBM02 from "./activity/formBM02";
+import Cookies from "js-cookie";
 import FromUpload from "./activity/formUpload";
 import {
   getListUnitsFromHrm,
@@ -615,9 +616,21 @@ const BM02 = () => {
       current: pagination.current || 1,
       pageSize: pagination.pageSize || 15,
     });
+    Cookies.set(
+      "p_s",
+      JSON.stringify([pagination.current, pagination.pageSize])
+    );
   };
   useEffect(() => {
     document.title = PageTitles.BM02;
+    const pageState = Cookies.get("p_s");
+    if (pageState) {
+      const [current, pageSize] = JSON.parse(pageState);
+      setPagination({
+        current,
+        pageSize,
+      });
+    }
     Promise.all([getListClassAssistants(), getAllUnitsFromHRM()]);
   }, []);
   return (

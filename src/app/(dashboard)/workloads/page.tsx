@@ -24,6 +24,7 @@ import {
   Breadcrumb,
   Button,
   Card,
+  Skeleton,
   Statistic,
   StatisticProps,
   Tooltip,
@@ -36,6 +37,7 @@ import CountUp from "react-countup";
 const Workloads = () => {
   const { data: session } = useSession();
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
   const [emailUser, setEmailUser] = useState("");
   const [types, setTypes] = useState<WorkloadTypeItem[]>([]);
   const [isOpened, setIsOpened] = useState(false);
@@ -129,7 +131,7 @@ const Workloads = () => {
     ),
   ];
   const handleSubmit = async (formData: Partial<AddUpdateWorkloadType>) => {
-    // console.log("formData :>> ", formData);
+    console.log("formData :>> ", formData);
     try {
       if (mode === "edit" && selectedItem) {
         const response = await putUpdateWorkloadType(
@@ -152,13 +154,9 @@ const Workloads = () => {
       setDescription("Đã có lỗi xảy ra!");
     }
   };
-  useEffect(() => {
-    document.title = PageTitles.BM;
-    
-    getListWorkloadTypes();
-  }, []);
 
   useEffect(() => {
+    setLoading(true);
     if (session) {
       const getRolesUser = async () => {
         const email = session.user?.email || "";
@@ -169,8 +167,11 @@ const Workloads = () => {
         setUserRole(roles[0]);
         setEmailUser(email);
       };
+      document.title = PageTitles.BM;
       getRolesUser();
+      getListWorkloadTypes();
     }
+    setLoading(false);
   }, [session]);
 
   return (
@@ -198,72 +199,87 @@ const Workloads = () => {
           ]}
         />
       </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-        {types &&
-          types.map((type) => (
-            <Card
-              key={type.id}
-              actions={actions(type)}
-              size="small"
-              className="hover:shadow-lg hover:rounded-lg"
-            >
-              <div
-                onClick={() => {
-                  if (
-                    type.emails?.includes(emailUser.replace("@uef.edu.vn", ""))
-                  ) {
-                    router.push("/workloads/" + type.href);
-                  } else {
-                    setIsAccess(false);
-                    setIsOpened(true);
-                    setTitle("");
-                    setIsOk(false);
-                  }
-                }}
-                className="cursor-pointer"
-              >
-                <Card.Meta
-                  title={
-                    <div className="flex justify-between items-center gap-2">
-                      <p>{type.shortName}</p>
-                      {type.emails?.includes(
-                        emailUser.replace("@uef.edu.vn", "")
-                      ) ? (
+        {loading ? (
+          <>
+            {Array.from({ length: 8 }).map((_, index) => (
+              <Card key={index}>
+                <Skeleton active />
+              </Card>
+            ))}
+          </>
+        ) : (
+          <>
+            {types &&
+              types.map((type) => (
+                <Card
+                  key={type.id}
+                  actions={actions(type)}
+                  size="small"
+                  className="hover:shadow-lg hover:rounded-lg"
+                >
+                  <div
+                    onClick={() => {
+                      if (
+                        type.emails?.includes(
+                          emailUser.replace("@uef.edu.vn", "")
+                        )
+                      ) {
+                        router.push("/workloads/" + type.href);
+                      } else {
+                        setIsAccess(false);
+                        setIsOpened(true);
+                        setTitle("");
+                        setIsOk(false);
+                      }
+                    }}
+                    className="cursor-pointer"
+                  >
+                    <Card.Meta
+                      title={
+                        <div className="flex justify-between items-center gap-2">
+                          <p>{type.shortName}</p>
+                          {type.emails?.includes(
+                            emailUser.replace("@uef.edu.vn", "")
+                          ) ? (
+                            <>
+                              <Tooltip
+                                placement="top"
+                                title={"Đã được cấp quyền"}
+                                arrow={true}
+                              >
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  shape="circle"
+                                  style={{
+                                    backgroundColor: "#52c41a",
+                                    borderColor: "#52c41a",
+                                    color: "#fff",
+                                  }}
+                                  icon={<CheckOutlined />}
+                                ></Button>
+                              </Tooltip>
+                            </>
+                          ) : (
+                            <></>
+                          )}
+                        </div>
+                      }
+                      className="max-h-20"
+                      description={
                         <>
-                          <Tooltip
-                            placement="top"
-                            title={"Đã được cấp quyền"}
-                            arrow={true}
-                          >
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              shape="circle"
-                              style={{
-                                backgroundColor: "#52c41a",
-                                borderColor: "#52c41a",
-                                color: "#fff",
-                              }}
-                              icon={<CheckOutlined />}
-                            ></Button>
-                          </Tooltip>
+                          <p className="text-nowrap">{type.name}</p>
+                          <p>Thuộc nhóm: {type.groupName}</p>
                         </>
-                      ) : (
-                        <></>
-                      )}
-                    </div>
-                  }
-                  className="max-h-20"
-                  description={
-                    <>
-                      <p className="text-nowrap">{type.name}</p>
-                      <p>Thuộc nhóm: {type.groupName}</p>
-                    </>
-                  }
-                />
-              </div>
-            </Card>
-          ))}
+                      }
+                    />
+                  </div>
+                </Card>
+              ))}
+          </>
+        )}
       </div>
       <CustomNotification
         message={message}
