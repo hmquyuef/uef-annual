@@ -15,10 +15,10 @@ const Home = () => {
       formData.append("password", "");
       formData.append("email", email);
       formData.append("provider", Providers.GOOGLE);
-      console.log("formData :>> ", formData);
       const response = await postInfoToGetToken(formData);
       if (response.accessToken) {
         sessionStorage.setItem("s_t", response.accessToken);
+        sessionStorage.setItem("s_r", response.refreshToken);
       }
     }
   };

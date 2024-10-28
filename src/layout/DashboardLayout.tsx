@@ -11,6 +11,12 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import Marquee from "react-fast-marquee";
+import Providers from "@/utility/Providers";
+import {
+  getExpiresInTokenByRefresh,
+  postInfoToGetToken,
+  putTokenByRefresh,
+} from "@/services/auth/authServices";
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
@@ -98,6 +104,21 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     setItemsMenu(tempMenu);
   };
 
+  const getToken = async (email: string) => {
+    if (email !== undefined) {
+      const formData = new FormData();
+      formData.append("userName", "");
+      formData.append("password", "");
+      formData.append("email", email);
+      formData.append("provider", Providers.GOOGLE);
+      console.log("formData :>> ", formData);
+      const response = await postInfoToGetToken(formData);
+      if (response.accessToken) {
+        sessionStorage.setItem("s_t", response.accessToken);
+      }
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       if (session) {
@@ -113,6 +134,29 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [session, router]);
 
   useEffect(() => {
+    const token = sessionStorage.getItem("s_t");
+    const refreshToken = sessionStorage.getItem("s_r");
+    if (!token && !refreshToken) {
+      router.push("/login");
+    }
+    if (refreshToken) {
+      const getExpiresInToken = async () => {
+        const responseCheckExpirseInToken = await getExpiresInTokenByRefresh(
+          refreshToken
+        );
+        if (
+          !responseCheckExpirseInToken.isExpires &&
+          responseCheckExpirseInToken.expirsesIn <= 0
+        ) {
+          const responseRefreshToken = await putTokenByRefresh(refreshToken);
+          if (responseRefreshToken.accessToken) {
+            sessionStorage.setItem("s_t", responseRefreshToken.accessToken);
+            sessionStorage.setItem("s_r", responseRefreshToken.refreshToken);
+          }
+        }
+      };
+      getExpiresInToken();
+    }
     const menuOpen = Cookies.get("m_i");
     if (menuOpen) {
       const openKeys = JSON.parse(menuOpen);
