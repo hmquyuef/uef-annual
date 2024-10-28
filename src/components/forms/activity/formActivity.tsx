@@ -520,7 +520,9 @@ const FormActivity: FC<FormActivityProps> = ({
           </>
         )}
         <div className="flex flex-col gap-[2px]">
-          <span className="font-medium text-neutral-600">Tài liệu đính kèm</span>
+          <span className="font-medium text-neutral-600">
+            Tài liệu đính kèm
+          </span>
           <div
             {...getRootProps()}
             className="w-full min-h-20 h-fit border-2 border-dashed border-neutral-300 cursor-pointer flex justify-center items-center gap-3 rounded-xl"
@@ -650,8 +652,17 @@ const FormActivity: FC<FormActivityProps> = ({
               <div
                 className="flex flex-col overflow-x-auto overflow-y-auto rounded-md shadow-md"
                 style={{
-                  maxHeight: "72vh",
+                  maxHeight: `${
+                    (document.querySelector("form")?.getBoundingClientRect()
+                      .height ?? 0) >
+                    0.72 * window.innerHeight
+                      ? "80vh"
+                      : "72vh"
+                  }`,
                 }}
+                // style={{
+                //   maxHeight: "72vh",
+                // }}
               >
                 <Document
                   file={`https://api-annual.uef.edu.vn/${pathPDF}`}
