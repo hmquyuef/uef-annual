@@ -660,9 +660,6 @@ const FormActivity: FC<FormActivityProps> = ({
                       : "72vh"
                   }`,
                 }}
-                // style={{
-                //   maxHeight: "72vh",
-                // }}
               >
                 <Document
                   file={`https://api-annual.uef.edu.vn/${pathPDF}`}

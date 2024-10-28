@@ -129,7 +129,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         ) {
           const responseRefreshToken = await putTokenByRefresh(refreshToken);
           if (responseRefreshToken.accessToken) {
-            Cookies.set("s_t", responseRefreshToken.accessToken);
+            const expires = new Date(responseRefreshToken.expiresAt * 1000);
+            Cookies.set("s_t", responseRefreshToken.accessToken, {
+              expires: expires,
+            });
             Cookies.set("s_r", responseRefreshToken.refreshToken);
           }
         }
