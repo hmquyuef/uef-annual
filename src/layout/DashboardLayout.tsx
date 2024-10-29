@@ -80,9 +80,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const getMenuByUserName = async (email: string) => {
     try {
       const response = await getUserNameByEmail(email);
-
       if (!response) return router.push("/not-permission");
-
       const listmenus = await getAllPermissionsForMenuByUserName(
         response.userName
       );
@@ -105,10 +103,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         }
       );
       setItemsMenu(tempMenu);
-      
     } catch (error) {
       if (error instanceof Error && (error as any).response?.status === 401) {
         await getToken(email);
+        router.refresh();
       }
     }
   };
@@ -143,18 +141,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
   useEffect(() => {
-    const token = Cookies.get("s_t");
-    if (token === undefined) {
-      const fetchData = async () => {
-        if (session) {
-          const email = session.user?.email;
-          if (email !== undefined) {
-            await getToken(email as string);
-          }
-        }
-      };
-      fetchData();
-    }
     const refreshToken = Cookies.get("s_r");
     if (refreshToken !== undefined) {
       const getExpiresInToken = async () => {
