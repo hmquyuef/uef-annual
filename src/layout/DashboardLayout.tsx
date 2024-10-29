@@ -78,30 +78,39 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     );
   };
   const getMenuByUserName = async (email: string) => {
-    const response = await getUserNameByEmail(email);
-    if (!response) return router.push("/not-permission");
+    try {
+      const response = await getUserNameByEmail(email);
 
-    const listmenus = await getAllPermissionsForMenuByUserName(
-      response.userName
-    );
-    if (listmenus.items.length === 0) return router.push("/not-permission");
+      if (!response) return router.push("/not-permission");
 
-    const tempMenu: MenuItem[] = listmenus.items[0].permissions.map((item) => {
-      const tempChildren: MenuItem[] = item.children.map((child) => ({
-        key: child.position,
-        label: <Link href={child.href}>{child.label}</Link>,
-      }));
-      const IconComponent = item.icon
-        ? require(`@ant-design/icons`)[item.icon]
-        : null;
-      return {
-        key: item.position,
-        icon: IconComponent ? <IconComponent /> : null,
-        label: item.label,
-        children: tempChildren,
-      };
-    });
-    setItemsMenu(tempMenu);
+      const listmenus = await getAllPermissionsForMenuByUserName(
+        response.userName
+      );
+      if (listmenus.items.length === 0) return router.push("/not-permission");
+      const tempMenu: MenuItem[] = listmenus.items[0].permissions.map(
+        (item) => {
+          const tempChildren: MenuItem[] = item.children.map((child) => ({
+            key: child.position,
+            label: <Link href={child.href}>{child.label}</Link>,
+          }));
+          const IconComponent = item.icon
+            ? require(`@ant-design/icons`)[item.icon]
+            : null;
+          return {
+            key: item.position,
+            icon: IconComponent ? <IconComponent /> : null,
+            label: item.label,
+            children: tempChildren,
+          };
+        }
+      );
+      setItemsMenu(tempMenu);
+      
+    } catch (error) {
+      if (error instanceof Error && (error as any).response?.status === 401) {
+        await getToken(email);
+      }
+    }
   };
 
   useEffect(() => {
@@ -117,6 +126,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     };
     fetchData();
   }, [session, router]);
+
   const getToken = async (email: string) => {
     if (email !== undefined) {
       const formData = new FormData();
@@ -134,7 +144,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   };
   useEffect(() => {
     const token = Cookies.get("s_t");
-    if (!token) {
+    if (token === undefined) {
       const fetchData = async () => {
         if (session) {
           const email = session.user?.email;
@@ -146,7 +156,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       fetchData();
     }
     const refreshToken = Cookies.get("s_r");
-    if (refreshToken) {
+    if (refreshToken !== undefined) {
       const getExpiresInToken = async () => {
         const responseCheckExpirseInToken = await getExpiresInTokenByRefresh(
           refreshToken
@@ -166,6 +176,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         }
       };
       getExpiresInToken();
+    } else {
+      const fetchData = async () => {
+        if (session) {
+          const email = session.user?.email;
+          if (email !== undefined) {
+            await getToken(email as string);
+          }
+        }
+      };
+      fetchData();
     }
     const menuOpen = Cookies.get("m_i");
     if (menuOpen) {
