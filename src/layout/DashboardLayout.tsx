@@ -140,6 +140,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       }
     }
   };
+  
   useEffect(() => {
     const refreshToken = Cookies.get("s_r");
     if (refreshToken !== undefined) {
