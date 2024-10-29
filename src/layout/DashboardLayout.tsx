@@ -3,10 +3,12 @@
 import TopHeaders from "@/components/TopHeader";
 import {
   getExpiresInTokenByRefresh,
+  postInfoToGetToken,
   putTokenByRefresh,
 } from "@/services/auth/authServices";
 import { getAllPermissionsForMenuByUserName } from "@/services/permissions/permissionForMenu";
 import { getUserNameByEmail } from "@/services/users/usersServices";
+import Providers from "@/utility/Providers";
 import { ArrowLeftOutlined, ArrowRightOutlined } from "@ant-design/icons";
 import { Alert, Image, Menu, MenuProps } from "antd";
 import Cookies from "js-cookie";
@@ -115,8 +117,34 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     };
     fetchData();
   }, [session, router]);
-
+  const getToken = async (email: string) => {
+    if (email !== undefined) {
+      const formData = new FormData();
+      formData.append("userName", "");
+      formData.append("password", "");
+      formData.append("email", email);
+      formData.append("provider", Providers.GOOGLE);
+      const response = await postInfoToGetToken(formData);
+      if (response.accessToken) {
+        const expires = new Date(response.expiresAt * 1000);
+        Cookies.set("s_t", response.accessToken, { expires: expires });
+        Cookies.set("s_r", response.refreshToken);
+      }
+    }
+  };
   useEffect(() => {
+    const token = Cookies.get("s_t");
+    if (!token) {
+      const fetchData = async () => {
+        if (session) {
+          const email = session.user?.email;
+          if (email !== undefined) {
+            await getToken(email as string);
+          }
+        }
+      };
+      fetchData();
+    }
     const refreshToken = Cookies.get("s_r");
     if (refreshToken) {
       const getExpiresInToken = async () => {
