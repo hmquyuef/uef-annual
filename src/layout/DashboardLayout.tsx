@@ -78,129 +78,66 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     );
   };
   const getMenuByUserName = async (email: string) => {
-    try {
-      const response = await getUserNameByEmail(email);
-      if (!response) return router.push("/not-permission");
-      const listmenus = await getAllPermissionsForMenuByUserName(
-        response.userName
-      );
-      if (listmenus.items.length === 0) return router.push("/not-permission");
-      const tempMenu: MenuItem[] = listmenus.items[0].permissions.map(
-        (item) => {
-          const tempChildren: MenuItem[] = item.children.map((child) => ({
-            key: child.position,
-            label: <Link href={child.href}>{child.label}</Link>,
-          }));
-          const IconComponent = item.icon
-            ? require(`@ant-design/icons`)[item.icon]
-            : null;
-          return {
-            key: item.position,
-            icon: IconComponent ? <IconComponent /> : null,
-            label: item.label,
-            children: tempChildren,
-          };
-        }
-      );
-      setItemsMenu(tempMenu);
-    } catch (error) {
-      if (error instanceof Error && (error as any).response?.status === 401) {
-        await getToken(email);
-        router.refresh();
-      }
-    }
+    const response = await getUserNameByEmail(email);
+    if (!response) return router.push("/not-permission");
+    const listmenus = await getAllPermissionsForMenuByUserName(
+      response.userName
+    );
+    if (listmenus.items.length === 0) return router.push("/not-permission");
+    const tempMenu: MenuItem[] = listmenus.items[0].permissions.map((item) => {
+      const tempChildren: MenuItem[] = item.children.map((child) => ({
+        key: child.position,
+        label: <Link href={child.href}>{child.label}</Link>,
+      }));
+      const IconComponent = item.icon
+        ? require(`@ant-design/icons`)[item.icon]
+        : null;
+      return {
+        key: item.position,
+        icon: IconComponent ? <IconComponent /> : null,
+        label: item.label,
+        children: tempChildren,
+      };
+    });
+    setItemsMenu(tempMenu);
   };
 
   useEffect(() => {
     const fetchData = async () => {
-      if (session) {
-        const email = session.user?.email;
-        if (email) {
-          await getMenuByUserName(email);
-        }
-      } else {
+      if (!session) {
         router.push("/login");
+        return;
+      }
+
+      const email = session.user?.email;
+      if (email) {
+        await getMenuByUserName(email);
       }
     };
+
+    const loadMenuFromCookies = () => {
+      const menuOpen = Cookies.get("m_i");
+      if (menuOpen) {
+        const openKeys = JSON.parse(menuOpen);
+        setStateOpenKeys([openKeys[0], openKeys[1]]);
+        router.push(openKeys[2]);
+      }
+    };
+
     fetchData();
+    loadMenuFromCookies();
   }, [session, router]);
 
-  const getToken = async (email: string) => {
-    if (email !== undefined) {
-      const formData = new FormData();
-      formData.append("userName", "");
-      formData.append("password", "");
-      formData.append("email", email);
-      formData.append("provider", Providers.GOOGLE);
-      const response = await postInfoToGetToken(formData);
-      if (response.accessToken) {
-        const expires = new Date(response.expiresAt * 1000);
-        Cookies.set("s_t", response.accessToken, { expires: expires });
-        Cookies.set("s_r", response.refreshToken);
-      }
-    }
-  };
-  
   useEffect(() => {
-    const refreshToken = Cookies.get("s_r");
-    if (refreshToken !== undefined) {
-      const getExpiresInToken = async () => {
-        const responseCheckExpirseInToken = await getExpiresInTokenByRefresh(
-          refreshToken
-        );
-        if (
-          !responseCheckExpirseInToken.isExpires &&
-          responseCheckExpirseInToken.expirsesIn <= 0
-        ) {
-          const responseRefreshToken = await putTokenByRefresh(refreshToken);
-          if (responseRefreshToken.accessToken) {
-            const expires = new Date(responseRefreshToken.expiresAt * 1000);
-            Cookies.set("s_t", responseRefreshToken.accessToken, {
-              expires: expires,
-            });
-            Cookies.set("s_r", responseRefreshToken.refreshToken);
-          }
-        }
-      };
-      getExpiresInToken();
-    } else {
-      const fetchData = async () => {
-        if (session) {
-          const email = session.user?.email;
-          if (email !== undefined) {
-            await getToken(email as string);
-          }
-        }
-      };
-      fetchData();
-    }
-    const menuOpen = Cookies.get("m_i");
-    if (menuOpen) {
-      const openKeys = JSON.parse(menuOpen);
-      const menuPath = openKeys[2];
-      setStateOpenKeys([openKeys[0], openKeys[1]]);
-      router.push(menuPath);
-    }
-  }, []);
+    const connection =
+      (navigator as any).connection ||
+      (navigator as any).mozConnection ||
+      (navigator as any).webkitConnection;
 
-  useEffect(() => {
     const checkConnectionSpeed = () => {
-      const connection =
-        (navigator as any).connection ||
-        (navigator as any).mozConnection ||
-        (navigator as any).webkitConnection;
       if (connection) {
-        const effectiveType = connection.effectiveType;
-        // Kiểm tra xem kết nối mạng có chậm không (2g hoặc slow-3g)
-        if (
-          effectiveType === "2g" ||
-          effectiveType === "slow-2g" ||
-          effectiveType === "3g"
-        ) {
-          setIsSlowConnection(true);
-        } else {
-          setIsSlowConnection(false);
-        }
+        const { effectiveType } = connection;
+        setIsSlowConnection(["2g", "slow-2g", "3g"].includes(effectiveType));
       }
     };
 
@@ -209,28 +146,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       checkConnectionSpeed();
     };
 
-    // Kiểm tra ngay khi component được mount
-    handleNetworkChange();
+    handleNetworkChange(); // Kiểm tra ngay khi component mount
 
-    // Lắng nghe sự kiện online, offline, và thay đổi trạng thái mạng
     window.addEventListener("online", handleNetworkChange);
     window.addEventListener("offline", handleNetworkChange);
-
-    // Lắng nghe sự kiện thay đổi kết nối
-    const connection =
-      (navigator as any).connection ||
-      (navigator as any).mozConnection ||
-      (navigator as any).webkitConnection;
-    if (connection) {
-      connection.addEventListener("change", checkConnectionSpeed);
-    }
+    connection?.addEventListener("change", checkConnectionSpeed);
 
     return () => {
       window.removeEventListener("online", handleNetworkChange);
       window.removeEventListener("offline", handleNetworkChange);
-      if (connection) {
-        connection.removeEventListener("change", checkConnectionSpeed);
-      }
+      connection?.removeEventListener("change", checkConnectionSpeed);
     };
   }, []);
 
