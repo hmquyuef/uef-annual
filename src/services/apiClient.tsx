@@ -2,6 +2,8 @@ import axios, { AxiosInstance, AxiosResponse } from "axios";
 import Cookies from "js-cookie";
 import { signOut } from "next-auth/react";
 
+let retryCount = 0;
+
 const apiClient: AxiosInstance = axios.create({
   baseURL: "https://api-annual.uef.edu.vn/",
   // baseURL: 'http://192.168.98.60:8081/',
@@ -10,7 +12,6 @@ const apiClient: AxiosInstance = axios.create({
     "Content-Type": "application/json",
   },
 });
-
 apiClient.interceptors.request.use(
   (config) => {
     const session = Cookies.get("s_t");
@@ -24,8 +25,6 @@ apiClient.interceptors.request.use(
   }
 );
 
-let retryCount = 0;
-
 apiClient.interceptors.response.use(
   (response) => {
     retryCount = 0;
@@ -35,7 +34,7 @@ apiClient.interceptors.response.use(
     if (error.response && error.response.status === 401 && retryCount < 2) {
       retryCount++;
       const keyRefreshToken = Cookies.get("s_r");
-      if (keyRefreshToken !== undefined) {
+      if (keyRefreshToken && keyRefreshToken !== undefined) {
         try {
           const res: AxiosResponse = await apiClient.put(
             `api/auth/refersh/${keyRefreshToken}`

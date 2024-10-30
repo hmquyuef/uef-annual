@@ -5,7 +5,7 @@ import {
   LogActivityItem,
 } from "@/services/history/logActivityServices";
 import PageTitles from "@/utility/Constraints";
-import { convertTimestampToDate } from "@/utility/Utilities";
+import { convertTimestampToFullDateTime } from "@/utility/Utilities";
 import {
   AuditOutlined,
   HistoryOutlined,
@@ -23,10 +23,6 @@ import { Key, useEffect, useState } from "react";
 const LogsActivities = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [data, setData] = useState<LogActivityItem[]>([]);
-
-  const [status, setStatus] = useState<
-    "success" | "error" | "info" | "warning"
-  >("success");
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 15,
@@ -142,7 +138,7 @@ const LogsActivities = () => {
       dataIndex: "creationTime",
       key: "creationTime",
       render: (creationTime: number) =>
-        creationTime ? convertTimestampToDate(creationTime) : "",
+        creationTime ? convertTimestampToFullDateTime(creationTime) : "",
       className: "text-center w-[100px]",
     },
   ];

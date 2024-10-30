@@ -1,6 +1,7 @@
 "use client";
 
 import TopHeaders from "@/components/TopHeader";
+import { postInfoToGetToken } from "@/services/auth/authServices";
 import { getAllPermissionsForMenuByUserName } from "@/services/permissions/permissionForMenu";
 import { getUserNameByEmail } from "@/services/users/usersServices";
 import { ArrowLeftOutlined, ArrowRightOutlined } from "@ant-design/icons";
@@ -96,16 +97,36 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     setItemsMenu(tempMenu);
   };
 
+  const getToken = async (email: string) => {
+    const formData = new FormData();
+    formData.append("username", "");
+    formData.append("password", "");
+    formData.append("email", email);
+    formData.append("provider", "Google");
+
+    const response = await postInfoToGetToken(formData);
+    if (response && response !== undefined) {
+      const expires = new Date(response.expiresAt * 1000);
+      const expiresRefresh = new Date(response.expiresAt * 1000);
+      expiresRefresh.setDate(expiresRefresh.getDate() + 7);
+      Cookies.set("s_t", response.accessToken, { expires: expires });
+      Cookies.set("s_r", response.refreshToken, {
+        expires: expiresRefresh,
+      });
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
-      if (!session) {
+      if (session === undefined || session === null) {
         router.push("/login");
         return;
       }
 
       const email = session.user?.email;
       if (email) {
-        await getMenuByUserName(email);
+        getToken(email);
+        getMenuByUserName(email);
       }
     };
 
