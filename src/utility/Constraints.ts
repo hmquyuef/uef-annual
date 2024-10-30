@@ -5,6 +5,7 @@ enum PageTitles {
     BM03 = "Biểu mẫu 03 - UEF",
     BM04 = "Biểu mẫu 04 - UEF",
     BM05 = "Biểu mẫu 05 - UEF",
+    LOGS_ACTIVITY = "Nhật ký hoạt động - UEF",
     SEARCH = "Tra cứu CB-GV-NV - UEF",
     APPLICATIONS = "Ứng dụng - UEF",
     ROLES = "Vai trò - UEF",
