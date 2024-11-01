@@ -4,8 +4,6 @@ import { ImportResponse } from "./formsServices";
 export interface ClassLeaderItem {
   id: string;
   userName: string;
-  middleName: string;
-  firstName: string;
   fullName: string;
   unitName: string;
   semester: string;
@@ -13,7 +11,9 @@ export interface ClassLeaderItem {
   subject: string;
   classCode: string;
   standardNumber: number;
-  attendances: number;
+  fromDate: number;
+  entryDate: number;
+  eventDate: number;
   proof: string;
   note: string;
 }
@@ -23,42 +23,23 @@ export interface ClassLeadersResponse {
   totalCount: number;
 }
 
-export interface AddUpdateClassLeaderItem {
-  id: string;
-  userName: string;
-  middleName: string;
-  firstName: string;
-  unitName: string;
-  semester: string;
-  subject: string;
-  course: string;
-  classCode: string;
-  standardNumber: number;
-  attendances: number;
-  proof: string;
-  note: string;
-}
-
 export async function getAllClassLeaders(): Promise<ClassLeadersResponse> {
   const response = await apiClient.get<ClassLeadersResponse>("api/leaders");
   return response.data;
 }
 
 export async function postAddClassLeader(
-  data: Partial<AddUpdateClassLeaderItem>
-): Promise<AddUpdateClassLeaderItem> {
-  const response = await apiClient.post<AddUpdateClassLeaderItem>(
-    "api/leaders",
-    data
-  );
+  data: Partial<ClassLeaderItem>
+): Promise<ClassLeaderItem> {
+  const response = await apiClient.post<ClassLeaderItem>("api/leaders", data);
   return response.data;
 }
 
 export async function putUpdateClassLeader(
   id: string,
-  data: Partial<AddUpdateClassLeaderItem>
-): Promise<AddUpdateClassLeaderItem> {
-  const response = await apiClient.put<AddUpdateClassLeaderItem>(
+  data: Partial<ClassLeaderItem>
+): Promise<ClassLeaderItem> {
+  const response = await apiClient.put<ClassLeaderItem>(
     `api/leaders/${id}`,
     data
   );

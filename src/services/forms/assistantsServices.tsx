@@ -4,30 +4,15 @@ import { ImportResponse } from "./formsServices";
 export interface ClassAssistantItem {
   id: string;
   userName: string;
-  middleName: string;
-  firstName: string;
   fullName: string;
   unitName: string;
   semester: string;
   activityName: string;
   classCode: string;
   standardNumber: number;
-  attendances: number;
-  proof: string;
-  note: string;
-}
-
-export interface AddUpdateClassAssistantItem {
-  id: string;
-  userName: string;
-  middleName: string;
-  firstName: string;
-  unitName: string;
-  semester: string;
-  activityName: string;
-  classCode: string;
-  standardNumber: number;
-  attendances: number;
+  fromDate: number;
+  entryDate: number;
+  eventDate: number;
   proof: string;
   note: string;
 }
@@ -45,9 +30,9 @@ export async function getAllClassAssistants(): Promise<ClassAssistantResponse> {
 }
 
 export async function postAddClassAssistant(
-  data: Partial<AddUpdateClassAssistantItem>
-): Promise<AddUpdateClassAssistantItem> {
-  const response = await apiClient.post<AddUpdateClassAssistantItem>(
+  data: Partial<ClassAssistantItem>
+): Promise<ClassAssistantItem> {
+  const response = await apiClient.post<ClassAssistantItem>(
     "api/assistants",
     data
   );
@@ -56,9 +41,9 @@ export async function postAddClassAssistant(
 
 export async function putUpdateClassAssistant(
   id: string,
-  data: Partial<AddUpdateClassAssistantItem>
-): Promise<AddUpdateClassAssistantItem> {
-  const response = await apiClient.put<AddUpdateClassAssistantItem>(
+  data: Partial<ClassAssistantItem>
+): Promise<ClassAssistantItem> {
+  const response = await apiClient.put<ClassAssistantItem>(
     `api/assistants/${id}`,
     data
   );

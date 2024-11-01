@@ -9,7 +9,11 @@ import {
   ResultItemForBM04,
   ResultItemForBM05,
 } from "@/services/exports/exportDetailForUser";
-import { convertTimestampToDate, setCellStyle } from "@/utility/Utilities";
+import {
+  convertTimestampToDate,
+  defaultFooterInfo,
+  setCellStyle,
+} from "@/utility/Utilities";
 
 export const handleExportAll = async (detailUser: DetailUserItem) => {
   const defaultInfo = [
@@ -495,26 +499,7 @@ export const handleExportForBM = async (
     ["Thâm niên công tác:", "", ""],
     ["Đơn vị:", "", `${response?.unitName}`],
   ];
-  const defaultFooterInfo = [
-    [""],
-    [""],
-    ["Ghi chú:"],
-    [
-      "- Mã số CB-GV-NV yêu cầu cung cấp phải chính xác. Đơn vị có thể tra cứu Mã CB-GV-NV trên trang Portal UEF.",
-    ],
-    ["- Biểu mẫu này dành cho các khoa, viện, Phòng Đào tạo."],
-    [
-      "- Photo Tờ trình, Kế hoạch đã được BĐH phê duyệt tiết chuẩn nộp về VPT. Các trường hợp không được phê duyệt hoặc đã thanh toán thù lao thì không đưa vào biểu mẫu này.",
-    ],
-    [
-      "- Mỗi cá nhân có thể có nhiều dòng dữ liệu tương ứng với các hoạt động đã thực hiện... được BĐH phê duyệt tiết chuẩn.",
-    ],
-    [
-      "- Việc quy đổi tiết chuẩn căn cứ theo Phụ lục III, Quyết định số 720/QĐ-UEF ngày 01 tháng 9 năm 2023.",
-    ],
-    [""],
-    ["LÃNH ĐẠO ĐƠN VỊ", "", "", "", "", "", "", "NGƯỜI LẬP", "", ""],
-  ];
+
   switch (forms.toUpperCase()) {
     case "BM01":
       const exportBM01: ExportDetailForUser = {
@@ -531,7 +516,8 @@ export const handleExportForBM = async (
           course: item.course,
           classCode: item.classCode,
           standarNumber: item.standarNumber,
-          attendances: item.attendances,
+          fromDate: item.fromDate,
+          eventDate: item.eventDate,
           proof: item.proof,
           note: item.note,
         })),
@@ -561,9 +547,7 @@ export const handleExportForBM = async (
           item.course,
           item.classCode,
           item.proof + ", " + convertTimestampToDate(item.fromDate),
-          convertTimestampToDate(item.attendances) === "01/01/1970"
-            ? ""
-            : convertTimestampToDate(item.attendances),
+          item.eventDate ? convertTimestampToDate(item.eventDate) : "",
           item.note ?? "",
         ]),
         [
@@ -600,7 +584,8 @@ export const handleExportForBM = async (
           activityName: item.activityName,
           classCode: item.classCode,
           standarNumber: item.standarNumber,
-          attendances: item.attendances,
+          fromDate: item.fromDate,
+          eventDate: item.eventDate,
           proof: item.proof,
           note: item.note,
         })),
@@ -630,9 +615,7 @@ export const handleExportForBM = async (
           item.standarNumber,
           "",
           item.proof + ", " + convertTimestampToDate(item.fromDate),
-          convertTimestampToDate(item.attendances) === "01/01/1970"
-            ? ""
-            : convertTimestampToDate(item.attendances),
+          item.eventDate ? convertTimestampToDate(item.eventDate) : "",
           item.note ?? "",
         ]),
         [
@@ -664,7 +647,8 @@ export const handleExportForBM = async (
           content: item.content,
           totalStudents: item.totalStudents,
           standarNumber: item.standarNumber,
-          attendances: item.attendances,
+          fromDate: item.fromDate,
+          eventDate: item.eventDate,
           proof: item.proof,
           note: item.note,
         })),
@@ -694,9 +678,7 @@ export const handleExportForBM = async (
           item.standarNumber,
           "",
           item.proof + ", " + convertTimestampToDate(item.fromDate),
-          convertTimestampToDate(item.attendances) === "01/01/1970"
-            ? ""
-            : convertTimestampToDate(item.attendances),
+          item.eventDate ? convertTimestampToDate(item.eventDate) : "",
           item.note ?? "",
         ]),
         [
@@ -727,7 +709,8 @@ export const handleExportForBM = async (
         results: response.results.map((item: ResultItemForBM05) => ({
           activityName: item.activityName,
           standarNumber: item.standarNumber,
-          attendances: item.attendances,
+          fromDate: item.fromDate,
+          eventDate: item.eventDate,
           proof: item.proof,
           note: item.note,
         })),
@@ -757,9 +740,7 @@ export const handleExportForBM = async (
           item.standarNumber,
           "",
           item.proof + ", " + convertTimestampToDate(item.fromDate),
-          convertTimestampToDate(item.attendances) === "01/01/1970"
-            ? ""
-            : convertTimestampToDate(item.attendances),
+          item.eventDate ? convertTimestampToDate(item.eventDate) : "",
           item.note ?? "",
         ]),
         [
@@ -1127,7 +1108,7 @@ export const handleExportForBM = async (
       tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 10 } });
     else {
       tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 4 } });
-      tempMerge.push({ s: { r: row, c: 7 }, e: { r: row, c: 8 } });
+      tempMerge.push({ s: { r: row, c: 8 }, e: { r: row, c: 9 } });
     }
 
     for (let col = range.s.c; col <= range.e.c; col++) {

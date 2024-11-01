@@ -16,10 +16,19 @@ import {
   Empty,
   PaginationProps,
   Table,
-  TableColumnsType
+  TableColumnsType,
+  Tooltip,
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import { Key, useEffect, useState } from "react";
+import {
+  JsonView,
+  allExpanded,
+  darkStyles,
+  defaultStyles,
+} from "react-json-view-lite";
+import "react-json-view-lite/dist/index.css";
+
 const LogsActivities = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [data, setData] = useState<LogActivityItem[]>([]);
@@ -59,6 +68,7 @@ const LogsActivities = () => {
       dataIndex: "functionName",
       key: "functionName",
       render: (functionName: string) => <>{functionName}</>,
+      className: "max-w-[20rem]",
     },
     {
       title: "PHƯƠNG THỨC",
@@ -68,23 +78,31 @@ const LogsActivities = () => {
         <>
           {method === "GET" ? (
             <>
-              <span className="bg-blue-500 px-2 py-1 text-white">{method}</span>
+              <span className="bg-blue-500 px-2 py-1 text-white rounded-md">
+                {method}
+              </span>
             </>
           ) : (
             <>
               {method === "POST" ? (
                 <>
-                  <span className="bg-green-500 text-white">{method}</span>
+                  <span className="bg-green-500 px-2 py-1 text-white rounded-md">
+                    {method}
+                  </span>
                 </>
               ) : (
                 <>
                   {method === "PUT" ? (
                     <>
-                      <span className="bg-orange-500 text-white">{method}</span>
+                      <span className="bg-orange-500 px-2 py-1 text-white rounded-md">
+                        {method}
+                      </span>
                     </>
                   ) : (
                     <>
-                      <span className="bg-red-500 text-white">{method}</span>
+                      <span className="bg-red-500 px-2 py-1 text-white rounded-md">
+                        {method}
+                      </span>
                     </>
                   )}
                 </>
@@ -93,7 +111,7 @@ const LogsActivities = () => {
           )}
         </>
       ),
-      className: "text-center w-[70px]",
+      className: "text-center w-[100px]",
     },
     {
       title: "ĐƯỜNG DẪN",
@@ -106,12 +124,29 @@ const LogsActivities = () => {
       dataIndex: "query",
       key: "query",
       render: (query: string) => <>{query}</>,
+      className:
+        "max-w-[20rem] whitespace-nowrap overflow-hidden text-ellipsis",
     },
     {
       title: "REQUEST BODY",
       dataIndex: "requestBody",
       key: "requestBody",
-      render: (requestBody: string) => <>{requestBody}</>,
+      render: (requestBody: string) => (
+        <Tooltip
+          title={
+            <JsonView
+              data={requestBody}
+              shouldExpandNode={allExpanded}
+              style={darkStyles}
+            />
+          }
+          placement="bottomLeft"
+        >
+          {requestBody}
+        </Tooltip>
+      ),
+      className:
+        "max-w-[20rem] whitespace-nowrap overflow-hidden text-ellipsis",
     },
     {
       title: "THỜI GIAN XỬ LÝ",

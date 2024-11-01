@@ -1,8 +1,6 @@
 import apiClient from "../apiClient";
 
 export interface DetailUserItem {
-  // title: string;
-  // results: any;
   id: string;
   userName: string;
   email: string;
@@ -48,8 +46,8 @@ export interface ResultItemForBM01 {
   course: string;
   classCode: string;
   standarNumber: number;
-  attendances: number;
   fromDate: number;
+  eventDate: number;
   proof: string;
   note: string;
 }
@@ -59,8 +57,8 @@ export interface ResultItemForBM02 {
   semester: string;
   classCode: string;
   standarNumber: number;
-  attendances: number;
   fromDate: number;
+  eventDate: number;
   proof: string;
   note: string;
 }
@@ -69,8 +67,8 @@ export interface ResultItemForBM04 {
   content: string;
   totalStudents: number;
   standarNumber: number;
-  attendances: number;
   fromDate: number;
+  eventDate: number;
   proof: string;
   note: string;
 }
@@ -78,8 +76,8 @@ export interface ResultItemForBM04 {
 export interface ResultItemForBM05 {
   activityName: string;
   standarNumber: number;
-  attendances: number;
   fromDate: number;
+  eventDate: number;
   proof: string;
   note: string;
 }

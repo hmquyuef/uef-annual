@@ -51,3 +51,24 @@ export const setCellStyle = (
     worksheet[cell].s = style;
   }
 };
+
+export const defaultFooterInfo = [
+  [""],
+  [""],
+  ["Ghi chú:"],
+  [
+    "- Mã số CB-GV-NV yêu cầu cung cấp phải chính xác. Đơn vị có thể tra cứu Mã CB-GV-NV trên trang Portal UEF.",
+  ],
+  ["- Biểu mẫu này dành cho các khoa, viện, Phòng Đào tạo."],
+  [
+    "- Photo Tờ trình, Kế hoạch đã được BĐH phê duyệt tiết chuẩn nộp về VPT. Các trường hợp không được phê duyệt hoặc đã thanh toán thù lao thì không đưa vào biểu mẫu này.",
+  ],
+  [
+    "- Mỗi cá nhân có thể có nhiều dòng dữ liệu tương ứng với các hoạt động đã thực hiện... được BĐH phê duyệt tiết chuẩn.",
+  ],
+  [
+    "- Việc quy đổi tiết chuẩn căn cứ theo Phụ lục III, Quyết định số 720/QĐ-UEF ngày 01 tháng 9 năm 2023.								",
+  ],
+  [""],
+  ["LÃNH ĐẠO ĐƠN VỊ", "", "", "", "", "", "", "", "NGƯỜI LẬP"],
+];

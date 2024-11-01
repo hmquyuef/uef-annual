@@ -1,4 +1,5 @@
 "use client";
+
 import DynamicComponent from "@/components/DynamicComponent";
 import {
   getWorkloadTypesByShortName,

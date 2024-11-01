@@ -38,11 +38,14 @@ import {
   Tooltip,
 } from "antd";
 import { Key, useEffect, useState } from "react";
+import PageTitles from "@/utility/Constraints";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
-import "dayjs/locale/vi";
-import PageTitles from "@/utility/Constraints";
-dayjs.locale("vi");
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 const { RangePicker } = DatePicker;
 const SearchMembers = () => {
   const [selectedKey, setSelectedKey] = useState<Key | null>(null);

@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  AddUpdateClassAssistantItem,
   ClassAssistantItem,
   ClassAssistantResponse,
   deleteClassAssistants,
@@ -10,7 +9,11 @@ import {
   postAddClassAssistant,
   putUpdateClassAssistant,
 } from "@/services/forms/assistantsServices";
-import { convertTimestampToDate, setCellStyle } from "@/utility/Utilities";
+import {
+  convertTimestampToDate,
+  defaultFooterInfo,
+  setCellStyle,
+} from "@/utility/Utilities";
 import {
   DeleteOutlined,
   FileExcelOutlined,
@@ -44,11 +47,11 @@ import {
   getListUnitsFromHrm,
   UnitHRMItem,
 } from "@/services/units/unitsServices";
+import PageTitles from "@/utility/Constraints";
 
 import locale from "antd/locale/vi_VN";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/vi";
-import PageTitles from "@/utility/Constraints";
 dayjs.locale("vi");
 
 type SearchProps = GetProps<typeof Input.Search>;
@@ -66,7 +69,7 @@ const BM02 = () => {
   const [mode, setMode] = useState<"add" | "edit">("add");
   const [isNotificationOpen, setNotificationOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<
-    Partial<AddUpdateClassAssistantItem> | undefined
+    Partial<ClassAssistantItem> | undefined
   >(undefined);
   const [units, setUnits] = useState<UnitHRMItem[]>([]);
   const [selectedKeyUnit, setSelectedKeyUnit] = useState<Key | null>(null);
@@ -77,6 +80,9 @@ const BM02 = () => {
   >("success");
   const [startDate, setStartDate] = useState<number | null>(null);
   const [endDate, setEndDate] = useState<number | null>(null);
+  const [selectedDates, setSelectedDates] = useState<
+    [Dayjs | null, Dayjs | null] | null
+  >(null);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 15,
@@ -109,17 +115,17 @@ const BM02 = () => {
       title: "STT",
       dataIndex: "stt",
       key: "stt",
-      render: (_, __, index) => <p>{index + 1}</p>,
+      render: (_, __, index) => <>{index + 1}</>,
       className: "text-center w-[1rem]",
     },
     {
       title: "MÃ SỐ CB-GV-NV",
       dataIndex: "userName",
       key: "userName",
-      className: "w-[2rem]",
+      className: "w-[5rem]",
       render: (userName: string, record: ClassAssistantItem) => {
         return (
-          <p
+          <span
             className="text-blue-500 font-semibold cursor-pointer"
             onClick={() => {
               setMode("edit");
@@ -127,80 +133,91 @@ const BM02 = () => {
             }}
           >
             {userName}
-          </p>
+          </span>
         );
       },
     },
     {
-      title: "HỌ VÀ CHỮ LÓT",
-      dataIndex: "middleName",
-      key: "middleName",
-      render: (middleName: string) => <p>{middleName}</p>,
-      className: "w-[5rem]",
-    },
-    {
-      title: "TÊN",
-      dataIndex: "firstName",
-      key: "firstName",
-      render: (firstName: string) => <p>{firstName}</p>,
-      className: "text-center w-[3rem]",
+      title: "HỌ VÀ TÊN",
+      dataIndex: "fullName",
+      key: "fullName",
+      render: (fullName: string) => <>{fullName}</>,
+      className: "w-[10rem]",
     },
     {
       title: "ĐƠN VỊ",
       dataIndex: "unitName",
       key: "unitName",
-      className: "text-center w-[5rem]",
-      render: (unitName: string) => <p>{unitName}</p>,
+      className: "text-center w-[80px]",
+      render: (unitName: string) => <>{unitName}</>,
     },
     {
-      title: "TÊN CÔNG TÁC SƯ PHẠM ĐÃ THỰC HIỆN",
+      title: "TÊN CÔNG TÁC SƯ PHẠM",
       dataIndex: "activityName",
       key: "activityName",
-      render: (activityName: string) => <p>{activityName}</p>,
-      className: "text-center w-[10rem]",
+      render: (activityName: string) => <>{activityName}</>,
+      className: "w-[20rem]",
     },
     {
       title: "MÃ LỚP",
       dataIndex: "classCode",
       key: "classCode",
-      render: (classCode: string) => <p>{classCode}</p>,
-      className: "text-center w-[2rem]",
+      render: (classCode: string) => <>{classCode}</>,
+      className: "text-center w-[70px]",
     },
     {
       title: "HỌC KỲ",
       dataIndex: "semester",
       key: "semester",
-      render: (semester: string) => <p>{semester}</p>,
-      className: "text-center w-[2rem]",
+      render: (semester: string) => <>{semester}</>,
+      className: "text-center w-[50px]",
     },
     {
-      title: "SỐ TIẾT CHUẨN ĐƯỢC PHÊ DUYỆT",
+      title: "SỐ TIẾT CHUẨN",
       dataIndex: "standardNumber",
       key: "standardNumber",
-      className: "text-center w-[5rem]",
-      render: (standardNumber: string) => <p>{standardNumber}</p>,
+      className: "text-center w-[90px]",
+      render: (standardNumber: string) => <>{standardNumber}</>,
     },
     {
-      title: "THỜI GIAN THAM DỰ",
-      dataIndex: "attendances",
-      key: "attendances",
-      render: (attendances: number) =>
-        attendances ? convertTimestampToDate(attendances) : "",
+      title: (
+        <>
+          THỜI GIAN <br /> HOẠT ĐỘNG
+        </>
+      ),
+      dataIndex: "eventDate",
+      key: "eventDate",
+      render: (eventDate: number) =>
+        eventDate ? convertTimestampToDate(eventDate) : "",
       className: "text-center w-[4rem]",
     },
     {
-      title: "MINH CHỨNG",
+      title: (
+        <>
+          SỐ VĂN BẢN <br /> NGÀY LẬP
+        </>
+      ),
       dataIndex: "proof",
       key: "proof",
-      render: (proof: string) => <p>{proof}</p>,
-      className: "w-[10rem]",
+      render: (proof: string, record: ClassAssistantItem) => {
+        const ngayLap = record.fromDate;
+        return (
+          <div className="flex flex-col">
+            <span className="text-center font-medium">{proof}</span>
+            <span className="text-center text-[13px]">
+              {convertTimestampToDate(ngayLap)}
+            </span>
+          </div>
+        );
+      },
+      className: "w-[5rem]",
     },
     {
       title: "GHI CHÚ",
       dataIndex: "note",
       key: "note",
-      render: (note: string) => <p>{note}</p>,
-      className: "text-center w-[2rem]",
+      render: (note: string) => <>{note}</>,
+      className: "text-center w-[5rem]",
     },
   ];
 
@@ -244,12 +261,30 @@ const BM02 = () => {
   ];
 
   const onSearch: SearchProps["onSearch"] = (value) => {
-    if (value === "") setData(classAssistants?.items || []);
-    const filteredData = classAssistants?.items.filter((item) =>
-      item.fullName.toLowerCase().includes(value.toLowerCase())
-    );
+    if ((value === "" && !selectedKeyUnit) || selectedKeyUnit === "all")
+      setData(classAssistants?.items || []);
+    const selectedUnit = units.find((unit) => unit.id === selectedKeyUnit);
+
+    const filteredData = classAssistants?.items.filter((item) => {
+      const matchesName =
+        item.userName.toLowerCase().includes(value.toLowerCase()) ||
+        item.fullName.toLowerCase().includes(value.toLowerCase()) ||
+        item.activityName.toLowerCase().includes(value.toLowerCase());
+      const matchesUnit = selectedUnit
+        ? item.unitName === selectedUnit.code
+        : true;
+      const matchesDate =
+        startDate && endDate
+          ? item.eventDate >= startDate && item.eventDate <= endDate
+          : true;
+      return matchesName && matchesUnit && matchesDate;
+    });
     setData(filteredData || []);
   };
+
+  useEffect(() => {
+    onSearch("");
+  }, [selectedKeyUnit, startDate, endDate]);
 
   const handleDelete = useCallback(async () => {
     try {
@@ -268,18 +303,17 @@ const BM02 = () => {
     } catch (error) {
       console.error("Error deleting selected items:", error);
     }
+    setNotificationOpen(false);
   }, [selectedRowKeys]);
   const handleEdit = (classLeader: ClassAssistantItem) => {
-    const updatedActivity: Partial<AddUpdateClassAssistantItem> = {
+    const updatedActivity: Partial<ClassAssistantItem> = {
       ...classLeader,
     };
     setSelectedItem(updatedActivity);
     setMode("edit");
     setIsOpen(true);
   };
-  const handleSubmit = async (
-    formData: Partial<AddUpdateClassAssistantItem>
-  ) => {
+  const handleSubmit = async (formData: Partial<ClassAssistantItem>) => {
     try {
       if (mode === "edit" && selectedItem) {
         const response = await putUpdateClassAssistant(
@@ -287,9 +321,6 @@ const BM02 = () => {
           formData
         );
         if (response) {
-          setNotificationOpen(true);
-          setStatus("success");
-          setMessage("Thông báo");
           setDescription(
             "Cập nhật thông tin tham gia cố vấn môn học, trợ giảng, phụ đạo thành công!"
           );
@@ -297,14 +328,14 @@ const BM02 = () => {
       } else {
         const response = await postAddClassAssistant(formData);
         if (response) {
-          setNotificationOpen(true);
-          setStatus("success");
-          setMessage("Thông báo");
           setDescription(
             "Thêm mới thông tin tham gia cố vấn môn học, trợ giảng, phụ đạo thành công!"
           );
         }
       }
+      setNotificationOpen(true);
+      setStatus("success");
+      setMessage("Thông báo");
       await getListClassAssistants();
       setIsOpen(false);
       setSelectedItem(undefined);
@@ -315,6 +346,7 @@ const BM02 = () => {
       setMessage("Thông báo");
       setDescription("Đã có lỗi xảy ra!");
     }
+    setNotificationOpen(false);
   };
 
   const handleSubmitUpload = async (file: File) => {
@@ -323,11 +355,11 @@ const BM02 = () => {
       formData.append("file", file);
       const response = await ImportClassAssistants(formData);
       if (response) {
-        setNotificationOpen(true);
-        setStatus("success");
-        setMessage("Thông báo");
         setDescription(`Tải lên thành công ${response.totalCount} hoạt động!`);
       }
+      setNotificationOpen(true);
+      setStatus("success");
+      setMessage("Thông báo");
       await getListClassAssistants();
       setIsOpen(false);
       setSelectedItem(undefined);
@@ -341,15 +373,15 @@ const BM02 = () => {
       setDescription("Đã có lỗi xảy ra!");
       setIsUpload(false);
     }
+    setNotificationOpen(false);
   };
 
   const handleExportExcel = async () => {
     if (data) {
       const defaultInfo = [
-        ["", "", "", "", "", "", "", "", "", "", "", "", "BM-02"],
+        ["", "", "", "", "", "", "", "", "", "", "BM-02"],
         [
           "TRƯỜNG ĐẠI HỌC KINH TẾ - TÀI CHÍNH",
-          "",
           "",
           "",
           "",
@@ -358,7 +390,6 @@ const BM02 = () => {
         ],
         [
           "THÀNH PHỐ HỒ CHÍ MINH",
-          "",
           "",
           "",
           "",
@@ -373,58 +404,46 @@ const BM02 = () => {
         [""],
       ];
 
-      const defaultFooterInfo = [
-        [""],
-        [""],
-        ["Ghi chú:"],
-        [
-          "- Mã số CB-GV-NV yêu cầu cung cấp phải chính xác. Đơn vị có thể tra cứu Mã CB-GV-NV trên trang Portal UEF.",
-        ],
-        ["- Biểu mẫu này dành cho các khoa, viện, Phòng Đào tạo."],
-        [
-          "- Photo Tờ trình, Kế hoạch đã được BĐH phê duyệt tiết chuẩn nộp về VPT. Các trường hợp không được phê duyệt hoặc đã thanh toán thù lao thì không đưa vào biểu mẫu này.",
-        ],
-        [
-          "- Mỗi cá nhân có thể có nhiều dòng dữ liệu tương ứng với các hoạt động đã thực hiện... được BĐH phê duyệt tiết chuẩn.",
-        ],
-        [
-          "- Việc quy đổi tiết chuẩn căn cứ theo Phụ lục III, Quyết định số 720/QĐ-UEF ngày 01 tháng 9 năm 2023.								",
-        ],
-        [""],
-        ["LÃNH ĐẠO ĐƠN VỊ", "", "", "", "", "", "", "", "NGƯỜI LẬP"],
-      ];
-
       const dataArray = [
         [
           "STT",
           "Mã số CB-GV-NV",
-          "Họ và chữ lót",
-          "Tên",
+          "Họ và Tên",
           "Đơn vị",
-          "Tên công tác sư phạm đã thực hiện",
-          "",
-          "",
+          "Tên công tác sư phạm",
           "Tên lớp",
           "Học kỳ",
-          "Số tiết chuẩn được phê duyệt",
-          "Minh chứng",
+          "Số tiết chuẩn",
+          "Số văn bản, ngày lập",
+          "Thời gian hoạt động",
           "Ghi chú",
         ],
         ...data.map((item, index) => [
           index + 1,
           item.userName,
-          item.middleName,
-          item.firstName,
+          item.fullName,
           item.unitName ?? "",
-          item.activityName,
-          "",
-          "",
+          item.activityName ?? "",
           item.classCode ?? "",
           item.semester ?? "",
           item.standardNumber,
-          item.proof ?? "",
+          item.proof + ", " + convertTimestampToDate(item.fromDate),
+          item.eventDate ? convertTimestampToDate(item.eventDate) : "",
           item.note ?? "",
         ]),
+        [
+          "TỔNG SỐ TIẾT CHUẨN",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          `${data.reduce((acc, x) => acc + x.standardNumber, 0)}`,
+          "",
+          "",
+          "",
+        ],
       ];
 
       const combinedData = [...defaultInfo, ...dataArray];
@@ -450,11 +469,13 @@ const BM02 = () => {
       XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
       worksheet["!cols"] = [];
       worksheet["!cols"][0] = { wch: 4 };
-      worksheet["!cols"][1] = { wch: 15 };
-      worksheet["!cols"][2] = { wch: 15 };
-      worksheet["!cols"][10] = { wch: 20 };
-      worksheet["!cols"][11] = { wch: 20 };
-      worksheet["M1"].s = {
+      worksheet["!cols"][1] = { wch: 20 };
+      worksheet["!cols"][2] = { wch: 20 };
+      worksheet["!cols"][3] = { wch: 10 };
+      worksheet["!cols"][4] = { wch: 30 };
+      worksheet["!cols"][8] = { wch: 10 };
+      worksheet["!cols"][10] = { wch: 15 };
+      worksheet["K1"].s = {
         fill: {
           fgColor: { rgb: "FFFF00" },
         },
@@ -475,9 +496,9 @@ const BM02 = () => {
         },
       };
       setCellStyle(worksheet, "A2", 11, true, "center", "center", false, false);
-      setCellStyle(worksheet, "G2", 11, true, "center", "center", false, false);
+      setCellStyle(worksheet, "F2", 11, true, "center", "center", false, false);
       setCellStyle(worksheet, "A3", 11, true, "center", "center", false, false);
-      setCellStyle(worksheet, "G3", 11, true, "center", "center", false, false);
+      setCellStyle(worksheet, "F3", 11, true, "center", "center", false, false);
       setCellStyle(worksheet, "A4", 11, true, "center", "center", false, false);
       setCellStyle(worksheet, "A5", 16, true, "center", "center", false, false);
       setCellStyle(worksheet, "A6", 11, true, "center", "center", false, false);
@@ -485,8 +506,10 @@ const BM02 = () => {
       worksheet["!merges"] = [];
       const tempMerge = [];
       const range = XLSX.utils.decode_range(worksheet["!ref"]!);
-      for (let row = 7; row <= data.length + 7; row++) {
-        tempMerge.push({ s: { r: row, c: 5 }, e: { r: row, c: 7 } });
+      for (let row = 7; row <= range.e.r; row++) {
+        if (row === combinedData.length - 1) {
+          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 6 } });
+        }
         for (let col = range.s.c; col <= range.e.c; col++) {
           const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
           if (row === 7) {
@@ -502,20 +525,13 @@ const BM02 = () => {
             );
             continue;
           }
-          if (
-            col === 0 ||
-            col === 4 ||
-            col === 6 ||
-            col === 8 ||
-            col === 9 ||
-            col === 10
-          ) {
+          if (col === 1 || col === 2 || col === 4 || col === 10) {
             setCellStyle(
               worksheet,
               cellRef,
               11,
               false,
-              "center",
+              "left",
               "center",
               true,
               true
@@ -526,7 +542,19 @@ const BM02 = () => {
               cellRef,
               11,
               false,
-              "left",
+              "center",
+              "center",
+              true,
+              true
+            );
+          }
+          if (row === combinedData.length - 1) {
+            setCellStyle(
+              worksheet,
+              cellRef,
+              11,
+              true,
+              "center",
               "center",
               true,
               true
@@ -541,11 +569,7 @@ const BM02 = () => {
         row++
       ) {
         if (row < range.e.r)
-          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 12 } });
-        else {
-          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 4 } });
-          tempMerge.push({ s: { r: row, c: 8 }, e: { r: row, c: 11 } });
-        }
+          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 10 } });
         for (let col = range.s.c; col <= range.e.c; col++) {
           const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
           setCellStyle(
@@ -584,13 +608,15 @@ const BM02 = () => {
       }
 
       const defaultMerges = [
-        { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } },
-        { s: { r: 1, c: 6 }, e: { r: 1, c: 12 } },
-        { s: { r: 2, c: 0 }, e: { r: 2, c: 3 } },
-        { s: { r: 2, c: 6 }, e: { r: 2, c: 12 } },
-        { s: { r: 3, c: 0 }, e: { r: 3, c: 3 } },
-        { s: { r: 4, c: 0 }, e: { r: 4, c: 12 } },
-        { s: { r: 5, c: 0 }, e: { r: 5, c: 12 } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
+        { s: { r: 1, c: 5 }, e: { r: 1, c: 10 } },
+        { s: { r: 2, c: 0 }, e: { r: 2, c: 2 } },
+        { s: { r: 2, c: 5 }, e: { r: 2, c: 10 } },
+        { s: { r: 3, c: 0 }, e: { r: 3, c: 2 } },
+        { s: { r: 4, c: 0 }, e: { r: 4, c: 10 } },
+        { s: { r: 5, c: 0 }, e: { r: 5, c: 10 } },
+        { s: { r: range.e.r, c: 0 }, e: { r: range.e.r, c: 2 } },
+        { s: { r: range.e.r, c: 8 }, e: { r: range.e.r, c: 9 } },
       ];
 
       worksheet["!merges"].push(...defaultMerges, ...tempMerge);
@@ -662,30 +688,36 @@ const BM02 = () => {
                 setSelectedKeyUnit(value);
               }}
             />
-            <div className="grid grid-cols-3 gap-4">
-              <ConfigProvider locale={locale}>
-                <RangePicker
-                  placeholder={["Từ ngày", "Đến ngày"]}
-                  format={"DD/MM/YYYY"}
-                  onChange={(dates, dateStrings) => {
-                    const [startDate, endDate] = dateStrings;
-                    const startTimestamp = startDate
-                      ? new Date(
-                          startDate.split("/").reverse().join("-")
-                        ).valueOf() / 1000
-                      : null;
-                    const endTimestamp = endDate
-                      ? new Date(
-                          endDate.split("/").reverse().join("-")
-                        ).valueOf() / 1000
-                      : null;
+            <ConfigProvider locale={locale}>
+              <RangePicker
+                placeholder={["Từ ngày", "Đến ngày"]}
+                format="DD/MM/YYYY"
+                value={
+                  selectedDates || [
+                    dayjs(`01/09/${dayjs().year()}`, "DD/MM/YYYY"),
+                    dayjs(`31/08/${dayjs().year() + 1}`, "DD/MM/YYYY"),
+                  ]
+                }
+                onChange={(dates, dateStrings) => {
+                  if (dates) {
+                    const [startDate, endDate] = dates;
+                    const startTimestamp = startDate ? startDate.unix() : null;
+                    const endTimestamp = endDate ? endDate.unix() : null;
                     setStartDate(startTimestamp);
                     setEndDate(endTimestamp);
-                  }}
-                  className="col-span-2"
-                />
-              </ConfigProvider>
-            </div>
+                    setSelectedDates(dates);
+                  } else {
+                    setSelectedDates(null);
+                    setStartDate(
+                      dayjs(`01/09/${dayjs().year()}`, "DD/MM/YYYY").unix()
+                    );
+                    setEndDate(
+                      dayjs(`31/08/${dayjs().year() + 1}`, "DD/MM/YYYY").unix()
+                    );
+                  }
+                }}
+              />
+            </ConfigProvider>
           </div>
         </div>
         <div className="flex justify-end gap-4">
@@ -734,7 +766,7 @@ const BM02 = () => {
         <CustomModal
           isOpen={isOpen}
           isOk={true}
-          width="900px"
+          width="700px"
           title={
             mode === "edit"
               ? "Cập nhật thông tin cố vấn học tập, trợ giảng, phụ đạo"
@@ -762,9 +794,7 @@ const BM02 = () => {
               <>
                 <FormBM02
                   onSubmit={handleSubmit}
-                  initialData={
-                    selectedItem as Partial<AddUpdateClassAssistantItem>
-                  }
+                  initialData={selectedItem as Partial<ClassAssistantItem>}
                   mode={mode}
                 />
               </>

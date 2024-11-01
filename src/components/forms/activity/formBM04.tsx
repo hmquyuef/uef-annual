@@ -1,6 +1,6 @@
 "use client";
 
-import { AddUpdateQAItem } from "@/services/forms/qaServices";
+import { QAItem } from "@/services/forms/qaServices";
 import {
   getListUnitsFromHrm,
   UnitHRMItem,
@@ -10,13 +10,19 @@ import {
   UsersFromHRM,
   UsersFromHRMResponse,
 } from "@/services/users/usersServices";
-import { DatePicker, Input, InputNumber, Select } from "antd";
-import moment from "moment";
+import { ConfigProvider, DatePicker, Input, InputNumber, Select } from "antd";
 import { FC, FormEvent, Key, useEffect, useState } from "react";
+import locale from "antd/locale/vi_VN";
+import moment from "moment";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 interface FormBM04Props {
-  onSubmit: (formData: Partial<AddUpdateQAItem>) => void;
-  initialData?: Partial<AddUpdateQAItem>;
+  onSubmit: (formData: Partial<QAItem>) => void;
+  initialData?: Partial<QAItem>;
   mode: "add" | "edit";
 }
 
@@ -32,7 +38,9 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
   const [standardValues, setStandardValues] = useState<number>(0);
   const [contents, setContents] = useState<string>("");
   const [totalStudent, setTotalStudent] = useState<number | 0>(0);
-  const [attendances, setAttendances] = useState<number>(0);
+  const [fromDate, setFromDate] = useState<number>(0);
+  const [entryDate, setEntryDate] = useState<number>(0);
+  const [eventDate, setEventDate] = useState<number>(0);
   const [evidence, setEvidence] = useState<string>("");
   const [description, setDescription] = useState<string>("");
 
@@ -49,24 +57,17 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const tempUser = users?.items?.find((user) => user.id === selectedKey);
-    const formData: Partial<AddUpdateQAItem> = {
+    const formData: Partial<QAItem> = {
       id: initialData?.id || "",
       userName: mode !== "edit" ? tempUser?.userName : defaultUsers[0].userName,
-      middleName:
-        mode !== "edit"
-          ? tempUser?.middleName
-            ? tempUser.lastName + " " + tempUser.middleName
-            : tempUser?.lastName
-          : defaultUsers[0]?.middleName
-          ? defaultUsers[0].lastName + " " + defaultUsers[0].middleName
-          : defaultUsers[0]?.lastName,
-      firstName:
-        mode !== "edit" ? tempUser?.firstName : defaultUsers[0].firstName,
+      fullName: mode !== "edit" ? tempUser?.fullName : defaultUsers[0].fullName,
       unitName: mode !== "edit" ? tempUser?.unitName : defaultUsers[0].unitName,
       contents: contents,
       totalStudent: totalStudent,
       standardNumber: standardValues,
-      attendances: attendances,
+      fromDate: fromDate,
+      entryDate: entryDate / 1000,
+      eventDate: eventDate,
       proof: evidence,
       note: description,
     };
@@ -96,16 +97,24 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
         }
         setContents(initialData.contents || "");
         setTotalStudent(initialData.totalStudent || 0);
-        setAttendances(initialData.attendances || 0);
+        setFromDate(initialData.fromDate || 0);
+        setEntryDate((initialData.entryDate ?? 0) * 1000);
+        setEventDate(initialData.eventDate || 0);
         setStandardValues(initialData.standardNumber || 0);
+        setEvidence(initialData.proof || "");
         setDescription(initialData.note || "");
       } else {
+        const formattedDate = moment(new Date()).format("DD/MM/YYYY");
+        const timestamp = moment(formattedDate, "DD/MM/YYYY").valueOf();
+        setEntryDate(timestamp);
         setDefaultUnits([]);
         setDefaultUsers([]);
         setContents("");
         setTotalStudent(0);
         setStandardValues(0);
-        setAttendances(0);
+        setFromDate(0);
+        setEventDate(0);
+        setEvidence("");
         setDescription("");
       }
     };
@@ -114,6 +123,71 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
   return (
     <form onSubmit={handleSubmit}>
       <hr className="mt-1 mb-3" />
+      <div className="grid grid-cols-4 gap-6 mb-4">
+        <div className="flex flex-col gap-1">
+          <p className="font-medium text-neutral-600">
+            Số văn bản <span className="text-red-500">(*)</span>
+          </p>
+          <TextArea
+            autoSize
+            value={evidence}
+            onChange={(e) => setEvidence(e.target.value)}
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <p className="font-medium text-neutral-600">
+            Ngày lập <span className="text-red-500">(*)</span>
+          </p>
+          <ConfigProvider locale={locale}>
+            <DatePicker
+              placeholder="dd/mm/yyyy"
+              format="DD/MM/YYYY"
+              value={
+                fromDate ? dayjs.unix(fromDate).tz("Asia/Ho_Chi_Minh") : null
+              }
+              onChange={(date) => {
+                if (date) {
+                  const timestamp = dayjs(date).tz("Asia/Ho_Chi_Minh").unix();
+                  setFromDate(timestamp);
+                } else {
+                  setFromDate(0);
+                }
+              }}
+            />
+          </ConfigProvider>
+        </div>
+        <div className="flex flex-col gap-1">
+          <p className="font-medium text-neutral-600">Ngày hoạt động</p>
+          <ConfigProvider locale={locale}>
+            <DatePicker
+              placeholder="dd/mm/yyyy"
+              format="DD/MM/YYYY"
+              value={
+                eventDate ? dayjs.unix(eventDate).tz("Asia/Ho_Chi_Minh") : null
+              }
+              onChange={(date) => {
+                if (date) {
+                  const timestamp = dayjs(date).tz("Asia/Ho_Chi_Minh").unix();
+                  setEventDate(timestamp);
+                } else {
+                  setEventDate(0);
+                }
+              }}
+            />
+          </ConfigProvider>
+        </div>
+        <div className="flex flex-col gap-1">
+          <p className="font-medium text-neutral-600">Ngày nhập</p>
+          <ConfigProvider locale={locale}>
+            <DatePicker
+              disabled
+              placeholder="dd/mm/yyyy"
+              format={"DD/MM/YYYY"}
+              value={entryDate ? moment(entryDate) : null}
+            />
+          </ConfigProvider>
+        </div>
+      </div>
       <div className="grid grid-cols-2 gap-6 mb-4">
         <div className="flex flex-col gap-1">
           <p className="font-medium text-neutral-600">Đơn vị</p>
@@ -191,30 +265,6 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
             />
           </div>
         </div>
-        <div className="flex flex-col gap-1">
-          <p className="font-medium text-neutral-600">Thời gian tham dự</p>
-          <DatePicker
-            placeholder="dd/mm/yyyy"
-            format={"DD/MM/YYYY"}
-            value={attendances ? moment(attendances * 1000) : null}
-            onChange={(date) => {
-              if (date) {
-                const timestamp = date.valueOf();
-                setAttendances(timestamp / 1000);
-              } else {
-                setAttendances(0);
-              }
-            }}
-          />
-        </div>
-      </div>
-      <div className="flex flex-col gap-1 mb-4">
-        <p className="font-medium text-neutral-600">Minh chứng</p>
-        <TextArea
-          autoSize
-          value={evidence}
-          onChange={(e) => setEvidence(e.target.value)}
-        />
       </div>
       <div className="flex flex-col gap-1 mb-4">
         <p className="font-medium text-neutral-600">Ghi chú</p>

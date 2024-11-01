@@ -15,7 +15,11 @@ import {
   getListUnitsFromHrm,
   UnitHRMItem,
 } from "@/services/units/unitsServices";
-import { convertTimestampToDate, setCellStyle } from "@/utility/Utilities";
+import {
+  convertTimestampToDate,
+  defaultFooterInfo,
+  setCellStyle,
+} from "@/utility/Utilities";
 import {
   CheckOutlined,
   CloseOutlined,
@@ -159,12 +163,12 @@ const BM05 = () => {
       render: (number: string, record: ActivityItem) => {
         const ngayLap = record.determinations?.fromDate;
         return (
-          <>
-            <p className="text-center font-medium">{number}</p>
-            <p className="text-center text-[13px]">
+          <div className="flex flex-col">
+            <span className="text-center font-medium">{number}</span>
+            <span className="text-center text-[13px]">
               {convertTimestampToDate(ngayLap)}
-            </p>
-          </>
+            </span>
+          </div>
         );
       },
     },
@@ -473,25 +477,6 @@ const BM05 = () => {
         [""],
       ];
 
-      const defaultFooterInfo = [
-        ["Ghi chú:"],
-        [
-          "- Mã số CB-GV-NV yêu cầu cung cấp phải chính xác. Đơn vị có thể tra cứu Mã CB-GV-NV trên trang Portal UEF.",
-        ],
-        ["- Biểu mẫu này dành cho các khoa, viện, Phòng Đào tạo."],
-        [
-          "- Photo Tờ trình, Kế hoạch đã được BĐH phê duyệt tiết chuẩn nộp về VPT. Các trường hợp không được phê duyệt hoặc đã thanh toán thù lao thì không đưa vào biểu mẫu này.",
-        ],
-        [
-          "- Mỗi cá nhân có thể có nhiều dòng dữ liệu tương ứng với các hoạt động đã thực hiện... được BĐH phê duyệt tiết chuẩn.",
-        ],
-        [
-          "- Việc quy đổi tiết chuẩn căn cứ theo Phụ lục III, Quyết định số 720/QĐ-UEF ngày 01 tháng 9 năm 2023.",
-        ],
-        [""],
-        ["LÃNH ĐẠO ĐƠN VỊ", "", "", "", "", "", "", "", "", "NGƯỜI LẬP"],
-      ];
-
       const dataArray = [
         [
           "STT",
@@ -695,8 +680,8 @@ const BM05 = () => {
         { s: { r: 2, c: 0 }, e: { r: 2, c: 3 } },
         { s: { r: 2, c: 6 }, e: { r: 2, c: 12 } },
         { s: { r: 3, c: 0 }, e: { r: 3, c: 3 } },
-        { s: { r: 4, c: 0 }, e: { r: 4, c: 12 } },
-        { s: { r: 5, c: 0 }, e: { r: 5, c: 12 } },
+        { s: { r: 4, c: 0 }, e: { r: 4, c: 13 } },
+        { s: { r: 5, c: 0 }, e: { r: 5, c: 13 } },
       ];
 
       for (

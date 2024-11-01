@@ -4,27 +4,14 @@ import { ImportResponse } from "./formsServices";
 export interface QAItem {
   id: string;
   userName: string;
-  middleName: string;
-  firstName: string;
   fullName: string;
   unitName: string;
   contents: string;
   totalStudent: number;
   standardNumber: number;
-  attendances: number;
-  note: string;
-}
-
-export interface AddUpdateQAItem {
-  id: string;
-  userName: string;
-  middleName: string;
-  firstName: string;
-  unitName: string;
-  contents: string;
-  totalStudent: number;
-  standardNumber: number;
-  attendances: number;
+  fromDate: number;
+  entryDate: number;
+  eventDate: number;
   proof: string;
   note: string;
 }
@@ -39,24 +26,16 @@ export async function getAllQAs(): Promise<QAResponse> {
   return response.data;
 }
 
-export async function postAddQA(
-  data: Partial<AddUpdateQAItem>
-): Promise<AddUpdateQAItem> {
-  const response = await apiClient.post<AddUpdateQAItem>(
-    "api/qae",
-    data
-  );
+export async function postAddQA(data: Partial<QAItem>): Promise<QAItem> {
+  const response = await apiClient.post<QAItem>("api/qae", data);
   return response.data;
 }
 
 export async function putUpdateQA(
   id: string,
-  data: Partial<AddUpdateQAItem>
-): Promise<AddUpdateQAItem> {
-  const response = await apiClient.put<AddUpdateQAItem>(
-    `api/qae/${id}`,
-    data
-  );
+  data: Partial<QAItem>
+): Promise<QAItem> {
+  const response = await apiClient.put<QAItem>(`api/qae/${id}`, data);
   return response.data;
 }
 
@@ -66,9 +45,7 @@ export async function deleteQAs(ids: string[]): Promise<void> {
   });
 }
 
-export async function ImportQAs(
-  data: FormData
-): Promise<ImportResponse> {
+export async function ImportQAs(data: FormData): Promise<ImportResponse> {
   const response = await apiClient.post<ImportResponse>(
     "api/qae/import",
     data,

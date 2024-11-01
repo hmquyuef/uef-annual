@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  AddUpdateClassLeaderItem,
   ClassLeaderItem,
   ClassLeadersResponse,
   deleteClassLeaders,
@@ -11,7 +10,16 @@ import {
   putUpdateClassLeader,
 } from "@/services/forms/classLeadersServices";
 import { AddUpdateActivityItem } from "@/services/forms/formsServices";
-import { convertTimestampToDate, setCellStyle } from "@/utility/Utilities";
+import {
+  getListUnitsFromHrm,
+  UnitHRMItem,
+} from "@/services/units/unitsServices";
+import PageTitles from "@/utility/Constraints";
+import {
+  convertTimestampToDate,
+  defaultFooterInfo,
+  setCellStyle,
+} from "@/utility/Utilities";
 import {
   DeleteOutlined,
   FileExcelOutlined,
@@ -34,21 +42,17 @@ import {
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import saveAs from "file-saver";
+import Cookies from "js-cookie";
 import { Key, useCallback, useEffect, useState } from "react";
 import * as XLSX from "sheetjs-style";
 import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
 import FormBM01 from "./activity/formBM01";
-import Cookies from "js-cookie";
 import FromUpload from "./activity/formUpload";
-import {
-  getListUnitsFromHrm,
-  UnitHRMItem,
-} from "@/services/units/unitsServices";
+
 import locale from "antd/locale/vi_VN";
 import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/vi";
-import PageTitles from "@/utility/Constraints";
 dayjs.locale("vi");
 
 type SearchProps = GetProps<typeof Input.Search>;
@@ -119,10 +123,10 @@ const BM01 = () => {
       title: "MÃ SỐ CB-GV-NV",
       dataIndex: "userName",
       key: "userName",
-      className: "w-[3rem]",
+      className: "w-[5rem]",
       render: (userName: string, record: ClassLeaderItem) => {
         return (
-          <p
+          <span
             className="text-blue-500 font-semibold cursor-pointer"
             onClick={() => {
               setMode("edit");
@@ -130,7 +134,7 @@ const BM01 = () => {
             }}
           >
             {userName}
-          </p>
+          </span>
         );
       },
     },
@@ -138,28 +142,28 @@ const BM01 = () => {
       title: "HỌ VÀ TÊN",
       dataIndex: "fullName",
       key: "fullName",
-      render: (fullName: string) => <p>{fullName}</p>,
+      render: (fullName: string) => <span>{fullName}</span>,
       className: "w-[10rem]",
     },
     {
       title: "ĐƠN VỊ",
       dataIndex: "unitName",
       key: "unitName",
-      className: "text-center w-[5rem]",
+      className: "text-center w-[80px]",
       render: (unitName: string) => <p>{unitName}</p>,
     },
     {
       title: "HỌC KỲ",
       dataIndex: "semester",
       key: "semester",
-      className: "text-center w-[3rem]",
+      className: "text-center w-[50px]",
       render: (semester: string) => <p>{semester}</p>,
     },
     {
       title: "SỐ TIẾT CHUẨN",
       dataIndex: "standardNumber",
       key: "standardNumber",
-      className: "text-center w-[5rem]",
+      className: "text-center w-[90px]",
       render: (standardNumber: string) => <p>{standardNumber}</p>,
     },
     {
@@ -174,14 +178,14 @@ const BM01 = () => {
       dataIndex: "course",
       key: "course",
       render: (course: string) => <p>{course}</p>,
-      className: "text-center w-[2rem]",
+      className: "text-center w-[50px]",
     },
     {
       title: "MÃ LỚP",
       dataIndex: "classCode",
       key: "classCode",
       render: (classCode: string) => <p>{classCode}</p>,
-      className: "text-center w-[2rem]",
+      className: "text-center w-[70px]",
     },
     {
       title: (
@@ -189,11 +193,11 @@ const BM01 = () => {
           THỜI GIAN <br /> HOẠT ĐỘNG
         </>
       ),
-      dataIndex: "attendances",
-      key: "attendances",
-      render: (attendances: number) =>
-        attendances ? convertTimestampToDate(attendances) : "",
-      className: "text-center w-[80px]",
+      dataIndex: "eventDate",
+      key: "eventDate",
+      render: (eventDate: number) =>
+        eventDate ? convertTimestampToDate(eventDate) : "",
+      className: "text-center w-[70px]",
     },
     {
       title: (
@@ -203,15 +207,25 @@ const BM01 = () => {
       ),
       dataIndex: "proof",
       key: "proof",
-      render: (proof: string) => <p>{proof}</p>,
-      className: "w-[9rem]",
+      render: (proof: string, record: ClassLeaderItem) => {
+        const ngayLap = record.fromDate;
+        return (
+          <div className="flex flex-col">
+            <span className="text-center font-medium">{proof}</span>
+            <span className="text-center text-[13px]">
+              {convertTimestampToDate(ngayLap)}
+            </span>
+          </div>
+        );
+      },
+      className: "w-[5rem]",
     },
     {
       title: "GHI CHÚ",
       dataIndex: "note",
       key: "note",
       render: (note: string) => <p>{note}</p>,
-      className: "text-center w-[5rem]",
+      className: "w-[5rem]",
     },
   ];
 
@@ -255,12 +269,28 @@ const BM01 = () => {
   ];
 
   const onSearch: SearchProps["onSearch"] = (value) => {
-    if (value === "") setData(classLeaders?.items || []);
-    const filteredData = classLeaders?.items.filter((item) =>
-      item.fullName.toLowerCase().includes(value.toLowerCase())
-    );
+    if ((value === "" && !selectedKeyUnit) || selectedKeyUnit === "all")
+      setData(classLeaders?.items || []);
+    const selectedUnit = units.find((unit) => unit.id === selectedKeyUnit);
+    const filteredData = classLeaders?.items.filter((item) => {
+      const matchesName =
+        item.userName.toLowerCase().includes(value.toLowerCase()) ||
+        item.fullName.toLowerCase().includes(value.toLowerCase());
+      const matchesUnit = selectedUnit
+        ? item.unitName === selectedUnit.code
+        : true;
+      const matchesDate =
+        startDate && endDate
+          ? item.eventDate >= startDate && item.eventDate <= endDate
+          : true;
+      return matchesName && matchesUnit && matchesDate;
+    });
     setData(filteredData || []);
   };
+
+  useEffect(() => {
+    onSearch("");
+  }, [selectedKeyUnit, startDate, endDate]);
 
   const handleDelete = useCallback(async () => {
     try {
@@ -281,14 +311,14 @@ const BM01 = () => {
     }
   }, [selectedRowKeys]);
   const handleEdit = (classLeader: ClassLeaderItem) => {
-    const updatedActivity: Partial<AddUpdateClassLeaderItem> = {
+    const updatedActivity: Partial<ClassLeaderItem> = {
       ...classLeader,
     };
     setSelectedItem(updatedActivity);
     setMode("edit");
     setIsOpen(true);
   };
-  const handleSubmit = async (formData: Partial<AddUpdateClassLeaderItem>) => {
+  const handleSubmit = async (formData: Partial<ClassLeaderItem>) => {
     try {
       if (mode === "edit" && selectedItem) {
         const response = await putUpdateClassLeader(
@@ -375,56 +405,49 @@ const BM01 = () => {
         [""],
       ];
 
-      const defaultFooterInfo = [
-        [""],
-        [""],
-        ["Ghi chú:"],
-        [
-          "- Mã số CB-GV-NV yêu cầu cung cấp phải chính xác. Đơn vị có thể tra cứu Mã CB-GV-NV trên trang Portal UEF.",
-        ],
-        ["- Biểu mẫu này dành cho các khoa, viện, Phòng Đào tạo."],
-        [
-          "- Photo Tờ trình, Kế hoạch đã được BĐH phê duyệt tiết chuẩn nộp về VPT. Các trường hợp không được phê duyệt hoặc đã thanh toán thù lao thì không đưa vào biểu mẫu này.",
-        ],
-        [
-          "- Mỗi cá nhân có thể có nhiều dòng dữ liệu tương ứng với các hoạt động đã thực hiện... được BĐH phê duyệt tiết chuẩn.",
-        ],
-        [
-          "- Việc quy đổi tiết chuẩn căn cứ theo Phụ lục III, Quyết định số 720/QĐ-UEF ngày 01 tháng 9 năm 2023.								",
-        ],
-        [""],
-        ["LÃNH ĐẠO ĐƠN VỊ", "", "", "", "", "", "", "", "NGƯỜI LẬP"],
-      ];
-
       const dataArray = [
         [
           "STT",
           "Mã số CB-GV-NV",
-          "Họ và chữ lót",
-          "Tên",
+          "Họ và tên",
           "Đơn vị",
           "Học kỳ",
-          "Số tiết chuẩn được duyệt",
+          "Số tiết chuẩn",
           "Ngành",
           "Khóa",
           "Mã lớp",
-          "Minh chứng",
+          "Số văn bản, ngày lập",
+          "Thời gian hoạt động",
           "Ghi chú",
-        ], // Tên cột ở dòng 10
+        ],
         ...data.map((item, index) => [
           index + 1,
           item.userName,
-          item.middleName,
-          item.firstName,
+          item.fullName,
           item.unitName ?? "",
           item.semester ?? "",
           item.standardNumber,
           item.subject ?? "",
           item.course ?? "",
           item.classCode ?? "",
-          item.proof ?? "",
+          item.proof + ", " + convertTimestampToDate(item.fromDate),
+          item.eventDate ? convertTimestampToDate(item.eventDate) : "",
           item.note ?? "",
         ]),
+        [
+          "TỔNG SỐ TIẾT CHUẨN",
+          "",
+          "",
+          "",
+          "",
+          `${data.reduce((acc, x) => acc + x.standardNumber, 0)}`,
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+        ],
       ];
 
       const combinedData = [...defaultInfo, ...dataArray];
@@ -452,11 +475,11 @@ const BM01 = () => {
       worksheet["!rows"] = [];
       worksheet["!cols"] = [];
       worksheet["!cols"][0] = { wch: 4 };
-      worksheet["!cols"][1] = { wch: 15 };
-      worksheet["!cols"][2] = { wch: 15 };
-      worksheet["!cols"][6] = { wch: 12 };
-      worksheet["!cols"][7] = { wch: 15 };
-      worksheet["!cols"][10] = { wch: 20 };
+      worksheet["!cols"][1] = { wch: 20 };
+      worksheet["!cols"][2] = { wch: 20 };
+      worksheet["!cols"][6] = { wch: 15 };
+      worksheet["!cols"][9] = { wch: 10 };
+      worksheet["!cols"][10] = { wch: 10 };
       worksheet["L1"].s = {
         fill: {
           fgColor: { rgb: "FFFF00" },
@@ -489,7 +512,10 @@ const BM01 = () => {
       worksheet["!merges"] = [];
       const tempMerge = [];
       const range = XLSX.utils.decode_range(worksheet["!ref"]!);
-      for (let row = 7; row <= data.length + 7; row++) {
+      for (let row = 7; row <= range.e.r; row++) {
+        if (row === combinedData.length - 1) {
+          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 4 } });
+        }
         for (let col = range.s.c; col <= range.e.c; col++) {
           const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
           if (row === 7) {
@@ -505,20 +531,13 @@ const BM01 = () => {
             );
             continue;
           }
-          if (
-            col === 0 ||
-            col === 4 ||
-            col === 5 ||
-            col === 6 ||
-            col === 8 ||
-            col === 9
-          ) {
+          if (col === 1 || col === 2 || col === 11) {
             setCellStyle(
               worksheet,
               cellRef,
               11,
               false,
-              "center",
+              "left",
               "center",
               true,
               true
@@ -529,7 +548,19 @@ const BM01 = () => {
               cellRef,
               11,
               false,
-              "left",
+              "center",
+              "center",
+              true,
+              true
+            );
+          }
+          if (row === combinedData.length - 1) {
+            setCellStyle(
+              worksheet,
+              cellRef,
+              11,
+              true,
+              "center",
               "center",
               true,
               true
@@ -663,14 +694,13 @@ const BM01 = () => {
               }))}
               value={selectedKeyUnit}
               onChange={(value) => {
-                // console.log("value :>> ", value);
                 setSelectedKeyUnit(value);
               }}
             />
             <ConfigProvider locale={locale}>
               <RangePicker
                 placeholder={["Từ ngày", "Đến ngày"]}
-                format={"DD/MM/YYYY"}
+                format="DD/MM/YYYY"
                 value={
                   selectedDates || [
                     dayjs(`01/09/${dayjs().year()}`, "DD/MM/YYYY"),
@@ -679,27 +709,19 @@ const BM01 = () => {
                 }
                 onChange={(dates, dateStrings) => {
                   if (dates) {
-                    const [startDate, endDate] = dateStrings;
-                    const startTimestamp = startDate
-                      ? new Date(
-                          startDate.split("/").reverse().join("-")
-                        ).valueOf() / 1000
-                      : null;
-                    const endTimestamp = endDate
-                      ? new Date(
-                          endDate.split("/").reverse().join("-")
-                        ).valueOf() / 1000
-                      : null;
+                    const [startDate, endDate] = dates;
+                    const startTimestamp = startDate ? startDate.unix() : null;
+                    const endTimestamp = endDate ? endDate.unix() : null;
                     setStartDate(startTimestamp);
                     setEndDate(endTimestamp);
                     setSelectedDates(dates);
                   } else {
                     setSelectedDates(null);
                     setStartDate(
-                      new Date(`01/09/${dayjs().year()}`).valueOf() / 1000
+                      dayjs(`01/09/${dayjs().year()}`, "DD/MM/YYYY").unix()
                     );
                     setEndDate(
-                      new Date(`31/08/${dayjs().year() + 1}`).valueOf() / 1000
+                      dayjs(`31/08/${dayjs().year() + 1}`, "DD/MM/YYYY").unix()
                     );
                   }
                 }}
@@ -756,7 +778,7 @@ const BM01 = () => {
         <CustomModal
           isOpen={isOpen}
           isOk={true}
-          width="900px"
+          width="700px"
           title={
             mode === "edit"
               ? "Cập nhật thông tin chủ nhiệm lớp"
@@ -784,7 +806,7 @@ const BM01 = () => {
               <>
                 <FormBM01
                   onSubmit={handleSubmit}
-                  initialData={selectedItem as Partial<AddUpdateActivityItem>}
+                  initialData={selectedItem as Partial<ClassLeaderItem>}
                   mode={mode}
                 />
               </>

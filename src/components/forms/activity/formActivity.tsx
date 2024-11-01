@@ -652,14 +652,17 @@ const FormActivity: FC<FormActivityProps> = ({
               <div
                 className="flex flex-col overflow-x-auto overflow-y-auto rounded-md shadow-md"
                 style={{
-                  maxHeight: `${
-                    (document.querySelector("form")?.getBoundingClientRect()
-                      .height ?? 0) >
-                    0.72 * window.innerHeight
-                      ? "80vh"
-                      : "72vh"
-                  }`,
+                  maxHeight: "78vh",
                 }}
+                // style={{
+                //   maxHeight: `${
+                //     (document.querySelector("form")?.getBoundingClientRect()
+                //       .height ?? 0) >
+                //     0.72 * window.innerHeight
+                //       ? "80vh"
+                //       : "72vh"
+                //   }`,
+                // }}
               >
                 <Document
                   file={`https://api-annual.uef.edu.vn/${pathPDF}`}
