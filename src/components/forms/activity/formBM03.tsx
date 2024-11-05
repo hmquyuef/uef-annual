@@ -1,6 +1,5 @@
 "use client";
 
-import { QAItem } from "@/services/forms/qaServices";
 import {
   getListUnitsFromHrm,
   UnitHRMItem,
@@ -12,6 +11,7 @@ import {
 } from "@/services/users/usersServices";
 import { ConfigProvider, DatePicker, Input, InputNumber, Select } from "antd";
 import { FC, FormEvent, Key, useEffect, useState } from "react";
+
 import locale from "antd/locale/vi_VN";
 import moment from "moment";
 import dayjs from "dayjs";
@@ -20,13 +20,13 @@ import timezone from "dayjs/plugin/timezone";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-interface FormBM04Props {
-  onSubmit: (formData: Partial<QAItem>) => void;
-  initialData?: Partial<QAItem>;
+interface FormBM03Props {
+  onSubmit: (formData: Partial<any>) => void;
+  initialData?: Partial<any>;
   mode: "add" | "edit";
 }
 
-const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
+const FormBM03: FC<FormBM03Props> = ({ onSubmit, initialData, mode }) => {
   const { TextArea } = Input;
   const [units, setUnits] = useState<UnitHRMItem[]>([]);
   const [defaultUnits, setDefaultUnits] = useState<UnitHRMItem[]>([]);
@@ -36,9 +36,11 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
   const [defaultUsers, setDefaultUsers] = useState<UsersFromHRM[]>([]);
   const [selectedKey, setSelectedKey] = useState<Key | null>(null);
   const [standardValues, setStandardValues] = useState<number>(0);
-  const [contents, setContents] = useState<string>("");
-  const [totalStudent, setTotalStudent] = useState<number | 0>(0);
+  const [location, setLocation] = useState<string>("");
+  const [position, setPosition] = useState<string>("");
+  const [numberOfTime, setNumberOfTime] = useState<number | 0>(0);
   const [fromDate, setFromDate] = useState<number>(0);
+  const [toDate, setToDate] = useState<number>(0);
   const [entryDate, setEntryDate] = useState<number>(0);
   const [eventDate, setEventDate] = useState<number>(0);
   const [evidence, setEvidence] = useState<string>("");
@@ -57,15 +59,17 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const tempUser = users?.items?.find((user) => user.id === selectedKey);
-    const formData: Partial<QAItem> = {
+    const formData: Partial<any> = {
       id: initialData?.id || "",
       userName: mode !== "edit" ? tempUser?.userName : defaultUsers[0].userName,
       fullName: mode !== "edit" ? tempUser?.fullName : defaultUsers[0].fullName,
       unitName: mode !== "edit" ? tempUser?.unitName : defaultUsers[0].unitName,
-      contents: contents,
-      totalStudent: totalStudent,
+      location: location,
+      position: position,
+      numberOfTime: numberOfTime,
       standardNumber: standardValues,
       fromDate: fromDate,
+      toDate: toDate,
       entryDate: entryDate / 1000,
       eventDate: eventDate,
       proof: evidence,
@@ -95,9 +99,10 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
           );
           setDefaultUsers([userTemp] as UsersFromHRM[]);
         }
-        setContents(initialData.contents || "");
-        setTotalStudent(initialData.totalStudent || 0);
+        setLocation(initialData.location || "");
+        setNumberOfTime(initialData.numberOfTime || 0);
         setFromDate(initialData.fromDate || 0);
+        setToDate(initialData.toDate || 0);
         setEntryDate((initialData.entryDate ?? 0) * 1000);
         setEventDate(initialData.eventDate || 0);
         setStandardValues(initialData.standardNumber || 0);
@@ -109,10 +114,11 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
         setEntryDate(timestamp);
         setDefaultUnits([]);
         setDefaultUsers([]);
-        setContents("");
-        setTotalStudent(0);
+        setLocation("");
+        setNumberOfTime(0);
         setStandardValues(0);
         setFromDate(0);
+        setToDate(0);
         setEventDate(0);
         setEvidence("");
         setDescription("");
@@ -123,7 +129,7 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
   return (
     <form onSubmit={handleSubmit}>
       <hr className="mt-1 mb-3" />
-      <div className="grid grid-cols-4 gap-6 mb-4">
+      <div className="grid grid-cols-5 gap-5 mb-3">
         <div className="flex flex-col gap-1">
           <p className="font-medium text-neutral-600">
             Số văn bản <span className="text-red-500">(*)</span>
@@ -157,7 +163,7 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
           </ConfigProvider>
         </div>
         <div className="flex flex-col gap-1">
-          <p className="font-medium text-neutral-600">Ngày hoạt động</p>
+          <p className="font-medium text-neutral-600">Từ ngày</p>
           <ConfigProvider locale={locale}>
             <DatePicker
               placeholder="dd/mm/yyyy"
@@ -177,6 +183,26 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
           </ConfigProvider>
         </div>
         <div className="flex flex-col gap-1">
+          <p className="font-medium text-neutral-600">Đến ngày</p>
+          <ConfigProvider locale={locale}>
+            <DatePicker
+              placeholder="dd/mm/yyyy"
+              format="DD/MM/YYYY"
+              value={
+                toDate ? dayjs.unix(toDate).tz("Asia/Ho_Chi_Minh") : null
+              }
+              onChange={(date) => {
+                if (date) {
+                  const timestamp = dayjs(date).tz("Asia/Ho_Chi_Minh").unix();
+                  setToDate(timestamp);
+                } else {
+                    setToDate(0);
+                }
+              }}
+            />
+          </ConfigProvider>
+        </div>
+        <div className="flex flex-col gap-1">
           <p className="font-medium text-neutral-600">Ngày nhập</p>
           <ConfigProvider locale={locale}>
             <DatePicker
@@ -188,7 +214,18 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
           </ConfigProvider>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-6 mb-4">
+      <div className="flex flex-col gap-1 mb-3">
+        <p className="font-medium text-neutral-600">
+          Địa điểm <span className="text-red-500">(*)</span>
+        </p>
+
+        <TextArea
+          autoSize
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-6 mb-3">
         <div className="flex flex-col gap-1">
           <p className="font-medium text-neutral-600">Đơn vị</p>
           <Select
@@ -234,39 +271,36 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
           />
         </div>
       </div>
-      <div className="flex flex-col gap-1 mb-4">
-        <p className="font-medium text-neutral-600">Nội dung</p>
-        <TextArea
-          autoSize
-          value={contents}
-          onChange={(e) => setContents(e.target.value)}
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-6 mb-4">
-        <div className="grid grid-cols-2 gap-6">
-          <div className="flex flex-col gap-1">
-            <p className="font-medium text-neutral-600">Số lượng SV</p>
-            <InputNumber
-              min={0}
-              defaultValue={0}
-              value={totalStudent}
-              onChange={(value) => setTotalStudent(value ?? 0)}
-              style={{ width: "100%" }}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <p className="font-medium text-neutral-600">Số tiết chuẩn</p>
-            <InputNumber
-              min={0}
-              defaultValue={1}
-              value={standardValues}
-              onChange={(value) => setStandardValues(value ?? 0)}
-              style={{ width: "100%" }}
-            />
-          </div>
+      <div className="grid grid-cols-3 gap-6 mb-3">
+      <div className="flex flex-col gap-1">
+          <p className="font-medium text-neutral-600">Vị trí tham gia</p>
+          <Input
+            value={position}
+            onChange={(e) => setPosition(e.target.value)}
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <p className="font-medium text-neutral-600">Số tiết chuẩn</p>
+          <InputNumber
+            min={0}
+            defaultValue={0}
+            value={standardValues}
+            onChange={(value) => setStandardValues(value ?? 0)}
+            style={{ width: "100%" }}
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <p className="font-medium text-neutral-600">Số buổi</p>
+          <InputNumber
+            min={0}
+            defaultValue={0}
+            value={numberOfTime}
+            onChange={(value) => setNumberOfTime(value ?? 0)}
+            style={{ width: "100%" }}
+          />
         </div>
       </div>
-      <div className="flex flex-col gap-1 mb-4">
+      <div className="flex flex-col gap-1 mb-3">
         <p className="font-medium text-neutral-600">Ghi chú</p>
         <TextArea
           autoSize
@@ -277,4 +311,5 @@ const FormBM04: FC<FormBM04Props> = ({ onSubmit, initialData, mode }) => {
     </form>
   );
 };
-export default FormBM04;
+
+export default FormBM03;

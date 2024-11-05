@@ -1,44 +1,42 @@
 "use client";
 
-import { postInfoToGetToken } from "@/services/auth/authServices";
 import { GoogleOutlined } from "@ant-design/icons";
 import { Button } from "antd";
-import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
+import { signIn } from "next-auth/react";
 
 const Login = () => {
-  const { data: session } = useSession();
-  const router = useRouter();
-  const getToken = async (email: string) => {
-    const formData = new FormData();
-    formData.append("username", "");
-    formData.append("password", "");
-    formData.append("email", email);
-    formData.append("provider", "Google");
+  // const { data: session } = useSession();
+  // const router = useRouter();
+  // const getToken = async (email: string) => {
+  //   const formData = new FormData();
+  //   formData.append("username", "");
+  //   formData.append("password", "");
+  //   formData.append("email", email);
+  //   formData.append("provider", "Google");
 
-    const response = await postInfoToGetToken(formData);
-    if (response && response !== undefined) {
-      const expires = new Date(response.expiresAt * 1000);
-      const expiresRefresh = new Date(response.expiresAt * 1000);
-      expiresRefresh.setDate(expiresRefresh.getDate() + 7);
-      Cookies.set("s_t", response.accessToken, { expires: expires });
-      Cookies.set("s_r", response.refreshToken, {
-        expires: expiresRefresh,
-      });
-    }
-  };
- 
+  //   const response = await postInfoToGetToken(formData);
+  //   if (response && response !== undefined) {
+  //     const expires = new Date(response.expiresAt * 1000);
+  //     const expiresRefresh = new Date(response.expiresAt * 1000);
+  //     expiresRefresh.setDate(expiresRefresh.getDate() + 7);
+  //     Cookies.set("s_t", response.accessToken, { expires: expires });
+  //     Cookies.set("s_r", response.refreshToken, {
+  //       expires: expiresRefresh,
+  //     });
+  //   }
+  // };
+
   const handleLogin = async () => {
-    const result = await signIn("google");
-    if (result?.error) {
-      console.error("Login failed:", result.error);
-    } else {
-      if (session && session.user?.email) {
-        await getToken(session.user.email);
-      }
-      router.push("/");
-    }
+    await signIn("google", { callbackUrl: "/" });
+    //const result =
+    // if (result?.error) {
+    //   console.error("Login failed:", result.error);
+    // } else {
+    //   if (session && session.user?.email) {
+    //     await getToken(session.user.email);
+    //     router.push("/");
+    //   }
+    // }
   };
 
   return (

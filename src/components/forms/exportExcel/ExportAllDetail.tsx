@@ -6,6 +6,7 @@ import {
   getDataExportByUserNameWithForms,
   ResultItemForBM01,
   ResultItemForBM02,
+  ResultItemForBM03,
   ResultItemForBM04,
   ResultItemForBM05,
 } from "@/services/exports/exportDetailForUser";
@@ -150,6 +151,56 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
     ],
   ];
 
+  const dataArrayAdmissionCounseling = [
+    [""],
+    ["BIỂU MẪU 03 - TƯ VẤN TUYỂN SINH"],
+    [
+      "STT",
+      "Tên hoạt động",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "Số tiết chuẩn",
+      "Số văn bản, ngày lập",
+      "Thời gian hoạt động",
+      "Ghi chú",
+    ],
+    ...(detailUser?.admissionCounseling.items ?? []).map((item, index) => [
+      index + 1,
+      item.activityName,
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      item.standarNumber,
+      item.proof + ", " + convertTimestampToDate(item.fromDate),
+      item.attendances ? convertTimestampToDate(item.attendances) : "",
+      item.note ?? "",
+    ]),
+    [
+      "Tổng số tiết chuẩn",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      `${detailUser?.assistants.items.reduce(
+        (sum, item) => sum + item.standarNumber,
+        0
+      )}`,
+      "",
+      "",
+      "",
+    ],
+  ];
+
   const dataArrayQAEs = [
     [""],
     ["BIỂU MẪU 04 - THAM GIA HỎI VẤN ĐÁP TIẾNG ANH ĐẦU VÀO"],
@@ -259,7 +310,14 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
     ...combinedDataClassLeader,
     ...dataArrayAssistants,
   ];
-  const combinedDataQAE = [...combinedDataAssistant, ...dataArrayQAEs];
+  const combinedDataAdmissionCounseling = [
+    ...combinedDataAssistant,
+    ...dataArrayAdmissionCounseling,
+  ];
+  const combinedDataQAE = [
+    ...combinedDataAdmissionCounseling,
+    ...dataArrayQAEs,
+  ];
   const combinedDataActivity = [...combinedDataQAE, ...dataArrayActivities];
 
   const worksheet = XLSX.utils.aoa_to_sheet(combinedDataActivity);
@@ -329,16 +387,19 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
   const countDefaultInfo = 12;
   const countClassLeader = countDefaultInfo + dataArrayClassLeader.length;
   const countAssistant = dataArrayAssistants.length + countClassLeader;
-  const countQAEs = dataArrayQAEs.length + countAssistant;
+  const countAdmissionCounseling =
+    dataArrayAdmissionCounseling.length + countAssistant;
+  const countQAEs = dataArrayQAEs.length + countAdmissionCounseling;
   const countActivities = dataArrayActivities.length + countQAEs;
   for (let row = 12; row <= range.e.r; row++) {
     if (
       row === countDefaultInfo ||
       row === countClassLeader ||
       row === countAssistant ||
+      row == countAdmissionCounseling ||
       row === countQAEs
     ) {
-      tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 10 } });
+      tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 11 } });
       const cellRefPre = XLSX.utils.encode_cell({ r: row - 1, c: 0 });
       const cellRef = XLSX.utils.encode_cell({ r: row, c: 0 });
       setCellStyle(
@@ -356,6 +417,7 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
     } else if (
       row === countClassLeader - 2 ||
       row === countAssistant - 2 ||
+      row === countAdmissionCounseling - 2 ||
       row === countQAEs - 2 ||
       row === countActivities - 2
     ) {
@@ -393,6 +455,7 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
         row - 1 === countDefaultInfo ||
         row - 1 === countClassLeader ||
         row - 1 === countAssistant ||
+        row - 1 === countAdmissionCounseling ||
         row - 1 === countQAEs
       ) {
         setCellStyle(
@@ -409,6 +472,7 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       if (
         row === countClassLeader - 2 ||
         row === countAssistant - 2 ||
+        row === countAdmissionCounseling - 2 ||
         row === countQAEs - 2 ||
         row === countActivities - 2
       ) {
@@ -633,6 +697,75 @@ export const handleExportForBM = async (
         ],
       ];
       resultsDataArray = [...[["BM02"]], ...defaultInfo, ...dataArrayAssistant];
+      break;
+    case "BM03":
+      const exportBM03: ExportDetailForUser = {
+        id: response.id,
+        email: response.email,
+        fullName: response.fullName,
+        userName: response.userName,
+        unitName: response.unitName,
+        title: response.title,
+        totalStandarNumber: response.totalStandarNumber,
+        results: response.results.map((item: ResultItemForBM03) => ({
+          location: item.location,
+          position: item.position,
+          standardNumber: item.standardNumber,
+          fromDate: item.fromDate,
+          numberOfTime: item.numberOfTime,
+          toDate: item.toDate,
+          eventDate: item.eventDate,
+          proof: item.proof,
+          note: item.note,
+        })),
+      };
+      const dataArrayAdmissionCounseling = [
+        [""],
+        [
+          "STT",
+          "Địa điểm",
+          "",
+          "",
+          "Từ ngày",
+          "Đến ngày",
+          "Vị trí tham gia",
+          "Số tiết chuẩn",
+          "Số buổi",
+          "Số văn bản, ngày lập",
+          "Ghi chú",
+        ],
+        ...exportBM03.results.map((item: ResultItemForBM03, index: number) => [
+          index + 1,
+          item.location ?? "",
+          "",
+          "",
+          item.eventDate ? convertTimestampToDate(item.eventDate) : "",
+          item.toDate ? convertTimestampToDate(item.toDate) : "",
+          item.position ?? "",
+          item.standardNumber,
+          item.numberOfTime ?? 0,
+          item.proof + ", " + convertTimestampToDate(item.fromDate),
+          item.note ?? "",
+        ]),
+        [
+          "Tổng số tiết chuẩn",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          `${exportBM03?.totalStandarNumber as Number}`,
+          "",
+          "",
+          "",
+        ],
+      ];
+      resultsDataArray = [
+        ...[["BM03"]],
+        ...defaultInfo,
+        ...dataArrayAdmissionCounseling,
+      ];
       break;
     case "BM04":
       const exportBM04: ExportDetailForUser = {
@@ -955,7 +1088,74 @@ export const handleExportForBM = async (
       }
     }
   }
-
+  if (forms.toUpperCase() === "BM03") {
+    for (
+      let row = defaultInfo.length + 2;
+      row <= range.e.r - defaultFooterInfo.length;
+      row++
+    ) {
+      if (row < range.e.r - defaultFooterInfo.length) {
+        tempMerge.push({ s: { r: row, c: 1 }, e: { r: row, c: 3 } });
+      } else{
+        tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 6 } });
+      }
+      for (let col = range.s.c; col <= range.e.c; col++) {
+        const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+        if (
+          row === defaultInfo.length + 2 ||
+          row === range.e.r - defaultFooterInfo.length
+        ) {
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            true,
+            "center",
+            "center",
+            true,
+            true
+          );
+          continue;
+        }
+        if (row === defaultInfo.length + 1) {
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            false,
+            "center",
+            "center",
+            true,
+            false
+          );
+          continue;
+        }
+        if (col === 1 || col === 10) {
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            false,
+            "left",
+            "center",
+            true,
+            true
+          );
+        } else {
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            false,
+            "center",
+            "center",
+            true,
+            true
+          );
+        }
+      }
+    }
+  }
   if (forms.toUpperCase() === "BM04") {
     for (
       let row = defaultInfo.length + 2;

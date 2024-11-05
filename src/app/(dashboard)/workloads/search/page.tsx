@@ -60,6 +60,7 @@ const SearchMembers = () => {
   const [dataClassLeaders, setDataClassLeaders] = useState<Item[]>([]);
   const [dataAssistants, setDataAssistants] = useState<Item[]>([]);
   const [dataQAEs, setDataQAEs] = useState<Item[]>([]);
+  const [dataAdmissionCounseling, setDataAdmissionCounseling] = useState<Item[]>([]);
   const [dataActivities, setDataActivities] = useState<Item[]>([]);
   const [startDate, setStartDate] = useState<number | null>(null);
   const [endDate, setEndDate] = useState<number | null>(null);
@@ -79,6 +80,7 @@ const SearchMembers = () => {
       setDataClassLeaders(response.classLeaders.items);
       setDataAssistants(response.assistants.items);
       setDataQAEs(response.qAs.items);
+      setDataAdmissionCounseling(response.admissionCounseling.items);
       setDataActivities(response.activities.items);
     }
   };
@@ -121,6 +123,18 @@ const SearchMembers = () => {
               }
             >
               BM02 - Cố vấn học tập, trợ giảng, phụ đạo
+            </p>
+          ),
+        },
+        {
+          key: "2-3",
+          label: (
+            <p
+              onClick={() =>
+                handleExportForBM(selectedUserName, startDate, endDate, "BM03")
+              }
+            >
+              BM03 - Tư vấn tuyển sinh
             </p>
           ),
         },
@@ -591,6 +605,76 @@ const SearchMembers = () => {
                               }}
                               columns={columns}
                               dataSource={dataAssistants}
+                              locale={{
+                                emptyText: (
+                                  <Empty description="No Data"></Empty>
+                                ),
+                              }}
+                            />
+                          </>
+                        ),
+                      },
+                    ]}
+                  />
+                </div>
+              </>
+            )}
+            {detailUser.admissionCounseling && (
+              <>
+                <div className="mb-4">
+                  <Collapse
+                    key={Math.random().toString(36).substr(2, 9)}
+                    collapsible="header"
+                    defaultActiveKey={["1"]}
+                    className="mb-4"
+                    expandIconPosition="end"
+                    items={[
+                      {
+                        key: "2",
+                        label: (
+                          <strong>
+                            {String(
+                              detailUser.admissionCounseling.shortName
+                            ).toUpperCase()}{" "}
+                            - {String(detailUser.admissionCounseling.name).toUpperCase()}{" "}
+                            ({detailUser.admissionCounseling.totalItems} SỰ KIỆN)
+                          </strong>
+                        ),
+                        children: (
+                          <>
+                            <Table<Item>
+                              key={"table-for-assistants"}
+                              className="custom-table-header shadow-md rounded-md mb-4"
+                              bordered
+                              rowKey={Math.random().toString(36).substr(2, 9)}
+                              rowHoverable
+                              size="small"
+                              pagination={false}
+                              summary={(items) => {
+                                let total = 0;
+                                items.forEach((item) => {
+                                  total += Number(item.standarNumber);
+                                });
+                                return (
+                                  <Table.Summary.Row>
+                                    <Table.Summary.Cell
+                                      colSpan={2}
+                                      index={0}
+                                      className="text-end font-semibold"
+                                    >
+                                      TỔNG SỐ TIẾT CHUẨN
+                                    </Table.Summary.Cell>
+                                    <Table.Summary.Cell
+                                      index={2}
+                                      className="text-center font-semibold"
+                                    >
+                                      {total}
+                                    </Table.Summary.Cell>
+                                  </Table.Summary.Row>
+                                );
+                              }}
+                              columns={columns}
+                              dataSource={dataAdmissionCounseling}
                               locale={{
                                 emptyText: (
                                   <Empty description="No Data"></Empty>

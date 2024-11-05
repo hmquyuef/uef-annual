@@ -12,11 +12,12 @@ const apiClient: AxiosInstance = axios.create({
     "Content-Type": "application/json",
   },
 });
+
 apiClient.interceptors.request.use(
   (config) => {
-    const session = Cookies.get("s_t");
-    if (session) {
-      config.headers.Authorization = `Bearer ${session}`;
+    const token = Cookies.get("s_t");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },

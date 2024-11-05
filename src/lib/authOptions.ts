@@ -5,7 +5,7 @@ interface GoogleProfile extends Profile {
     hd?: string;
 }
 
-export const authOptions: NextAuthOptions = {
+export const authOptions1: NextAuthOptions = {
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID as string,
@@ -16,6 +16,8 @@ export const authOptions: NextAuthOptions = {
                     prompt: 'select_account',
                     hd: 'uef.edu.vn',
                     domain_hint: 'uef.edu.vn',
+                    access_type: "offline",
+                    response_type: "code"
                 },
             },
         }),
@@ -23,7 +25,6 @@ export const authOptions: NextAuthOptions = {
     callbacks: {
         async signIn({ account, profile }) {
             const googleProfile = profile as GoogleProfile;
-            // Kiểm tra tài khoản có thuộc miền uef.edu.vn không
             if (googleProfile?.hd === "uef.edu.vn") {
                 return true;
             } else {

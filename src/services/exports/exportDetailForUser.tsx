@@ -10,6 +10,7 @@ export interface DetailUserItem {
   classLeaders: DetailsItem;
   assistants: DetailsItem;
   qAs: DetailsItem;
+  admissionCounseling: DetailsItem;
   totalStandarNumber: number;
 }
 
@@ -58,6 +59,19 @@ export interface ResultItemForBM02 {
   classCode: string;
   standarNumber: number;
   fromDate: number;
+  eventDate: number;
+  proof: string;
+  note: string;
+}
+
+export interface ResultItemForBM03 {
+  location: string;
+  position: string;
+  numberOfTime: number;
+  standardNumber: number;
+  fromDate: number;
+  toDate: number;
+  entryDate: number;
   eventDate: number;
   proof: string;
   note: string;

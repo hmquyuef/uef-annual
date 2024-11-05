@@ -1,7 +1,10 @@
 "use client";
 
 import TopHeaders from "@/components/TopHeader";
-import { postInfoToGetToken } from "@/services/auth/authServices";
+import {
+  postInfoToGetToken,
+  putTokenByRefresh,
+} from "@/services/auth/authServices";
 import { getAllPermissionsForMenuByUserName } from "@/services/permissions/permissionForMenu";
 import { getUserNameByEmail } from "@/services/users/usersServices";
 import { ArrowLeftOutlined, ArrowRightOutlined } from "@ant-design/icons";
@@ -73,11 +76,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     );
   };
   const getMenuByUserName = async (email: string) => {
+    console.log('start :>> ');
     const response = await getUserNameByEmail(email);
+    console.log('Call: getUserNameByEmail :>> ');
     if (!response) return router.push("/not-permission");
     const listmenus = await getAllPermissionsForMenuByUserName(
       response.userName
     );
+    console.log('Call: getAllPermissionsForMenuByUserName :>> ');
     if (listmenus.items.length === 0) return router.push("/not-permission");
     const tempMenu: MenuItem[] = listmenus.items[0].permissions.map((item) => {
       const tempChildren: MenuItem[] = item.children.map((child) => ({
@@ -116,6 +122,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
+  const getTokenWithRefreshToken = async (refresh: string) => {
+    const response = await putTokenByRefresh(refresh);
+    if (response && response !== undefined) {
+      const expires = new Date(response.expiresAt * 1000);
+      Cookies.set("s_t", response.accessToken, { expires: expires });
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       if (session === undefined || session === null) {
@@ -125,8 +139,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       const email = session.user?.email;
       if (email) {
-        getToken(email);
-        getMenuByUserName(email);
+        const token = Cookies.get("s_t");
+        const refreshToken = Cookies.get("s_r");
+        if (!token && !refreshToken) {
+          await getToken(email);
+        }
+        if (!token && refreshToken) {
+          await getTokenWithRefreshToken(refreshToken);
+        }
+        await getMenuByUserName(email);
       }
     };
 

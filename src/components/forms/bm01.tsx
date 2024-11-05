@@ -297,18 +297,19 @@ const BM01 = () => {
       const selectedKeysArray = Array.from(selectedRowKeys) as string[];
       if (selectedKeysArray.length > 0) {
         await deleteClassLeaders(selectedKeysArray);
-        setNotificationOpen(true);
-        setStatus("success");
-        setMessage("Thông báo");
         setDescription(
           `Đã xóa thành công ${selectedKeysArray.length} thông tin chủ nhiệm lớp!`
         );
+        setNotificationOpen(true);
+        setStatus("success");
+        setMessage("Thông báo");
         await getListClassLeaders();
         setSelectedRowKeys([]);
       }
     } catch (error) {
       console.error("Error deleting selected items:", error);
     }
+    setNotificationOpen(false);
   }, [selectedRowKeys]);
   const handleEdit = (classLeader: ClassLeaderItem) => {
     const updatedActivity: Partial<ClassLeaderItem> = {

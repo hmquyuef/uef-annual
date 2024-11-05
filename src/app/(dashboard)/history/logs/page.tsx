@@ -22,10 +22,9 @@ import {
 import { TableRowSelection } from "antd/es/table/interface";
 import { Key, useEffect, useState } from "react";
 import {
-  JsonView,
   allExpanded,
   darkStyles,
-  defaultStyles,
+  JsonView
 } from "react-json-view-lite";
 import "react-json-view-lite/dist/index.css";
 
@@ -68,7 +67,7 @@ const LogsActivities = () => {
       dataIndex: "functionName",
       key: "functionName",
       render: (functionName: string) => <>{functionName}</>,
-      className: "max-w-[20rem]",
+      className: "w-[20rem]",
     },
     {
       title: "PHƯƠNG THỨC",
