@@ -10,13 +10,17 @@ import {
   ImportActivities,
   postAddActivity,
   putUpdateActivity,
+  putUpdateApprovedActivity,
 } from "@/services/forms/formsServices";
+import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
 import {
   getListUnitsFromHrm,
   UnitHRMItem,
 } from "@/services/units/unitsServices";
+import PageTitles from "@/utility/Constraints";
 import {
   convertTimestampToDate,
+  convertTimestampToFullDateTime,
   defaultFooterInfo,
   setCellStyle,
 } from "@/utility/Utilities";
@@ -27,6 +31,7 @@ import {
   FileExcelOutlined,
   PlusCircleOutlined,
   PlusOutlined,
+  SafetyOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -40,13 +45,19 @@ import {
   PaginationProps,
   Select,
   Skeleton,
+  Spin,
   Table,
   TableColumnsType,
   Tag,
   Tooltip,
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
+import locale from "antd/locale/vi_VN";
+import dayjs, { Dayjs } from "dayjs";
+import "dayjs/locale/vi";
 import { saveAs } from "file-saver";
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 import Link from "next/link";
 import { Key, useCallback, useEffect, useState } from "react";
 import * as XLSX from "sheetjs-style";
@@ -54,11 +65,6 @@ import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
 import FormActivity from "./activity/formActivity";
 import FromUpload from "./activity/formUpload";
-import Cookies from "js-cookie";
-import locale from "antd/locale/vi_VN";
-import dayjs, { Dayjs } from "dayjs";
-import "dayjs/locale/vi";
-import PageTitles from "@/utility/Constraints";
 dayjs.locale("vi");
 
 const { Search } = Input;
@@ -89,6 +95,9 @@ const BM05 = () => {
   const [selectedDates, setSelectedDates] = useState<
     [Dayjs | null, Dayjs | null] | null
   >(null);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [role, setRole] = useState<RoleItem>();
+  const [isBlock, setIsBlock] = useState(false);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 15,
@@ -110,6 +119,9 @@ const BM05 = () => {
   };
   const rowSelection: TableRowSelection<ActivityItem> = {
     selectedRowKeys,
+    getCheckboxProps: (record: ActivityItem) => ({
+      disabled: record.payments?.isBlockData ?? false,
+    }),
     onChange: onSelectChange,
   };
   const showTotal: PaginationProps["showTotal"] = (total) => (
@@ -144,6 +156,8 @@ const BM05 = () => {
             onClick={() => {
               setMode("edit");
               handleEdit(record);
+              setIsBlock(record.payments?.isBlockData ?? false);
+              console.log('record.payments?.isBlockData :>> ', record.payments?.isBlockData);
             }}
           >
             {name}
@@ -252,14 +266,56 @@ const BM05 = () => {
       },
     },
     {
-      title: (
-        <div className="bg-orange-400 p-1 rounded-tr-lg">NGÀY NHẬP VĂN BẢN</div>
-      ),
+      title: <div className="bg-orange-400 p-1">NGÀY NHẬP VĂN BẢN</div>,
       dataIndex: ["determinations", "entryDate"],
       key: "entryDate",
       render: (fromDate: number) =>
         fromDate ? convertTimestampToDate(fromDate) : "",
       className: "text-center w-[2rem]",
+    },
+    {
+      title: (
+        <div className="bg-rose-500 p-1 rounded-tr-lg">
+          PHÊ DUYỆT <br /> THANH TOÁN
+        </div>
+      ),
+      dataIndex: ["payments", "isRejected"],
+      key: "isRejected",
+      render: (isRejected: boolean, record: ActivityItem) => {
+        const time = record.payments?.approvedTime
+          ? convertTimestampToFullDateTime(record.payments.approvedTime)
+          : "";
+        return (
+          <>
+            {record.payments ? (
+              <>
+                {isRejected ? (
+                  <Tooltip title={`P.TC đã từ chối vào lúc ${time}`}>
+                    <span className="text-red-500">
+                      <CloseOutlined className="me-1" /> Từ chối
+                    </span>
+                  </Tooltip>
+                ) : (
+                  <Tooltip title={`P.TC đã phê duyệt vào lúc ${time}`}>
+                    <span className="text-green-500">
+                      <SafetyOutlined className="me-1" /> Đã duyệt
+                    </span>
+                  </Tooltip>
+                )}
+              </>
+            ) : (
+              <>
+                <Tooltip title="Đợi phê duyệt từ P.TC">
+                  <span className="text-sky-500 flex justify-center items-center gap-2">
+                    <Spin size="small" /> Chờ duyệt
+                  </span>
+                </Tooltip>
+              </>
+            )}
+          </>
+        );
+      },
+      className: "text-center w-[110px]",
     },
   ];
 
@@ -754,6 +810,74 @@ const BM05 = () => {
       JSON.stringify([pagination.current, pagination.pageSize])
     );
   };
+  const handleApproved = async () => {
+    const formData = {
+      approver: userName,
+      approvedTime: Math.floor(Date.now() / 1000),
+      isRejected: false,
+      isBlockData: true,
+    };
+    try {
+      if (mode === "edit" && selectedItem) {
+        const response = await putUpdateApprovedActivity(
+          selectedItem.id as string,
+          formData
+        );
+        if (response) {
+          setDescription("Phê duyệt thông tin hoạt động thành công!");
+        }
+      }
+      setNotificationOpen(true);
+      setStatus("success");
+      setMessage("Thông báo");
+      await getListActivities();
+      setIsOpen(false);
+      setSelectedItem(undefined);
+      setMode("add");
+    } catch (error) {
+      setNotificationOpen(true);
+      setStatus("error");
+      setMessage("Thông báo");
+      setDescription("Đã có lỗi xảy ra!");
+    }
+  };
+  const handleRejected = async () => {
+    const formData = {
+      approver: userName,
+      approvedTime: Math.floor(Date.now() / 1000),
+      isRejected: true,
+      reason: "",
+      isBlockData: false,
+    };
+    try {
+      if (mode === "edit" && selectedItem) {
+        const response = await putUpdateApprovedActivity(
+          selectedItem.id as string,
+          formData
+        );
+        if (response) {
+          setDescription("Đã từ chối thông tin hoạt động!");
+        }
+      }
+      setNotificationOpen(true);
+      setStatus("success");
+      setMessage("Thông báo");
+      await getListActivities();
+      setIsOpen(false);
+      setSelectedItem(undefined);
+      setMode("add");
+    } catch (error) {
+      setNotificationOpen(true);
+      setStatus("error");
+      setMessage("Thông báo");
+      setDescription("Đã có lỗi xảy ra!");
+    }
+  };
+
+  const getDisplayRole = async (name: string) => {
+    const response = await getRoleByName(name);
+    setRole(response.items[0]);
+  };
   useEffect(() => {
     setLoading(true);
     document.title = PageTitles.BM05;
@@ -766,6 +890,21 @@ const BM05 = () => {
       });
     }
     Promise.all([getListActivities(), getAllUnitsFromHRM()]);
+    const token = Cookies.get("s_t");
+    if (token) {
+      const decodedRole = jwtDecode<{
+        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
+      }>(token);
+      const role =
+        decodedRole[
+          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        ];
+      getDisplayRole(role as string);
+      const decodedUserName = jwtDecode(token);
+      if (decodedUserName.sub) {
+        setUserName(decodedUserName.sub);
+      }
+    }
     setLoading(false);
   }, []);
 
@@ -859,47 +998,69 @@ const BM05 = () => {
             </>
           ) : (
             <>
-              <Tooltip placement="top" title="Xuất dữ liệu Excel" arrow={true}>
-                <Button
-                  icon={<FileExcelOutlined />}
-                  onClick={handleExportExcel}
-                  iconPosition="start"
-                  style={{
-                    backgroundColor: "#52c41a",
-                    borderColor: "#52c41a",
-                    color: "#fff",
-                  }}
-                >
-                  Xuất Excel
-                </Button>
-              </Tooltip>
-              <Tooltip
-                placement="top"
-                title={"Thêm mới hoạt động"}
-                arrow={true}
-              >
-                <Dropdown menu={{ items }} trigger={["click"]}>
-                  <a onClick={(e) => e.preventDefault()}>
-                    <Button type="primary" icon={<PlusOutlined />}>
-                      Thêm hoạt động
+              {role?.displayRole.isExport && (
+                <>
+                  <Tooltip
+                    placement="top"
+                    title="Xuất dữ liệu Excel"
+                    arrow={true}
+                  >
+                    <Button
+                      icon={<FileExcelOutlined />}
+                      onClick={handleExportExcel}
+                      iconPosition="start"
+                      style={{
+                        backgroundColor: "#52c41a",
+                        borderColor: "#52c41a",
+                        color: "#fff",
+                      }}
+                    >
+                      Xuất Excel
                     </Button>
-                  </a>
-                </Dropdown>
-              </Tooltip>
-              <Tooltip placement="top" title="Xóa các hoạt động" arrow={true}>
-                <Button
-                  type="dashed"
-                  disabled={selectedRowKeys.length === 0}
-                  danger
-                  onClick={handleDelete}
-                  icon={<DeleteOutlined />}
-                >
-                  Xóa{" "}
-                  {selectedRowKeys.length !== 0
-                    ? `(${selectedRowKeys.length})`
-                    : ""}
-                </Button>
-              </Tooltip>
+                  </Tooltip>
+                </>
+              )}
+
+              {role?.displayRole.isCreate && (
+                <>
+                  <Tooltip
+                    placement="top"
+                    title={"Thêm mới hoạt động"}
+                    arrow={true}
+                  >
+                    <Dropdown menu={{ items }} trigger={["click"]}>
+                      <a onClick={(e) => e.preventDefault()}>
+                        <Button type="primary" icon={<PlusOutlined />}>
+                          Thêm hoạt động
+                        </Button>
+                      </a>
+                    </Dropdown>
+                  </Tooltip>
+                </>
+              )}
+
+              {role?.displayRole.isDelete && (
+                <>
+                  <Tooltip
+                    placement="top"
+                    title="Xóa các hoạt động"
+                    arrow={true}
+                  >
+                    <Button
+                      type="dashed"
+                      disabled={selectedRowKeys.length === 0}
+                      danger
+                      onClick={handleDelete}
+                      icon={<DeleteOutlined />}
+                    >
+                      Xóa{" "}
+                      {selectedRowKeys.length !== 0
+                        ? `(${selectedRowKeys.length})`
+                        : ""}
+                    </Button>
+                  </Tooltip>
+                </>
+              )}
             </>
           )}
         </div>
@@ -914,6 +1075,10 @@ const BM05 = () => {
           isOk={true}
           width={isShowPdf ? "85vw" : ""}
           title={mode === "edit" ? "Cập nhật hoạt động" : "Thêm mới hoạt động"}
+          role={role || undefined}
+          isBlock={isBlock}
+          onApprove={handleApproved}
+          onReject={handleRejected}
           onOk={() => {
             const formElement = document.querySelector("form");
             formElement?.dispatchEvent(
@@ -941,6 +1106,7 @@ const BM05 = () => {
                   initialData={selectedItem as Partial<AddUpdateActivityItem>}
                   mode={mode}
                   numberActivity={data.length}
+                  isBlock={isBlock}
                 />
               </>
             )

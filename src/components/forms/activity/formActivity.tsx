@@ -35,6 +35,7 @@ import {
   Table,
   TableColumnsType,
   Tag,
+  Timeline,
   Tooltip,
 } from "antd";
 import moment from "moment";
@@ -54,6 +55,7 @@ interface FormActivityProps {
   initialData?: Partial<AddUpdateActivityItem>;
   mode: "add" | "edit";
   numberActivity?: number;
+  isBlock: boolean;
 }
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.mjs`;
@@ -64,6 +66,7 @@ const FormActivity: FC<FormActivityProps> = ({
   initialData,
   mode,
   numberActivity,
+  isBlock,
 }) => {
   const { TextArea } = Input;
   const [documentNumber, setDocumentNumber] = useState<string>("");
@@ -217,15 +220,11 @@ const FormActivity: FC<FormActivityProps> = ({
           <div>
             <Tooltip placement="right" title="Xóa dữ liệu" arrow={true}>
               <Button
+                disabled={isBlock}
                 color="danger"
                 variant="text"
                 onClick={() => onRemoveUsers(id)}
               >
-                {/* <span
-                  className="text-center cursor-pointer text-red-500"
-                  onClick={() => onRemoveUsers(id)}
-                >
-                </span> */}
                 <CloseCircleOutlined />
               </Button>
             </Tooltip>
@@ -271,6 +270,7 @@ const FormActivity: FC<FormActivityProps> = ({
   }, []);
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
+    disabled: isBlock,
   });
 
   const handleSubmit = async (e: FormEvent) => {
@@ -313,6 +313,7 @@ const FormActivity: FC<FormActivityProps> = ({
   }, [showPDF]);
 
   useEffect(() => {
+    console.log("isBlock :>> ", isBlock);
     const loadUsers = async () => {
       if (mode === "edit" && initialData !== undefined) {
         setName(initialData.name || "");
@@ -457,6 +458,7 @@ const FormActivity: FC<FormActivityProps> = ({
             <span className="font-medium text-neutral-600">Đơn vị</span>
             <Select
               showSearch
+              disabled={isBlock}
               optionFilterProp="label"
               filterSort={(optionA, optionB) =>
                 (optionA?.label ?? "")
@@ -480,6 +482,7 @@ const FormActivity: FC<FormActivityProps> = ({
             </span>
             <Select
               showSearch
+              disabled={isBlock}
               optionFilterProp="label"
               defaultValue={""}
               filterSort={(optionA, optionB) =>
@@ -576,6 +579,7 @@ const FormActivity: FC<FormActivityProps> = ({
                         <div className="flex gap-3 items-center mt-2">
                           <Button
                             danger
+                            disabled={isBlock}
                             color="danger"
                             onClick={handleDeletePicture}
                             size="small"
@@ -586,6 +590,7 @@ const FormActivity: FC<FormActivityProps> = ({
                           <Button
                             type="primary"
                             size="small"
+                            disabled={isBlock}
                             icon={<CloudUploadOutlined />}
                             onClick={() => {
                               const input = document.createElement("input");
@@ -654,15 +659,6 @@ const FormActivity: FC<FormActivityProps> = ({
                 style={{
                   maxHeight: "78vh",
                 }}
-                // style={{
-                //   maxHeight: `${
-                //     (document.querySelector("form")?.getBoundingClientRect()
-                //       .height ?? 0) >
-                //     0.72 * window.innerHeight
-                //       ? "80vh"
-                //       : "72vh"
-                //   }`,
-                // }}
               >
                 <Document
                   file={`https://api-annual.uef.edu.vn/${pathPDF}`}

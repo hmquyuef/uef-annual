@@ -1,6 +1,6 @@
 import apiClient from "../apiClient";
 import { ImportResponse } from "./formsServices";
-
+import {PaymentApprovedItem} from "./PaymentApprovedItem";
 export interface ClassLeaderItem {
   id: string;
   userName: string;
@@ -14,6 +14,7 @@ export interface ClassLeaderItem {
   fromDate: number;
   entryDate: number;
   eventDate: number;
+  payments: PaymentApprovedItem;
   proof: string;
   note: string;
 }
@@ -41,6 +42,17 @@ export async function putUpdateClassLeader(
 ): Promise<ClassLeaderItem> {
   const response = await apiClient.put<ClassLeaderItem>(
     `api/leaders/${id}`,
+    data
+  );
+  return response.data;
+}
+
+export async function putUpdateApprovedClassLeader(
+  id: string,
+  data: Partial<any>
+): Promise<any> {
+  const response = await apiClient.put<any>(
+    `/api/leaders/approved/${id}`,
     data
   );
   return response.data;

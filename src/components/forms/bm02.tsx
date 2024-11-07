@@ -48,10 +48,12 @@ import {
   UnitHRMItem,
 } from "@/services/units/unitsServices";
 import PageTitles from "@/utility/Constraints";
+import { jwtDecode } from "jwt-decode";
 
 import locale from "antd/locale/vi_VN";
 import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/vi";
+import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
 dayjs.locale("vi");
 
 type SearchProps = GetProps<typeof Input.Search>;
@@ -80,6 +82,8 @@ const BM02 = () => {
   >("success");
   const [startDate, setStartDate] = useState<number | null>(null);
   const [endDate, setEndDate] = useState<number | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [role, setRole] = useState<RoleItem>();
   const [selectedDates, setSelectedDates] = useState<
     [Dayjs | null, Dayjs | null] | null
   >(null);
@@ -346,7 +350,11 @@ const BM02 = () => {
       setMessage("Thông báo");
       setDescription("Đã có lỗi xảy ra!");
     }
-    setNotificationOpen(false);
+  };
+
+  const getDisplayRole = async (name: string) => {
+    const response = await getRoleByName(name);
+    setRole(response.items[0]);
   };
 
   const handleSubmitUpload = async (file: File) => {
@@ -373,7 +381,6 @@ const BM02 = () => {
       setDescription("Đã có lỗi xảy ra!");
       setIsUpload(false);
     }
-    setNotificationOpen(false);
   };
 
   const handleExportExcel = async () => {
@@ -658,6 +665,21 @@ const BM02 = () => {
       });
     }
     Promise.all([getListClassAssistants(), getAllUnitsFromHRM()]);
+    const token = Cookies.get("s_t");
+    if (token) {
+      const decodedRole = jwtDecode<{
+        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
+      }>(token);
+      const role =
+        decodedRole[
+          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        ];
+      getDisplayRole(role as string);
+      const decodedUserName = jwtDecode(token);
+      if (decodedUserName.sub) {
+        setUserName(decodedUserName.sub);
+      }
+    }
   }, []);
   return (
     <div>
@@ -721,41 +743,57 @@ const BM02 = () => {
           </div>
         </div>
         <div className="flex justify-end gap-4">
-          <Tooltip placement="top" title="Xuất dữ liệu Excel" arrow={true}>
-            <Button
-              icon={<FileExcelOutlined />}
-              onClick={handleExportExcel}
-              iconPosition="start"
-              style={{
-                backgroundColor: "#52c41a",
-                borderColor: "#52c41a",
-                color: "#fff",
-              }}
-            >
-              Xuất Excel
-            </Button>
-          </Tooltip>
-          <Tooltip placement="top" title={"Thêm mới hoạt động"} arrow={true}>
-            <Dropdown menu={{ items }} trigger={["click"]}>
-              <a onClick={(e) => e.preventDefault()}>
-                <Button type="primary" icon={<PlusOutlined />}>
-                  Thêm hoạt động
+          {role?.displayRole.isExport && (
+            <>
+              <Tooltip placement="top" title="Xuất dữ liệu Excel" arrow={true}>
+                <Button
+                  icon={<FileExcelOutlined />}
+                  onClick={handleExportExcel}
+                  iconPosition="start"
+                  style={{
+                    backgroundColor: "#52c41a",
+                    borderColor: "#52c41a",
+                    color: "#fff",
+                  }}
+                >
+                  Xuất Excel
                 </Button>
-              </a>
-            </Dropdown>
-          </Tooltip>
-          <Tooltip placement="top" title="Xóa các thông tin" arrow={true}>
-            <Button
-              type="dashed"
-              disabled={selectedRowKeys.length === 0}
-              danger
-              onClick={handleDelete}
-              icon={<DeleteOutlined />}
-              iconPosition="start"
-            >
-              Xóa
-            </Button>
-          </Tooltip>
+              </Tooltip>
+            </>
+          )}
+          {role?.displayRole.isCreate && (
+            <>
+              <Tooltip
+                placement="top"
+                title={"Thêm mới hoạt động"}
+                arrow={true}
+              >
+                <Dropdown menu={{ items }} trigger={["click"]}>
+                  <a onClick={(e) => e.preventDefault()}>
+                    <Button type="primary" icon={<PlusOutlined />}>
+                      Thêm hoạt động
+                    </Button>
+                  </a>
+                </Dropdown>
+              </Tooltip>
+            </>
+          )}
+          {role?.displayRole.isDelete && (
+            <>
+              <Tooltip placement="top" title="Xóa các thông tin" arrow={true}>
+                <Button
+                  type="dashed"
+                  disabled={selectedRowKeys.length === 0}
+                  danger
+                  onClick={handleDelete}
+                  icon={<DeleteOutlined />}
+                  iconPosition="start"
+                >
+                  Xóa
+                </Button>
+              </Tooltip>
+            </>
+          )}
         </div>
         <CustomNotification
           message={message}
@@ -772,6 +810,11 @@ const BM02 = () => {
               ? "Cập nhật thông tin cố vấn học tập, trợ giảng, phụ đạo"
               : "Thêm mới thông tin cố vấn học tập, trợ giảng, phụ đạo"
           }
+          role={role || undefined}
+          onApprove={() => {}}
+          onReject={() => {
+            console.log("Nút Từ chối được nhấn");
+          }}
           onOk={() => {
             const formElement = document.querySelector("form");
             formElement?.dispatchEvent(
@@ -803,7 +846,7 @@ const BM02 = () => {
         />
       </div>
       <Table<ClassAssistantItem>
-        key={"table-activity-bm01"}
+        key={"table-activity-bm02"}
         className="custom-table-header shadow-md rounded-md"
         bordered
         rowKey={(item) => item.id}

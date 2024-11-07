@@ -1,4 +1,5 @@
 import apiClient from "@/services/apiClient";
+import { PaymentApprovedItem } from "./PaymentApprovedItem";
 
 export interface ActivityItem {
     id: string;
@@ -10,6 +11,7 @@ export interface ActivityItem {
     participants: Participation[];
     description: string;
     documentNumber: string;
+    payments: PaymentApprovedItem;
     creationTime: number;
     isActived: boolean;
 }
@@ -74,11 +76,6 @@ export async function getAllActivities(): Promise<ActivitiesResponse> {
     return response.data;
 }
 
-export async function getAllActivitiesByTypesId(typeId: string): Promise<ActivitiesResponse> {
-    const response = await apiClient.get<ActivitiesResponse>(`api/activities/${typeId}`);
-    return response.data;
-}
-
 export async function getActivityById(id: string): Promise<ActivityItem> {
     const response = await apiClient.get<ActivityItem>(`api/activities/${id}`);
     return response.data;
@@ -93,6 +90,17 @@ export async function putUpdateActivity(id: string, data: Partial<AddUpdateActiv
     const response = await apiClient.put<AddUpdateActivityItem>(`api/activities/${id}`, data);
     return response.data;
 }
+
+export async function putUpdateApprovedActivity(
+    id: string,
+    data: Partial<any>
+  ): Promise<any> {
+    const response = await apiClient.put<any>(
+      `/api/activities/approved/${id}`,
+      data
+    );
+    return response.data;
+  }
 
 export async function deleteActivities(ids: string[]): Promise<void> {
     await apiClient.delete('api/activities', {

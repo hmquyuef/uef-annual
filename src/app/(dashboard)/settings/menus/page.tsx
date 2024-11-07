@@ -32,6 +32,10 @@ import {
   Tooltip,
 } from "antd";
 import { Key, useEffect, useState } from "react";
+import { jwtDecode } from "jwt-decode";
+import Cookies from "js-cookie";
+import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
+
 type TableRowSelection<T extends object = object> =
   TableProps<T>["rowSelection"];
 const Menus = () => {
@@ -48,6 +52,7 @@ const Menus = () => {
   const [status, setStatus] = useState<
     "success" | "error" | "info" | "warning"
   >("success");
+  const [role, setRole] = useState<RoleItem>();
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 15,
@@ -213,9 +218,24 @@ const Menus = () => {
     }
     setNotificationOpen(false);
   };
+  const getDisplayRole = async (name: string) => {
+    const response = await getRoleByName(name);
+    setRole(response.items[0]);
+  };
   useEffect(() => {
     document.title = PageTitles.MENUS;
     getListMenus();
+    const token = Cookies.get("s_t");
+    if (token) {
+      const decodedRole = jwtDecode<{
+        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
+      }>(token);
+      const role =
+        decodedRole[
+          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        ];
+      getDisplayRole(role as string);
+    }
   }, []);
 
   return (

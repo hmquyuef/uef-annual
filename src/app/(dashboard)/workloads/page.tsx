@@ -14,11 +14,13 @@ import {
 import PageTitles from "@/utility/Constraints";
 import {
   CheckOutlined,
+  CloseOutlined,
   EditOutlined,
   HomeOutlined,
   InfoCircleOutlined,
   PieChartOutlined,
   ProfileOutlined,
+  SafetyOutlined,
 } from "@ant-design/icons";
 import {
   Breadcrumb,
@@ -87,16 +89,27 @@ const Workloads = () => {
           setIsOk(false);
         }
       }}
-      className="flex justify-center gap-1"
+      className="flex justify-center gap-1 text-blue-500"
     >
       <PieChartOutlined />
       <Statistic
         value={type.totalItems}
         formatter={formatter}
         suffix="sự kiện"
-        valueStyle={{ fontSize: "14px" }}
+        valueStyle={{ fontSize: "14px", color: "rgb(59 130 246)" }}
       />
-      {/* {type.totalItems} sự kiện</span> */}
+    </div>,
+    <div
+      key="report-approved"
+      className="flex justify-center gap-1 text-green-500"
+    >
+      <SafetyOutlined />
+      <Statistic
+        value={type.totalApprovedItems}
+        formatter={formatter}
+        suffix="đã duyệt"
+        valueStyle={{ fontSize: "14px", color: "rgb(34 197 94)" }}
+      />
     </div>,
     userRole && userRole.includes("admin") ? (
       <>

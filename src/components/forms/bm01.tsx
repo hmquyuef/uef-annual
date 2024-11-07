@@ -7,9 +7,11 @@ import {
   getAllClassLeaders,
   ImportClassLeaders,
   postAddClassLeader,
+  putUpdateApprovedClassLeader,
   putUpdateClassLeader,
 } from "@/services/forms/classLeadersServices";
 import { AddUpdateActivityItem } from "@/services/forms/formsServices";
+import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
 import {
   getListUnitsFromHrm,
   UnitHRMItem,
@@ -17,12 +19,16 @@ import {
 import PageTitles from "@/utility/Constraints";
 import {
   convertTimestampToDate,
+  convertTimestampToFullDateTime,
   defaultFooterInfo,
   setCellStyle,
 } from "@/utility/Utilities";
 import {
+  CheckOutlined,
+  CloseOutlined,
   DeleteOutlined,
   FileExcelOutlined,
+  LoadingOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
 import {
@@ -41,18 +47,18 @@ import {
   Tooltip,
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
+import locale from "antd/locale/vi_VN";
+import dayjs, { Dayjs } from "dayjs";
+import "dayjs/locale/vi";
 import saveAs from "file-saver";
 import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 import { Key, useCallback, useEffect, useState } from "react";
 import * as XLSX from "sheetjs-style";
 import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
 import FormBM01 from "./activity/formBM01";
 import FromUpload from "./activity/formUpload";
-
-import locale from "antd/locale/vi_VN";
-import dayjs, { Dayjs } from "dayjs";
-import "dayjs/locale/vi";
 dayjs.locale("vi");
 
 type SearchProps = GetProps<typeof Input.Search>;
@@ -84,6 +90,8 @@ const BM01 = () => {
   const [selectedDates, setSelectedDates] = useState<
     [Dayjs | null, Dayjs | null] | null
   >(null);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [role, setRole] = useState<RoleItem>();
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 15,
@@ -129,7 +137,6 @@ const BM01 = () => {
           <span
             className="text-blue-500 font-semibold cursor-pointer"
             onClick={() => {
-              setMode("edit");
               handleEdit(record);
             }}
           >
@@ -219,6 +226,50 @@ const BM01 = () => {
         );
       },
       className: "w-[5rem]",
+    },
+    {
+      title: (
+        <div className="bg-orange-400 p-1">
+          PHÊ DUYỆT <br /> THANH TOÁN
+        </div>
+      ),
+      dataIndex: ["payments", "isRejected"],
+      key: "isRejected",
+      render: (isRejected: boolean, record: ClassLeaderItem) => {
+        const time = record.payments?.approvedTime
+          ? convertTimestampToFullDateTime(record.payments.approvedTime)
+          : "";
+        return (
+          <>
+            {record.payments ? (
+              <>
+                {isRejected ? (
+                  <Tooltip title={`P.TC đã từ chối vào lúc ${time}`}>
+                    <span className="text-red-500">
+                      <CloseOutlined className="me-1"/> Từ chối
+                    </span>
+                  </Tooltip>
+                ) : (
+                  <Tooltip title={`P.TC đã phê duyệt vào lúc ${time}`}>
+                    <span className="text-green-500">
+                      <CheckOutlined className="me-1"/> Đã duyệt
+                    </span>
+                  </Tooltip>
+                )}
+              </>
+            ) : (
+              <>
+                <Tooltip title="Đợi phê duyệt từ P.TC">
+                  <span className="text-sky-500">
+                    <LoadingOutlined className="me-1"/> Chờ duyệt
+                  </span>
+                </Tooltip>
+              </>
+            )}
+          </>
+        );
+      },
+      className: "text-center w-[110px]",
     },
     {
       title: "GHI CHÚ",
@@ -657,6 +708,44 @@ const BM01 = () => {
       JSON.stringify([pagination.current, pagination.pageSize])
     );
   };
+
+  const handleApproved = async () => {
+    const formData = {
+      approver: userName,
+      approvedTime: Math.floor(Date.now() / 1000),
+      isRejected: false,
+      isBlockData: true,
+    };
+    try {
+      if (mode === "edit" && selectedItem) {
+        const response = await putUpdateApprovedClassLeader(
+          selectedItem.id as string,
+          formData
+        );
+        if (response) {
+          setDescription("Phê duyệt thông tin chủ nhiệm lớp thành công!");
+        }
+      }
+      setNotificationOpen(true);
+      setStatus("success");
+      setMessage("Thông báo");
+      await getListClassLeaders();
+      setIsOpen(false);
+      setSelectedItem(undefined);
+      setMode("add");
+    } catch (error) {
+      setNotificationOpen(true);
+      setStatus("error");
+      setMessage("Thông báo");
+      setDescription("Đã có lỗi xảy ra!");
+    }
+  };
+
+  const getDisplayRole = async (name: string) => {
+    const response = await getRoleByName(name);
+    setRole(response.items[0]);
+  };
+
   useEffect(() => {
     document.title = PageTitles.BM01;
     const pageState = Cookies.get("p_s");
@@ -668,6 +757,21 @@ const BM01 = () => {
       });
     }
     Promise.all([getListClassLeaders(), getAllUnitsFromHRM()]);
+    const token = Cookies.get("s_t");
+    if (token) {
+      const decodedRole = jwtDecode<{
+        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
+      }>(token);
+      const role =
+        decodedRole[
+          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        ];
+      getDisplayRole(role as string);
+      const decodedUserName = jwtDecode(token);
+      if (decodedUserName.sub) {
+        setUserName(decodedUserName.sub);
+      }
+    }
   }, []);
   return (
     <div>
@@ -731,50 +835,66 @@ const BM01 = () => {
           </div>
         </div>
         <div className="flex justify-end gap-4">
-          <Tooltip placement="top" title="Xuất dữ liệu Excel" arrow={true}>
-            <Button
-              icon={<FileExcelOutlined />}
-              onClick={handleExportExcel}
-              iconPosition="start"
-              style={{
-                backgroundColor: "#52c41a",
-                borderColor: "#52c41a",
-                color: "#fff",
-              }}
-            >
-              Xuất Excel
-            </Button>
-          </Tooltip>
-          <Tooltip placement="top" title={"Thêm mới hoạt động"} arrow={true}>
-            <Dropdown menu={{ items }} trigger={["click"]}>
-              <a onClick={(e) => e.preventDefault()}>
-                <Button type="primary" icon={<PlusOutlined />}>
-                  Thêm hoạt động
+          {role?.displayRole.isExport && (
+            <>
+              <Tooltip placement="top" title="Xuất dữ liệu Excel" arrow={true}>
+                <Button
+                  icon={<FileExcelOutlined />}
+                  onClick={handleExportExcel}
+                  iconPosition="start"
+                  style={{
+                    backgroundColor: "#52c41a",
+                    borderColor: "#52c41a",
+                    color: "#fff",
+                  }}
+                >
+                  Xuất Excel
                 </Button>
-              </a>
-            </Dropdown>
-          </Tooltip>
-          <Tooltip placement="top" title="Xóa các thông tin" arrow={true}>
-            <Button
-              type="dashed"
-              disabled={selectedRowKeys.length === 0}
-              danger
-              onClick={handleDelete}
-              icon={<DeleteOutlined />}
-              iconPosition="start"
-            >
-              Xóa{" "}
-              {selectedRowKeys.length !== 0
-                ? `(${selectedRowKeys.length})`
-                : ""}
-            </Button>
-          </Tooltip>
+              </Tooltip>
+            </>
+          )}
+          {role?.displayRole.isCreate && (
+            <>
+              <Tooltip
+                placement="top"
+                title={"Thêm mới hoạt động"}
+                arrow={true}
+              >
+                <Dropdown menu={{ items }} trigger={["click"]}>
+                  <a onClick={(e) => e.preventDefault()}>
+                    <Button type="primary" icon={<PlusOutlined />}>
+                      Thêm hoạt động
+                    </Button>
+                  </a>
+                </Dropdown>
+              </Tooltip>
+            </>
+          )}
+          {role?.displayRole.isDelete && (
+            <>
+              <Tooltip placement="top" title="Xóa các thông tin" arrow={true}>
+                <Button
+                  type="dashed"
+                  disabled={selectedRowKeys.length === 0}
+                  danger
+                  onClick={handleDelete}
+                  icon={<DeleteOutlined />}
+                  iconPosition="start"
+                >
+                  Xóa{" "}
+                  {selectedRowKeys.length !== 0
+                    ? `(${selectedRowKeys.length})`
+                    : ""}
+                </Button>
+              </Tooltip>
+            </>
+          )}
         </div>
         <CustomNotification
           message={message}
           description={description}
           status={status}
-          isOpen={isNotificationOpen} // Truyền trạng thái mở
+          isOpen={isNotificationOpen}
         />
         <CustomModal
           isOpen={isOpen}
@@ -790,6 +910,11 @@ const BM01 = () => {
             formElement?.dispatchEvent(
               new Event("submit", { cancelable: true, bubbles: true })
             );
+          }}
+          role={role || undefined}
+          onApprove={handleApproved}
+          onReject={() => {
+            console.log("Nút Từ chối được nhấn");
           }}
           onCancel={() => {
             setNotificationOpen(false);

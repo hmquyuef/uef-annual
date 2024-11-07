@@ -9,6 +9,7 @@ export interface WorkloadTypeItem {
     groupName: string;
     emails: string;
     totalItems: number;
+    totalApprovedItems: number;
     creationTime: number;
     isActived: boolean;
 }

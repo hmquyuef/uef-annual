@@ -6,6 +6,7 @@ import FormRole from "@/components/forms/roles/formRole";
 import {
   deleteRoles,
   getAllRoles,
+  getRoleByName,
   postAddRole,
   putUpdateRole,
   RoleItem,
@@ -22,6 +23,7 @@ import {
 import {
   Breadcrumb,
   Button,
+  Checkbox,
   Empty,
   PaginationProps,
   Table,
@@ -31,6 +33,8 @@ import {
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import { Key, useCallback, useEffect, useState } from "react";
+import { jwtDecode } from "jwt-decode";
+import Cookies from "js-cookie";
 
 const Roles = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
@@ -46,6 +50,7 @@ const Roles = () => {
   const [status, setStatus] = useState<
     "success" | "error" | "info" | "warning"
   >("success");
+  const [role, setRole] = useState<RoleItem>();
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 15,
@@ -54,6 +59,7 @@ const Roles = () => {
   const getListRoles = async () => {
     const response = await getAllRoles();
     setData(response.items);
+    setNotificationOpen(false);
   };
 
   const columns: TableColumnsType<RoleItem> = [
@@ -91,12 +97,75 @@ const Roles = () => {
       render: (appName: string) => <>{appName}</>,
     },
     {
+      title: "XEM",
+      dataIndex: ["displayRole", "isRead"],
+      key: "isRead",
+      render: (isRead: boolean) => <Checkbox checked={isRead}></Checkbox>,
+      className: "text-center w-[80px]",
+    },
+    {
+      title: "KHỞI TẠO",
+      dataIndex: ["displayRole", "isCreate"],
+      key: "isCreate",
+      render: (isCreate: boolean) => <Checkbox checked={isCreate}></Checkbox>,
+      className: "text-center w-[80px]",
+    },
+    {
+      title: "CẬP NHẬT",
+      dataIndex: ["displayRole", "isUpdate"],
+      key: "isUpdate",
+      render: (isUpdate: boolean) => <Checkbox checked={isUpdate}></Checkbox>,
+      className: "text-center w-[80px]",
+    },
+    {
+      title: "XÓA",
+      dataIndex: ["displayRole", "isDelete"],
+      key: "isDelete",
+      render: (isDelete: boolean) => <Checkbox checked={isDelete}></Checkbox>,
+      className: "text-center w-[80px]",
+    },
+    {
+      title: "XÁC NHẬN",
+      dataIndex: ["displayRole", "isConfirm"],
+      key: "isConfirm",
+      render: (isConfirm: boolean) => <Checkbox checked={isConfirm}></Checkbox>,
+      className: "text-center w-[80px]",
+    },
+    {
+      title: "EXPORT",
+      dataIndex: ["displayRole", "isExport"],
+      key: "isExport",
+      render: (isExport: boolean) => <Checkbox checked={isExport}></Checkbox>,
+      className: "text-center w-[80px]",
+    },
+    {
+      title: "IMPORT",
+      dataIndex: ["displayRole", "isImport"],
+      key: "isImport",
+      render: (isImport: boolean) => <Checkbox checked={isImport}></Checkbox>,
+      className: "text-center w-[80px]",
+    },
+    {
+      title: "PHÊ DUYỆT",
+      dataIndex: ["displayRole", "isApprove"],
+      key: "isApprove",
+      render: (isApprove: boolean) => <Checkbox checked={isApprove}></Checkbox>,
+      className: "text-center w-[80px]",
+    },
+    {
+      title: "TỪ CHỐI",
+      dataIndex: ["displayRole", "isReject"],
+      key: "isReject",
+      render: (isReject: boolean) => <Checkbox checked={isReject}></Checkbox>,
+      className: "text-center w-[80px]",
+    },
+    {
       title: "NGÀY KHỞI TẠO",
       dataIndex: "creationTime",
       key: "creationTime",
       render: (creationTime: number) =>
         creationTime ? convertTimestampToDate(creationTime) : "",
-      className: "text-center w-[10rem]",
+      className: "text-center w-[100px]",
     },
     {
       title: "TRẠNG THÁI",
@@ -117,7 +186,7 @@ const Roles = () => {
           </>
         );
       },
-      className: "text-center w-[10rem]",
+      className: "text-center w-[100px]",
     },
   ];
 
@@ -142,7 +211,7 @@ const Roles = () => {
   };
 
   const handleSubmit = async (formData: Partial<RoleItem>) => {
-    console.log('formData :>> ', formData);
+    console.log("formData :>> ", formData);
     try {
       if (mode === "edit" && selectedItem) {
         const response = await putUpdateRole(formData.id as string, formData);
@@ -168,7 +237,6 @@ const Roles = () => {
       setMessage("Thông báo");
       setDescription("Đã có lỗi xảy ra!");
     }
-    setNotificationOpen(false);
   };
   const handleDelete = useCallback(async () => {
     try {
@@ -187,11 +255,25 @@ const Roles = () => {
     } catch (error) {
       console.error("Error deleting selected items:", error);
     }
-    setNotificationOpen(false);
   }, [selectedRowKeys]);
+  const getDisplayRole = async (name: string) => {
+    const response = await getRoleByName(name);
+    setRole(response.items[0]);
+  };
   useEffect(() => {
     document.title = PageTitles.ROLES;
     getListRoles();
+    const token = Cookies.get("s_t");
+    if (token) {
+      const decodedRole = jwtDecode<{
+        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
+      }>(token);
+      const role =
+        decodedRole[
+          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        ];
+      getDisplayRole(role as string);
+    }
   }, []);
   return (
     <div>
@@ -228,31 +310,39 @@ const Roles = () => {
         />
       </div>
       <div className="flex justify-end gap-4 mb-4">
-        <Tooltip placement="top" title={"Thêm mới vai trò"} arrow={true}>
-          <Button
-            type="primary"
-            onClick={() => {
-              setIsOpen(true);
-              setMode("add");
-            }}
-            icon={<PlusOutlined />}
-            iconPosition="start"
-          >
-            Thêm vai trò
-          </Button>
-        </Tooltip>
-        <Tooltip placement="top" title="Xóa các hoạt động" arrow={true}>
-          <Button
-            type="dashed"
-            disabled={selectedRowKeys.length === 0}
-            danger
-            onClick={handleDelete}
-            icon={<DeleteOutlined />}
-            iconPosition="start"
-          >
-            Xóa
-          </Button>
-        </Tooltip>
+        {role?.displayRole.isCreate && (
+          <>
+            <Tooltip placement="top" title={"Thêm mới vai trò"} arrow={true}>
+              <Button
+                type="primary"
+                onClick={() => {
+                  setIsOpen(true);
+                  setMode("add");
+                }}
+                icon={<PlusOutlined />}
+                iconPosition="start"
+              >
+                Thêm vai trò
+              </Button>
+            </Tooltip>
+          </>
+        )}
+        {role?.displayRole.isDelete && (
+          <>
+            <Tooltip placement="top" title="Xóa các hoạt động" arrow={true}>
+              <Button
+                type="dashed"
+                disabled={selectedRowKeys.length === 0}
+                danger
+                onClick={handleDelete}
+                icon={<DeleteOutlined />}
+                iconPosition="start"
+              >
+                Xóa
+              </Button>
+            </Tooltip>
+          </>
+        )}
       </div>
 
       <div>
@@ -267,6 +357,7 @@ const Roles = () => {
           isOk={true}
           width={"25vw"}
           title={mode === "edit" ? "Cập nhật vai trò" : "Thêm mới vai trò"}
+          role={role || undefined}
           onOk={() => {
             const formElement = document.querySelector("form");
             formElement?.dispatchEvent(
@@ -288,7 +379,7 @@ const Roles = () => {
           }
         />
         <Table<RoleItem>
-          key={"table-activity-bm05"}
+          key={"table-roles"}
           className="custom-table-header shadow-md rounded-md"
           bordered
           rowKey={(item) => item.id}

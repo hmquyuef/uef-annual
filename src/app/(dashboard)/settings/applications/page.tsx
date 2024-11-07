@@ -22,6 +22,9 @@ import {
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import { Key, useEffect, useState } from "react";
+import { jwtDecode } from "jwt-decode";
+import Cookies from "js-cookie";
+import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
 
 const Applications = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
@@ -32,6 +35,7 @@ const Applications = () => {
   const [status, setStatus] = useState<
     "success" | "error" | "info" | "warning"
   >("success");
+  const [role, setRole] = useState<RoleItem>();
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 15,
@@ -161,10 +165,24 @@ const Applications = () => {
       pageSize: pagination.pageSize || 15,
     });
   };
-
+  const getDisplayRole = async (name: string) => {
+    const response = await getRoleByName(name);
+    setRole(response.items[0]);
+  };
   useEffect(() => {
     document.title = PageTitles.APPLICATIONS;
     getListApplications();
+    const token = Cookies.get("s_t");
+    if (token) {
+      const decodedRole = jwtDecode<{
+        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
+      }>(token);
+      const role =
+        decodedRole[
+          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        ];
+      getDisplayRole(role as string);
+    }
   }, []);
 
   return (
@@ -205,32 +223,49 @@ const Applications = () => {
         message={message}
         description={description}
         status={status}
-        isOpen={isNotificationOpen} // Truyền trạng thái mở
+        isOpen={isNotificationOpen}
       />
-      <div>
-        <Table<ApplicationItem>
-          key={"table-activity-bm05"}
-          className="custom-table-header shadow-md rounded-md"
-          bordered
-          rowKey={(item) => item.id}
-          rowHoverable
-          size="small"
-          pagination={{
-            ...pagination,
-            total: data.length,
-            showTotal: showTotal,
-            showSizeChanger: true,
-            position: ["bottomRight"],
-            defaultPageSize: 15,
-            pageSizeOptions: ["15", "25", "50", "100"],
-          }}
-          rowSelection={rowSelection}
-          columns={columns}
-          dataSource={data}
-          locale={{ emptyText: <Empty description="No Data"></Empty> }}
-          onChange={handleTableChange}
-        />
-      </div>
+      {role?.displayRole.isRead ? (
+        <>
+          <div>
+            <Table<ApplicationItem>
+              key={"table-activity-bm05"}
+              className="custom-table-header shadow-md rounded-md"
+              bordered
+              rowKey={(item) => item.id}
+              rowHoverable
+              size="small"
+              pagination={{
+                ...pagination,
+                total: data.length,
+                showTotal: showTotal,
+                showSizeChanger: true,
+                position: ["bottomRight"],
+                defaultPageSize: 15,
+                pageSizeOptions: ["15", "25", "50", "100"],
+              }}
+              rowSelection={rowSelection}
+              columns={columns}
+              dataSource={data}
+              locale={{ emptyText: <Empty description="No Data"></Empty> }}
+              onChange={handleTableChange}
+            />
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="text-center text-red-500">
+            <div className="flex flex-col">
+              <span className="font-medium text-xl">
+                Bạn chưa được cấp quyền để khai thác nội dung!
+              </span>
+              <span>
+                Vui lòng liên hệ Trung Tâm QLCNTT để được cấp quyền. Xin cảm on!
+              </span>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

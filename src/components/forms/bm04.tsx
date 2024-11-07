@@ -48,10 +48,12 @@ import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
 import FormBM04 from "./activity/formBM04";
 import FromUpload from "./activity/formUpload";
+import { jwtDecode } from "jwt-decode";
 
 import locale from "antd/locale/vi_VN";
 import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/vi";
+import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
 dayjs.locale("vi");
 
 type SearchProps = GetProps<typeof Input.Search>;
@@ -81,6 +83,8 @@ const BM04 = () => {
   const [selectedDates, setSelectedDates] = useState<
     [Dayjs | null, Dayjs | null] | null
   >(null);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [role, setRole] = useState<RoleItem>();
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 15,
@@ -627,6 +631,10 @@ const BM04 = () => {
       saveAs(blob, "BM04-" + formattedDate + ".xlsx");
     }
   };
+  const getDisplayRole = async (name: string) => {
+    const response = await getRoleByName(name);
+    setRole(response.items[0]);
+  };
   const handleTableChange = (pagination: PaginationProps) => {
     setPagination({
       current: pagination.current || 1,
@@ -648,6 +656,21 @@ const BM04 = () => {
       });
     }
     Promise.all([getListQAs(), getAllUnitsFromHRM()]);
+    const token = Cookies.get("s_t");
+    if (token) {
+      const decodedRole = jwtDecode<{
+        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
+      }>(token);
+      const role =
+        decodedRole[
+          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        ];
+      getDisplayRole(role as string);
+      const decodedUserName = jwtDecode(token);
+      if (decodedUserName.sub) {
+        setUserName(decodedUserName.sub);
+      }
+    }
   }, []);
   return (
     <div>
@@ -711,41 +734,59 @@ const BM04 = () => {
           </div>
         </div>
         <div className="flex justify-end gap-4">
-          <Tooltip placement="top" title="Xuất dữ liệu Excel" arrow={true}>
-            <Button
-              icon={<FileExcelOutlined />}
-              onClick={handleExportExcel}
-              iconPosition="start"
-              style={{
-                backgroundColor: "#52c41a",
-                borderColor: "#52c41a",
-                color: "#fff",
-              }}
-            >
-              Xuất Excel
-            </Button>
-          </Tooltip>
-          <Tooltip placement="top" title={"Thêm mới hoạt động"} arrow={true}>
-            <Dropdown menu={{ items }} trigger={["click"]}>
-              <a onClick={(e) => e.preventDefault()}>
-                <Button type="primary" icon={<PlusOutlined />}>
-                  Thêm hoạt động
+          {role?.displayRole.isExport && (
+            <>
+              <Tooltip placement="top" title="Xuất dữ liệu Excel" arrow={true}>
+                <Button
+                  icon={<FileExcelOutlined />}
+                  onClick={handleExportExcel}
+                  iconPosition="start"
+                  style={{
+                    backgroundColor: "#52c41a",
+                    borderColor: "#52c41a",
+                    color: "#fff",
+                  }}
+                >
+                  Xuất Excel
                 </Button>
-              </a>
-            </Dropdown>
-          </Tooltip>
-          <Tooltip placement="top" title="Xóa các thông tin" arrow={true}>
-            <Button
-              type="dashed"
-              disabled={selectedRowKeys.length === 0}
-              danger
-              onClick={handleDelete}
-              icon={<DeleteOutlined />}
-              iconPosition="start"
-            >
-              Xóa
-            </Button>
-          </Tooltip>
+              </Tooltip>
+            </>
+          )}
+
+          {role?.displayRole.isCreate && (
+            <>
+              <Tooltip
+                placement="top"
+                title={"Thêm mới hoạt động"}
+                arrow={true}
+              >
+                <Dropdown menu={{ items }} trigger={["click"]}>
+                  <a onClick={(e) => e.preventDefault()}>
+                    <Button type="primary" icon={<PlusOutlined />}>
+                      Thêm hoạt động
+                    </Button>
+                  </a>
+                </Dropdown>
+              </Tooltip>
+            </>
+          )}
+
+          {role?.displayRole.isDelete && (
+            <>
+              <Tooltip placement="top" title="Xóa các thông tin" arrow={true}>
+                <Button
+                  type="dashed"
+                  disabled={selectedRowKeys.length === 0}
+                  danger
+                  onClick={handleDelete}
+                  icon={<DeleteOutlined />}
+                  iconPosition="start"
+                >
+                  Xóa
+                </Button>
+              </Tooltip>
+            </>
+          )}
         </div>
         <CustomNotification
           message={message}
@@ -762,6 +803,11 @@ const BM04 = () => {
               ? "Cập nhật thông tin tham gia hỏi vấn đáp Tiếng Anh đầu vào"
               : "Thêm mới thông tin tham gia hỏi vấn đáp Tiếng Anh đầu vào"
           }
+          role={role || undefined}
+          onApprove={() => {}}
+          onReject={() => {
+            console.log("Nút Từ chối được nhấn");
+          }}
           onOk={() => {
             const formElement = document.querySelector("form");
             formElement?.dispatchEvent(

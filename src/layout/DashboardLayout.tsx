@@ -76,14 +76,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     );
   };
   const getMenuByUserName = async (email: string) => {
-    console.log('start :>> ');
     const response = await getUserNameByEmail(email);
-    console.log('Call: getUserNameByEmail :>> ');
     if (!response) return router.push("/not-permission");
     const listmenus = await getAllPermissionsForMenuByUserName(
       response.userName
     );
-    console.log('Call: getAllPermissionsForMenuByUserName :>> ');
     if (listmenus.items.length === 0) return router.push("/not-permission");
     const tempMenu: MenuItem[] = listmenus.items[0].permissions.map((item) => {
       const tempChildren: MenuItem[] = item.children.map((child) => ({

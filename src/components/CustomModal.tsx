@@ -1,3 +1,4 @@
+import { RoleItem } from "@/services/roles/rolesServices";
 import { Button, Modal, ModalProps } from "antd";
 
 interface CustomModalProps extends ModalProps {
@@ -8,6 +9,10 @@ interface CustomModalProps extends ModalProps {
   isOk: boolean;
   onOk: () => void;
   onCancel: () => void;
+  role?: RoleItem | undefined;
+  onApprove?: () => void;
+  onReject?: () => void;
+  isBlock?: boolean;
 }
 
 const CustomModal: React.FC<CustomModalProps> = ({
@@ -18,6 +23,10 @@ const CustomModal: React.FC<CustomModalProps> = ({
   isOk,
   onOk,
   onCancel,
+  role,
+  onApprove,
+  onReject,
+  isBlock,
 }) => {
   return (
     <Modal
@@ -33,7 +42,37 @@ const CustomModal: React.FC<CustomModalProps> = ({
       footer={(_, { OkBtn, CancelBtn }) => (
         <>
           <CancelBtn />
-          {isOk && <OkBtn />}
+          {role?.displayRole?.isReject && !isBlock && (
+            <>
+              <Button
+                color="danger"
+                variant="solid"
+                onClick={() => {
+                  onReject && onReject();
+                }}
+              >
+                Từ chối
+              </Button>
+            </>
+          )}
+          {role?.displayRole?.isApprove && !isBlock && (
+            <>
+              {" "}
+              <Button
+                type="primary"
+                onClick={() => {
+                  onApprove && onApprove();
+                }}
+              >
+                Phê duyệt
+              </Button>
+            </>
+          )}
+          {role?.displayRole?.isConfirm && !isBlock && (
+            <>
+              <OkBtn />
+            </>
+          )}
         </>
       )}
     >

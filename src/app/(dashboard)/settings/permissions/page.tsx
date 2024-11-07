@@ -23,7 +23,7 @@ import {
   DeleteOutlined,
   HomeOutlined,
   PlusOutlined,
-  SettingOutlined
+  SettingOutlined,
 } from "@ant-design/icons";
 import {
   Breadcrumb,
@@ -33,10 +33,13 @@ import {
   Table,
   TableColumnsType,
   Tag,
-  Tooltip
+  Tooltip,
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import { Key, useCallback, useEffect, useState } from "react";
+import { jwtDecode } from "jwt-decode";
+import Cookies from "js-cookie";
+import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
 
 const Permissions = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
@@ -55,6 +58,7 @@ const Permissions = () => {
   const [status, setStatus] = useState<
     "success" | "error" | "info" | "warning"
   >("success");
+  const [role, setRole] = useState<RoleItem>();
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 15,
@@ -266,10 +270,24 @@ const Permissions = () => {
   const fetchData = async () => {
     await Promise.all([getListPermissions(), getListPermissionsForMenu()]);
   };
-
+  const getDisplayRole = async (name: string) => {
+    const response = await getRoleByName(name);
+    setRole(response.items[0]);
+  };
   useEffect(() => {
     document.title = PageTitles.PERMISSIONS;
     fetchData();
+    const token = Cookies.get("s_t");
+    if (token) {
+      const decodedRole = jwtDecode<{
+        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
+      }>(token);
+      const role =
+        decodedRole[
+          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        ];
+      getDisplayRole(role as string);
+    }
   }, []);
 
   return (
@@ -307,33 +325,41 @@ const Permissions = () => {
         />
       </div>
       <div className="flex justify-end gap-4 mb-4">
-        <Tooltip placement="top" title={"Thêm mới phân quyền"} arrow={true}>
-          <Button
-            type="primary"
-            onClick={() => {
-              setIsOpen(true);
-              setMode("add");
-            }}
-            icon={<PlusOutlined />}
-            iconPosition="start"
-          >
-            Thêm phân quyền
-          </Button>
-        </Tooltip>
-        <Tooltip placement="top" title="Xóa các hoạt động" arrow={true}>
-          <Button
-            type="dashed"
-            disabled={selectedRowKeys.length === 0}
-            danger
-            onClick={handleDelete}
-            icon={<DeleteOutlined />}
-            iconPosition="start"
-          >
-            Xóa
-          </Button>
-        </Tooltip>
-      </div>
+        {role?.displayRole.isCreate && (
+          <>
+            <Tooltip placement="top" title={"Thêm mới phân quyền"} arrow={true}>
+              <Button
+                type="primary"
+                onClick={() => {
+                  setIsOpen(true);
+                  setMode("add");
+                }}
+                icon={<PlusOutlined />}
+                iconPosition="start"
+              >
+                Thêm phân quyền
+              </Button>
+            </Tooltip>
+          </>
+        )}
 
+        {role?.displayRole.isCreate && (
+          <>
+            <Tooltip placement="top" title="Xóa các hoạt động" arrow={true}>
+              <Button
+                type="dashed"
+                disabled={selectedRowKeys.length === 0}
+                danger
+                onClick={handleDelete}
+                icon={<DeleteOutlined />}
+                iconPosition="start"
+              >
+                Xóa
+              </Button>
+            </Tooltip>
+          </>
+        )}
+      </div>
       <div>
         <CustomNotification
           message={message}
