@@ -85,6 +85,7 @@ const Permissions = () => {
   const getListPermissionsForMenu = async () => {
     const response = await getAllPermissionsForMenu();
     setDataForMenu(response);
+    setNotificationOpen(false);
   };
 
   const columns: TableColumnsType<PermissionItem> = [
@@ -373,6 +374,7 @@ const Permissions = () => {
           title={
             mode === "edit" ? "Cập nhật phân quyền" : "Thêm mới phân quyền"
           }
+          role={role || undefined}
           onOk={() => {
             const formElement = document.querySelector("form");
             formElement?.dispatchEvent(

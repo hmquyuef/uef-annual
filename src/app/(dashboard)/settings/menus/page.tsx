@@ -310,6 +310,7 @@ const Menus = () => {
           isOpen={isOpen}
           width={"50vw"}
           title={mode === "edit" ? "Cập nhật chức năng" : "Thêm mới chức năng"}
+          role={role || undefined}
           onOk={() => {
             const formElement = document.querySelector("form");
             formElement?.dispatchEvent(
