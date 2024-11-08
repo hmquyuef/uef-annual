@@ -37,7 +37,7 @@ import {
   Table,
   TableColumnsType,
   Tag,
-  Tooltip
+  Tooltip,
 } from "antd";
 import moment from "moment";
 import { FC, FormEvent, Key, useCallback, useEffect, useState } from "react";
@@ -51,6 +51,7 @@ import { convertTimestampToFullDateTime } from "@/utility/Utilities";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
+import { DisplayRoleItem } from "@/services/roles/rolesServices";
 dayjs.locale("vi");
 interface FormActivityProps {
   onSubmit: (formData: Partial<AddUpdateActivityItem>) => void;
@@ -60,6 +61,7 @@ interface FormActivityProps {
   numberActivity?: number;
   isBlock: boolean;
   isPayment?: PaymentApprovedItem;
+  displayRole: DisplayRoleItem;
 }
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.mjs`;
@@ -72,6 +74,7 @@ const FormActivity: FC<FormActivityProps> = ({
   numberActivity,
   isBlock,
   isPayment,
+  displayRole,
 }) => {
   const { TextArea } = Input;
   const [documentNumber, setDocumentNumber] = useState<string>("");
@@ -225,7 +228,7 @@ const FormActivity: FC<FormActivityProps> = ({
           <div>
             <Tooltip placement="right" title="Xóa dữ liệu" arrow={true}>
               <Button
-                disabled={isBlock}
+                disabled={isBlock || displayRole.isDelete === false}
                 color="danger"
                 variant="text"
                 onClick={() => onRemoveUsers(id)}
@@ -275,7 +278,7 @@ const FormActivity: FC<FormActivityProps> = ({
   }, []);
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
-    disabled: isBlock,
+    disabled: isBlock || displayRole.isUpload === false,
   });
 
   const handleSubmit = async (e: FormEvent) => {
@@ -318,7 +321,6 @@ const FormActivity: FC<FormActivityProps> = ({
   }, [showPDF]);
 
   useEffect(() => {
-    console.log("isBlock :>> ", isBlock);
     const loadUsers = async () => {
       if (mode === "edit" && initialData !== undefined) {
         setName(initialData.name || "");
@@ -463,7 +465,11 @@ const FormActivity: FC<FormActivityProps> = ({
             <span className="font-medium text-neutral-600">Đơn vị</span>
             <Select
               showSearch
-              disabled={isBlock}
+              disabled={
+                isBlock ||
+                displayRole.isCreate === false ||
+                displayRole.isUpdate === false
+              }
               optionFilterProp="label"
               filterSort={(optionA, optionB) =>
                 (optionA?.label ?? "")
@@ -487,7 +493,11 @@ const FormActivity: FC<FormActivityProps> = ({
             </span>
             <Select
               showSearch
-              disabled={isBlock}
+              disabled={
+                isBlock ||
+                displayRole.isCreate === false ||
+                displayRole.isUpdate === false
+              }
               optionFilterProp="label"
               defaultValue={""}
               filterSort={(optionA, optionB) =>
@@ -584,7 +594,7 @@ const FormActivity: FC<FormActivityProps> = ({
                         <div className="flex gap-3 items-center mt-2">
                           <Button
                             danger
-                            disabled={isBlock}
+                            disabled={isBlock || displayRole.isUpload === false}
                             color="danger"
                             onClick={handleDeletePicture}
                             size="small"
@@ -595,7 +605,7 @@ const FormActivity: FC<FormActivityProps> = ({
                           <Button
                             type="primary"
                             size="small"
-                            disabled={isBlock}
+                            disabled={isBlock || displayRole.isUpload === false}
                             icon={<CloudUploadOutlined />}
                             onClick={() => {
                               const input = document.createElement("input");

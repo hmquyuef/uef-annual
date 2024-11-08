@@ -59,7 +59,7 @@ import { jwtDecode } from "jwt-decode";
 import locale from "antd/locale/vi_VN";
 import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/vi";
-import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
+import { DisplayRoleItem, getRoleByName, RoleItem } from "@/services/roles/rolesServices";
 import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 dayjs.locale("vi");
 
@@ -956,6 +956,7 @@ const BM02 = () => {
                   mode={mode}
                   isBlock={isBlock}
                   isPayment={isPayments}
+                  displayRole={role?.displayRole ?? {} as DisplayRoleItem}
                 />
               </>
             )

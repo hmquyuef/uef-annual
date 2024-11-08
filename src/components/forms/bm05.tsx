@@ -12,7 +12,7 @@ import {
   putUpdateActivity,
   putUpdateApprovedActivity,
 } from "@/services/forms/formsServices";
-import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
+import { DisplayRoleItem, getRoleByName, RoleItem } from "@/services/roles/rolesServices";
 import {
   getListUnitsFromHrm,
   UnitHRMItem,
@@ -1107,6 +1107,7 @@ const BM05 = () => {
                   numberActivity={data.length}
                   isBlock={isBlock}
                   isPayment={isPayments}
+                  displayRole={role?.displayRole ?? {} as DisplayRoleItem}
                 />
               </>
             )

@@ -27,6 +27,7 @@ import timezone from "dayjs/plugin/timezone";
 import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 import { CloseOutlined, SafetyOutlined } from "@ant-design/icons";
 import { convertTimestampToFullDateTime } from "@/utility/Utilities";
+import { DisplayRoleItem } from "@/services/roles/rolesServices";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -36,6 +37,7 @@ interface FormBM01Props {
   mode: "add" | "edit";
   isBlock: boolean;
   isPayment?: PaymentApprovedItem;
+  displayRole: DisplayRoleItem;
 }
 
 const FormBM01: FC<FormBM01Props> = ({
@@ -44,6 +46,7 @@ const FormBM01: FC<FormBM01Props> = ({
   mode,
   isBlock,
   isPayment,
+  displayRole,
 }) => {
   const { TextArea } = Input;
   const [units, setUnits] = useState<UnitHRMItem[]>([]);
@@ -225,7 +228,11 @@ const FormBM01: FC<FormBM01Props> = ({
           <p className="font-medium text-neutral-600">Đơn vị</p>
           <Select
             showSearch
-            disabled={isBlock}
+            disabled={
+              isBlock ||
+              displayRole.isCreate === false ||
+              displayRole.isUpdate === false
+            }
             optionFilterProp="label"
             filterSort={(optionA, optionB) =>
               (optionA?.label ?? "")
@@ -246,7 +253,11 @@ const FormBM01: FC<FormBM01Props> = ({
           <p className="font-medium text-neutral-600">Tìm mã CB-GV-NV</p>
           <Select
             showSearch
-            disabled={isBlock}
+            disabled={
+              isBlock ||
+              displayRole.isCreate === false ||
+              displayRole.isUpdate === false
+            }
             optionFilterProp="label"
             filterSort={(optionA, optionB) =>
               (optionA?.label ?? "")

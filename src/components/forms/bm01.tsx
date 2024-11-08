@@ -11,7 +11,11 @@ import {
   putUpdateClassLeader,
 } from "@/services/forms/classLeadersServices";
 import { AddUpdateActivityItem } from "@/services/forms/formsServices";
-import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
+import {
+  DisplayRoleItem,
+  getRoleByName,
+  RoleItem,
+} from "@/services/roles/rolesServices";
 import {
   getListUnitsFromHrm,
   UnitHRMItem,
@@ -972,6 +976,7 @@ const BM01 = () => {
                   mode={mode}
                   isBlock={isBlock}
                   isPayment={isPayments}
+                  displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
                 />
               </>
             )

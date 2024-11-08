@@ -146,6 +146,13 @@ const Roles = () => {
       className: "text-center w-[80px]",
     },
     {
+      title: "UPLOAD",
+      dataIndex: ["displayRole", "isUpload"],
+      key: "isUpload",
+      render: (isUpload: boolean) => <Checkbox checked={isUpload}></Checkbox>,
+      className: "text-center w-[80px]",
+    },
+    {
       title: "PHÊ DUYỆT",
       dataIndex: ["displayRole", "isApprove"],
       key: "isApprove",
@@ -211,7 +218,6 @@ const Roles = () => {
   };
 
   const handleSubmit = async (formData: Partial<RoleItem>) => {
-    console.log("formData :>> ", formData);
     try {
       if (mode === "edit" && selectedItem) {
         const response = await putUpdateRole(formData.id as string, formData);

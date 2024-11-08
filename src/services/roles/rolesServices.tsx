@@ -15,6 +15,7 @@ export interface DisplayRoleItem {
   isDelete: boolean;
   isExport: boolean;
   isImport: boolean;
+  isUpload: boolean;
   isConfirm: boolean;
   isApprove: boolean;
   isReject: boolean;

@@ -24,6 +24,7 @@ const FormRole: FC<FormRoleProps> = ({ onSubmit, initialData, mode }) => {
   const [isDelete, setIsDelete] = useState(false);
   const [isExport, setIsExport] = useState(false);
   const [isImport, setIsImport] = useState(false);
+  const [isUpload, setIsUpload] = useState(false);
   const [isConfirm, setIsConfirm] = useState(false);
   const [isApprove, setIsApprove] = useState(false);
   const [isReject, setIsReject] = useState(false);
@@ -42,13 +43,14 @@ const FormRole: FC<FormRoleProps> = ({ onSubmit, initialData, mode }) => {
       id: initialData?.id || "",
       name: name,
       appId: selectedKeyApp,
-      displayRole:{
+      displayRole: {
         isRead: isRead,
         isCreate: isCreate,
         isUpdate: isUpdate,
         isDelete: isDelete,
         isExport: isExport,
         isImport: isImport,
+        isUpload: isUpload,
         isConfirm: isConfirm,
         isApprove: isApprove,
         isReject: isReject,
@@ -73,6 +75,7 @@ const FormRole: FC<FormRoleProps> = ({ onSubmit, initialData, mode }) => {
       setIsDelete(initialData.displayRole?.isDelete || false);
       setIsExport(initialData.displayRole?.isExport || false);
       setIsImport(initialData.displayRole?.isImport || false);
+      setIsUpload(initialData.displayRole?.isUpload || false);
       setIsConfirm(initialData.displayRole?.isConfirm || false);
       setIsApprove(initialData.displayRole?.isApprove || false);
       setIsReject(initialData.displayRole?.isReject || false);
@@ -87,6 +90,7 @@ const FormRole: FC<FormRoleProps> = ({ onSubmit, initialData, mode }) => {
       setIsDelete(false);
       setIsExport(false);
       setIsImport(false);
+      setIsUpload(false);
       setIsConfirm(false);
       setIsApprove(false);
       setIsReject(false);
@@ -165,6 +169,12 @@ const FormRole: FC<FormRoleProps> = ({ onSubmit, initialData, mode }) => {
             onChange={(e) => setIsImport(e.target.checked)}
           >
             Quyền import dữ liệu
+          </Checkbox>
+          <Checkbox
+            checked={isUpload}
+            onChange={(e) => setIsUpload(e.target.checked)}
+          >
+            Quyền Upload file
           </Checkbox>
           <Checkbox
             checked={isConfirm}
