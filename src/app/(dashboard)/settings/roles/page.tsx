@@ -354,7 +354,6 @@ const Roles = () => {
         />
         <CustomModal
           isOpen={isOpen}
-          isOk={true}
           width={"25vw"}
           title={mode === "edit" ? "Cập nhật vai trò" : "Thêm mới vai trò"}
           role={role || undefined}

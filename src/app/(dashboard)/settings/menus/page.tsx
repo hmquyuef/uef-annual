@@ -308,7 +308,6 @@ const Menus = () => {
         />
         <CustomModal
           isOpen={isOpen}
-          isOk={true}
           width={"50vw"}
           title={mode === "edit" ? "Cập nhật chức năng" : "Thêm mới chức năng"}
           onOk={() => {

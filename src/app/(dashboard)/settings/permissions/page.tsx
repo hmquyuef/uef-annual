@@ -369,7 +369,6 @@ const Permissions = () => {
         />
         <CustomModal
           isOpen={isOpen}
-          isOk={true}
           width={"40vw"}
           title={
             mode === "edit" ? "Cập nhật phân quyền" : "Thêm mới phân quyền"
