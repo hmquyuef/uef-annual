@@ -1,5 +1,6 @@
 import apiClient from "../apiClient";
 import { ImportResponse } from "./formsServices";
+import { PaymentApprovedItem } from "./PaymentApprovedItem";
 
 export interface QAItem {
   id: string;
@@ -12,6 +13,7 @@ export interface QAItem {
   fromDate: number;
   entryDate: number;
   eventDate: number;
+  payments: PaymentApprovedItem;
   proof: string;
   note: string;
 }
@@ -36,6 +38,17 @@ export async function putUpdateQA(
   data: Partial<QAItem>
 ): Promise<QAItem> {
   const response = await apiClient.put<QAItem>(`api/qae/${id}`, data);
+  return response.data;
+}
+
+export async function putUpdateApprovedQA(
+  id: string,
+  data: Partial<any>
+): Promise<any> {
+  const response = await apiClient.put<any>(
+    `/api/qae/approved/${id}`,
+    data
+  );
   return response.data;
 }
 

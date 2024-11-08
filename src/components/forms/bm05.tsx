@@ -42,6 +42,7 @@ import {
   Empty,
   Input,
   MenuProps,
+  Modal,
   PaginationProps,
   Select,
   Skeleton,
@@ -65,6 +66,7 @@ import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
 import FormActivity from "./activity/formActivity";
 import FromUpload from "./activity/formUpload";
+import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 dayjs.locale("vi");
 
 const { Search } = Input;
@@ -98,6 +100,9 @@ const BM05 = () => {
   const [userName, setUserName] = useState<string | null>(null);
   const [role, setRole] = useState<RoleItem>();
   const [isBlock, setIsBlock] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [reason, setReason] = useState("");
+  const [isPayments, setIsPayments] = useState<PaymentApprovedItem>();
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 15,
@@ -137,7 +142,7 @@ const BM05 = () => {
       dataIndex: "stt",
       key: "stt",
       render: (_, __, index) => (
-        <p>{pagination.pageSize * (pagination.current - 1) + index + 1}</p>
+        <>{pagination.pageSize * (pagination.current - 1) + index + 1}</>
       ),
       className: "text-center w-[20px]",
     },
@@ -149,19 +154,18 @@ const BM05 = () => {
       render: (name: string, record: ActivityItem) => {
         const path = record.determinations?.file?.path;
         return (
-          <p
+          <span
             className={`${
               path ? "text-blue-500" : "text-red-400"
             } font-semibold cursor-pointer`}
             onClick={() => {
-              setMode("edit");
               handleEdit(record);
               setIsBlock(record.payments?.isBlockData ?? false);
-              console.log('record.payments?.isBlockData :>> ', record.payments?.isBlockData);
+              setIsPayments(record.payments);
             }}
           >
             {name}
-          </p>
+          </span>
         );
       },
     },
@@ -285,18 +289,32 @@ const BM05 = () => {
         const time = record.payments?.approvedTime
           ? convertTimestampToFullDateTime(record.payments.approvedTime)
           : "";
+        const reason = record.payments?.reason;
         return (
           <>
             {record.payments ? (
               <>
                 {isRejected ? (
-                  <Tooltip title={`P.TC đã từ chối vào lúc ${time}`}>
+                  <Tooltip
+                    title={
+                      <>
+                        <div>- P.TC đã từ chối vào lúc {time}</div>
+                        <div>- Lý do: {reason}</div>
+                      </>
+                    }
+                  >
                     <span className="text-red-500">
                       <CloseOutlined className="me-1" /> Từ chối
                     </span>
                   </Tooltip>
                 ) : (
-                  <Tooltip title={`P.TC đã phê duyệt vào lúc ${time}`}>
+                  <Tooltip
+                    title={
+                      <>
+                        <div>- P.TC đã phê duyệt vào lúc {time}</div>
+                      </>
+                    }
+                  >
                     <span className="text-green-500">
                       <SafetyOutlined className="me-1" /> Đã duyệt
                     </span>
@@ -305,7 +323,13 @@ const BM05 = () => {
               </>
             ) : (
               <>
-                <Tooltip title="Đợi phê duyệt từ P.TC">
+                <Tooltip
+                  title={
+                    <>
+                      <div>- Đợi phê duyệt từ P.TC</div>
+                    </>
+                  }
+                >
                   <span className="text-sky-500 flex justify-center items-center gap-2">
                     <Spin size="small" /> Chờ duyệt
                   </span>
@@ -429,6 +453,7 @@ const BM05 = () => {
       })),
     };
     setSelectedItem(updatedActivity);
+    setIsPayments(activity.payments);
     setMode("edit");
     setIsOpen(true);
   };
@@ -810,11 +835,12 @@ const BM05 = () => {
       JSON.stringify([pagination.current, pagination.pageSize])
     );
   };
-  const handleApproved = async () => {
+  const handleApproved = async (isRejected: boolean) => {
     const formData = {
       approver: userName,
       approvedTime: Math.floor(Date.now() / 1000),
-      isRejected: false,
+      isRejected: isRejected,
+      reason: reason,
       isBlockData: true,
     };
     try {
@@ -824,39 +850,11 @@ const BM05 = () => {
           formData
         );
         if (response) {
-          setDescription("Phê duyệt thông tin hoạt động thành công!");
-        }
-      }
-      setNotificationOpen(true);
-      setStatus("success");
-      setMessage("Thông báo");
-      await getListActivities();
-      setIsOpen(false);
-      setSelectedItem(undefined);
-      setMode("add");
-    } catch (error) {
-      setNotificationOpen(true);
-      setStatus("error");
-      setMessage("Thông báo");
-      setDescription("Đã có lỗi xảy ra!");
-    }
-  };
-  const handleRejected = async () => {
-    const formData = {
-      approver: userName,
-      approvedTime: Math.floor(Date.now() / 1000),
-      isRejected: true,
-      reason: "",
-      isBlockData: false,
-    };
-    try {
-      if (mode === "edit" && selectedItem) {
-        const response = await putUpdateApprovedActivity(
-          selectedItem.id as string,
-          formData
-        );
-        if (response) {
-          setDescription("Đã từ chối thông tin hoạt động!");
+          setDescription(
+            isRejected
+              ? "Đã từ chối phê duyệt thông tin hoạt động!"
+              : "Phê duyệt thông tin hoạt động thành công!"
+          );
         }
       }
       setNotificationOpen(true);
@@ -878,6 +876,7 @@ const BM05 = () => {
     const response = await getRoleByName(name);
     setRole(response.items[0]);
   };
+
   useEffect(() => {
     setLoading(true);
     document.title = PageTitles.BM05;
@@ -1072,13 +1071,12 @@ const BM05 = () => {
         />
         <CustomModal
           isOpen={isOpen}
-          isOk={true}
           width={isShowPdf ? "85vw" : ""}
           title={mode === "edit" ? "Cập nhật hoạt động" : "Thêm mới hoạt động"}
           role={role || undefined}
           isBlock={isBlock}
-          onApprove={handleApproved}
-          onReject={handleRejected}
+          onApprove={() => handleApproved(false)}
+          onReject={() => setIsModalVisible(true)}
           onOk={() => {
             const formElement = document.querySelector("form");
             formElement?.dispatchEvent(
@@ -1101,17 +1099,35 @@ const BM05 = () => {
             ) : (
               <>
                 <FormActivity
+                  key="form-activity-bm05"
                   onSubmit={handleSubmit}
                   handleShowPDF={setIsShowPdf}
                   initialData={selectedItem as Partial<AddUpdateActivityItem>}
                   mode={mode}
                   numberActivity={data.length}
                   isBlock={isBlock}
+                  isPayment={isPayments}
                 />
               </>
             )
           }
         />
+        <Modal
+          open={isModalVisible}
+          onCancel={() => {
+            setIsModalVisible(false);
+            setReason("");
+          }}
+          onOk={() => {
+            setIsModalVisible(false);
+            handleApproved(true);
+            setReason("");
+          }}
+          title="Lý do từ chối"
+          width={700}
+        >
+          <Input value={reason} onChange={(e) => setReason(e.target.value)} />
+        </Modal>
       </div>
       {loading ? (
         <>

@@ -8,6 +8,7 @@ import {
   ImportAdmissionCounseling,
   postAddAdmissionCounseling,
   putUpdateAdmissionCounseling,
+  putUpdateApprovedAdmissionCounseling,
 } from "@/services/forms/admissionCounseling";
 import {
   getListUnitsFromHrm,
@@ -15,13 +16,16 @@ import {
 } from "@/services/units/unitsServices";
 import {
   convertTimestampToDate,
+  convertTimestampToFullDateTime,
   defaultFooterInfo,
   setCellStyle,
 } from "@/utility/Utilities";
 import {
+  CloseOutlined,
   DeleteOutlined,
   FileExcelOutlined,
   PlusOutlined,
+  SafetyOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -32,8 +36,10 @@ import {
   GetProps,
   Input,
   MenuProps,
+  Modal,
   PaginationProps,
   Select,
+  Spin,
   Table,
   TableColumnsType,
   Tooltip,
@@ -53,6 +59,7 @@ import locale from "antd/locale/vi_VN";
 import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/vi";
 import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
+import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 dayjs.locale("vi");
 
 type SearchProps = GetProps<typeof Input.Search>;
@@ -86,6 +93,10 @@ const BM03 = () => {
   >(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [role, setRole] = useState<RoleItem>();
+  const [isBlock, setIsBlock] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [reason, setReason] = useState("");
+  const [isPayments, setIsPayments] = useState<PaymentApprovedItem>();
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 15,
@@ -107,6 +118,9 @@ const BM03 = () => {
   };
   const rowSelection: TableRowSelection<AdmissionCounselingItem> = {
     selectedRowKeys,
+    getCheckboxProps: (record: AdmissionCounselingItem) => ({
+      disabled: record.payments?.isBlockData ?? false,
+    }),
     onChange: onSelectChange,
   };
   const showTotal: PaginationProps["showTotal"] = (total) => (
@@ -132,8 +146,9 @@ const BM03 = () => {
           <span
             className="text-blue-500 font-semibold cursor-pointer"
             onClick={() => {
-              setMode("edit");
               handleEdit(record);
+              setIsBlock(record.payments?.isBlockData ?? false);
+              setIsPayments(record.payments);
             }}
           >
             {userName}
@@ -215,6 +230,70 @@ const BM03 = () => {
       key: "note",
       render: (note: string) => <>{note}</>,
       className: "text-center w-[5rem]",
+    },
+    {
+      title: (
+        <div className="bg-rose-500 p-1 rounded-tr-lg">
+          PHÊ DUYỆT <br /> THANH TOÁN
+        </div>
+      ),
+      dataIndex: ["payments", "isRejected"],
+      key: "isRejected",
+      render: (isRejected: boolean, record: AdmissionCounselingItem) => {
+        const time = record.payments?.approvedTime
+          ? convertTimestampToFullDateTime(record.payments.approvedTime)
+          : "";
+        const reason = record.payments?.reason;
+        return (
+          <>
+            {record.payments ? (
+              <>
+                {isRejected ? (
+                  <Tooltip
+                    title={
+                      <>
+                        <div>- P.TC đã từ chối vào lúc {time}</div>
+                        <div>- Lý do: {reason}</div>
+                      </>
+                    }
+                  >
+                    <span className="text-red-500">
+                      <CloseOutlined className="me-1" /> Từ chối
+                    </span>
+                  </Tooltip>
+                ) : (
+                  <Tooltip
+                    title={
+                      <>
+                        <div>- P.TC đã phê duyệt vào lúc {time}</div>
+                      </>
+                    }
+                  >
+                    <span className="text-green-500">
+                      <SafetyOutlined className="me-1" /> Đã duyệt
+                    </span>
+                  </Tooltip>
+                )}
+              </>
+            ) : (
+              <>
+                <Tooltip
+                  title={
+                    <>
+                      <div>- Đợi phê duyệt từ P.TC</div>
+                    </>
+                  }
+                >
+                  <span className="text-sky-500 flex justify-center items-center gap-2">
+                    <Spin size="small" /> Chờ duyệt
+                  </span>
+                </Tooltip>
+              </>
+            )}
+          </>
+        );
+      },
+      className: "text-center w-[110px]",
     },
   ];
 
@@ -643,6 +722,43 @@ const BM03 = () => {
       JSON.stringify([pagination.current, pagination.pageSize])
     );
   };
+  const handleApproved = async (isRejected: boolean) => {
+    const formData = {
+      approver: userName,
+      approvedTime: Math.floor(Date.now() / 1000),
+      isRejected: isRejected,
+      reason: reason,
+      isBlockData: true,
+    };
+    try {
+      if (mode === "edit" && selectedItem) {
+        const response = await putUpdateApprovedAdmissionCounseling(
+          selectedItem.id as string,
+          formData
+        );
+        if (response) {
+          setDescription(
+            isRejected
+              ? "Đã từ chối phê duyệt thông tin tham gia tư vấn tuyển sinh!"
+              : "Phê duyệt thông tin tham gia tư vấn tuyển sinh thành công!"
+          );
+        }
+      }
+      setNotificationOpen(true);
+      setStatus("success");
+      setMessage("Thông báo");
+      await getListAdmissionCounseling();
+      setIsOpen(false);
+      setSelectedItem(undefined);
+      setMode("add");
+    } catch (error) {
+      setNotificationOpen(true);
+      setStatus("error");
+      setMessage("Thông báo");
+      setDescription("Đã có lỗi xảy ra!");
+    }
+  };
+
   const getDisplayRole = async (name: string) => {
     const response = await getRoleByName(name);
     setRole(response.items[0]);
@@ -794,11 +910,10 @@ const BM03 = () => {
           message={message}
           description={description}
           status={status}
-          isOpen={isNotificationOpen} // Truyền trạng thái mở
+          isOpen={isNotificationOpen}
         />
         <CustomModal
           isOpen={isOpen}
-          isOk={true}
           width="800px"
           title={
             mode === "edit"
@@ -806,10 +921,9 @@ const BM03 = () => {
               : "Thêm mới thông tin tham gia tư vấn tuyển sinh"
           }
           role={role || undefined}
-          onApprove={() => {}}
-          onReject={() => {
-            console.log("Nút Từ chối được nhấn");
-          }}
+          isBlock={isBlock}
+          onApprove={() => handleApproved(false)}
+          onReject={() => setIsModalVisible(true)}
           onOk={() => {
             const formElement = document.querySelector("form");
             formElement?.dispatchEvent(
@@ -834,11 +948,29 @@ const BM03 = () => {
                   onSubmit={handleSubmit}
                   initialData={selectedItem as Partial<any>}
                   mode={mode}
+                  isBlock={isBlock}
+                  isPayment={isPayments}
                 />
               </>
             )
           }
         />
+        <Modal
+          open={isModalVisible}
+          onCancel={() => {
+            setIsModalVisible(false);
+            setReason("");
+          }}
+          onOk={() => {
+            setIsModalVisible(false);
+            handleApproved(true);
+            setReason("");
+          }}
+          title="Lý do từ chối"
+          width={500}
+        >
+          <Input value={reason} onChange={(e) => setReason(e.target.value)} />
+        </Modal>
       </div>
       <Table<AdmissionCounselingItem>
         key={"table-activity-bm01"}

@@ -30,6 +30,7 @@ import {
   FileExcelOutlined,
   LoadingOutlined,
   PlusOutlined,
+  SafetyOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -40,8 +41,10 @@ import {
   GetProps,
   Input,
   MenuProps,
+  Modal,
   PaginationProps,
   Select,
+  Spin,
   Table,
   TableColumnsType,
   Tooltip,
@@ -59,6 +62,7 @@ import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
 import FormBM01 from "./activity/formBM01";
 import FromUpload from "./activity/formUpload";
+import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 dayjs.locale("vi");
 
 type SearchProps = GetProps<typeof Input.Search>;
@@ -92,6 +96,10 @@ const BM01 = () => {
   >(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [role, setRole] = useState<RoleItem>();
+  const [isBlock, setIsBlock] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [reason, setReason] = useState("");
+  const [isPayments, setIsPayments] = useState<PaymentApprovedItem>();
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 15,
@@ -112,6 +120,9 @@ const BM01 = () => {
   };
   const rowSelection: TableRowSelection<ClassLeaderItem> = {
     selectedRowKeys,
+    getCheckboxProps: (record: ClassLeaderItem) => ({
+      disabled: record.payments?.isBlockData ?? false,
+    }),
     onChange: onSelectChange,
   };
   const showTotal: PaginationProps["showTotal"] = (total) => (
@@ -138,6 +149,8 @@ const BM01 = () => {
             className="text-blue-500 font-semibold cursor-pointer"
             onClick={() => {
               handleEdit(record);
+              setIsBlock(record.payments?.isBlockData ?? false);
+              setIsPayments(record.payments);
             }}
           >
             {userName}
@@ -228,8 +241,15 @@ const BM01 = () => {
       className: "w-[5rem]",
     },
     {
+      title: "GHI CHÚ",
+      dataIndex: "note",
+      key: "note",
+      render: (note: string) => <p>{note}</p>,
+      className: "w-[5rem]",
+    },
+    {
       title: (
-        <div className="bg-orange-400 p-1">
+        <div className="bg-rose-500 p-1 rounded-tr-lg">
           PHÊ DUYỆT <br /> THANH TOÁN
         </div>
       ),
@@ -239,29 +259,49 @@ const BM01 = () => {
         const time = record.payments?.approvedTime
           ? convertTimestampToFullDateTime(record.payments.approvedTime)
           : "";
+        const reason = record.payments?.reason;
         return (
           <>
             {record.payments ? (
               <>
                 {isRejected ? (
-                  <Tooltip title={`P.TC đã từ chối vào lúc ${time}`}>
+                  <Tooltip
+                    title={
+                      <>
+                        <div>- P.TC đã từ chối vào lúc {time}</div>
+                        <div>- Lý do: {reason}</div>
+                      </>
+                    }
+                  >
                     <span className="text-red-500">
-                      <CloseOutlined className="me-1"/> Từ chối
+                      <CloseOutlined className="me-1" /> Từ chối
                     </span>
                   </Tooltip>
                 ) : (
-                  <Tooltip title={`P.TC đã phê duyệt vào lúc ${time}`}>
+                  <Tooltip
+                    title={
+                      <>
+                        <div>- P.TC đã phê duyệt vào lúc {time}</div>
+                      </>
+                    }
+                  >
                     <span className="text-green-500">
-                      <CheckOutlined className="me-1"/> Đã duyệt
+                      <SafetyOutlined className="me-1" /> Đã duyệt
                     </span>
                   </Tooltip>
                 )}
               </>
             ) : (
               <>
-                <Tooltip title="Đợi phê duyệt từ P.TC">
-                  <span className="text-sky-500">
-                    <LoadingOutlined className="me-1"/> Chờ duyệt
+                <Tooltip
+                  title={
+                    <>
+                      <div>- Đợi phê duyệt từ P.TC</div>
+                    </>
+                  }
+                >
+                  <span className="text-sky-500 flex justify-center items-center gap-2">
+                    <Spin size="small" /> Chờ duyệt
                   </span>
                 </Tooltip>
               </>
@@ -270,13 +310,6 @@ const BM01 = () => {
         );
       },
       className: "text-center w-[110px]",
-    },
-    {
-      title: "GHI CHÚ",
-      dataIndex: "note",
-      key: "note",
-      render: (note: string) => <p>{note}</p>,
-      className: "w-[5rem]",
     },
   ];
 
@@ -709,11 +742,12 @@ const BM01 = () => {
     );
   };
 
-  const handleApproved = async () => {
+  const handleApproved = async (isRejected: boolean) => {
     const formData = {
       approver: userName,
       approvedTime: Math.floor(Date.now() / 1000),
-      isRejected: false,
+      isRejected: isRejected,
+      reason: reason,
       isBlockData: true,
     };
     try {
@@ -723,7 +757,11 @@ const BM01 = () => {
           formData
         );
         if (response) {
-          setDescription("Phê duyệt thông tin chủ nhiệm lớp thành công!");
+          setDescription(
+            isRejected
+              ? "Đã từ chối phê duyệt thông tin chủ nhiệm lớp!"
+              : "Phê duyệt thông tin chủ nhiệm lớp thành công!"
+          );
         }
       }
       setNotificationOpen(true);
@@ -898,7 +936,6 @@ const BM01 = () => {
         />
         <CustomModal
           isOpen={isOpen}
-          isOk={true}
           width="700px"
           title={
             mode === "edit"
@@ -912,10 +949,9 @@ const BM01 = () => {
             );
           }}
           role={role || undefined}
-          onApprove={handleApproved}
-          onReject={() => {
-            console.log("Nút Từ chối được nhấn");
-          }}
+          isBlock={isBlock}
+          onApprove={() => handleApproved(false)}
+          onReject={() => setIsModalVisible(true)}
           onCancel={() => {
             setNotificationOpen(false);
             setIsOpen(false);
@@ -934,11 +970,29 @@ const BM01 = () => {
                   onSubmit={handleSubmit}
                   initialData={selectedItem as Partial<ClassLeaderItem>}
                   mode={mode}
+                  isBlock={isBlock}
+                  isPayment={isPayments}
                 />
               </>
             )
           }
         />
+        <Modal
+          open={isModalVisible}
+          onCancel={() => {
+            setIsModalVisible(false);
+            setReason("");
+          }}
+          onOk={() => {
+            setIsModalVisible(false);
+            handleApproved(true);
+            setReason("");
+          }}
+          title="Lý do từ chối"
+          width={500}
+        >
+          <Input value={reason} onChange={(e) => setReason(e.target.value)} />
+        </Modal>
       </div>
       <Table<ClassLeaderItem>
         key={"table-activity-bm01"}

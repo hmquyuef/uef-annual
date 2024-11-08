@@ -1,4 +1,5 @@
 import apiClient from "../apiClient";
+import { PaymentApprovedItem } from "./PaymentApprovedItem";
 
 export interface AdmissionCounselingItem {
   id: string;
@@ -13,6 +14,7 @@ export interface AdmissionCounselingItem {
   toDate: number;
   entryDate: number;
   eventDate: number;
+  payments: PaymentApprovedItem;
   proof: string;
   note: string;
 }
@@ -39,6 +41,17 @@ export async function putUpdateAdmissionCounseling(
   data: Partial<any>
 ): Promise<any> {
   const response = await apiClient.put<any>(`api/admissions-counseling/${id}`, data);
+  return response.data;
+}
+
+export async function putUpdateApprovedAdmissionCounseling(
+  id: string,
+  data: Partial<any>
+): Promise<any> {
+  const response = await apiClient.put<any>(
+    `/api/admissions-counseling/approved/${id}`,
+    data
+  );
   return response.data;
 }
 

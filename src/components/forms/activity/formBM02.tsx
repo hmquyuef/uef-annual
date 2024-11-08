@@ -10,13 +10,23 @@ import {
   UsersFromHRM,
   UsersFromHRMResponse,
 } from "@/services/users/usersServices";
-import { ConfigProvider, DatePicker, Input, InputNumber, Select } from "antd";
+import {
+  ConfigProvider,
+  DatePicker,
+  Input,
+  InputNumber,
+  Select,
+  Spin,
+} from "antd";
 import { FC, FormEvent, Key, useEffect, useState } from "react";
 import locale from "antd/locale/vi_VN";
 import moment from "moment";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
+import { CloseOutlined, SafetyOutlined } from "@ant-design/icons";
+import { convertTimestampToFullDateTime } from "@/utility/Utilities";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -24,9 +34,17 @@ interface FormBM02Props {
   onSubmit: (formData: Partial<ClassAssistantItem>) => void;
   initialData?: Partial<ClassAssistantItem>;
   mode: "add" | "edit";
+  isBlock: boolean;
+  isPayment?: PaymentApprovedItem;
 }
 
-const FormBM02: FC<FormBM02Props> = ({ onSubmit, initialData, mode }) => {
+const FormBM02: FC<FormBM02Props> = ({
+  onSubmit,
+  initialData,
+  mode,
+  isBlock,
+  isPayment,
+}) => {
   const { TextArea } = Input;
   const [units, setUnits] = useState<UnitHRMItem[]>([]);
   const [defaultUnits, setDefaultUnits] = useState<UnitHRMItem[]>([]);
@@ -197,6 +215,7 @@ const FormBM02: FC<FormBM02Props> = ({ onSubmit, initialData, mode }) => {
           <p className="font-medium text-neutral-600">Đơn vị</p>
           <Select
             showSearch
+            disabled={isBlock}
             optionFilterProp="label"
             filterSort={(optionA, optionB) =>
               (optionA?.label ?? "")
@@ -217,6 +236,7 @@ const FormBM02: FC<FormBM02Props> = ({ onSubmit, initialData, mode }) => {
           <p className="font-medium text-neutral-600">Tìm mã CB-GV-NV</p>
           <Select
             showSearch
+            disabled={isBlock}
             optionFilterProp="label"
             filterSort={(optionA, optionB) =>
               (optionA?.label ?? "")
@@ -283,6 +303,52 @@ const FormBM02: FC<FormBM02Props> = ({ onSubmit, initialData, mode }) => {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
+      </div>
+      <div className="flex flex-col gap-[2px]">
+        <span className="font-medium text-neutral-600">
+          Thông tin thanh toán
+        </span>
+        <div>
+          {isPayment ? (
+            <>
+              {isPayment.isRejected ? (
+                <>
+                  <div>
+                    <span className="text-red-500">
+                      <CloseOutlined className="me-1" /> Từ chối
+                    </span>
+                    {" - "}P.TC đã từ chối vào lúc{" "}
+                    <strong>
+                      {convertTimestampToFullDateTime(isPayment.approvedTime)}
+                    </strong>
+                  </div>
+                  <div>- Lý do: {isPayment.reason}</div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <span className="text-green-500">
+                      <SafetyOutlined className="me-1" /> Đã duyệt
+                    </span>
+                    {" - "}P.TC đã phê duyệt vào lúc{" "}
+                    <strong>
+                      {convertTimestampToFullDateTime(isPayment.approvedTime)}
+                    </strong>
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              <div>
+                <span className="text-sky-500">
+                  <Spin size="small" className="mx-1" /> Chờ duyệt
+                </span>{" "}
+                {" - "} Đợi phê duyệt từ P.TC
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </form>
   );

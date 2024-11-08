@@ -1,5 +1,6 @@
 import apiClient from "../apiClient";
 import { ImportResponse } from "./formsServices";
+import { PaymentApprovedItem } from "./PaymentApprovedItem";
 
 export interface ClassAssistantItem {
   id: string;
@@ -13,6 +14,7 @@ export interface ClassAssistantItem {
   fromDate: number;
   entryDate: number;
   eventDate: number;
+  payments: PaymentApprovedItem;
   proof: string;
   note: string;
 }
@@ -45,6 +47,17 @@ export async function putUpdateClassAssistant(
 ): Promise<ClassAssistantItem> {
   const response = await apiClient.put<ClassAssistantItem>(
     `api/assistants/${id}`,
+    data
+  );
+  return response.data;
+}
+
+export async function putUpdateApprovedClassAssistant(
+  id: string,
+  data: Partial<any>
+): Promise<any> {
+  const response = await apiClient.put<any>(
+    `/api/assistants/approved/${id}`,
     data
   );
   return response.data;

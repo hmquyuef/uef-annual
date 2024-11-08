@@ -6,7 +6,6 @@ interface CustomModalProps extends ModalProps {
   bodyContent: React.ReactNode;
   width?: string;
   isOpen: boolean;
-  isOk: boolean;
   onOk: () => void;
   onCancel: () => void;
   role?: RoleItem | undefined;
@@ -20,7 +19,6 @@ const CustomModal: React.FC<CustomModalProps> = ({
   bodyContent,
   width,
   isOpen,
-  isOk,
   onOk,
   onCancel,
   role,
@@ -57,7 +55,6 @@ const CustomModal: React.FC<CustomModalProps> = ({
           )}
           {role?.displayRole?.isApprove && !isBlock && (
             <>
-              {" "}
               <Button
                 type="primary"
                 onClick={() => {

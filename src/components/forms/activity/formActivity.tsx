@@ -22,6 +22,7 @@ import {
   CloseOutlined,
   CloudUploadOutlined,
   MinusCircleOutlined,
+  SafetyOutlined,
   ZoomInOutlined,
   ZoomOutOutlined,
 } from "@ant-design/icons";
@@ -32,11 +33,11 @@ import {
   Input,
   InputNumber,
   Select,
+  Spin,
   Table,
   TableColumnsType,
   Tag,
-  Timeline,
-  Tooltip,
+  Tooltip
 } from "antd";
 import moment from "moment";
 import { FC, FormEvent, Key, useCallback, useEffect, useState } from "react";
@@ -45,6 +46,8 @@ import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
+import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
+import { convertTimestampToFullDateTime } from "@/utility/Utilities";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
@@ -56,6 +59,7 @@ interface FormActivityProps {
   mode: "add" | "edit";
   numberActivity?: number;
   isBlock: boolean;
+  isPayment?: PaymentApprovedItem;
 }
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.mjs`;
@@ -67,6 +71,7 @@ const FormActivity: FC<FormActivityProps> = ({
   mode,
   numberActivity,
   isBlock,
+  isPayment,
 }) => {
   const { TextArea } = Input;
   const [documentNumber, setDocumentNumber] = useState<string>("");
@@ -522,7 +527,7 @@ const FormActivity: FC<FormActivityProps> = ({
             </div>
           </>
         )}
-        <div className="flex flex-col gap-[2px]">
+        <div className="flex flex-col gap-[2px] mb-2">
           <span className="font-medium text-neutral-600">
             Tài liệu đính kèm
           </span>
@@ -615,6 +620,52 @@ const FormActivity: FC<FormActivityProps> = ({
             )}
           </div>
         </div>
+        <div className="flex flex-col gap-[2px]">
+          <span className="font-medium text-neutral-600">
+            Thông tin thanh toán
+          </span>
+          <div>
+            {isPayment ? (
+              <>
+                {isPayment.isRejected ? (
+                  <>
+                    <div>
+                      <span className="text-red-500">
+                        <CloseOutlined className="me-1" /> Từ chối
+                      </span>
+                      {" - "}P.TC đã từ chối vào lúc{" "}
+                      <strong>
+                        {convertTimestampToFullDateTime(isPayment.approvedTime)}
+                      </strong>
+                    </div>
+                    <div>- Lý do: {isPayment.reason}</div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <span className="text-green-500">
+                        <SafetyOutlined className="me-1" /> Đã duyệt
+                      </span>
+                      {" - "}P.TC đã phê duyệt vào lúc{" "}
+                      <strong>
+                        {convertTimestampToFullDateTime(isPayment.approvedTime)}
+                      </strong>
+                    </div>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <div>
+                  <span className="text-sky-500">
+                    <Spin size="small" className="mx-1" /> Chờ duyệt
+                  </span>{" "}
+                  {" - "} Đợi phê duyệt từ P.TC
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </form>
       {showPDF === true && (
         <div>
@@ -657,7 +708,7 @@ const FormActivity: FC<FormActivityProps> = ({
               <div
                 className="flex flex-col overflow-x-auto overflow-y-auto rounded-md shadow-md"
                 style={{
-                  maxHeight: "78vh",
+                  maxHeight: "72vh",
                 }}
               >
                 <Document
