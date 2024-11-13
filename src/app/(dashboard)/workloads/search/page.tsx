@@ -15,6 +15,8 @@ import {
 } from "@/services/users/usersServices";
 import { convertTimestampToDate } from "@/utility/Utilities";
 import {
+  CheckOutlined,
+  CloseOutlined,
   DownloadOutlined,
   FileProtectOutlined,
   FilterOutlined,
@@ -43,6 +45,7 @@ import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import Link from "next/link";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -60,7 +63,9 @@ const SearchMembers = () => {
   const [dataClassLeaders, setDataClassLeaders] = useState<Item[]>([]);
   const [dataAssistants, setDataAssistants] = useState<Item[]>([]);
   const [dataQAEs, setDataQAEs] = useState<Item[]>([]);
-  const [dataAdmissionCounseling, setDataAdmissionCounseling] = useState<Item[]>([]);
+  const [dataAdmissionCounseling, setDataAdmissionCounseling] = useState<
+    Item[]
+  >([]);
   const [dataActivities, setDataActivities] = useState<Item[]>([]);
   const [startDate, setStartDate] = useState<number | null>(null);
   const [endDate, setEndDate] = useState<number | null>(null);
@@ -319,28 +324,62 @@ const SearchMembers = () => {
       render: (standarNumber: string) => <p>{standarNumber}</p>,
     },
     {
-      title: "SỐ VĂN BẢN, NGÀY LẬP",
+      title: (
+        <div>
+          SỐ VĂN BẢN <br /> NGÀY LẬP
+        </div>
+      ),
       dataIndex: "proof",
       key: "proof",
       render: (proof: string, record: Item) => {
-        const fromDate = record.fromDate
-          ? convertTimestampToDate(record.fromDate)
+        const documentDate = record.documentDate
+          ? convertTimestampToDate(record.documentDate)
           : "";
         return (
           <div className="flex flex-col">
             <span className="font-medium">{proof}</span>
-            <span className="text-[13px]">{fromDate}</span>
+            <span className="text-[13px]">{documentDate}</span>
           </div>
         );
       },
-      className: "text-center w-[100px]",
+      className: "text-center w-[160px]",
+    },
+    {
+      title: (
+        <div className="p-1">
+          TÀI LIỆU <br /> ĐÍNH KÈM
+        </div>
+      ),
+      dataIndex: ["file", "path"],
+      key: "path",
+      className: "text-center w-[95px]",
+      render: (path: string) => {
+        return path !== "" && path !== undefined ? (
+          <>
+            <Link
+              href={"https://api-annual.uef.edu.vn/" + path}
+              target="__blank"
+            >
+              <p className="text-green-500">
+                <CheckOutlined />
+              </p>
+            </Link>
+          </>
+        ) : (
+          <>
+            <p className="text-red-400">
+              <CloseOutlined />
+            </p>
+          </>
+        );
+      },
     },
     {
       title: "THỜI GIAN HOẠT ĐỘNG",
-      dataIndex: "attendances",
-      key: "attendances",
-      render: (attendances: number) =>
-        attendances ? convertTimestampToDate(attendances) : "",
+      dataIndex: "fromDate",
+      key: "fromDate",
+      render: (fromDate: number) =>
+        fromDate ? convertTimestampToDate(fromDate) : "",
       className: "text-center w-[80px]",
     },
     {
@@ -636,8 +675,12 @@ const SearchMembers = () => {
                             {String(
                               detailUser.admissionCounseling.shortName
                             ).toUpperCase()}{" "}
-                            - {String(detailUser.admissionCounseling.name).toUpperCase()}{" "}
-                            ({detailUser.admissionCounseling.totalItems} SỰ KIỆN)
+                            -{" "}
+                            {String(
+                              detailUser.admissionCounseling.name
+                            ).toUpperCase()}{" "}
+                            ({detailUser.admissionCounseling.totalItems} SỰ
+                            KIỆN)
                           </strong>
                         ),
                         children: (

@@ -1,4 +1,5 @@
 import apiClient from "../apiClient";
+import { AttackmentItem } from "./Attackment";
 import { PaymentApprovedItem } from "./PaymentApprovedItem";
 
 export interface AdmissionCounselingItem {
@@ -13,7 +14,8 @@ export interface AdmissionCounselingItem {
   fromDate: number;
   toDate: number;
   entryDate: number;
-  eventDate: number;
+  documentDate: number;
+  attackment: AttackmentItem;
   payments: PaymentApprovedItem;
   proof: string;
   note: string;

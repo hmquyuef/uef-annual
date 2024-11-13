@@ -8,8 +8,8 @@ export interface FileItem {
   size: number;
 }
 
-export async function postFiles(data: FormData): Promise<FileItem[]> {
-  const response = await apiClient.post<FileItem[]>("api/files/upload", data, {
+export async function postFiles(data: FormData): Promise<FileItem> {
+  const response = await apiClient.post<FileItem>("api/files/upload", data, {
     headers: {
       "Content-Type": "multipart/form-data",
     },

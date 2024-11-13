@@ -1,4 +1,5 @@
 import apiClient from "../apiClient";
+import { AttackmentItem } from "../forms/Attackment";
 
 export interface DetailUserItem {
   id: string;
@@ -24,8 +25,11 @@ export interface DetailsItem {
 export interface Item {
   activityName: string;
   standarNumber: number;
-  attendances: number;
   fromDate: number;
+  toDate: number;
+  entryDate: number;
+  documentDate: number;
+  file: AttackmentItem;
   proof: string;
   note: string;
 }

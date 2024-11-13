@@ -21,6 +21,7 @@ import {
   setCellStyle,
 } from "@/utility/Utilities";
 import {
+  CheckOutlined,
   CloseOutlined,
   DeleteOutlined,
   FileExcelOutlined,
@@ -29,6 +30,7 @@ import {
 } from "@ant-design/icons";
 import {
   Button,
+  Card,
   ConfigProvider,
   DatePicker,
   Dropdown,
@@ -39,6 +41,7 @@ import {
   Modal,
   PaginationProps,
   Select,
+  Skeleton,
   Spin,
   Table,
   TableColumnsType,
@@ -58,8 +61,14 @@ import { jwtDecode } from "jwt-decode";
 import locale from "antd/locale/vi_VN";
 import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/vi";
-import { DisplayRoleItem, getRoleByName, RoleItem } from "@/services/roles/rolesServices";
+import {
+  DisplayRoleItem,
+  getRoleByName,
+  RoleItem,
+} from "@/services/roles/rolesServices";
 import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
+import Messages from "@/utility/Messages";
+import Link from "next/link";
 dayjs.locale("vi");
 
 type SearchProps = GetProps<typeof Input.Search>;
@@ -67,6 +76,7 @@ const { Search } = Input;
 const { RangePicker } = DatePicker;
 
 const BM03 = () => {
+  const [loading, setLoading] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [admissionCounseling, setAdmissionCounseling] = useState<
     AdmissionCounselingResponse | undefined
@@ -97,6 +107,7 @@ const BM03 = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [reason, setReason] = useState("");
   const [isPayments, setIsPayments] = useState<PaymentApprovedItem>();
+  const [isShowPdf, setIsShowPdf] = useState(false);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 15,
@@ -178,30 +189,35 @@ const BM03 = () => {
       className: "w-[15rem]",
     },
     {
-      title: (
-        <div className="py-1">
-          TỪ NGÀY <br /> ĐẾN NGÀY
-        </div>
-      ),
-      dataIndex: "eventDate",
-      key: "eventDate",
-      className: "text-center w-[3rem]",
-      render: (eventDate: number, record: AdmissionCounselingItem) => {
-        const denNgay = record.toDate;
-        return (
-          <div className="flex flex-col">
-            <span>{eventDate ? convertTimestampToDate(eventDate) : ""}</span>
-            <span>{denNgay ? convertTimestampToDate(denNgay) : ""}</span>
-          </div>
-        );
-      },
-    },
-    {
       title: "SỐ TIẾT CHUẨN",
       dataIndex: "standardNumber",
       key: "standardNumber",
-      className: "text-center w-[60px]",
+      className: "text-center w-[50px]",
       render: (standardNumber: string) => <>{standardNumber}</>,
+    },
+    {
+      title: (
+        <>
+          THỜI GIAN <br /> HOẠT ĐỘNG
+        </>
+      ),
+      dataIndex: "fromDate",
+      key: "fromDate",
+      render: (_, record: AdmissionCounselingItem) => {
+        return (
+          <>
+            {record.fromDate && record.toDate ? (
+              <div className="flex flex-col">
+                <span>{convertTimestampToDate(record.fromDate)}</span>
+                <span>{convertTimestampToDate(record.toDate)}</span>
+              </div>
+            ) : (
+              ""
+            )}
+          </>
+        );
+      },
+      className: "text-center w-[70px]",
     },
     {
       title: (
@@ -225,11 +241,35 @@ const BM03 = () => {
       className: "w-[70px]",
     },
     {
-      title: "GHI CHÚ",
-      dataIndex: "note",
-      key: "note",
-      render: (note: string) => <>{note}</>,
-      className: "text-center w-[5rem]",
+      title: (
+        <div className="p-1">
+          TÀI LIỆU <br /> ĐÍNH KÈM
+        </div>
+      ),
+      dataIndex: ["attackment", "path"],
+      key: "path",
+      className: "text-center w-[70px]",
+      sorter: (a, b) => a.attackment?.path.localeCompare(b.attackment?.path),
+      render: (path: string) => {
+        return path !== "" && path !== undefined ? (
+          <>
+            <Link
+              href={"https://api-annual.uef.edu.vn/" + path}
+              target="__blank"
+            >
+              <p className="text-green-500">
+                <CheckOutlined />
+              </p>
+            </Link>
+          </>
+        ) : (
+          <>
+            <p className="text-red-400">
+              <CloseOutlined />
+            </p>
+          </>
+        );
+      },
     },
     {
       title: (
@@ -351,7 +391,7 @@ const BM03 = () => {
         : true;
       const matchesDate =
         startDate && endDate
-          ? item.eventDate >= startDate && item.toDate <= endDate
+          ? item.fromDate >= startDate && item.toDate <= endDate
           : true;
       return matchesName && matchesUnit && matchesDate;
     });
@@ -497,12 +537,12 @@ const BM03 = () => {
           item.fullName,
           item.unitName ?? "",
           item.location ?? "",
-          item.eventDate ? convertTimestampToDate(item.eventDate) : "",
+          item.fromDate ? convertTimestampToDate(item.fromDate) : "",
           item.toDate ? convertTimestampToDate(item.toDate) : "",
           item.position ?? "",
           item.numberOfTime ?? 0,
           item.standardNumber,
-          item.proof + ", " + convertTimestampToDate(item.fromDate),
+          item.proof + ", " + convertTimestampToDate(item.documentDate),
           item.note ?? "",
         ]),
         [
@@ -739,8 +779,8 @@ const BM03 = () => {
         if (response) {
           setDescription(
             isRejected
-              ? "Đã từ chối phê duyệt thông tin tham gia tư vấn tuyển sinh!"
-              : "Phê duyệt thông tin tham gia tư vấn tuyển sinh thành công!"
+              ? Messages.REJECTED_ADMISSION_COUNSELING
+              : Messages.APPROVED_ADMISSION_COUNSELING
           );
         }
       }
@@ -755,7 +795,7 @@ const BM03 = () => {
       setNotificationOpen(true);
       setStatus("error");
       setMessage("Thông báo");
-      setDescription("Đã có lỗi xảy ra!");
+      setDescription(Messages.ERROR);
     }
   };
 
@@ -764,6 +804,7 @@ const BM03 = () => {
     setRole(response.items[0]);
   };
   useEffect(() => {
+    setLoading(true);
     document.title = PageTitles.BM03;
     const pageState = Cookies.get("p_s");
     if (pageState) {
@@ -789,120 +830,159 @@ const BM03 = () => {
         setUserName(decodedUserName.sub);
       }
     }
+    setLoading(false);
   }, []);
   return (
     <div>
       <div className="grid grid-cols-3 mb-4">
         <div className="col-span-2">
           <div className="grid grid-cols-3 gap-4">
-            <Search
-              placeholder="Tìm kiếm hoạt động..."
-              onSearch={onSearch}
-              enterButton
-            />
-            <Select
-              showSearch
-              allowClear
-              placeholder="Tất cả đơn vị"
-              optionFilterProp="label"
-              filterSort={(optionA, optionB) =>
-                (optionA?.label ?? "")
-                  .toLowerCase()
-                  .localeCompare((optionB?.label ?? "").toLowerCase())
-              }
-              options={units.map((unit) => ({
-                value: unit.id,
-                label: unit.name,
-              }))}
-              value={selectedKeyUnit}
-              onChange={(value) => {
-                setSelectedKeyUnit(value);
-              }}
-            />
-            <ConfigProvider locale={locale}>
-              <RangePicker
-                placeholder={["Từ ngày", "Đến ngày"]}
-                format="DD/MM/YYYY"
-                value={
-                  selectedDates || [
-                    dayjs(`01/09/${dayjs().year()}`, "DD/MM/YYYY"),
-                    dayjs(`31/08/${dayjs().year() + 1}`, "DD/MM/YYYY"),
-                  ]
-                }
-                onChange={(dates, dateStrings) => {
-                  if (dates) {
-                    const [startDate, endDate] = dates;
-                    const startTimestamp = startDate ? startDate.unix() : null;
-                    const endTimestamp = endDate ? endDate.unix() : null;
-                    setStartDate(startTimestamp);
-                    setEndDate(endTimestamp);
-                    setSelectedDates(dates);
-                  } else {
-                    setSelectedDates(null);
-                    setStartDate(
-                      dayjs(`01/09/${dayjs().year()}`, "DD/MM/YYYY").unix()
-                    );
-                    setEndDate(
-                      dayjs(`31/08/${dayjs().year() + 1}`, "DD/MM/YYYY").unix()
-                    );
+            {loading ? (
+              <>
+                <Skeleton.Input active size="small" style={{ width: "100%" }} />
+                <Skeleton.Input active size="small" style={{ width: "100%" }} />
+                <Skeleton.Input active size="small" style={{ width: "100%" }} />
+              </>
+            ) : (
+              <>
+                <Search
+                  placeholder="Tìm kiếm hoạt động..."
+                  onSearch={onSearch}
+                  enterButton
+                />
+                <Select
+                  showSearch
+                  allowClear
+                  // size="large"
+                  placeholder="Tất cả đơn vị"
+                  optionFilterProp="label"
+                  filterSort={(optionA, optionB) =>
+                    (optionA?.label ?? "")
+                      .toLowerCase()
+                      .localeCompare((optionB?.label ?? "").toLowerCase())
                   }
-                }}
-              />
-            </ConfigProvider>
+                  options={units.map((unit) => ({
+                    value: unit.id,
+                    label: unit.name,
+                  }))}
+                  value={selectedKeyUnit}
+                  onChange={(value) => {
+                    setSelectedKeyUnit(value);
+                  }}
+                />
+                <ConfigProvider locale={locale}>
+                  <RangePicker
+                    placeholder={["Từ ngày", "Đến ngày"]}
+                    format={"DD/MM/YYYY"}
+                    value={
+                      selectedDates || [
+                        dayjs(`01/09/${dayjs().year()}`, "DD/MM/YYYY"),
+                        dayjs(`31/08/${dayjs().year() + 1}`, "DD/MM/YYYY"),
+                      ]
+                    }
+                    onChange={(dates, dateStrings) => {
+                      if (dates) {
+                        const [startDate, endDate] = dateStrings;
+                        const startTimestamp = startDate
+                          ? new Date(
+                              startDate.split("/").reverse().join("-")
+                            ).valueOf() / 1000
+                          : null;
+                        const endTimestamp = endDate
+                          ? new Date(
+                              endDate.split("/").reverse().join("-")
+                            ).valueOf() / 1000
+                          : null;
+                        setStartDate(startTimestamp);
+                        setEndDate(endTimestamp);
+                        setSelectedDates(dates);
+                      } else {
+                        setSelectedDates(null);
+                        setStartDate(
+                          new Date(`01/09/${dayjs().year()}`).valueOf() / 1000
+                        );
+                        setEndDate(
+                          new Date(`31/08/${dayjs().year() + 1}`).valueOf() /
+                            1000
+                        );
+                      }
+                    }}
+                  />
+                </ConfigProvider>
+              </>
+            )}
           </div>
         </div>
         <div className="flex justify-end gap-4">
-          {role?.displayRole.isExport && (
+          {loading ? (
             <>
-              <Tooltip placement="top" title="Xuất dữ liệu Excel" arrow={true}>
-                <Button
-                  icon={<FileExcelOutlined />}
-                  onClick={handleExportExcel}
-                  iconPosition="start"
-                  style={{
-                    backgroundColor: "#52c41a",
-                    borderColor: "#52c41a",
-                    color: "#fff",
-                  }}
-                >
-                  Xuất Excel
-                </Button>
-              </Tooltip>
+              <Skeleton.Input active size="small" />
+              <Skeleton.Input active size="small" />
+              <Skeleton.Input active size="small" />
             </>
-          )}
-
-          {role?.displayRole.isCreate && (
+          ) : (
             <>
-              <Tooltip
-                placement="top"
-                title={"Thêm mới hoạt động"}
-                arrow={true}
-              >
-                <Dropdown menu={{ items }} trigger={["click"]}>
-                  <a onClick={(e) => e.preventDefault()}>
-                    <Button type="primary" icon={<PlusOutlined />}>
-                      Thêm hoạt động
+              {role?.displayRole.isExport && (
+                <>
+                  <Tooltip
+                    placement="top"
+                    title="Xuất dữ liệu Excel"
+                    arrow={true}
+                  >
+                    <Button
+                      icon={<FileExcelOutlined />}
+                      onClick={handleExportExcel}
+                      iconPosition="start"
+                      style={{
+                        backgroundColor: "#52c41a",
+                        borderColor: "#52c41a",
+                        color: "#fff",
+                      }}
+                    >
+                      Xuất Excel
                     </Button>
-                  </a>
-                </Dropdown>
-              </Tooltip>
-            </>
-          )}
-
-          {role?.displayRole.isDelete && (
-            <>
-              <Tooltip placement="top" title="Xóa các thông tin" arrow={true}>
-                <Button
-                  type="dashed"
-                  disabled={selectedRowKeys.length === 0}
-                  danger
-                  onClick={handleDelete}
-                  icon={<DeleteOutlined />}
-                  iconPosition="start"
-                >
-                  Xóa
-                </Button>
-              </Tooltip>
+                  </Tooltip>
+                </>
+              )}
+              {role?.displayRole.isCreate && (
+                <>
+                  <Tooltip
+                    placement="top"
+                    title={"Thêm mới hoạt động"}
+                    arrow={true}
+                  >
+                    <Dropdown menu={{ items }} trigger={["click"]}>
+                      <a onClick={(e) => e.preventDefault()}>
+                        <Button type="primary" icon={<PlusOutlined />}>
+                          Thêm hoạt động
+                        </Button>
+                      </a>
+                    </Dropdown>
+                  </Tooltip>
+                </>
+              )}
+              {role?.displayRole.isDelete && (
+                <>
+                  <Tooltip
+                    placement="top"
+                    title="Xóa các hoạt động"
+                    arrow={true}
+                  >
+                    <Button
+                      type="dashed"
+                      disabled={selectedRowKeys.length === 0}
+                      danger
+                      onClick={handleDelete}
+                      icon={<DeleteOutlined />}
+                    >
+                      Xóa{" "}
+                      {selectedRowKeys.length !== 0
+                        ? `(${selectedRowKeys.length})`
+                        : ""}
+                    </Button>
+                  </Tooltip>
+                </>
+              )}
             </>
           )}
         </div>
@@ -914,11 +994,11 @@ const BM03 = () => {
         />
         <CustomModal
           isOpen={isOpen}
-          width="800px"
+          width={isShowPdf ? "85vw" : "800px"}
           title={
             mode === "edit"
-              ? "Cập nhật thông tin tham gia tư vấn tuyển sinh"
-              : "Thêm mới thông tin tham gia tư vấn tuyển sinh"
+              ? Messages.UPDATE_ADMISSION_COUNSELING
+              : Messages.ADD_ADMISSION_COUNSELING
           }
           role={role || undefined}
           isBlock={isBlock}
@@ -936,6 +1016,7 @@ const BM03 = () => {
             setSelectedItem(undefined);
             setMode("add");
             setIsUpload(false);
+            setIsShowPdf(false);
           }}
           bodyContent={
             isUpload ? (
@@ -946,11 +1027,12 @@ const BM03 = () => {
               <>
                 <FormBM03
                   onSubmit={handleSubmit}
+                  handleShowPDF={setIsShowPdf}
                   initialData={selectedItem as Partial<any>}
                   mode={mode}
                   isBlock={isBlock}
                   isPayment={isPayments}
-                  displayRole={role?.displayRole ?? {} as DisplayRoleItem}
+                  displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
                 />
               </>
             )
@@ -973,28 +1055,38 @@ const BM03 = () => {
           <Input value={reason} onChange={(e) => setReason(e.target.value)} />
         </Modal>
       </div>
-      <Table<AdmissionCounselingItem>
-        key={"table-activity-bm01"}
-        className="custom-table-header shadow-md rounded-md"
-        bordered
-        rowKey={(item) => item.id}
-        rowHoverable
-        size="small"
-        pagination={{
-          ...pagination,
-          total: data.length,
-          showTotal: showTotal,
-          showSizeChanger: true,
-          position: ["bottomRight"],
-          defaultPageSize: 15,
-          pageSizeOptions: ["15", "25", "50", "100"],
-        }}
-        rowSelection={rowSelection}
-        columns={columns}
-        dataSource={data}
-        locale={{ emptyText: <Empty description="No Data"></Empty> }}
-        onChange={handleTableChange}
-      />
+      {loading ? (
+        <>
+          <Card>
+            <Skeleton active />
+          </Card>
+        </>
+      ) : (
+        <>
+          <Table<AdmissionCounselingItem>
+            key={"table-activity-bm01"}
+            className="custom-table-header shadow-md rounded-md"
+            bordered
+            rowKey={(item) => item.id}
+            rowHoverable
+            size="small"
+            pagination={{
+              ...pagination,
+              total: data.length,
+              showTotal: showTotal,
+              showSizeChanger: true,
+              position: ["bottomRight"],
+              defaultPageSize: 15,
+              pageSizeOptions: ["15", "25", "50", "100"],
+            }}
+            rowSelection={rowSelection}
+            columns={columns}
+            dataSource={data}
+            locale={{ emptyText: <Empty description="No Data"></Empty> }}
+            onChange={handleTableChange}
+          />
+        </>
+      )}
     </div>
   );
 };

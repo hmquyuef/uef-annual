@@ -40,7 +40,7 @@ import {
   Tooltip,
 } from "antd";
 import moment from "moment";
-import { FC, FormEvent, Key, useCallback, useEffect, useState } from "react";
+import { FC, FormEvent, Key, useCallback, useEffect, useMemo, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
@@ -91,7 +91,9 @@ const FormActivity: FC<FormActivityProps> = ({
   const [selectedKey, setSelectedKey] = useState<Key | null>(null);
   const [selectedKeyUnit, setSelectedKeyUnit] = useState<Key | null>(null);
   const [standardValues, setStandardValues] = useState<number | 0>(0);
-  const [listPicture, setListPicture] = useState<FileItem[]>([]);
+  const [listPicture, setListPicture] = useState<FileItem | undefined>(
+    undefined
+  );
   const [isUploaded, setIsUploaded] = useState<boolean>(false);
   const [pathPDF, setPathPDF] = useState<string>("");
   const [numPages, setNumPages] = useState<number>(1);
@@ -243,39 +245,41 @@ const FormActivity: FC<FormActivityProps> = ({
     },
   ];
   const handleDeletePicture = async () => {
-    if (listPicture[0].path !== "") {
+    if (listPicture && listPicture !== undefined) {
       await deleteFiles(
-        listPicture[0].path.replace("https://api-annual.uef.edu.vn/", "")
+        listPicture.path.replace("https://api-annual.uef.edu.vn/", "")
         // listPicture[0].path.replace("http://192.168.98.60:8081/", "")
       );
       // Cập nhật lại trạng thái sau khi xóa
       setIsUploaded(false);
-      setListPicture([{ type: "", path: "", name: "", size: 0 }]);
+      setListPicture({ type: "", path: "", name: "", size: 0 });
       setPathPDF("");
     } else {
       console.log("Không có file nào để xóa.");
     }
   };
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    const formData = new FormData();
-    formData.append("file", acceptedFiles[0]);
-    // console.log("acceptedFiles[0] :>> ", acceptedFiles[0]);
-    if (listPicture[0]?.path !== "") {
-      await deleteFiles(
-        listPicture[0]?.path.replace("https://api-annual.uef.edu.vn/", "")
-        // listPicture[0]?.path.replace("http://192.168.98.60:8081/", "")
-      );
-      setPathPDF("");
-    }
-    const results = await postFiles(formData);
-    // console.log("results :>> ", results);
-    if (results.length > 0) {
-      setIsUploaded(true);
-      setListPicture(results);
-      setPathPDF(results[0].path);
-    }
-  }, []);
+  const onDrop = useMemo(
+    () => async (acceptedFiles: File[]) => {
+      const formData = new FormData();
+      formData.append("FunctionName", "activity");
+      formData.append("file", acceptedFiles[0]);
+      if (listPicture && listPicture !== undefined) {
+        await deleteFiles(
+          listPicture.path.replace("https://api-annual.uef.edu.vn/", "")
+        );
+        setPathPDF("");
+      }
+      const results = await postFiles(formData);
+      if (results && results !== undefined) {
+        setIsUploaded(true);
+        setListPicture(results);
+        setPathPDF(results.path);
+      }
+    },
+    [listPicture]
+  );
+
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
     disabled: isBlock || displayRole.isUpload === false,
@@ -292,10 +296,10 @@ const FormActivity: FC<FormActivityProps> = ({
         entryDate: deterEntryDate / 1000,
         eventDate: deterEventDate / 1000,
         file: {
-          type: listPicture[0]?.type ?? "",
-          path: listPicture[0]?.path ?? "",
-          name: listPicture[0]?.name ?? "",
-          size: listPicture[0]?.size ?? 0,
+          type: listPicture?.type ?? "",
+          path: listPicture?.path ?? "",
+          name: listPicture?.name ?? "",
+          size: listPicture?.size ?? 0,
         },
       },
       participants: tableUsers.map((user) => ({
@@ -346,8 +350,8 @@ const FormActivity: FC<FormActivityProps> = ({
         if (initialData.determinations?.file !== null) {
           setListPicture(
             initialData.determinations?.file
-              ? [initialData.determinations.file]
-              : []
+              ? initialData.determinations.file
+              : undefined
           );
           setIsUploaded(true);
         }
@@ -363,7 +367,7 @@ const FormActivity: FC<FormActivityProps> = ({
         setDeterFromDate(0);
         setDeterEventDate(0);
         setTableUsers([]);
-        setListPicture([]);
+        setListPicture(undefined);
         setIsUploaded(false);
         setDescription("");
         setPathPDF("");
@@ -555,77 +559,63 @@ const FormActivity: FC<FormActivityProps> = ({
               </>
             ) : (
               <>
-                {listPicture &&
-                  listPicture.map((item) => (
-                    <>
-                      <div className="flex flex-col items-center gap-1 py-2">
-                        <div className="grid grid-cols-3 gap-2">
-                          <img
-                            src={
-                              item.type === "image/jpeg" ||
-                              item.type === "image/png"
-                                ? "https://api-annual.uef.edu.vn/" +
-                                  listPicture[0].path
-                                : "/file-pdf.svg"
-                            }
-                            width={50}
-                            loading="lazy"
-                            alt="file-preview"
-                          />
-                          <div className="col-span-2 text-center content-center">
-                            <span className="text-sm">
-                              {listPicture[0].name}
+                {listPicture && (
+                  <>
+                    <div className="flex flex-col items-center gap-1 py-2">
+                      <div className="grid grid-cols-3 gap-2">
+                        <img
+                          src={
+                            listPicture.type === "image/jpeg" ||
+                            listPicture.type === "image/png"
+                              ? "https://api-annual.uef.edu.vn/" +
+                                listPicture.path
+                              : "/file-pdf.svg"
+                          }
+                          width={50}
+                          loading="lazy"
+                          alt="file-preview"
+                        />
+                        <div className="col-span-2 text-center content-center">
+                          <span className="text-sm">{listPicture.name}</span>
+                          <span className="text-sm flex">
+                            ({(listPicture.size / (1024 * 1024)).toFixed(2)} MB
+                            -
+                            <span
+                              className="text-sm ms-1 cursor-pointer text-blue-500 hover:text-blue-600"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowPDF(!showPDF);
+                              }}
+                            >
+                              xem chi tiết
                             </span>
-                            <span className="text-sm flex">
-                              ({(item.size / (1024 * 1024)).toFixed(2)} MB -
-                              <span
-                                className="text-sm ms-1 cursor-pointer text-blue-500 hover:text-blue-600"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setShowPDF(!showPDF);
-                                }}
-                              >
-                                xem chi tiết
-                              </span>
-                              )
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex gap-3 items-center mt-2">
-                          <Button
-                            danger
-                            disabled={isBlock || displayRole.isUpload === false}
-                            color="danger"
-                            onClick={handleDeletePicture}
-                            size="small"
-                            icon={<MinusCircleOutlined />}
-                          >
-                            Hủy tệp
-                          </Button>
-                          <Button
-                            type="primary"
-                            size="small"
-                            disabled={isBlock || displayRole.isUpload === false}
-                            icon={<CloudUploadOutlined />}
-                            onClick={() => {
-                              const input = document.createElement("input");
-                              input.type = "file";
-                              input.onchange = (event) => {
-                                const files = (event.target as HTMLInputElement)
-                                  .files;
-                                if (files && files.length > 0) {
-                                  onDrop(Array.from(files));
-                                }
-                              };
-                              input.click();
-                            }}
-                          >
-                            Chọn tệp thay thế
-                          </Button>
+                            )
+                          </span>
                         </div>
                       </div>
-                    </>
-                  ))}
+                      <div className="flex gap-3 items-center mt-2">
+                        <Button
+                          danger
+                          disabled={isBlock || displayRole.isUpload === false}
+                          color="danger"
+                          onClick={handleDeletePicture}
+                          size="small"
+                          icon={<MinusCircleOutlined />}
+                        >
+                          Hủy tệp
+                        </Button>
+                        <Button
+                          type="primary"
+                          size="small"
+                          disabled={isBlock || displayRole.isUpload === false}
+                          icon={<CloudUploadOutlined />}
+                        >
+                          Chọn tệp thay thế
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </>
             )}
           </div>
