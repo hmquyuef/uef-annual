@@ -74,10 +74,8 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       "",
       item.standarNumber,
-      item.proof + ", " + convertTimestampToDate(item.fromDate),
-      convertTimestampToDate(item.attendances) === "01/01/1970"
-        ? ""
-        : convertTimestampToDate(item.attendances),
+      item.proof + ", " + convertTimestampToDate(item.documentDate),
+      item.fromDate && item.toDate ? `${convertTimestampToDate(item.fromDate)} - ${convertTimestampToDate(item.toDate)}` : "",
       item.note ?? "",
     ]),
     [
@@ -126,10 +124,8 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       "",
       item.standarNumber,
-      item.proof + ", " + convertTimestampToDate(item.fromDate),
-      convertTimestampToDate(item.attendances) === "01/01/1970"
-        ? ""
-        : convertTimestampToDate(item.attendances),
+      item.proof + ", " + convertTimestampToDate(item.documentDate),
+      item.fromDate && item.toDate ? `${convertTimestampToDate(item.fromDate)} - ${convertTimestampToDate(item.toDate)}` : "",
       item.note ?? "",
     ]),
     [
@@ -178,8 +174,8 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       "",
       item.standarNumber,
-      item.proof + ", " + convertTimestampToDate(item.fromDate),
-      item.attendances ? convertTimestampToDate(item.attendances) : "",
+      item.proof + ", " + convertTimestampToDate(item.documentDate),
+      item.fromDate && item.toDate ? `${convertTimestampToDate(item.fromDate)} - ${convertTimestampToDate(item.toDate)}` : "",
       item.note ?? "",
     ]),
     [
@@ -228,10 +224,8 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       "",
       item.standarNumber,
-      item.proof + ", " + convertTimestampToDate(item.fromDate),
-      convertTimestampToDate(item.attendances) === "01/01/1970"
-        ? ""
-        : convertTimestampToDate(item.attendances),
+      item.proof + ", " + convertTimestampToDate(item.documentDate),
+      item.fromDate && item.toDate ? `${convertTimestampToDate(item.fromDate)} - ${convertTimestampToDate(item.toDate)}` : "",
       item.note ?? "",
     ]),
     [
@@ -280,10 +274,8 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       "",
       item.standarNumber,
-      item.proof + ", " + convertTimestampToDate(item.fromDate),
-      convertTimestampToDate(item.attendances) === "01/01/1970"
-        ? ""
-        : convertTimestampToDate(item.attendances),
+      item.proof + ", " + convertTimestampToDate(item.documentDate),
+      item.fromDate && item.toDate ? `${convertTimestampToDate(item.fromDate)} - ${convertTimestampToDate(item.toDate)}` : "",
       item.note ?? "",
     ]),
     [
