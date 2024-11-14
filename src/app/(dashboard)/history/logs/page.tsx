@@ -1,43 +1,65 @@
 "use client";
 
 import {
+  deleteLogActivities,
   getAllLogActivities,
   LogActivityItem,
+  LogActivityResponses,
 } from "@/services/history/logActivityServices";
+import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
 import PageTitles from "@/utility/Constraints";
 import { convertTimestampToFullDateTime } from "@/utility/Utilities";
 import {
   AuditOutlined,
+  DeleteOutlined,
   HistoryOutlined,
   HomeOutlined,
 } from "@ant-design/icons";
 import {
   Breadcrumb,
+  Button,
   Empty,
+  GetProps,
+  Input,
   PaginationProps,
+  Skeleton,
   Table,
   TableColumnsType,
   Tooltip,
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
-import { Key, useEffect, useState } from "react";
-import {
-  allExpanded,
-  darkStyles,
-  JsonView
-} from "react-json-view-lite";
+import { jwtDecode } from "jwt-decode";
+import { Key, useCallback, useEffect, useState } from "react";
+import { allExpanded, darkStyles, JsonView } from "react-json-view-lite";
 import "react-json-view-lite/dist/index.css";
+import Cookies from "js-cookie";
+import CustomNotification from "@/components/CustomNotification";
+
+type SearchProps = GetProps<typeof Input.Search>;
+const { Search } = Input;
 
 const LogsActivities = () => {
+  const [loading, setLoading] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [data, setData] = useState<LogActivityItem[]>([]);
+  const [logActivities, setLogActivities] = useState<
+    LogActivityResponses | undefined
+  >(undefined);
+  const [role, setRole] = useState<RoleItem>();
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 15,
   });
+  const [isNotificationOpen, setNotificationOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState<
+    "success" | "error" | "info" | "warning"
+  >("success");
 
   const getListLogActivities = async () => {
     const response = await getAllLogActivities();
+    setLogActivities(response);
     setData(response.items);
   };
 
@@ -47,7 +69,7 @@ const LogsActivities = () => {
       dataIndex: "stt",
       key: "stt",
       render: (_, __, index) => (
-        <p>{pagination.pageSize * (pagination.current - 1) + index + 1}</p>
+        <>{pagination.pageSize * (pagination.current - 1) + index + 1}</>
       ),
       className: "text-center w-[20px]",
     },
@@ -177,6 +199,17 @@ const LogsActivities = () => {
     },
   ];
 
+  const onSearch: SearchProps["onSearch"] = (value) => {
+    if (value === "") setData(logActivities?.items || []);
+    const filteredData = logActivities?.items.filter((item) => {
+      const matchesName =
+        item.username.toLowerCase().includes(value.toLowerCase()) ||
+        item.functionName.toLowerCase().includes(value.toLowerCase());
+      return matchesName;
+    });
+    setData(filteredData || []);
+  };
+
   const onSelectChange = (newSelectedRowKeys: Key[]) => {
     setSelectedRowKeys(newSelectedRowKeys);
   };
@@ -190,6 +223,25 @@ const LogsActivities = () => {
     </p>
   );
 
+  const handleDelete = useCallback(async () => {
+    try {
+      const selectedKeysArray = Array.from(selectedRowKeys) as string[];
+      if (selectedKeysArray.length > 0) {
+        await deleteLogActivities(selectedKeysArray);
+        setDescription(
+          `Đã xóa thành công ${selectedKeysArray.length} sự kiện logs hoạt động!`
+        );
+        setNotificationOpen(true);
+        setStatus("success");
+        setMessage("Thông báo");
+        await getListLogActivities();
+        setSelectedRowKeys([]);
+      }
+    } catch (error) {
+      console.error("Error deleting selected items:", error);
+    }
+  }, [selectedRowKeys]);
+
   const handleTableChange = (pagination: PaginationProps) => {
     setPagination({
       current: pagination.current || 1,
@@ -197,9 +249,27 @@ const LogsActivities = () => {
     });
   };
 
+  const getDisplayRole = async (name: string) => {
+    const response = await getRoleByName(name);
+    setRole(response.items[0]);
+  };
+
   useEffect(() => {
+    setLoading(true);
     document.title = PageTitles.LOGS_ACTIVITY;
     getListLogActivities();
+    const token = Cookies.get("s_t");
+    if (token) {
+      const decodedRole = jwtDecode<{
+        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
+      }>(token);
+      const role =
+        decodedRole[
+          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        ];
+      getDisplayRole(role as string);
+      setLoading(false);
+    }
   }, []);
   return (
     <div>
@@ -235,34 +305,69 @@ const LogsActivities = () => {
           ]}
         />
       </section>
-      {/* <section className="flex justify-end gap-4 mb-4">
-        <Tooltip placement="top" title={"Thêm mới vai trò"} arrow={true}>
-          <Button
-            type="primary"
-            onClick={() => {
-              setIsOpen(true);
-              setMode("add");
-            }}
-            icon={<PlusOutlined />}
-            iconPosition="start"
-          >
-            Thêm vai trò
-          </Button>
-        </Tooltip>
-        <Tooltip placement="top" title="Xóa các hoạt động" arrow={true}>
-          <Button
-            type="dashed"
-            disabled={selectedRowKeys.length === 0}
-            danger
-            onClick={handleDelete}
-            icon={<DeleteOutlined />}
-            iconPosition="start"
-          >
-            Xóa
-          </Button>
-        </Tooltip>
-      </section> */}
-
+      <section className="grid grid-cols-3 mb-4">
+        <div className="col-span-2">
+          <div className="grid grid-cols-3 gap-4">
+            {loading ? (
+              <>
+                <Skeleton.Input active size="small" style={{ width: "100%" }} />
+                <Skeleton.Input active size="small" style={{ width: "100%" }} />
+                <Skeleton.Input active size="small" style={{ width: "100%" }} />
+              </>
+            ) : (
+              <>
+                <div>
+                  <Search
+                    placeholder="Tìm kiếm hoạt động..."
+                    onSearch={onSearch}
+                    enterButton
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="flex justify-end gap-4">
+          {loading ? (
+            <>
+              <Skeleton.Input active size="small" />
+              <Skeleton.Input active size="small" />
+              <Skeleton.Input active size="small" />
+            </>
+          ) : (
+            <>
+              {role?.displayRole.isDelete && (
+                <>
+                  <Tooltip
+                    placement="top"
+                    title="Xóa các hoạt động"
+                    arrow={true}
+                  >
+                    <Button
+                      type="dashed"
+                      disabled={selectedRowKeys.length === 0}
+                      danger
+                      onClick={handleDelete}
+                      icon={<DeleteOutlined />}
+                    >
+                      Xóa{" "}
+                      {selectedRowKeys.length !== 0
+                        ? `(${selectedRowKeys.length})`
+                        : ""}
+                    </Button>
+                  </Tooltip>
+                </>
+              )}
+            </>
+          )}
+        </div>
+      </section>
+      <CustomNotification
+        message={message}
+        description={description}
+        status={status}
+        isOpen={isNotificationOpen}
+      />
       <section>
         <Table<LogActivityItem>
           key={"table-activity-bm05"}

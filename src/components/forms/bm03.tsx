@@ -10,10 +10,19 @@ import {
   putUpdateAdmissionCounseling,
   putUpdateApprovedAdmissionCounseling,
 } from "@/services/forms/admissionCounseling";
+import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
+import {
+  DisplayRoleItem,
+  getRoleByName,
+  RoleItem,
+} from "@/services/roles/rolesServices";
 import {
   getListUnitsFromHrm,
   UnitHRMItem,
 } from "@/services/units/unitsServices";
+import { FileItem } from "@/services/uploads/uploadsServices";
+import PageTitles from "@/utility/Constraints";
+import Messages from "@/utility/Messages";
 import {
   convertTimestampToDate,
   convertTimestampToFullDateTime,
@@ -48,27 +57,19 @@ import {
   Tooltip,
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
-import { Key, useCallback, useEffect, useState } from "react";
-import * as XLSX from "sheetjs-style";
-import saveAs from "file-saver";
-import Cookies from "js-cookie";
-import PageTitles from "@/utility/Constraints";
-import CustomNotification from "../CustomNotification";
-import CustomModal from "../CustomModal";
-import FromUpload from "./activity/formUpload";
-import FormBM03 from "./activity/formBM03";
-import { jwtDecode } from "jwt-decode";
 import locale from "antd/locale/vi_VN";
 import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/vi";
-import {
-  DisplayRoleItem,
-  getRoleByName,
-  RoleItem,
-} from "@/services/roles/rolesServices";
-import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
-import Messages from "@/utility/Messages";
+import saveAs from "file-saver";
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 import Link from "next/link";
+import { Key, useCallback, useEffect, useState } from "react";
+import * as XLSX from "sheetjs-style";
+import CustomModal from "../CustomModal";
+import CustomNotification from "../CustomNotification";
+import FormBM03 from "./activity/formBM03";
+import FromUpload from "./activity/formUpload";
 dayjs.locale("vi");
 
 type SearchProps = GetProps<typeof Input.Search>;
@@ -464,10 +465,18 @@ const BM03 = () => {
     setNotificationOpen(false);
   };
 
-  const handleSubmitUpload = async (file: File) => {
+  const handleSubmitUpload = async (
+    fileParticipant: File,
+    fileAttackment: FileItem
+  ) => {
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("File", fileParticipant);
+      formData.append("Type", fileAttackment.type);
+      formData.append("Path", fileAttackment.path);
+      formData.append("Name", fileAttackment.name);
+      formData.append("Size", fileAttackment.size.toString());
+
       const response = await ImportAdmissionCounseling(formData);
       if (response) {
         setNotificationOpen(true);
@@ -1021,7 +1030,11 @@ const BM03 = () => {
           bodyContent={
             isUpload ? (
               <>
-                <FromUpload onSubmit={handleSubmitUpload} />
+                <FromUpload
+                  formName="admission"
+                  onSubmit={handleSubmitUpload}
+                  handleShowPDF={setIsShowPdf}
+                />
               </>
             ) : (
               <>

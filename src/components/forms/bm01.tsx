@@ -21,7 +21,7 @@ import {
   getListUnitsFromHrm,
   UnitHRMItem,
 } from "@/services/units/unitsServices";
-import { postFiles } from "@/services/uploads/uploadsServices";
+import { FileItem } from "@/services/uploads/uploadsServices";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
 import {
@@ -64,13 +64,13 @@ import "dayjs/locale/vi";
 import saveAs from "file-saver";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
+import Link from "next/link";
 import { Key, useCallback, useEffect, useState } from "react";
 import * as XLSX from "sheetjs-style";
 import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
 import FormBM01 from "./activity/formBM01";
 import FromUpload from "./activity/formUpload";
-import Link from "next/link";
 dayjs.locale("vi");
 
 type SearchProps = GetProps<typeof Input.Search>;
@@ -489,28 +489,22 @@ const BM01 = () => {
 
   const handleSubmitUpload = async (
     fileParticipant: File,
-    fileAttackment: File
+    fileAttackment: FileItem
   ) => {
     try {
-      const formDataParticipant = new FormData();
-      formDataParticipant.append("file", fileParticipant);
+      const formData = new FormData();
+      formData.append("File", fileParticipant);
+      formData.append("Type", fileAttackment.type);
+      formData.append("Path", fileAttackment.path);
+      formData.append("Name", fileAttackment.name);
+      formData.append("Size", fileAttackment.size.toString());
 
-      const formDataAttackment = new FormData();
-      formDataAttackment.append("FunctionName", "classLeader");
-      formDataAttackment.append("file", fileAttackment);
-      
-      const [responseParticipant, responseAttackment] = await Promise.all([
-        ImportClassLeaders(formDataParticipant),
-        postFiles(formDataAttackment),
-      ]);
-
-      if (responseParticipant && responseAttackment) {
+      const response = await ImportClassLeaders(formData);
+      if (response) {
         setNotificationOpen(true);
         setStatus("success");
         setMessage("Thông báo");
-        setDescription(
-          `Tải lên thành công ${responseParticipant.totalCount} hoạt động!`
-        );
+        setDescription(`Tải lên thành công ${response.totalCount} thông tin chủ nhiệm lớp!`);
       }
       await getListClassLeaders();
       setIsOpen(false);
@@ -1073,7 +1067,11 @@ const BM01 = () => {
           bodyContent={
             isUpload ? (
               <>
-                <FromUpload onSubmit={handleSubmitUpload} />
+                <FromUpload
+                  formName="classleader"
+                  onSubmit={handleSubmitUpload}
+                  handleShowPDF={setIsShowPdf}
+                />
               </>
             ) : (
               <>

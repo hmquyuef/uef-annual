@@ -65,6 +65,7 @@ import {
   getRoleByName,
   RoleItem,
 } from "@/services/roles/rolesServices";
+import { FileItem } from "@/services/uploads/uploadsServices";
 import Messages from "@/utility/Messages";
 import locale from "antd/locale/vi_VN";
 import dayjs, { Dayjs } from "dayjs";
@@ -479,13 +480,21 @@ const BM02 = () => {
     setRole(response.items[0]);
   };
 
-  const handleSubmitUpload = async (file: File) => {
+  const handleSubmitUpload = async (
+    fileParticipant: File,
+    fileAttackment: FileItem
+  ) => {
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("File", fileParticipant);
+      formData.append("Type", fileAttackment.type);
+      formData.append("Path", fileAttackment.path);
+      formData.append("Name", fileAttackment.name);
+      formData.append("Size", fileAttackment.size.toString());
+
       const response = await ImportClassAssistants(formData);
       if (response) {
-        setDescription(`Tải lên thành công ${response.totalCount} hoạt động!`);
+        setDescription(`Tải lên thành công ${response.totalCount} thông tin Cố vấn học tập, trợ giảng, phụ đạo!`);
       }
       setNotificationOpen(true);
       setStatus("success");
@@ -1038,7 +1047,11 @@ const BM02 = () => {
           bodyContent={
             isUpload ? (
               <>
-                <FromUpload onSubmit={handleSubmitUpload} />
+                <FromUpload
+                  formName="assistant"
+                  onSubmit={handleSubmitUpload}
+                  handleShowPDF={setIsShowPdf}
+                />
               </>
             ) : (
               <>

@@ -12,7 +12,12 @@ import {
   putUpdateActivity,
   putUpdateApprovedActivity,
 } from "@/services/forms/formsServices";
-import { DisplayRoleItem, getRoleByName, RoleItem } from "@/services/roles/rolesServices";
+import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
+import {
+  DisplayRoleItem,
+  getRoleByName,
+  RoleItem,
+} from "@/services/roles/rolesServices";
 import {
   getListUnitsFromHrm,
   UnitHRMItem,
@@ -29,19 +34,16 @@ import {
   CloseOutlined,
   DeleteOutlined,
   FileExcelOutlined,
-  PlusCircleOutlined,
   PlusOutlined,
-  SafetyOutlined,
+  SafetyOutlined
 } from "@ant-design/icons";
 import {
   Button,
   Card,
   ConfigProvider,
   DatePicker,
-  Dropdown,
   Empty,
   Input,
-  MenuProps,
   Modal,
   PaginationProps,
   Select,
@@ -50,7 +52,7 @@ import {
   Table,
   TableColumnsType,
   Tag,
-  Tooltip,
+  Tooltip
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import locale from "antd/locale/vi_VN";
@@ -65,8 +67,6 @@ import * as XLSX from "sheetjs-style";
 import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
 import FormActivity from "./activity/formActivity";
-import FromUpload from "./activity/formUpload";
-import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 dayjs.locale("vi");
 
 const { Search } = Input;
@@ -340,45 +340,6 @@ const BM05 = () => {
         );
       },
       className: "text-center w-[110px]",
-    },
-  ];
-
-  const items: MenuProps["items"] = [
-    {
-      key: "1",
-      label: (
-        <p
-          onClick={() => {
-            setIsOpen(true);
-            setMode("add");
-          }}
-          className="font-medium"
-        >
-          Thêm mới
-        </p>
-      ),
-      icon: <PlusCircleOutlined />,
-      style: { color: "#1890ff" },
-    },
-    {
-      type: "divider",
-    },
-    {
-      key: "2",
-      label: (
-        <p
-          onClick={() => {
-            setIsOpen(true);
-            setMode("add");
-            setIsUpload(true);
-          }}
-          className="font-medium"
-        >
-          Import Excel
-        </p>
-      ),
-      icon: <FileExcelOutlined />,
-      style: { color: "#52c41a" },
     },
   ];
 
@@ -928,7 +889,6 @@ const BM05 = () => {
                 <Select
                   showSearch
                   allowClear
-                  // size="large"
                   placeholder="Tất cả đơn vị"
                   optionFilterProp="label"
                   filterSort={(optionA, optionB) =>
@@ -1019,7 +979,6 @@ const BM05 = () => {
                   </Tooltip>
                 </>
               )}
-
               {role?.displayRole.isCreate && (
                 <>
                   <Tooltip
@@ -1027,17 +986,20 @@ const BM05 = () => {
                     title={"Thêm mới hoạt động"}
                     arrow={true}
                   >
-                    <Dropdown menu={{ items }} trigger={["click"]}>
-                      <a onClick={(e) => e.preventDefault()}>
-                        <Button type="primary" icon={<PlusOutlined />}>
-                          Thêm hoạt động
-                        </Button>
-                      </a>
-                    </Dropdown>
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={() => {
+                        setIsOpen(true);
+                        setMode("add");
+                      }}
+                      iconPosition="start"
+                    >
+                      Thêm hoạt động
+                    </Button>
                   </Tooltip>
                 </>
               )}
-
               {role?.displayRole.isDelete && (
                 <>
                   <Tooltip
@@ -1092,25 +1054,17 @@ const BM05 = () => {
             setIsShowPdf(false);
           }}
           bodyContent={
-            isUpload ? (
-              <>
-                <FromUpload onSubmit={handleSubmitUpload} />
-              </>
-            ) : (
-              <>
-                <FormActivity
-                  key="form-activity-bm05"
-                  onSubmit={handleSubmit}
-                  handleShowPDF={setIsShowPdf}
-                  initialData={selectedItem as Partial<AddUpdateActivityItem>}
-                  mode={mode}
-                  numberActivity={data.length}
-                  isBlock={isBlock}
-                  isPayment={isPayments}
-                  displayRole={role?.displayRole ?? {} as DisplayRoleItem}
-                />
-              </>
-            )
+            <FormActivity
+              key="form-activity-bm05"
+              onSubmit={handleSubmit}
+              handleShowPDF={setIsShowPdf}
+              initialData={selectedItem as Partial<AddUpdateActivityItem>}
+              mode={mode}
+              numberActivity={data.length}
+              isBlock={isBlock}
+              isPayment={isPayments}
+              displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
+            />
           }
         />
         <Modal

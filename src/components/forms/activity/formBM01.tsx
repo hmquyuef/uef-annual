@@ -259,7 +259,7 @@ const FormBM01: FC<FormBM01Props> = ({
     >
       <form onSubmit={handleSubmit}>
         <hr className="mt-1 mb-3" />
-        <div className="grid grid-cols-5 gap-6 mb-4">
+        <div className="grid grid-cols-5 gap-6 mb-2">
           <div className="flex flex-col gap-1">
             <p className="font-medium text-neutral-600">
               Số văn bản <span className="text-red-500">(*)</span>
@@ -346,7 +346,7 @@ const FormBM01: FC<FormBM01Props> = ({
             </ConfigProvider>
           </div>
         </div>
-        <div className="grid grid-cols-5 gap-6 mb-4">
+        <div className="grid grid-cols-5 gap-6 mb-2">
           <div className="flex flex-col gap-1">
             <p className="font-medium text-neutral-600">Số tiết chuẩn</p>
             <InputNumber
@@ -383,7 +383,7 @@ const FormBM01: FC<FormBM01Props> = ({
             />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-6 mb-4">
+        <div className="grid grid-cols-2 gap-6 mb-2">
           <div className="flex flex-col gap-1">
             <p className="font-medium text-neutral-600">Đơn vị</p>
             <Select
@@ -518,7 +518,7 @@ const FormBM01: FC<FormBM01Props> = ({
             )}
           </div>
         </div>
-        <div className="flex flex-col gap-1 mb-4">
+        <div className="flex flex-col gap-1 mb-2">
           <p className="font-medium text-neutral-600">Ghi chú</p>
           <TextArea
             autoSize

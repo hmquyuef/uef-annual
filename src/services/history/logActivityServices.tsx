@@ -24,3 +24,9 @@ export async function getAllLogActivities(): Promise<LogActivityResponses> {
   );
   return response.data;
 }
+
+export async function deleteLogActivities(ids: string[]): Promise<void> {
+  await apiClient.delete("api/log-activity", {
+    data: ids,
+  });
+}

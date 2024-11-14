@@ -51,23 +51,24 @@ import {
 import { TableRowSelection } from "antd/es/table/interface";
 import saveAs from "file-saver";
 import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 import { Key, useCallback, useEffect, useState } from "react";
 import * as XLSX from "sheetjs-style";
 import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
 import FormBM04 from "./activity/formBM04";
 import FromUpload from "./activity/formUpload";
-import { jwtDecode } from "jwt-decode";
 
-import locale from "antd/locale/vi_VN";
-import dayjs, { Dayjs } from "dayjs";
-import "dayjs/locale/vi";
+import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 import {
   DisplayRoleItem,
   getRoleByName,
   RoleItem,
 } from "@/services/roles/rolesServices";
-import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
+import { FileItem } from "@/services/uploads/uploadsServices";
+import locale from "antd/locale/vi_VN";
+import dayjs, { Dayjs } from "dayjs";
+import "dayjs/locale/vi";
 import Link from "next/link";
 dayjs.locale("vi");
 
@@ -465,10 +466,18 @@ const BM04 = () => {
     setNotificationOpen(false);
   };
 
-  const handleSubmitUpload = async (file: File) => {
+  const handleSubmitUpload = async (
+    fileParticipant: File,
+    fileAttackment: FileItem
+  ) => {
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("File", fileParticipant);
+      formData.append("Type", fileAttackment.type);
+      formData.append("Path", fileAttackment.path);
+      formData.append("Name", fileAttackment.name);
+      formData.append("Size", fileAttackment.size.toString());
+
       const response = await ImportQAs(formData);
       if (response) {
         setNotificationOpen(true);
@@ -1030,7 +1039,11 @@ const BM04 = () => {
           bodyContent={
             isUpload ? (
               <>
-                <FromUpload onSubmit={handleSubmitUpload} />
+                <FromUpload
+                  formName="qae"
+                  onSubmit={handleSubmitUpload}
+                  handleShowPDF={setIsShowPdf}
+                />
               </>
             ) : (
               <>
