@@ -517,7 +517,7 @@ const FormBM04: FC<FormBM04Props> = ({
           <>
             <div className="flex flex-col gap-[2px]">
               <span className="font-medium text-neutral-600">
-                Thông tin thanh toán
+                Trạng thái phê duyệt thanh toán
               </span>
               <div>
                 {isPayment ? (
