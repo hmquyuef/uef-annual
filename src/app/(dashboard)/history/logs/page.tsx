@@ -336,7 +336,7 @@ const LogsActivities = () => {
             </>
           ) : (
             <>
-              {role?.displayRole.isDelete && (
+              {role?.displayRole.isDelete && role.name === "admin" && (
                 <>
                   <Tooltip
                     placement="top"
