@@ -208,11 +208,28 @@ const SearchMembers = () => {
       className: "text-center w-[100px]",
     },
     {
+      title: "TỔNG SỐ SỰ KIỆN",
+      dataIndex: "totalEvents",
+      key: "totalEvents",
+      className: "text-center w-[8rem]",
+      render: (totalEvents: string, record: DetailUserItem) => {
+        const total =
+          record.classLeaders.totalItems +
+          record.assistants.totalItems +
+          record.qAs.totalItems +
+          record.admissionCounseling.totalItems +
+          record.activities.totalItems;
+        return <strong>{total}</strong>;
+      },
+    },
+    {
       title: "TỔNG SỐ TIẾT CHUẨN",
       dataIndex: "totalStandarNumber",
       key: "totalStandarNumber",
       className: "text-center w-[8rem]",
-      render: (totalStandarNumber: string) => <p>{totalStandarNumber}</p>,
+      render: (totalStandarNumber: string) => (
+        <strong>{totalStandarNumber}</strong>
+      ),
     },
     {
       title: "",
@@ -390,7 +407,7 @@ const SearchMembers = () => {
       key: "note",
       render: (note: string) => <>{note}</>,
       className: "w-[200px]",
-    }
+    },
   ];
 
   useEffect(() => {
