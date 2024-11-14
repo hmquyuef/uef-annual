@@ -275,7 +275,7 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       item.standarNumber,
       item.proof + ", " + convertTimestampToDate(item.documentDate),
-      item.fromDate && item.toDate ? `${convertTimestampToDate(item.fromDate)} - ${convertTimestampToDate(item.toDate)}` : "",
+      item.fromDate  ? convertTimestampToDate(item.fromDate) : "",
       item.note ?? "",
     ]),
     [

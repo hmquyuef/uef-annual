@@ -40,7 +40,15 @@ import {
   Tooltip,
 } from "antd";
 import moment from "moment";
-import { FC, FormEvent, Key, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  FC,
+  FormEvent,
+  Key,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useDropzone } from "react-dropzone";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
@@ -620,52 +628,60 @@ const FormActivity: FC<FormActivityProps> = ({
             )}
           </div>
         </div>
-        <div className="flex flex-col gap-[2px]">
-          <span className="font-medium text-neutral-600">
-            Thông tin thanh toán
-          </span>
-          <div>
-            {isPayment ? (
-              <>
-                {isPayment.isRejected ? (
+        {mode === "edit" && (
+          <>
+            <div className="flex flex-col gap-[2px]">
+              <span className="font-medium text-neutral-600">
+                Thông tin thanh toán
+              </span>
+              <div>
+                {isPayment ? (
                   <>
-                    <div>
-                      <span className="text-red-500">
-                        <CloseOutlined className="me-1" /> Từ chối
-                      </span>
-                      {" - "}P.TC đã từ chối vào lúc{" "}
-                      <strong>
-                        {convertTimestampToFullDateTime(isPayment.approvedTime)}
-                      </strong>
-                    </div>
-                    <div>- Lý do: {isPayment.reason}</div>
+                    {isPayment.isRejected ? (
+                      <>
+                        <div>
+                          <span className="text-red-500">
+                            <CloseOutlined className="me-1" /> Từ chối
+                          </span>
+                          {" - "}P.TC đã từ chối vào lúc{" "}
+                          <strong>
+                            {convertTimestampToFullDateTime(
+                              isPayment.approvedTime
+                            )}
+                          </strong>
+                        </div>
+                        <div>- Lý do: {isPayment.reason}</div>
+                      </>
+                    ) : (
+                      <>
+                        <div>
+                          <span className="text-green-500">
+                            <SafetyOutlined className="me-1" /> Đã duyệt
+                          </span>
+                          {" - "}P.TC đã phê duyệt vào lúc{" "}
+                          <strong>
+                            {convertTimestampToFullDateTime(
+                              isPayment.approvedTime
+                            )}
+                          </strong>
+                        </div>
+                      </>
+                    )}
                   </>
                 ) : (
                   <>
                     <div>
-                      <span className="text-green-500">
-                        <SafetyOutlined className="me-1" /> Đã duyệt
-                      </span>
-                      {" - "}P.TC đã phê duyệt vào lúc{" "}
-                      <strong>
-                        {convertTimestampToFullDateTime(isPayment.approvedTime)}
-                      </strong>
+                      <span className="text-sky-500">
+                        <Spin size="small" className="mx-1" /> Chờ duyệt
+                      </span>{" "}
+                      {" - "} Đợi phê duyệt từ P.TC
                     </div>
                   </>
                 )}
-              </>
-            ) : (
-              <>
-                <div>
-                  <span className="text-sky-500">
-                    <Spin size="small" className="mx-1" /> Chờ duyệt
-                  </span>{" "}
-                  {" - "} Đợi phê duyệt từ P.TC
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+              </div>
+            </div>
+          </>
+        )}
       </form>
       {showPDF === true && (
         <div>

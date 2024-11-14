@@ -306,22 +306,24 @@ const SearchMembers = () => {
       title: <div className="px-2 py-3">STT</div>,
       dataIndex: "stt",
       key: "stt",
-      render: (_, __, index) => <p>{index + 1}</p>,
+      render: (_, __, index) => <>{index + 1}</>,
       className: "text-center w-[50px]",
     },
     {
       title: "TÊN HOẠT ĐỘNG",
       dataIndex: "activityName",
       key: "activityName",
-      render: (activityName: string) => <p>{activityName}</p>,
+      render: (activityName: string) => (
+        <span className="text-blue-500 font-semibold">{activityName}</span>
+      ),
       className: "w-[4/5]",
     },
     {
       title: "SỐ TIẾT CHUẨN",
       dataIndex: "standarNumber",
       key: "standarNumber",
-      className: "text-center w-[100px]",
-      render: (standarNumber: string) => <p>{standarNumber}</p>,
+      className: "text-center w-[70px]",
+      render: (standarNumber: string) => <>{standarNumber}</>,
     },
     {
       title: (
@@ -345,6 +347,14 @@ const SearchMembers = () => {
       className: "text-center w-[160px]",
     },
     {
+      title: "THỜI GIAN HOẠT ĐỘNG",
+      dataIndex: "fromDate",
+      key: "fromDate",
+      render: (fromDate: number) =>
+        fromDate ? convertTimestampToDate(fromDate) : "",
+      className: "text-center w-[80px]",
+    },
+    {
       title: (
         <div className="p-1">
           TÀI LIỆU <br /> ĐÍNH KÈM
@@ -352,7 +362,7 @@ const SearchMembers = () => {
       ),
       dataIndex: ["file", "path"],
       key: "path",
-      className: "text-center w-[95px]",
+      className: "text-center w-[80px]",
       render: (path: string) => {
         return path !== "" && path !== undefined ? (
           <>
@@ -375,20 +385,12 @@ const SearchMembers = () => {
       },
     },
     {
-      title: "THỜI GIAN HOẠT ĐỘNG",
-      dataIndex: "fromDate",
-      key: "fromDate",
-      render: (fromDate: number) =>
-        fromDate ? convertTimestampToDate(fromDate) : "",
-      className: "text-center w-[80px]",
-    },
-    {
       title: "GHI CHÚ",
       dataIndex: "note",
       key: "note",
-      render: (note: string) => <p>{note}</p>,
+      render: (note: string) => <>{note}</>,
       className: "w-[200px]",
-    },
+    }
   ];
 
   useEffect(() => {
