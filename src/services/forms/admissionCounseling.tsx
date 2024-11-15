@@ -33,7 +33,9 @@ export async function getAllAdmissionCounseling(): Promise<AdmissionCounselingRe
   return response.data;
 }
 
-export async function postAddAdmissionCounseling(data: Partial<any>): Promise<any> {
+export async function postAddAdmissionCounseling(
+  data: Partial<any>
+): Promise<any> {
   const response = await apiClient.post<any>("api/admissions-counseling", data);
   return response.data;
 }
@@ -42,16 +44,18 @@ export async function putUpdateAdmissionCounseling(
   id: string,
   data: Partial<any>
 ): Promise<any> {
-  const response = await apiClient.put<any>(`api/admissions-counseling/${id}`, data);
+  const response = await apiClient.put<any>(
+    `api/admissions-counseling/${id}`,
+    data
+  );
   return response.data;
 }
 
 export async function putUpdateApprovedAdmissionCounseling(
-  id: string,
   data: Partial<any>
 ): Promise<any> {
   const response = await apiClient.put<any>(
-    `/api/admissions-counseling/approved/${id}`,
+    `/api/admissions-counseling/approved`,
     data
   );
   return response.data;
@@ -64,11 +68,15 @@ export async function deleteAdmissionCounseling(ids: string[]): Promise<void> {
 }
 
 export async function ImportAdmissionCounseling(data: FormData): Promise<any> {
-  const response = await apiClient.post<any>("api/admissions-counseling/import", data, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+  const response = await apiClient.post<any>(
+    "api/admissions-counseling/import",
+    data,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
 
   return response.data;
 }

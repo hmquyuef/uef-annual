@@ -32,9 +32,11 @@ import {
 } from "@/utility/Utilities";
 import {
   CheckOutlined,
+  CloseCircleOutlined,
   CloseOutlined,
   DeleteOutlined,
   FileExcelOutlined,
+  FileProtectOutlined,
   PlusOutlined,
   SafetyOutlined,
 } from "@ant-design/icons";
@@ -270,7 +272,7 @@ const BM01 = () => {
       ),
       dataIndex: ["attackment", "path"],
       key: "path",
-      className: "text-center w-[70px]",
+      className: "text-center w-[80px]",
       sorter: (a, b) => a.attackment?.path.localeCompare(b.attackment?.path),
       render: (path: string) => {
         return path !== "" && path !== undefined ? (
@@ -405,6 +407,32 @@ const BM01 = () => {
     },
   ];
 
+  const itemsApproved: MenuProps["items"] = [
+    {
+      key: "1",
+      label: (
+        <p onClick={() => handleApproved(false)} className="font-medium">
+          Chấp nhận
+        </p>
+      ),
+      icon: <SafetyOutlined />,
+      style: { color: "#52c41a" },
+    },
+    {
+      type: "divider",
+    },
+    {
+      key: "2",
+      label: (
+        <p onClick={() => setIsModalVisible(true)} className="font-medium">
+          Từ chối
+        </p>
+      ),
+      icon: <CloseCircleOutlined />,
+      style: { color: "rgb(220 38 38)" },
+    },
+  ];
+
   const onSearch: SearchProps["onSearch"] = (value) => {
     if ((value === "" && !selectedKeyUnit) || selectedKeyUnit === "all")
       setData(classLeaders?.items || []);
@@ -504,7 +532,9 @@ const BM01 = () => {
         setNotificationOpen(true);
         setStatus("success");
         setMessage("Thông báo");
-        setDescription(`Tải lên thành công ${response.totalCount} thông tin chủ nhiệm lớp!`);
+        setDescription(
+          `Tải lên thành công ${response.totalCount} thông tin chủ nhiệm lớp!`
+        );
       }
       await getListClassLeaders();
       setIsOpen(false);
@@ -809,26 +839,31 @@ const BM01 = () => {
 
   const handleApproved = async (isRejected: boolean) => {
     const formData = {
-      approver: userName,
-      approvedTime: Math.floor(Date.now() / 1000),
-      isRejected: isRejected,
-      reason: reason,
-      isBlockData: true,
+      ids: selectedRowKeys.length > 0 ? selectedRowKeys : [selectedItem?.id],
+      paymentInfo: {
+        approver: userName,
+        approvedTime: Math.floor(Date.now() / 1000),
+        isRejected: isRejected,
+        reason: reason,
+        isBlockData: true,
+      },
     };
     try {
-      if (mode === "edit" && selectedItem) {
-        const response = await putUpdateApprovedClassLeader(
-          selectedItem.id as string,
-          formData
-        );
+      if (selectedRowKeys.length > 0 || selectedItem) {
+        const response = await putUpdateApprovedClassLeader(formData);
         if (response) {
           setDescription(
             isRejected
-              ? Messages.REJECTED_CLASSLEADERS
-              : Messages.APPROVED_CLASSLEADERS
+              ? `${Messages.REJECTED_CLASSLEADERS} (${
+                  selectedRowKeys.length > 0 ? selectedRowKeys.length : 1
+                } dòng)`
+              : `${Messages.APPROVED_CLASSLEADERS} (${
+                  selectedRowKeys.length > 0 ? selectedRowKeys.length : 1
+                } dòng)`
           );
         }
       }
+      setSelectedRowKeys([]);
       setNotificationOpen(true);
       setStatus("success");
       setMessage("Thông báo");
@@ -959,7 +994,7 @@ const BM01 = () => {
             )}
           </div>
         </div>
-        <div className="flex justify-end gap-4">
+        <div className="flex justify-end gap-3">
           {loading ? (
             <>
               <Skeleton.Input active size="small" />
@@ -968,6 +1003,33 @@ const BM01 = () => {
             </>
           ) : (
             <>
+              {role?.displayRole.isApprove && role?.displayRole.isReject && (
+                <>
+                  <Tooltip
+                    placement="top"
+                    title="Phê duyệt dữ liệu"
+                    arrow={true}
+                  >
+                    <Dropdown
+                      menu={{ items: itemsApproved }}
+                      trigger={["click"]}
+                    >
+                      <a onClick={(e) => e.preventDefault()}>
+                        <Button
+                          type="primary"
+                          icon={<FileProtectOutlined />}
+                          disabled={selectedRowKeys.length === 0}
+                        >
+                          Phê duyệt{" "}
+                          {selectedRowKeys.length !== 0
+                            ? `(${selectedRowKeys.length})`
+                            : ""}
+                        </Button>
+                      </a>
+                    </Dropdown>
+                  </Tooltip>
+                </>
+              )}
               {role?.displayRole.isExport && (
                 <>
                   <Tooltip
@@ -994,7 +1056,7 @@ const BM01 = () => {
                 <>
                   <Tooltip
                     placement="top"
-                    title={"Thêm mới hoạt động"}
+                    title="Thêm mới hoạt động"
                     arrow={true}
                   >
                     <Dropdown menu={{ items }} trigger={["click"]}>

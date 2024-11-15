@@ -44,14 +44,8 @@ export async function putUpdateQA(
   return response.data;
 }
 
-export async function putUpdateApprovedQA(
-  id: string,
-  data: Partial<any>
-): Promise<any> {
-  const response = await apiClient.put<any>(
-    `/api/qae/approved/${id}`,
-    data
-  );
+export async function putUpdateApprovedQA(data: Partial<any>): Promise<any> {
+  const response = await apiClient.put<any>(`/api/qae/approved`, data);
   return response.data;
 }
 

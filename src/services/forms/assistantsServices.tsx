@@ -56,13 +56,9 @@ export async function putUpdateClassAssistant(
 }
 
 export async function putUpdateApprovedClassAssistant(
-  id: string,
   data: Partial<any>
 ): Promise<any> {
-  const response = await apiClient.put<any>(
-    `/api/assistants/approved/${id}`,
-    data
-  );
+  const response = await apiClient.put<any>(`/api/assistants/approved`, data);
   return response.data;
 }
 

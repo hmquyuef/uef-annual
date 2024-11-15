@@ -51,11 +51,10 @@ export async function putUpdateClassLeader(
 }
 
 export async function putUpdateApprovedClassLeader(
-  id: string,
   data: Partial<any>
 ): Promise<any> {
   const response = await apiClient.put<any>(
-    `/api/leaders/approved/${id}`,
+    `/api/leaders/approved`,
     data
   );
   return response.data;

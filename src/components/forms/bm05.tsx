@@ -31,19 +31,23 @@ import {
 } from "@/utility/Utilities";
 import {
   CheckOutlined,
+  CloseCircleOutlined,
   CloseOutlined,
   DeleteOutlined,
   FileExcelOutlined,
+  FileProtectOutlined,
   PlusOutlined,
-  SafetyOutlined
+  SafetyOutlined,
 } from "@ant-design/icons";
 import {
   Button,
   Card,
   ConfigProvider,
   DatePicker,
+  Dropdown,
   Empty,
   Input,
+  MenuProps,
   Modal,
   PaginationProps,
   Select,
@@ -52,7 +56,7 @@ import {
   Table,
   TableColumnsType,
   Tag,
-  Tooltip
+  Tooltip,
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import locale from "antd/locale/vi_VN";
@@ -67,6 +71,7 @@ import * as XLSX from "sheetjs-style";
 import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
 import FormActivity from "./activity/formActivity";
+import Messages from "@/utility/Messages";
 dayjs.locale("vi");
 
 const { Search } = Input;
@@ -340,6 +345,32 @@ const BM05 = () => {
         );
       },
       className: "text-center w-[110px]",
+    },
+  ];
+
+  const itemsApproved: MenuProps["items"] = [
+    {
+      key: "1",
+      label: (
+        <p onClick={() => handleApproved(false)} className="font-medium">
+          Chấp nhận
+        </p>
+      ),
+      icon: <SafetyOutlined />,
+      style: { color: "#52c41a" },
+    },
+    {
+      type: "divider",
+    },
+    {
+      key: "2",
+      label: (
+        <p onClick={() => setIsModalVisible(true)} className="font-medium">
+          Từ chối
+        </p>
+      ),
+      icon: <CloseCircleOutlined />,
+      style: { color: "rgb(220 38 38)" },
     },
   ];
 
@@ -798,26 +829,31 @@ const BM05 = () => {
   };
   const handleApproved = async (isRejected: boolean) => {
     const formData = {
-      approver: userName,
-      approvedTime: Math.floor(Date.now() / 1000),
-      isRejected: isRejected,
-      reason: reason,
-      isBlockData: true,
+      ids: selectedRowKeys.length > 0 ? selectedRowKeys : [selectedItem?.id],
+      paymentInfo: {
+        approver: userName,
+        approvedTime: Math.floor(Date.now() / 1000),
+        isRejected: isRejected,
+        reason: reason,
+        isBlockData: true,
+      },
     };
     try {
-      if (mode === "edit" && selectedItem) {
-        const response = await putUpdateApprovedActivity(
-          selectedItem.id as string,
-          formData
-        );
+      if (selectedRowKeys.length > 0 || selectedItem) {
+        const response = await putUpdateApprovedActivity(formData);
         if (response) {
           setDescription(
             isRejected
-              ? "Đã từ chối phê duyệt thông tin hoạt động!"
-              : "Phê duyệt thông tin hoạt động thành công!"
+              ? `${Messages.REJECTED_ACTIVITY} (${
+                  selectedRowKeys.length > 0 ? selectedRowKeys.length : 1
+                } dòng)`
+              : `${Messages.APPROVED_ACTIVITY} (${
+                  selectedRowKeys.length > 0 ? selectedRowKeys.length : 1
+                } dòng)`
           );
         }
       }
+      setSelectedRowKeys([]);
       setNotificationOpen(true);
       setStatus("success");
       setMessage("Thông báo");
@@ -957,6 +993,33 @@ const BM05 = () => {
             </>
           ) : (
             <>
+              {role?.displayRole.isApprove && role?.displayRole.isReject && (
+                <>
+                  <Tooltip
+                    placement="top"
+                    title="Phê duyệt dữ liệu"
+                    arrow={true}
+                  >
+                    <Dropdown
+                      menu={{ items: itemsApproved }}
+                      trigger={["click"]}
+                    >
+                      <a onClick={(e) => e.preventDefault()}>
+                        <Button
+                          type="primary"
+                          icon={<FileProtectOutlined />}
+                          disabled={selectedRowKeys.length === 0}
+                        >
+                          Phê duyệt{" "}
+                          {selectedRowKeys.length !== 0
+                            ? `(${selectedRowKeys.length})`
+                            : ""}
+                        </Button>
+                      </a>
+                    </Dropdown>
+                  </Tooltip>
+                </>
+              )}
               {role?.displayRole.isExport && (
                 <>
                   <Tooltip

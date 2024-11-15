@@ -24,6 +24,20 @@ enum Messages {
     UPDATE_ADMISSION_COUNSELING = "Cập nhật thông tin tham gia tư vấn tuyển sinh thành công!",
     APPROVED_ADMISSION_COUNSELING = "Phê duyệt thông tin tham gia tư vấn tuyển sinh thành công!",
     REJECTED_ADMISSION_COUNSELING = "Đã từ chối phê duyệt thông tin tham gia tư vấn tuyển sinh!",
+
+    TITLE_ADD_QAE = "Thêm mới thông tin tham gia hỏi vấn đáp thi xếp lớp Anh văn đầu vào",
+    TITLE_UPDATE_QAE = "Cập nhật thông tin tham gia hỏi vấn đáp thi xếp lớp Anh văn đầu vào",
+    ADD_QAE = "Thêm mới thông tin tham gia hỏi vấn đáp thi xếp lớp Anh văn đầu vào thành công!",
+    UPDATE_QAE = "Cập nhật thông tin tham gia tư vấn tuyển sinh thành công!",
+    APPROVED_QAE= "Phê duyệt thông tin hỏi vấn đáp thi xếp lớp Anh văn đầu vào thành công!",
+    REJECTED_QAE = "Đã từ chối phê duyệt thông tin hỏi vấn đáp thi xếp lớp Anh văn đầu vào!",
+
+    TITLE_ADD_ACTIVITY = "Thêm mới thông tin tham gia hoạt động",
+    TITLE_UPDATE_ACTIVITY = "Cập nhật thông tin tham gia hoạt động",
+    ADD_ACTIVITY = "Thêm mới thông tin tham gia hoạt động thành công!",
+    UPDATE_ACTIVITY = "Cập nhật thông tin tham gia hoạt động thành công!",
+    APPROVED_ACTIVITY= "Phê duyệt thông tin hoạt động thành công!",
+    REJECTED_ACTIVITY = "Đã từ chối phê duyệt thông tin hoạt động!",
 }
 
 export default Messages;
