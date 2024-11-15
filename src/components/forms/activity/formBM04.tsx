@@ -109,7 +109,7 @@ const FormBM04: FC<FormBM04Props> = ({
   };
 
   const handleDeletePicture = async () => {
-    if (listPicture && listPicture !== undefined) {
+    if (listPicture && listPicture.path !== "") {
       await deleteFiles(
         listPicture.path.replace("https://api-annual.uef.edu.vn/", "")
         // listPicture[0].path.replace("http://192.168.98.60:8081/", "")
@@ -128,7 +128,8 @@ const FormBM04: FC<FormBM04Props> = ({
       const formData = new FormData();
       formData.append("FunctionName", "qae");
       formData.append("file", acceptedFiles[0]);
-      if (listPicture && listPicture !== undefined) {
+      
+      if (listPicture && listPicture.path !== "") {
         await deleteFiles(
           listPicture.path.replace("https://api-annual.uef.edu.vn/", "")
         );
