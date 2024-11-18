@@ -523,10 +523,9 @@ const BM05 = () => {
     );
     if (results) {
       const defaultInfo = [
-        ["", "", "", "", "", "", "", "", "", "", "", "", "", "BM-05"],
+        ["", "", "", "", "", "", "", "", "BM-05"],
         [
           "TRƯỜNG ĐẠI HỌC KINH TẾ - TÀI CHÍNH",
-          "",
           "",
           "",
           "",
@@ -535,7 +534,6 @@ const BM05 = () => {
         ],
         [
           "THÀNH PHỐ HỒ CHÍ MINH",
-          "",
           "",
           "",
           "",
@@ -555,15 +553,10 @@ const BM05 = () => {
           "STT",
           "Mã số CB-GV-NV",
           "Họ và Tên",
-          "",
           "Đơn vị",
           "Tên hoạt động",
-          "",
-          "",
-          "",
           "Số tiết chuẩn",
           "Số văn bản, ngày lập",
-          "",
           "Thời gian hoạt động",
           "Ghi chú",
         ],
@@ -572,15 +565,10 @@ const BM05 = () => {
               index + 1,
               item.userName,
               item.middleName + " " + item.firstName,
-              "",
               item.faculityName,
               item.activityName,
-              "",
-              "",
-              "",
               item.standNumber,
               item.determination + ", " + convertTimestampToDate(item.fromDate),
-              "",
               item.eventDate ? convertTimestampToDate(item.eventDate) : "",
               item.note ?? "",
             ])
@@ -595,17 +583,12 @@ const BM05 = () => {
                 index + 1,
                 item.userName,
                 item.middleName + " " + item.firstName,
-                "",
                 item.faculityName,
                 item.activityName,
-                "",
-                "",
-                "",
                 item.standNumber,
                 item.determination +
                   ", " +
                   convertTimestampToDate(item.fromDate),
-                "",
                 item.eventDate ? convertTimestampToDate(item.eventDate) : "",
                 item.note ?? "",
               ])),
@@ -615,12 +598,7 @@ const BM05 = () => {
           "",
           "",
           "",
-          "",
-          "",
-          "",
-          "",
           `${results.data.reduce((acc, x) => acc + x.standNumber, 0)}`,
-          "",
           "",
           "",
           "",
@@ -654,8 +632,12 @@ const BM05 = () => {
       worksheet["!cols"][0] = { wch: 4 };
       worksheet["!cols"][1] = { wch: 20 };
       worksheet["!cols"][2] = { wch: 20 };
-      worksheet["!cols"][4] = { wch: 13 };
-      worksheet["N1"].s = {
+      worksheet["!cols"][3] = { wch: 15 };
+      worksheet["!cols"][4] = { wch: 45 };
+      worksheet["!cols"][6] = { wch: 12 };
+      worksheet["!cols"][7] = { wch: 10 };
+      worksheet["!cols"][8] = { wch: 15 };
+      worksheet["I1"].s = {
         fill: {
           fgColor: { rgb: "FFFF00" },
         },
@@ -676,9 +658,9 @@ const BM05 = () => {
         },
       };
       setCellStyle(worksheet, "A2", 11, true, "center", "center", false, false);
-      setCellStyle(worksheet, "G2", 11, true, "center", "center", false, false);
+      setCellStyle(worksheet, "F2", 11, true, "center", "center", false, false);
       setCellStyle(worksheet, "A3", 11, true, "center", "center", false, false);
-      setCellStyle(worksheet, "G3", 11, true, "center", "center", false, false);
+      setCellStyle(worksheet, "F3", 11, true, "center", "center", false, false);
       setCellStyle(worksheet, "A4", 11, true, "center", "center", false, false);
       setCellStyle(worksheet, "A5", 16, true, "center", "center", false, false);
       setCellStyle(worksheet, "A6", 11, true, "center", "center", true, false);
@@ -687,19 +669,12 @@ const BM05 = () => {
       worksheet["!merges"] = [];
       const tempMerge = [];
       const range = XLSX.utils.decode_range(worksheet["!ref"]!);
-      for (let row = 7; row <= results.data.length + 8; row++) {
-        if (row < results.data.length + 8) {
-          tempMerge.push(
-            { s: { r: row, c: 2 }, e: { r: row, c: 3 } },
-            { s: { r: row, c: 5 }, e: { r: row, c: 8 } },
-            { s: { r: row, c: 10 }, e: { r: row, c: 11 } }
-          );
-        } else {
-          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 8 } });
-          tempMerge.push({ s: { r: row, c: 10 }, e: { r: row, c: 11 } });
-        }
-        worksheet["!rows"][row + 1] = { hpx: 45 };
-        for (let col = range.s.c; col <= range.e.c; col++) {
+      for (let row = 7; row <= range.e.r - 1; row++) {
+        if (row === range.e.r - defaultFooterInfo.length)
+          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 4 } });
+        if (row < range.e.r - defaultFooterInfo.length)
+          worksheet["!rows"][row + 1] = { hpx: 45 };
+        for (let col = 0; col <= range.e.c; col++) {
           const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
           if (worksheet[cellRef]) {
             worksheet[cellRef].s = {
@@ -707,7 +682,7 @@ const BM05 = () => {
                 name: "Times New Roman",
                 sz: 11,
                 bold:
-                  row === 7 || col === 1 || col === 2 || col === 3 || col === 4
+                  row === 7 || col === 1 || col === 2 || col === 3
                     ? true
                     : false,
               },
@@ -715,12 +690,7 @@ const BM05 = () => {
                 wrapText: true,
                 vertical: "center",
                 horizontal:
-                  row > 7 &&
-                  (col === 1 ||
-                    col === 2 ||
-                    col === 3 ||
-                    col === 4 ||
-                    col === 5)
+                  row > 7 && (col === 1 || col === 2 || col === 4 || col === 8)
                     ? "left"
                     : "center",
               },
@@ -732,7 +702,7 @@ const BM05 = () => {
               },
             };
           }
-          if (row === results.data.length + 8) {
+          if (row === range.e.r - defaultFooterInfo.length)
             setCellStyle(
               worksheet,
               cellRef,
@@ -743,18 +713,17 @@ const BM05 = () => {
               true,
               true
             );
-          }
         }
       }
 
       const defaultMerges = [
         { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } },
-        { s: { r: 1, c: 6 }, e: { r: 1, c: 12 } },
+        { s: { r: 1, c: 5 }, e: { r: 1, c: 8 } },
         { s: { r: 2, c: 0 }, e: { r: 2, c: 3 } },
-        { s: { r: 2, c: 6 }, e: { r: 2, c: 12 } },
+        { s: { r: 2, c: 5 }, e: { r: 2, c: 8 } },
         { s: { r: 3, c: 0 }, e: { r: 3, c: 3 } },
-        { s: { r: 4, c: 0 }, e: { r: 4, c: 13 } },
-        { s: { r: 5, c: 0 }, e: { r: 5, c: 13 } },
+        { s: { r: 4, c: 0 }, e: { r: 4, c: 8 } },
+        { s: { r: 5, c: 0 }, e: { r: 5, c: 8 } },
       ];
 
       for (
@@ -763,24 +732,33 @@ const BM05 = () => {
         row++
       ) {
         if (row < range.e.r)
-          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 13 } });
-        else {
-          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 3 } });
-          tempMerge.push({ s: { r: row, c: 9 }, e: { r: row, c: 10 } });
-        }
-
+          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 8 } });
+        else tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 2 } });
         for (let col = range.s.c; col <= range.e.c; col++) {
           const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-          setCellStyle(
-            worksheet,
-            cellRef,
-            11,
-            false,
-            "left",
-            "center",
-            true,
-            false
-          );
+
+          if (row === range.e.r - 6)
+            setCellStyle(
+              worksheet,
+              cellRef,
+              11,
+              true,
+              "left",
+              "center",
+              true,
+              false
+            );
+          else
+            setCellStyle(
+              worksheet,
+              cellRef,
+              11,
+              false,
+              "left",
+              "center",
+              true,
+              false
+            );
           if (row === range.e.r)
             setCellStyle(
               worksheet,
@@ -794,7 +772,6 @@ const BM05 = () => {
             );
         }
       }
-
       worksheet["!merges"].push(...defaultMerges, ...tempMerge);
       // Xuất file Excel
       const excelBuffer = XLSX.write(workbook, {
@@ -1174,7 +1151,9 @@ const BM05 = () => {
             rowSelection={rowSelection}
             columns={columns}
             dataSource={data}
-            locale={{ emptyText: <Empty description="No Data"></Empty> }}
+            locale={{
+              emptyText: <Empty description="Không có dữ liệu..."></Empty>,
+            }}
             onChange={handleTableChange}
           />
         </>

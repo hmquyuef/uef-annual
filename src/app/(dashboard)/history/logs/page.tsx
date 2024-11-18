@@ -370,7 +370,7 @@ const LogsActivities = () => {
       />
       <section>
         <Table<LogActivityItem>
-          key={"table-activity-bm05"}
+          key={"table-logs-history"}
           className="custom-table-header shadow-md rounded-md"
           bordered
           rowKey={(item) => item.id}
@@ -388,7 +388,7 @@ const LogsActivities = () => {
           rowSelection={rowSelection}
           columns={columns}
           dataSource={data}
-          locale={{ emptyText: <Empty description="No Data"></Empty> }}
+          locale={{ emptyText: <Empty description="Không có dữ liệu..."></Empty> }}
           onChange={handleTableChange}
         />
       </section>

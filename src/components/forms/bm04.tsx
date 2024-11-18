@@ -194,14 +194,14 @@ const BM04 = () => {
       title: "SỐ LƯỢNG SINH VIÊN",
       dataIndex: "totalStudent",
       key: "totalStudent",
-      className: "text-center w-[3rem]",
+      className: "text-center w-[70px]",
       render: (totalStudent: string) => <>{totalStudent}</>,
     },
     {
       title: "SỐ TIẾT CHUẨN",
       dataIndex: "standardNumber",
       key: "standardNumber",
-      className: "text-center w-[90px]",
+      className: "text-center w-[60px]",
       render: (standardNumber: string) => <>{standardNumber}</>,
     },
     {
@@ -223,7 +223,7 @@ const BM04 = () => {
           </div>
         );
       },
-      className: "w-[5rem]",
+      className: "text-center w-[100px]",
     },
     {
       title: (
@@ -257,7 +257,7 @@ const BM04 = () => {
       ),
       dataIndex: ["attackment", "path"],
       key: "path",
-      className: "text-center w-[70px]",
+      className: "text-center w-[90px]",
       sorter: (a, b) => a.attackment?.path.localeCompare(b.attackment?.path),
       render: (path: string) => {
         return path !== "" && path !== undefined ? (
@@ -626,6 +626,7 @@ const BM04 = () => {
       worksheet["!cols"][3] = { wch: 15 };
       worksheet["!cols"][4] = { wch: 30 };
       worksheet["!cols"][7] = { wch: 10 };
+      worksheet["!cols"][8] = { wch: 10 };
       worksheet["!cols"][9] = { wch: 15 };
       worksheet["J1"].s = {
         fill: {
@@ -1104,6 +1105,7 @@ const BM04 = () => {
                   formName="qae"
                   onSubmit={handleSubmitUpload}
                   handleShowPDF={setIsShowPdf}
+                  displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
                 />
               </>
             ) : (
@@ -1147,7 +1149,7 @@ const BM04 = () => {
       ) : (
         <>
           <Table<QAItem>
-            key={"table-activity-bm04"}
+            key={"table-qae-bm04"}
             className="custom-table-header shadow-md rounded-md"
             bordered
             rowKey={(item) => item.id}
@@ -1165,7 +1167,7 @@ const BM04 = () => {
             rowSelection={rowSelection}
             columns={columns}
             dataSource={data}
-            locale={{ emptyText: <Empty description="No Data"></Empty> }}
+            locale={{ emptyText: <Empty description="Không có dữ liệu..."></Empty> }}
             onChange={handleTableChange}
           />
         </>

@@ -231,7 +231,7 @@ const BM02 = () => {
           </div>
         );
       },
-      className: "w-[5rem]",
+      className: "text-center w-[100px]",
     },
     {
       title: (
@@ -265,7 +265,7 @@ const BM02 = () => {
       ),
       dataIndex: ["attackment", "path"],
       key: "path",
-      className: "text-center w-[70px]",
+      className: "text-center w-[90px]",
       sorter: (a, b) => a.attackment?.path.localeCompare(b.attackment?.path),
       render: (path: string) => {
         return path !== "" && path !== undefined ? (
@@ -1113,6 +1113,7 @@ const BM02 = () => {
                   formName="assistant"
                   onSubmit={handleSubmitUpload}
                   handleShowPDF={setIsShowPdf}
+                  displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
                 />
               </>
             ) : (
@@ -1157,7 +1158,7 @@ const BM02 = () => {
       ) : (
         <>
           <Table<ClassAssistantItem>
-            key={"table-activity-bm02"}
+            key={"table-assistant-bm02"}
             className="custom-table-header shadow-md rounded-md"
             bordered
             rowKey={(item) => item.id}
@@ -1175,7 +1176,7 @@ const BM02 = () => {
             rowSelection={rowSelection}
             columns={columns}
             dataSource={data}
-            locale={{ emptyText: <Empty description="No Data"></Empty> }}
+            locale={{ emptyText: <Empty description="Không có dữ liệu..."></Empty> }}
             onChange={handleTableChange}
           />
         </>

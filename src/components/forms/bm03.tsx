@@ -201,6 +201,27 @@ const BM03 = () => {
     {
       title: (
         <>
+          SỐ VĂN BẢN <br /> NGÀY LẬP
+        </>
+      ),
+      dataIndex: "proof",
+      key: "proof",
+      render: (proof: string, record: AdmissionCounselingItem) => {
+        const ngayLap = record.fromDate;
+        return (
+          <div className="flex flex-col">
+            <span className="text-center font-medium">{proof}</span>
+            <span className="text-center text-[13px]">
+              {convertTimestampToDate(ngayLap)}
+            </span>
+          </div>
+        );
+      },
+      className: "text-center w-[100px]",
+    },
+    {
+      title: (
+        <>
           THỜI GIAN <br /> HOẠT ĐỘNG
         </>
       ),
@@ -224,34 +245,13 @@ const BM03 = () => {
     },
     {
       title: (
-        <>
-          SỐ VĂN BẢN <br /> NGÀY LẬP
-        </>
-      ),
-      dataIndex: "proof",
-      key: "proof",
-      render: (proof: string, record: AdmissionCounselingItem) => {
-        const ngayLap = record.fromDate;
-        return (
-          <div className="flex flex-col">
-            <span className="text-center font-medium">{proof}</span>
-            <span className="text-center text-[13px]">
-              {convertTimestampToDate(ngayLap)}
-            </span>
-          </div>
-        );
-      },
-      className: "w-[70px]",
-    },
-    {
-      title: (
         <div className="p-1">
           TÀI LIỆU <br /> ĐÍNH KÈM
         </div>
       ),
       dataIndex: ["attackment", "path"],
       key: "path",
-      className: "text-center w-[70px]",
+      className: "text-center w-[90px]",
       sorter: (a, b) => a.attackment?.path.localeCompare(b.attackment?.path),
       render: (path: string) => {
         return path !== "" && path !== undefined ? (
@@ -530,7 +530,7 @@ const BM03 = () => {
   const handleExportExcel = async () => {
     if (data) {
       const defaultInfo = [
-        ["", "", "", "", "", "", "", "", "", "", "", "BM-03"],
+        ["", "", "", "", "", "", "", "", "", "", "BM-03"],
         [
           "TRƯỜNG ĐẠI HỌC KINH TẾ - TÀI CHÍNH",
           "",
@@ -560,12 +560,11 @@ const BM03 = () => {
           "Họ và Tên",
           "Đơn vị",
           "Địa điểm",
-          "Từ ngày",
-          "Đến ngày",
           "Vị trí tham gia",
           "Số buổi",
           "Số tiết chuẩn",
           "Số văn bản, ngày lập",
+          "Thời gian hoạt động",
           "Ghi chú",
         ],
         ...data.map((item, index) => [
@@ -574,12 +573,15 @@ const BM03 = () => {
           item.fullName,
           item.unitName ?? "",
           item.location ?? "",
-          item.fromDate ? convertTimestampToDate(item.fromDate) : "",
-          item.toDate ? convertTimestampToDate(item.toDate) : "",
           item.position ?? "",
           item.numberOfTime ?? 0,
           item.standardNumber,
           item.proof + ", " + convertTimestampToDate(item.documentDate),
+          item.fromDate && item.toDate
+            ? convertTimestampToDate(item.fromDate) +
+              " - " +
+              convertTimestampToDate(item.toDate)
+            : "",
           item.note ?? "",
         ]),
         [
@@ -590,9 +592,8 @@ const BM03 = () => {
           "",
           "",
           "",
-          "",
-          "",
           `${data.reduce((acc, x) => acc + x.standardNumber, 0)}`,
+          "",
           "",
           "",
         ],
@@ -625,7 +626,9 @@ const BM03 = () => {
       worksheet["!cols"][2] = { wch: 20 };
       worksheet["!cols"][3] = { wch: 15 };
       worksheet["!cols"][4] = { wch: 30 };
-      worksheet["L1"].s = {
+      worksheet["!cols"][8] = { wch: 12 };
+      worksheet["!cols"][9] = { wch: 10 };
+      worksheet["K1"].s = {
         fill: {
           fgColor: { rgb: "FFFF00" },
         },
@@ -659,7 +662,7 @@ const BM03 = () => {
       const range = XLSX.utils.decode_range(worksheet["!ref"]!);
       for (let row = 7; row <= range.e.r; row++) {
         if (row === combinedData.length - 1) {
-          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 8 } });
+          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 6 } });
         }
         for (let col = range.s.c; col <= range.e.c; col++) {
           const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
@@ -676,7 +679,7 @@ const BM03 = () => {
             );
             continue;
           }
-          if (col === 1 || col === 2 || col === 4 || col === 11) {
+          if (col === 1 || col === 2 || col === 4 || col === 10) {
             setCellStyle(
               worksheet,
               cellRef,
@@ -719,7 +722,7 @@ const BM03 = () => {
         row++
       ) {
         if (row < range.e.r)
-          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 11 } });
+          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 10 } });
         for (let col = range.s.c; col <= range.e.c; col++) {
           const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
           setCellStyle(
@@ -761,12 +764,12 @@ const BM03 = () => {
 
       const defaultMerges = [
         { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
-        { s: { r: 1, c: 5 }, e: { r: 1, c: 11 } },
+        { s: { r: 1, c: 5 }, e: { r: 1, c: 10 } },
         { s: { r: 2, c: 0 }, e: { r: 2, c: 2 } },
-        { s: { r: 2, c: 5 }, e: { r: 2, c: 11 } },
+        { s: { r: 2, c: 5 }, e: { r: 2, c: 10 } },
         { s: { r: 3, c: 0 }, e: { r: 3, c: 2 } },
-        { s: { r: 4, c: 0 }, e: { r: 4, c: 11 } },
-        { s: { r: 5, c: 0 }, e: { r: 5, c: 11 } },
+        { s: { r: 4, c: 0 }, e: { r: 4, c: 10 } },
+        { s: { r: 5, c: 0 }, e: { r: 5, c: 10 } },
         { s: { r: range.e.r, c: 0 }, e: { r: range.e.r, c: 2 } },
         { s: { r: range.e.r, c: 8 }, e: { r: range.e.r, c: 9 } },
       ];
@@ -1094,6 +1097,7 @@ const BM03 = () => {
                   formName="admission"
                   onSubmit={handleSubmitUpload}
                   handleShowPDF={setIsShowPdf}
+                  displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
                 />
               </>
             ) : (
@@ -1137,7 +1141,7 @@ const BM03 = () => {
       ) : (
         <>
           <Table<AdmissionCounselingItem>
-            key={"table-activity-bm01"}
+            key={"table-admission-bm03"}
             className="custom-table-header shadow-md rounded-md"
             bordered
             rowKey={(item) => item.id}
@@ -1155,7 +1159,9 @@ const BM03 = () => {
             rowSelection={rowSelection}
             columns={columns}
             dataSource={data}
-            locale={{ emptyText: <Empty description="No Data"></Empty> }}
+            locale={{
+              emptyText: <Empty description="Không có dữ liệu..."></Empty>,
+            }}
             onChange={handleTableChange}
           />
         </>

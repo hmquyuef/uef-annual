@@ -1133,6 +1133,7 @@ const BM01 = () => {
                   formName="classleader"
                   onSubmit={handleSubmitUpload}
                   handleShowPDF={setIsShowPdf}
+                  displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
                 />
               </>
             ) : (
@@ -1177,7 +1178,7 @@ const BM01 = () => {
       ) : (
         <>
           <Table<ClassLeaderItem>
-            key={"table-activity-bm01"}
+            key={"table-classleader-bm01"}
             className="custom-table-header shadow-md rounded-md"
             bordered
             rowKey={(item) => item.id}

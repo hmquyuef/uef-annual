@@ -1,6 +1,7 @@
 "use client";
 
 import CustomNotification from "@/components/CustomNotification";
+import { DisplayRoleItem } from "@/services/roles/rolesServices";
 import {
   deleteFiles,
   FileItem,
@@ -10,6 +11,7 @@ import Messages from "@/utility/Messages";
 import {
   CloseOutlined,
   CloudUploadOutlined,
+  DownloadOutlined,
   MinusCircleOutlined,
   ZoomInOutlined,
   ZoomOutOutlined,
@@ -25,12 +27,14 @@ interface FromUploadProps {
   formName: string;
   onSubmit: (fileParticipant: File, fileAttachment: FileItem) => void;
   handleShowPDF: (isVisible: boolean) => void;
+  displayRole: DisplayRoleItem;
 }
 
 const FromUpload: FC<FromUploadProps> = ({
   formName,
   onSubmit,
   handleShowPDF,
+  displayRole,
 }) => {
   const [selectedFileParticipant, setSelectedFileParticipant] =
     useState<File | null>(null);
@@ -186,9 +190,28 @@ const FromUpload: FC<FromUploadProps> = ({
             {!isUploadedFileParticipant ? (
               <>
                 <img src="/upload.svg" width={50} loading="lazy" alt="upload" />
-                <span className="text-sm">
-                  Kéo và thả một tập tin vào đây hoặc nhấp để chọn một tập tin
-                </span>
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm">
+                    Kéo và thả một tập tin vào đây hoặc nhấp để chọn một tập tin
+                  </span>
+                  <Button
+                    color="primary"
+                    variant="filled"
+                    shape="round"
+                    icon={<DownloadOutlined />}
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const fileUrl = `/template-import-${formName}.xlsx`; // Đường dẫn đến file
+                      const link = document.createElement("a");
+                      link.href = fileUrl;
+                      link.download = `template-import-${formName}.xlsx`;
+                      link.click();
+                    }}
+                  >
+                    Tải xuống mẫu template-import-{formName}.xlsx
+                  </Button>
+                </div>
               </>
             ) : (
               <>
@@ -219,7 +242,7 @@ const FromUpload: FC<FromUploadProps> = ({
                       <div className="flex gap-3 items-center mt-2">
                         <Button
                           danger
-                          // disabled={isBlock || displayRole.isUpload === false}
+                          disabled={displayRole.isUpload === false}
                           color="danger"
                           onClick={handleDeleteExcel}
                           size="small"
@@ -230,7 +253,7 @@ const FromUpload: FC<FromUploadProps> = ({
                         <Button
                           type="primary"
                           size="small"
-                          // disabled={isBlock || displayRole.isUpload === false}
+                          disabled={displayRole.isUpload === false}
                           icon={<CloudUploadOutlined />}
                         >
                           Chọn tệp thay thế
@@ -306,7 +329,7 @@ const FromUpload: FC<FromUploadProps> = ({
                       <div className="flex gap-3 items-center mt-2">
                         <Button
                           danger
-                          // disabled={isBlock || displayRole.isUpload === false}
+                          disabled={displayRole.isUpload === false}
                           color="danger"
                           onClick={handleDeletePicture}
                           size="small"
@@ -317,7 +340,7 @@ const FromUpload: FC<FromUploadProps> = ({
                         <Button
                           type="primary"
                           size="small"
-                          // disabled={isBlock || displayRole.isUpload === false}
+                          disabled={displayRole.isUpload === false}
                           icon={<CloudUploadOutlined />}
                         >
                           Chọn tệp thay thế

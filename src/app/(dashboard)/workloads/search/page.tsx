@@ -261,63 +261,115 @@ const SearchMembers = () => {
     },
   ];
 
-  //render table Classleaders
+  //render table for BM01, BM02, BM03, BM04
   const columns: TableColumnsType<Item> = [
     {
       title: <div className="px-2 py-3">STT</div>,
       dataIndex: "stt",
       key: "stt",
-      render: (_, __, index) => <p>{index + 1}</p>,
+      render: (_, __, index) => <>{index + 1}</>,
       className: "text-center w-[50px]",
     },
     {
       title: "TÊN HOẠT ĐỘNG",
       dataIndex: "activityName",
       key: "activityName",
-      render: (activityName: string) => <p>{activityName}</p>,
+      render: (activityName: string) => (
+        <span className="text-blue-500 font-semibold">{activityName}</span>
+      ),
       className: "w-[4/5]",
     },
     {
       title: "SỐ TIẾT CHUẨN",
       dataIndex: "standarNumber",
       key: "standarNumber",
-      className: "text-center w-[100px]",
-      render: (standarNumber: string) => <p>{standarNumber}</p>,
+      className: "text-center w-[70px]",
+      render: (standarNumber: string) => <>{standarNumber}</>,
     },
     {
-      title: "SỐ VĂN BẢN, NGÀY LẬP",
+      title: (
+        <div>
+          SỐ VĂN BẢN <br /> NGÀY LẬP
+        </div>
+      ),
       dataIndex: "proof",
       key: "proof",
       render: (proof: string, record: Item) => {
-        const fromDate = record.fromDate
-          ? convertTimestampToDate(record.fromDate)
+        const documentDate = record.documentDate
+          ? convertTimestampToDate(record.documentDate)
           : "";
         return (
           <div className="flex flex-col">
             <span className="font-medium">{proof}</span>
-            <span className="text-[13px]">{fromDate}</span>
+            <span className="text-[13px]">{documentDate}</span>
           </div>
         );
       },
-      className: "text-center w-[100px]",
+      className: "text-center w-[150px]",
     },
     {
       title: "THỜI GIAN HOẠT ĐỘNG",
-      dataIndex: "attendances",
-      key: "attendances",
-      render: (attendances: number) =>
-        attendances ? convertTimestampToDate(attendances) : "",
+      dataIndex: "fromDate",
+      key: "fromDate",
+      render: (fromDate: number, record: Item) => {
+        const toDate = record.toDate
+          ? convertTimestampToDate(record.toDate)
+          : "";
+        return (
+          <>
+            {fromDate ? (
+              <div className="flex flex-col">
+                <span>{convertTimestampToDate(fromDate)}</span>
+                <span>{toDate}</span>
+              </div>
+            ) : (
+              ""
+            )}
+          </>
+        );
+      },
+      className: "text-center w-[90px]",
+    },
+    {
+      title: (
+        <div className="p-1">
+          TÀI LIỆU <br /> ĐÍNH KÈM
+        </div>
+      ),
+      dataIndex: ["file", "path"],
+      key: "path",
       className: "text-center w-[80px]",
+      render: (path: string) => {
+        return path !== "" && path !== undefined ? (
+          <>
+            <Link
+              href={"https://api-annual.uef.edu.vn/" + path}
+              target="__blank"
+            >
+              <p className="text-green-500">
+                <CheckOutlined />
+              </p>
+            </Link>
+          </>
+        ) : (
+          <>
+            <p className="text-red-400">
+              <CloseOutlined />
+            </p>
+          </>
+        );
+      },
     },
     {
       title: "GHI CHÚ",
       dataIndex: "note",
       key: "note",
-      render: (note: string) => <p>{note}</p>,
+      render: (note: string) => <>{note}</>,
       className: "w-[200px]",
     },
   ];
 
+  //render table for BM05
   const columnsBM05: TableColumnsType<Item> = [
     {
       title: <div className="px-2 py-3">STT</div>,
@@ -361,7 +413,7 @@ const SearchMembers = () => {
           </div>
         );
       },
-      className: "text-center w-[160px]",
+      className: "text-center w-[150px]",
     },
     {
       title: "THỜI GIAN HOẠT ĐỘNG",
