@@ -1,6 +1,10 @@
 "use client";
 
 import {
+  getUsersFromHRM,
+  UsersFromHRMResponse,
+} from "@/services/users/usersServices";
+import {
   getWorkloadGroups,
   WorkloadGroupResponse,
 } from "@/services/workloads/groupsServices";
@@ -27,13 +31,29 @@ const FormWorkloadType: React.FC<FormWorkloadTypeProps> = ({
     WorkloadGroupResponse | undefined
   >(undefined);
   const [selectedGroupId, setSelectedGroupId] = useState<string>("");
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [usersHRM, setUsersHRM] = useState<UsersFromHRMResponse | undefined>(
+    undefined
+  );
+
+  const filteredOptions = usersHRM?.items.filter(
+    (o) => !selectedItems.includes(o.userName)
+  );
+
+  const getUsersHRM = async () => {
+    const response = await getUsersFromHRM();
+    setUsersHRM(response);
+  };
+
   const getListWorkloadGroups = async () => {
     const response = await getWorkloadGroups();
     setWorkloadGroups(response);
   };
+
   useEffect(() => {
-    getListWorkloadGroups();
+    Promise.all([getListWorkloadGroups(), getUsersHRM()]);
   }, []);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const formData: Partial<AddUpdateWorkloadType> = {
@@ -42,9 +62,10 @@ const FormWorkloadType: React.FC<FormWorkloadTypeProps> = ({
       shortName: shortName,
       href: href,
       workloadGroupId: selectedGroupId,
-      emails: emails,
+      emails: selectedItems.join(","),
       isActived: true,
     };
+    console.log('formData :>> ', formData);
     onSubmit(formData);
   };
   useEffect(() => {
@@ -55,12 +76,14 @@ const FormWorkloadType: React.FC<FormWorkloadTypeProps> = ({
         setHref(initialData.href || "");
         setEmails(initialData.emails || "");
         setSelectedGroupId(initialData.workloadGroupId || "");
+        setSelectedItems(initialData.emails?.split(",") || []);
       } else {
         setName("");
         setShortName("");
         setHref("");
         setEmails("");
         setSelectedGroupId("");
+        setSelectedItems([]);
       }
     };
     loadUsers();
@@ -121,9 +144,24 @@ const FormWorkloadType: React.FC<FormWorkloadTypeProps> = ({
       </div>
       <div className="flex flex-col gap-1 mb-4">
         <p className="font-medium text-neutral-600">
-          Danh sách Email được phép khai thác
+          Danh sách CB-GB-NV được phân quyền
         </p>
-        <TextArea autoSize value={emails} onChange={(e) => setEmails(e.target.value.trim())} />
+        {/* <TextArea
+          autoSize
+          value={emails}
+          onChange={(e) => setEmails(e.target.value.trim())}
+        /> */}
+        <Select
+          mode="multiple"
+          value={selectedItems}
+          onChange={setSelectedItems}
+          style={{ width: "100%" }}
+          options={(filteredOptions || []).map((user) => ({
+            key: user.id,
+            value: user.userName,
+            label: `${user.fullName} - ${user.userName}`,
+          }))}
+        />
       </div>
     </form>
   );

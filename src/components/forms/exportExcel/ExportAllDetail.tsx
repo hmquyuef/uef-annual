@@ -75,7 +75,11 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       item.standarNumber,
       item.proof + ", " + convertTimestampToDate(item.documentDate),
-      item.fromDate && item.toDate ? `${convertTimestampToDate(item.fromDate)} - ${convertTimestampToDate(item.toDate)}` : "",
+      item.fromDate && item.toDate
+        ? `${convertTimestampToDate(item.fromDate)} - ${convertTimestampToDate(
+            item.toDate
+          )}`
+        : "",
       item.note ?? "",
     ]),
     [
@@ -125,7 +129,11 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       item.standarNumber,
       item.proof + ", " + convertTimestampToDate(item.documentDate),
-      item.fromDate && item.toDate ? `${convertTimestampToDate(item.fromDate)} - ${convertTimestampToDate(item.toDate)}` : "",
+      item.fromDate && item.toDate
+        ? `${convertTimestampToDate(item.fromDate)} - ${convertTimestampToDate(
+            item.toDate
+          )}`
+        : "",
       item.note ?? "",
     ]),
     [
@@ -175,7 +183,11 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       item.standarNumber,
       item.proof + ", " + convertTimestampToDate(item.documentDate),
-      item.fromDate && item.toDate ? `${convertTimestampToDate(item.fromDate)} - ${convertTimestampToDate(item.toDate)}` : "",
+      item.fromDate && item.toDate
+        ? `${convertTimestampToDate(item.fromDate)} - ${convertTimestampToDate(
+            item.toDate
+          )}`
+        : "",
       item.note ?? "",
     ]),
     [
@@ -225,7 +237,11 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       item.standarNumber,
       item.proof + ", " + convertTimestampToDate(item.documentDate),
-      item.fromDate && item.toDate ? `${convertTimestampToDate(item.fromDate)} - ${convertTimestampToDate(item.toDate)}` : "",
+      item.fromDate && item.toDate
+        ? `${convertTimestampToDate(item.fromDate)} - ${convertTimestampToDate(
+            item.toDate
+          )}`
+        : "",
       item.note ?? "",
     ]),
     [
@@ -275,7 +291,7 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
       "",
       item.standarNumber,
       item.proof + ", " + convertTimestampToDate(item.documentDate),
-      item.fromDate  ? convertTimestampToDate(item.fromDate) : "",
+      item.fromDate ? convertTimestampToDate(item.fromDate) : "",
       item.note ?? "",
     ]),
     [
@@ -573,7 +589,9 @@ export const handleExportForBM = async (
           classCode: item.classCode,
           standarNumber: item.standarNumber,
           fromDate: item.fromDate,
-          eventDate: item.eventDate,
+          toDate: item.toDate,
+          entryDate: item.entryDate,
+          documentDate: item.documentDate,
           proof: item.proof,
           note: item.note,
         })),
@@ -602,8 +620,12 @@ export const handleExportForBM = async (
           item.subject,
           item.course,
           item.classCode,
-          item.proof + ", " + convertTimestampToDate(item.fromDate),
-          item.eventDate ? convertTimestampToDate(item.eventDate) : "",
+          item.proof + ", " + convertTimestampToDate(item.documentDate),
+          item.fromDate
+            ? `${convertTimestampToDate(
+                item.fromDate
+              )} ${convertTimestampToDate(item.toDate)}`
+            : "",
           item.note ?? "",
         ]),
         [
@@ -641,7 +663,9 @@ export const handleExportForBM = async (
           classCode: item.classCode,
           standarNumber: item.standarNumber,
           fromDate: item.fromDate,
-          eventDate: item.eventDate,
+          toDate: item.toDate,
+          entryDate: item.entryDate,
+          documentDate: item.documentDate,
           proof: item.proof,
           note: item.note,
         })),
@@ -670,8 +694,12 @@ export const handleExportForBM = async (
           item.semester,
           item.standarNumber,
           "",
-          item.proof + ", " + convertTimestampToDate(item.fromDate),
-          item.eventDate ? convertTimestampToDate(item.eventDate) : "",
+          item.proof + ", " + convertTimestampToDate(item.documentDate),
+          item.fromDate
+            ? `${convertTimestampToDate(
+                item.fromDate
+              )} ${convertTimestampToDate(item.toDate)}`
+            : "",
           item.note ?? "",
         ]),
         [
@@ -703,10 +731,11 @@ export const handleExportForBM = async (
           location: item.location,
           position: item.position,
           standardNumber: item.standardNumber,
-          fromDate: item.fromDate,
           numberOfTime: item.numberOfTime,
+          fromDate: item.fromDate,
           toDate: item.toDate,
-          eventDate: item.eventDate,
+          entryDate: item.entryDate,
+          documentDate: item.documentDate,
           proof: item.proof,
           note: item.note,
         })),
@@ -718,12 +747,12 @@ export const handleExportForBM = async (
           "Địa điểm",
           "",
           "",
-          "Từ ngày",
-          "Đến ngày",
+          "",
           "Vị trí tham gia",
           "Số tiết chuẩn",
           "Số buổi",
           "Số văn bản, ngày lập",
+          "Thời gian hoạt động",
           "Ghi chú",
         ],
         ...exportBM03.results.map((item: ResultItemForBM03, index: number) => [
@@ -731,12 +760,16 @@ export const handleExportForBM = async (
           item.location ?? "",
           "",
           "",
-          item.eventDate ? convertTimestampToDate(item.eventDate) : "",
-          item.toDate ? convertTimestampToDate(item.toDate) : "",
+          "",
           item.position ?? "",
           item.standardNumber,
           item.numberOfTime ?? 0,
-          item.proof + ", " + convertTimestampToDate(item.fromDate),
+          item.proof + ", " + convertTimestampToDate(item.documentDate),
+          item.fromDate
+            ? `${convertTimestampToDate(
+                item.fromDate
+              )} ${convertTimestampToDate(item.toDate)}`
+            : "",
           item.note ?? "",
         ]),
         [
@@ -746,11 +779,11 @@ export const handleExportForBM = async (
           "",
           "",
           "",
-          "",
           `${exportBM03?.totalStandarNumber as Number}`,
           "",
           "",
           "",
+          ""
         ],
       ];
       resultsDataArray = [
@@ -773,7 +806,9 @@ export const handleExportForBM = async (
           totalStudents: item.totalStudents,
           standarNumber: item.standarNumber,
           fromDate: item.fromDate,
-          eventDate: item.eventDate,
+          toDate: item.toDate,
+          entryDate: item.entryDate,
+          documentDate: item.documentDate,
           proof: item.proof,
           note: item.note,
         })),
@@ -802,8 +837,12 @@ export const handleExportForBM = async (
           "",
           item.standarNumber,
           "",
-          item.proof + ", " + convertTimestampToDate(item.fromDate),
-          item.eventDate ? convertTimestampToDate(item.eventDate) : "",
+          item.proof + ", " + convertTimestampToDate(item.documentDate),
+          item.fromDate
+            ? `${convertTimestampToDate(
+                item.fromDate
+              )} ${convertTimestampToDate(item.toDate)}`
+            : "",
           item.note ?? "",
         ]),
         [
@@ -1087,9 +1126,9 @@ export const handleExportForBM = async (
       row++
     ) {
       if (row < range.e.r - defaultFooterInfo.length) {
-        tempMerge.push({ s: { r: row, c: 1 }, e: { r: row, c: 3 } });
-      } else{
-        tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 6 } });
+        tempMerge.push({ s: { r: row, c: 1 }, e: { r: row, c: 4 } });
+      } else {
+        tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 5 } });
       }
       for (let col = range.s.c; col <= range.e.c; col++) {
         const cellRef = XLSX.utils.encode_cell({ r: row, c: col });

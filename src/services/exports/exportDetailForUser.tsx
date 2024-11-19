@@ -52,7 +52,9 @@ export interface ResultItemForBM01 {
   classCode: string;
   standarNumber: number;
   fromDate: number;
-  eventDate: number;
+  toDate: number;
+  entryDate: number;
+  documentDate: number;
   proof: string;
   note: string;
 }
@@ -63,7 +65,9 @@ export interface ResultItemForBM02 {
   classCode: string;
   standarNumber: number;
   fromDate: number;
-  eventDate: number;
+  toDate: number;
+  entryDate: number;
+  documentDate: number;
   proof: string;
   note: string;
 }
@@ -76,7 +80,7 @@ export interface ResultItemForBM03 {
   fromDate: number;
   toDate: number;
   entryDate: number;
-  eventDate: number;
+  documentDate: number;
   proof: string;
   note: string;
 }
@@ -86,7 +90,9 @@ export interface ResultItemForBM04 {
   totalStudents: number;
   standarNumber: number;
   fromDate: number;
-  eventDate: number;
+  toDate: number;
+  entryDate: number;
+  documentDate: number;
   proof: string;
   note: string;
 }
@@ -95,6 +101,8 @@ export interface ResultItemForBM05 {
   activityName: string;
   standarNumber: number;
   fromDate: number;
+  toDate: number;
+  entryDate: number;
   eventDate: number;
   proof: string;
   note: string;

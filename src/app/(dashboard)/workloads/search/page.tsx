@@ -342,14 +342,20 @@ const SearchMembers = () => {
       render: (path: string) => {
         return path !== "" && path !== undefined ? (
           <>
-            <Link
-              href={"https://api-annual.uef.edu.vn/" + path}
-              target="__blank"
+            <Tooltip
+              placement="bottom"
+              title={"Thông tin minh chứng"}
+              arrow={true}
             >
-              <p className="text-green-500">
-                <CheckOutlined />
-              </p>
-            </Link>
+              <Link
+                href={"https://api-annual.uef.edu.vn/" + path}
+                target="__blank"
+              >
+                <p className="text-green-500">
+                  <CheckOutlined />
+                </p>
+              </Link>
+            </Tooltip>
           </>
         ) : (
           <>
@@ -435,14 +441,20 @@ const SearchMembers = () => {
       render: (path: string) => {
         return path !== "" && path !== undefined ? (
           <>
-            <Link
-              href={"https://api-annual.uef.edu.vn/" + path}
-              target="__blank"
+            <Tooltip
+              placement="bottom"
+              title={"Thông tin minh chứng"}
+              arrow={true}
             >
-              <p className="text-green-500">
-                <CheckOutlined />
-              </p>
-            </Link>
+              <Link
+                href={"https://api-annual.uef.edu.vn/" + path}
+                target="__blank"
+              >
+                <p className="text-green-500">
+                  <CheckOutlined />
+                </p>
+              </Link>
+            </Tooltip>
           </>
         ) : (
           <>

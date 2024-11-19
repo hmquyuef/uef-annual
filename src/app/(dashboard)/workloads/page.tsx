@@ -4,7 +4,7 @@ import CustomModal from "@/components/CustomModal";
 import CustomNotification from "@/components/CustomNotification";
 import FormWorkloadType from "@/components/forms/workloads/formWorkloadType";
 import NotFound from "@/components/NotFound";
-import { getListRolesByEmail } from "@/services/users/usersServices";
+import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
 import {
   AddUpdateWorkloadType,
   getWorkloadTypes,
@@ -14,7 +14,6 @@ import {
 import PageTitles from "@/utility/Constraints";
 import {
   CheckOutlined,
-  CloseOutlined,
   EditOutlined,
   HomeOutlined,
   InfoCircleOutlined,
@@ -31,19 +30,18 @@ import {
   StatisticProps,
   Tooltip,
 } from "antd";
-import { useSession } from "next-auth/react";
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import CountUp from "react-countup";
 
 const Workloads = () => {
-  const { data: session } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [emailUser, setEmailUser] = useState("");
+  const [userName, setUserName] = useState<string | null>(null);
   const [types, setTypes] = useState<WorkloadTypeItem[]>([]);
   const [isOpened, setIsOpened] = useState(false);
-  const [isOk, setIsOk] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [isAccess, setIsAccess] = useState(true);
   const [title, setTitle] = useState("");
@@ -53,10 +51,10 @@ const Workloads = () => {
   const [status, setStatus] = useState<
     "success" | "error" | "info" | "warning"
   >("success");
-  const [userRole, setUserRole] = useState<string[]>([]);
   const [selectedItem, setSelectedItem] = useState<
     Partial<WorkloadTypeItem> | undefined
   >(undefined);
+  const [role, setRole] = useState<RoleItem>();
   const getListWorkloadTypes = async () => {
     const response = await getWorkloadTypes();
     setTypes(response.items);
@@ -67,7 +65,6 @@ const Workloads = () => {
   );
 
   const handleEllipsis = async (type: WorkloadTypeItem) => {
-    setIsOk(true);
     setMode("edit");
     setIsAccess(true);
     setSelectedItem(type);
@@ -80,13 +77,12 @@ const Workloads = () => {
     <div
       key="report"
       onClick={() => {
-        if (type.emails?.includes(emailUser)) {
+        if (userName && type.emails?.includes(userName)) {
           router.push("/workloads/" + type.href.toLowerCase());
         } else {
           setIsAccess(false);
           setIsOpened(true);
           setTitle("");
-          setIsOk(false);
         }
       }}
       className="flex justify-center gap-1 text-blue-500"
@@ -111,7 +107,7 @@ const Workloads = () => {
         valueStyle={{ fontSize: "14px", color: "rgb(34 197 94)" }}
       />
     </div>,
-    userRole && userRole.includes("admin") ? (
+    role && role.name === "admin" ? (
       <>
         <div
           key="edit"
@@ -126,13 +122,12 @@ const Workloads = () => {
       <>
         <div
           onClick={() => {
-            if (type.emails?.includes(emailUser)) {
+            if (userName && type.emails?.includes(userName)) {
               router.push("/workloads/" + type.href.toLowerCase());
             } else {
               setIsAccess(false);
               setIsOpened(true);
               setTitle("");
-              setIsOk(false);
             }
           }}
           className="flex justify-center gap-1"
@@ -144,7 +139,6 @@ const Workloads = () => {
     ),
   ];
   const handleSubmit = async (formData: Partial<AddUpdateWorkloadType>) => {
-    console.log("formData :>> ", formData);
     try {
       if (mode === "edit" && selectedItem) {
         const response = await putUpdateWorkloadType(
@@ -168,24 +162,46 @@ const Workloads = () => {
     }
   };
 
+  const getDisplayRole = async (name: string) => {
+    const response = await getRoleByName(name);
+    setRole(response.items[0]);
+  };
+
   useEffect(() => {
     setLoading(true);
-    if (session) {
-      const getRolesUser = async () => {
-        const email = session.user?.email || "";
-        const response = await getListRolesByEmail(email);
-        const roles = response.items.map((item) =>
-          item.roles.map((role) => role.name)
-        );
-        setUserRole(roles[0]);
-        setEmailUser(email);
-      };
-      document.title = PageTitles.BM;
-      getRolesUser();
-      getListWorkloadTypes();
+    // if (session) {
+    //   const getRolesUser = async () => {
+    //     const email = session.user?.email || "";
+    //     const response = await getListRolesByEmail(email);
+    //     const roles = response.items.map((item) =>
+    //       item.roles.map((role) => role.name)
+    //     );
+    //     setUserRole(roles[0]);
+    //     setEmailUser(email);
+    //   };
+    //   document.title = PageTitles.BM;
+    //   getRolesUser();
+    //   getListWorkloadTypes();
+    // }
+    document.title = PageTitles.BM;
+    getListWorkloadTypes();
+    const token = Cookies.get("s_t");
+    if (token) {
+      const decodedRole = jwtDecode<{
+        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
+      }>(token);
+      const role =
+        decodedRole[
+          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        ];
+      getDisplayRole(role as string);
+      const decodedToken = jwtDecode(token);
+      if (decodedToken.sub) {
+        setUserName(decodedToken.sub);
+      }
     }
     setLoading(false);
-  }, [session]);
+  }, []);
 
   return (
     <div>
@@ -234,17 +250,12 @@ const Workloads = () => {
                 >
                   <div
                     onClick={() => {
-                      if (
-                        type.emails?.includes(
-                          emailUser.replace("@uef.edu.vn", "")
-                        )
-                      ) {
+                      if (userName && type.emails?.includes(userName)) {
                         router.push("/workloads/" + type.href);
                       } else {
                         setIsAccess(false);
                         setIsOpened(true);
                         setTitle("");
-                        setIsOk(false);
                       }
                     }}
                     className="cursor-pointer"
@@ -253,9 +264,7 @@ const Workloads = () => {
                       title={
                         <div className="flex justify-between items-center gap-2">
                           <p>{type.shortName}</p>
-                          {type.emails?.includes(
-                            emailUser.replace("@uef.edu.vn", "")
-                          ) ? (
+                          {userName && type.emails?.includes(userName) ? (
                             <>
                               <Tooltip
                                 placement="top"
@@ -304,6 +313,7 @@ const Workloads = () => {
         isOpen={isOpened}
         title={title}
         width="900px"
+        role={role || undefined}
         onOk={() => {
           const formElement = document.querySelector("form");
           formElement?.dispatchEvent(
