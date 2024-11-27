@@ -34,7 +34,7 @@ export async function getExpiresInTokenByRefresh(
 export async function putTokenByRefresh(
   refresh: string,
 ): Promise<any> {
-  let url = `api/auth/refersh/${refresh}`;
+  let url = `api/auth/refresh/${refresh}`;
   const response = await apiClient.put<any>(url);
   return response.data;
 }

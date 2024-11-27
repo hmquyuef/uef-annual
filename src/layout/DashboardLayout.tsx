@@ -7,7 +7,11 @@ import {
 } from "@/services/auth/authServices";
 import { getAllPermissionsForMenuByUserName } from "@/services/permissions/permissionForMenu";
 import { getUserNameByEmail } from "@/services/users/usersServices";
-import { ArrowLeftOutlined, ArrowRightOutlined } from "@ant-design/icons";
+import {
+  ArrowLeftOutlined,
+  ArrowRightOutlined,
+  HomeOutlined,
+} from "@ant-design/icons";
 import { Alert, Image, Menu, MenuProps } from "antd";
 import Cookies from "js-cookie";
 import { useSession } from "next-auth/react";
@@ -15,6 +19,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Marquee from "react-fast-marquee";
+import { jwtDecode } from "jwt-decode";
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
@@ -36,10 +41,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     const key: Record<string, number> = {};
     const func = (items2: LevelKeysProps[], level = 1) => {
       items2.forEach((item) => {
-        if (item.key) {
+        if (item && item.key) {
           key[item.key] = level;
         }
-        if (item.children) {
+        if (item && item.children) {
           func(item.children, level + 1);
         }
       });
@@ -82,22 +87,47 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       response.userName
     );
     if (listmenus.items.length === 0) return router.push("/not-permission");
-    const tempMenu: MenuItem[] = listmenus.items[0].permissions.map((item) => {
-      const tempChildren: MenuItem[] = item.children.map((child) => ({
-        key: child.position,
-        label: <Link href={child.href}>{child.label}</Link>,
-      }));
+    const tempMenu: any[] = listmenus.items[0].permissions.map((item) => {
+      const tempChildren: MenuItem[] | null = item.isChildren
+        ? item.children
+            ?.filter((child) => child.isActived)
+            .map((child) => ({
+              key: child.position,
+              label: <Link href={child.href}>{child.label}</Link>,
+            }))
+        : null;
       const IconComponent = item.icon
         ? require(`@ant-design/icons`)[item.icon]
         : null;
-      return {
-        key: item.position,
-        icon: IconComponent ? <IconComponent /> : null,
-        label: item.label,
-        children: tempChildren,
-      };
+      if (tempChildren && tempChildren.length > 0) {
+        return {
+          key: item.position,
+          icon: IconComponent ? <IconComponent /> : null,
+          label: item.label,
+          children: tempChildren,
+        };
+      }
     });
-    setItemsMenu(tempMenu);
+    const token = Cookies.get("s_t") as string;
+    const decodedRole = jwtDecode<{
+      "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
+    }>(token);
+    const role =
+      decodedRole[
+        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+      ];
+    if (role === "admin") {
+      setItemsMenu([
+        {
+          key: "0",
+          icon: <HomeOutlined />,
+          label: <Link href={"/"}>Trang chủ</Link>,
+        },
+        ...tempMenu,
+      ]);
+    } else {
+      setItemsMenu(tempMenu);
+    }
   };
 
   const getToken = async (email: string) => {

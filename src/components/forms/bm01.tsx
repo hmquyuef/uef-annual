@@ -295,13 +295,6 @@ const BM01 = () => {
         );
       },
     },
-    // {
-    //   title: "GHI CHÚ",
-    //   dataIndex: "note",
-    //   key: "note",
-    //   render: (note: string) => <p>{note}</p>,
-    //   className: "w-[5rem]",
-    // },
     {
       title: (
         <div className="bg-rose-500 p-1 rounded-tr-lg">
@@ -484,7 +477,6 @@ const BM01 = () => {
     setIsOpen(true);
   };
   const handleSubmit = async (formData: Partial<ClassLeaderItem>) => {
-    console.log("formData :>> ", formData);
     try {
       if (mode === "edit" && selectedItem) {
         const response = await putUpdateClassLeader(
@@ -910,8 +902,17 @@ const BM01 = () => {
       if (decodedUserName.sub) {
         setUserName(decodedUserName.sub);
       }
-      setLoading(false);
+      if (role === "secretary") {
+        const decodedUnitId = jwtDecode<{
+          family_name: string;
+        }>(token);
+        const unitId = decodedUnitId.family_name;
+        setSelectedKeyUnit(unitId);
+      } else {
+        setSelectedKeyUnit(null);
+      }
     }
+    setLoading(false);
   }, []);
   return (
     <div>
@@ -931,26 +932,28 @@ const BM01 = () => {
                   onSearch={onSearch}
                   enterButton
                 />
-                <Select
-                  showSearch
-                  allowClear
-                  // size="large"
-                  placeholder="Tất cả đơn vị"
-                  optionFilterProp="label"
-                  filterSort={(optionA, optionB) =>
-                    (optionA?.label ?? "")
-                      .toLowerCase()
-                      .localeCompare((optionB?.label ?? "").toLowerCase())
-                  }
-                  options={units.map((unit) => ({
-                    value: unit.id,
-                    label: unit.name,
-                  }))}
-                  value={selectedKeyUnit}
-                  onChange={(value) => {
-                    setSelectedKeyUnit(value);
-                  }}
-                />
+                <div hidden={role && role.name === "secretary"}>
+                  <Select
+                    showSearch
+                    allowClear
+                    placeholder="Tất cả đơn vị"
+                    optionFilterProp="label"
+                    filterSort={(optionA, optionB) =>
+                      (optionA?.label ?? "")
+                        .toLowerCase()
+                        .localeCompare((optionB?.label ?? "").toLowerCase())
+                    }
+                    options={units.map((unit) => ({
+                      value: unit.id,
+                      label: unit.name,
+                    }))}
+                    value={selectedKeyUnit}
+                    onChange={(value) => {
+                      setSelectedKeyUnit(value);
+                    }}
+                    className="w-full"
+                  />
+                </div>
                 <ConfigProvider locale={locale}>
                   <RangePicker
                     placeholder={["Từ ngày", "Đến ngày"]}

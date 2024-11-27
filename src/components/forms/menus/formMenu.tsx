@@ -253,7 +253,7 @@ const FormMenu: FC<FormMenuProps> = ({ onSubmit, initialData, mode }) => {
         />
       </div>
       <Checkbox
-        value={isActivedMenu}
+        checked={isActivedMenu}
         onChange={(e) => setIsActivedMenu(e.target.checked)}
       >
         Kích hoạt

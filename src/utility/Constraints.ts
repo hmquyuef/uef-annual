@@ -1,4 +1,5 @@
 enum PageTitles {
+    HOME = "Trang chủ - UEF",
     BM = "Biểu mẫu - UEF",
     BM01 = "Biểu mẫu 01 - UEF",
     BM02 = "Biểu mẫu 02 - UEF",

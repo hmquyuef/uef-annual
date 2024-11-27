@@ -9,14 +9,15 @@ import {
   WorkloadGroupResponse,
 } from "@/services/workloads/groupsServices";
 import { AddUpdateWorkloadType } from "@/services/workloads/typesServices";
-import { Input, Select } from "antd";
+import { Input, Select, SelectProps, Tag } from "antd";
 import { FormEvent, useEffect, useState } from "react";
-const { TextArea } = Input;
 interface FormWorkloadTypeProps {
   onSubmit: (formData: Partial<AddUpdateWorkloadType>) => void;
   initialData?: Partial<AddUpdateWorkloadType>;
   mode: "add" | "edit";
 }
+
+type TagRender = SelectProps["tagRender"];
 
 const FormWorkloadType: React.FC<FormWorkloadTypeProps> = ({
   onSubmit,
@@ -26,7 +27,6 @@ const FormWorkloadType: React.FC<FormWorkloadTypeProps> = ({
   const [name, setName] = useState("");
   const [shortName, setShortName] = useState("");
   const [href, setHref] = useState("");
-  const [emails, setEmails] = useState("");
   const [workloadGroups, setWorkloadGroups] = useState<
     WorkloadGroupResponse | undefined
   >(undefined);
@@ -39,6 +39,25 @@ const FormWorkloadType: React.FC<FormWorkloadTypeProps> = ({
   const filteredOptions = usersHRM?.items.filter(
     (o) => !selectedItems.includes(o.userName)
   );
+
+  const tagRender: TagRender = (props) => {
+    const { label, closable, onClose } = props;
+    const onPreventMouseDown = (event: React.MouseEvent<HTMLSpanElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+    };
+    return (
+      <Tag
+        color={"gold"}
+        onMouseDown={onPreventMouseDown}
+        closable={closable}
+        onClose={onClose}
+        style={{ margin: 2 }}
+      >
+        {label}
+      </Tag>
+    );
+  };
 
   const getUsersHRM = async () => {
     const response = await getUsersFromHRM();
@@ -65,7 +84,7 @@ const FormWorkloadType: React.FC<FormWorkloadTypeProps> = ({
       emails: selectedItems.join(","),
       isActived: true,
     };
-    console.log('formData :>> ', formData);
+    console.log("formData :>> ", formData);
     onSubmit(formData);
   };
   useEffect(() => {
@@ -74,14 +93,12 @@ const FormWorkloadType: React.FC<FormWorkloadTypeProps> = ({
         setName(initialData.name || "");
         setShortName(initialData.shortName || "");
         setHref(initialData.href || "");
-        setEmails(initialData.emails || "");
         setSelectedGroupId(initialData.workloadGroupId || "");
         setSelectedItems(initialData.emails?.split(",") || []);
       } else {
         setName("");
         setShortName("");
         setHref("");
-        setEmails("");
         setSelectedGroupId("");
         setSelectedItems([]);
       }
@@ -144,15 +161,11 @@ const FormWorkloadType: React.FC<FormWorkloadTypeProps> = ({
       </div>
       <div className="flex flex-col gap-1 mb-4">
         <p className="font-medium text-neutral-600">
-          Danh sách CB-GB-NV được phân quyền
+          Danh sách CB-GB-NV được phân quyền ({selectedItems.length})
         </p>
-        {/* <TextArea
-          autoSize
-          value={emails}
-          onChange={(e) => setEmails(e.target.value.trim())}
-        /> */}
         <Select
           mode="multiple"
+          tagRender={tagRender}
           value={selectedItems}
           onChange={setSelectedItems}
           style={{ width: "100%" }}

@@ -1,5 +1,6 @@
 "use client";
 
+import LineChart from "@/components/charts/LineChart";
 import CustomModal from "@/components/CustomModal";
 import CustomNotification from "@/components/CustomNotification";
 import FormWorkloadType from "@/components/forms/workloads/formWorkloadType";
@@ -12,6 +13,7 @@ import {
   WorkloadTypeItem,
 } from "@/services/workloads/typesServices";
 import PageTitles from "@/utility/Constraints";
+import { convertTimestampToDayMonth } from "@/utility/Utilities";
 import {
   CheckOutlined,
   EditOutlined,
@@ -25,15 +27,18 @@ import {
   Breadcrumb,
   Button,
   Card,
+  Select,
   Skeleton,
+  Spin,
   Statistic,
   StatisticProps,
   Tooltip,
 } from "antd";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
+import moment from "moment";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import CountUp from "react-countup";
 
 const Workloads = () => {
@@ -55,13 +60,25 @@ const Workloads = () => {
     Partial<WorkloadTypeItem> | undefined
   >(undefined);
   const [role, setRole] = useState<RoleItem>();
+  const [dataCategories, setDataCategories] = useState<string[]>([]);
+  const [startIndex, setStartIndex] = useState<number>(0);
+  const [endIndex, setEndIndex] = useState<number>(0);
+  const [defaultValues, setDefaultValues] = useState<string>("7");
+  const [startTime, setStartTime] = useState<number>(0);
+  const [endTime, setEndTime] = useState<number>(0);
+
   const getListWorkloadTypes = async () => {
-    const response = await getWorkloadTypes();
+    const response = await getWorkloadTypes(startTime, endTime);
     setTypes(response.items);
+    response.items.forEach((item) => {
+      setDataCategories(
+        item.infoChart.categories.map((i) => convertTimestampToDayMonth(i))
+      );
+    });
   };
 
   const formatter: StatisticProps["formatter"] = (value) => (
-    <CountUp end={value as number} duration={5} separator="," />
+    <CountUp end={value as number} duration={3} separator="," />
   );
 
   const handleEllipsis = async (type: WorkloadTypeItem) => {
@@ -167,24 +184,54 @@ const Workloads = () => {
     setRole(response.items[0]);
   };
 
+  const handleChange = (value: string) => {
+    setDefaultValues(value);
+  };
+
+  const updatedDataCategories = useMemo(async () => {
+    const formatType = Number(defaultValues) >= 7 ? "days" : "months";
+    const now = moment(new Date()).format("DD/MM/YYYY");
+    const unixNow = moment(now, "DD/MM/YYYY").unix();
+    const timeEnd = moment()
+      .subtract(Number(defaultValues), formatType)
+      .format("DD/MM/YYYY");
+    const unixEnd = moment(timeEnd, "DD/MM/YYYY").unix();
+    setStartTime(unixEnd);
+    setEndTime(unixNow);
+  }, [defaultValues]);
+
+  // useEffect(() => {
+  //   setLoading(true);
+  //   const fetchData = async () => {
+  //     updatedDataCategories;
+  //     await getListWorkloadTypes();
+  //   };
+  //   fetchData();
+  //   setTimeout(() => {
+  //     setLoading(false);
+  //   }, 500);
+  // }, [updatedDataCategories]);
+
+  useEffect(() => {
+    const dateIndices = dataCategories.reduce<Record<string, number>>(
+      (acc, date, index) => {
+        acc[date] = index;
+        return acc;
+      },
+      {}
+    );
+    const formatType = Number(defaultValues) >= 7 ? "days" : "months";
+    const now = moment(new Date()).format("DD/MM");
+    const end = moment()
+      .subtract(Number(defaultValues), formatType)
+      .format("DD/MM");
+    setStartIndex(dateIndices[end]);
+    setEndIndex(dateIndices[now]);
+  }, [defaultValues, dataCategories]);
+
   useEffect(() => {
     setLoading(true);
-    // if (session) {
-    //   const getRolesUser = async () => {
-    //     const email = session.user?.email || "";
-    //     const response = await getListRolesByEmail(email);
-    //     const roles = response.items.map((item) =>
-    //       item.roles.map((role) => role.name)
-    //     );
-    //     setUserRole(roles[0]);
-    //     setEmailUser(email);
-    //   };
-    //   document.title = PageTitles.BM;
-    //   getRolesUser();
-    //   getListWorkloadTypes();
-    // }
     document.title = PageTitles.BM;
-    getListWorkloadTypes();
     const token = Cookies.get("s_t");
     if (token) {
       const decodedRole = jwtDecode<{
@@ -200,8 +247,15 @@ const Workloads = () => {
         setUserName(decodedToken.sub);
       }
     }
-    setLoading(false);
-  }, []);
+    const fetchData = async () => {
+      updatedDataCategories;
+      await getListWorkloadTypes();
+    };
+    fetchData();
+    setTimeout(() => {
+      setLoading(false);
+    }, 500);
+  }, [updatedDataCategories]);
 
   return (
     <div>
@@ -228,80 +282,107 @@ const Workloads = () => {
           ]}
         />
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-        {loading ? (
-          <>
-            {Array.from({ length: 8 }).map((_, index) => (
-              <Card key={index}>
-                <Skeleton active />
-              </Card>
-            ))}
-          </>
-        ) : (
-          <>
-            {types &&
-              types.map((type) => (
-                <Card
-                  key={type.id}
-                  actions={actions(type)}
-                  size="small"
-                  className="hover:shadow-lg hover:rounded-lg"
-                >
-                  <div
-                    onClick={() => {
-                      if (userName && type.emails?.includes(userName)) {
-                        router.push("/workloads/" + type.href);
-                      } else {
-                        setIsAccess(false);
-                        setIsOpened(true);
-                        setTitle("");
-                      }
-                    }}
-                    className="cursor-pointer"
-                  >
-                    <Card.Meta
-                      title={
-                        <div className="flex justify-between items-center gap-2">
-                          <p>{type.shortName}</p>
-                          {userName && type.emails?.includes(userName) ? (
-                            <>
-                              <Tooltip
-                                placement="top"
-                                title={"Đã được cấp quyền"}
-                                arrow={true}
-                              >
-                                <Button
-                                  size="small"
-                                  variant="outlined"
-                                  shape="circle"
-                                  style={{
-                                    backgroundColor: "#52c41a",
-                                    borderColor: "#52c41a",
-                                    color: "#fff",
-                                  }}
-                                  icon={<CheckOutlined />}
-                                ></Button>
-                              </Tooltip>
-                            </>
-                          ) : (
-                            <></>
-                          )}
-                        </div>
-                      }
-                      className="max-h-20"
-                      description={
+      <div className="mb-4">
+        <span>Thống kê biểu đồ trong </span>
+        <Select
+          defaultValue={defaultValues}
+          style={{ width: 120 }}
+          onChange={handleChange}
+          options={[
+            { value: "7", label: "7 ngày" },
+            { value: "14", label: "14 ngày" },
+            { value: "1", label: "1 tháng" },
+            { value: "3", label: "3 tháng" },
+            { value: "6", label: "6 tháng" },
+          ]}
+        />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        {types &&
+          types.map((type) => (
+            <Card
+              key={type.id}
+              actions={actions(type)}
+              size="small"
+              className="hover:shadow-lg transition-transform duration-300 hover:-translate-y-2"
+            >
+              <div
+                onClick={() => {
+                  if (userName && type.emails?.includes(userName)) {
+                    router.push("/workloads/" + type.href);
+                  } else {
+                    setIsAccess(false);
+                    setIsOpened(true);
+                    setTitle("");
+                  }
+                }}
+                className="cursor-pointer"
+              >
+                <Card.Meta
+                  title={
+                    <div className="flex justify-between items-center gap-2">
+                      <p>{type.shortName}</p>
+                      {userName && type.emails?.includes(userName) ? (
                         <>
-                          <p className="text-nowrap">{type.name}</p>
-                          <p>Thuộc nhóm: {type.groupName}</p>
+                          <Tooltip
+                            placement="top"
+                            title={"Đã được cấp quyền"}
+                            arrow={true}
+                          >
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              shape="circle"
+                              style={{
+                                backgroundColor: "#52c41a",
+                                borderColor: "#52c41a",
+                                color: "#fff",
+                              }}
+                              icon={<CheckOutlined />}
+                            ></Button>
+                          </Tooltip>
                         </>
-                      }
-                    />
-                  </div>
-                </Card>
-              ))}
-          </>
-        )}
+                      ) : (
+                        <></>
+                      )}
+                    </div>
+                  }
+                  className="h-fit"
+                  description={
+                    <div>
+                      <div>
+                        <p className="whitespace-wrap text-ellipsis">
+                          {type.name}
+                        </p>
+                        <p>Thuộc nhóm: {type.groupName}</p>
+                      </div>
+                      <div className="mb-[-40px]">
+                        <span>Biểu đồ thêm mới dữ liệu</span>
+                        {loading ? (
+                          <>
+                            <Spin tip="Đang tải dữ liệu...">
+                              {<div className="p-[80px]" />}
+                            </Spin>
+                          </>
+                        ) : (
+                          <>
+                            <div className="mt-[-15px]">
+                              <LineChart
+                                start={startIndex}
+                                end={endIndex}
+                                categories={dataCategories}
+                                seriesData={type?.infoChart?.series}
+                              />
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  }
+                />
+              </div>
+            </Card>
+          ))}
       </div>
       <CustomNotification
         message={message}

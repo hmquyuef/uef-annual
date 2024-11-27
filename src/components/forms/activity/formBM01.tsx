@@ -82,7 +82,7 @@ const FormBM01: FC<FormBM01Props> = ({
   const [course, setCourse] = useState<string>("");
   const [fromDate, setFromDate] = useState<number>(0);
   const [toDate, setToDate] = useState<number>(0);
-  const [entryDate, setEntryDate] = useState<number>(0);
+  const [entryDate, setEntryDate] = useState<number | 0>(0);
   const [documentDate, setDocumentDate] = useState<number>(0);
   const [classCode, setClassCode] = useState<string>("");
   const [proof, setProof] = useState<string>("");
@@ -212,7 +212,11 @@ const FormBM01: FC<FormBM01Props> = ({
         setStandardValues(initialData.standardNumber || 0);
         setFromDate(initialData.fromDate || 0);
         setToDate(initialData.toDate || 0);
-        setEntryDate((initialData.entryDate ?? 0) * 1000);
+        setEntryDate(
+          initialData.entryDate
+            ? new Date(initialData.entryDate * 1000).getTime()
+            : 0
+        );
         setDocumentDate(initialData.documentDate || 0);
         if (
           initialData.attackment &&

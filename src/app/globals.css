@@ -33,9 +33,15 @@
   padding-bottom: 4px !important;
 }
 
-
 .custom-table-header > div > div > ul {
   padding-right: 1rem !important;
+}
+
+.custom-dot .ant-badge-dot {
+  position: absolute !important;
+  top: 5px !important;
+  right: 9px !important;
+  transform: none !important;
 }
 
 /* :root {

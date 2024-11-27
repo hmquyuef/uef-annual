@@ -38,7 +38,7 @@ apiClient.interceptors.response.use(
       if (keyRefreshToken && keyRefreshToken !== undefined) {
         try {
           const res: AxiosResponse = await apiClient.put(
-            `api/auth/refersh/${keyRefreshToken}`
+            `api/auth/refresh/${keyRefreshToken}`
           );
           const expires = new Date(res.data.expiresAt * 1000);
           const expiresRefresh = new Date(res.data.expiresAt * 1000);

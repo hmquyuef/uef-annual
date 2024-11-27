@@ -17,6 +17,13 @@ export function convertTimestampToFullDateTime(timestamp: number): string {
   return `${hours}:${minutes}:${seconds} ${day}/${month}/${year}`;
 }
 
+export function convertTimestampToDayMonth(timestamp: number): string {
+  const date = new Date(timestamp * 1000);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${day}/${month}`;
+}
+
 export const setCellStyle = (
   worksheet: any,
   cell: string,
