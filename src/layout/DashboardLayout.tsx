@@ -12,13 +12,13 @@ import {
   ArrowRightOutlined,
   HomeOutlined,
 } from "@ant-design/icons";
-import { Alert, Image, Menu, MenuProps } from "antd";
+import { Image, Menu, MenuProps } from "antd";
 import Cookies from "js-cookie";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import Marquee from "react-fast-marquee";
+// import Marquee from "react-fast-marquee";
 import { jwtDecode } from "jwt-decode";
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -191,37 +191,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     loadMenuFromCookies();
   }, [session, router]);
 
-  useEffect(() => {
-    const connection =
-      (navigator as any).connection ||
-      (navigator as any).mozConnection ||
-      (navigator as any).webkitConnection;
-
-    const checkConnectionSpeed = () => {
-      if (connection) {
-        const { effectiveType } = connection;
-        setIsSlowConnection(["2g", "slow-2g", "3g"].includes(effectiveType));
-      }
-    };
-
-    const handleNetworkChange = () => {
-      setIsOnline(navigator.onLine);
-      checkConnectionSpeed();
-    };
-
-    handleNetworkChange(); // Kiểm tra ngay khi component mount
-
-    window.addEventListener("online", handleNetworkChange);
-    window.addEventListener("offline", handleNetworkChange);
-    connection?.addEventListener("change", checkConnectionSpeed);
-
-    return () => {
-      window.removeEventListener("online", handleNetworkChange);
-      window.removeEventListener("offline", handleNetworkChange);
-      connection?.removeEventListener("change", checkConnectionSpeed);
-    };
-  }, []);
-
   return (
     <React.Fragment>
       <div className="flex h-screen bg-[#fcfaf6]">
@@ -272,7 +241,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 name={session?.user?.name || ""}
                 email={session?.user?.email || ""}
               />
-              {!isOnline && (
+              {/* {!isOnline && (
                 <div className="mx-4 pt-4">
                   <Alert
                     banner
@@ -301,7 +270,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     showIcon
                   />
                 </div>
-              )}
+              )} */}
               {children}
             </>
           )}
