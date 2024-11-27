@@ -1,11 +1,9 @@
 "use client";
 
-import ColumnChart from "@/components/charts/ColumnChart";
-import RadialBarChart from "@/components/charts/RadialBarChart";
 import PercentForms from "@/components/dashboard/PercentForms";
 import PageTitles from "@/utility/Constraints";
 import { FastBackwardOutlined, MoreOutlined } from "@ant-design/icons";
-import { Button, Dropdown, Empty, MenuProps, Segmented, Timeline } from "antd";
+import { Button, MenuProps, Segmented, Timeline } from "antd";
 import { useEffect, useState } from "react";
 
 const Home = () => {
@@ -236,7 +234,8 @@ const Home = () => {
             </div>
             <hr />
             <div className="h-full px-3 py-2 flex items-center justify-center">
-              <ColumnChart />
+              Column chart
+              {/* <ColumnChart /> */}
               {/* <Empty description="Không có dữ liệu..." /> */}
             </div>
           </div>

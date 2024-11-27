@@ -29,8 +29,8 @@ interface LevelKeysProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const [isOnline, setIsOnline] = useState(true);
-  const [isSlowConnection, setIsSlowConnection] = useState(false);
+  // const [isOnline, setIsOnline] = useState(true);
+  // const [isSlowConnection, setIsSlowConnection] = useState(false);
   const { data: session } = useSession();
   const router = useRouter();
   type MenuItem = Required<MenuProps>["items"][number];

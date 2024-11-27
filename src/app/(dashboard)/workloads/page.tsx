@@ -1,6 +1,5 @@
 "use client";
 
-import LineChart from "@/components/charts/LineChart";
 import CustomModal from "@/components/CustomModal";
 import CustomNotification from "@/components/CustomNotification";
 import FormWorkloadType from "@/components/forms/workloads/formWorkloadType";
@@ -28,7 +27,6 @@ import {
   Button,
   Card,
   Select,
-  Spin,
   Statistic,
   StatisticProps,
   Tooltip
@@ -355,7 +353,7 @@ const Workloads = () => {
                         </p>
                         <p>Thuộc nhóm: {type.groupName}</p>
                       </div>
-                      <div className="mb-[-40px]">
+                      {/* <div className="mb-[-40px]">
                         <span>Biểu đồ thêm mới dữ liệu</span>
                         {loading ? (
                           <>
@@ -375,7 +373,7 @@ const Workloads = () => {
                             </div>
                           </>
                         )}
-                      </div>
+                      </div> */}
                     </div>
                   }
                 />

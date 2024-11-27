@@ -1,8 +1,7 @@
+import SessionWrapper from "@/components/SessionWrapper";
+import { AntdRegistry } from "@ant-design/nextjs-registry";
 import type { Metadata } from "next";
 import "./globals.css";
-import { AntdRegistry } from "@ant-design/nextjs-registry";
-import SessionWrapper from "@/components/SessionWrapper";
-import DashboardLayout from "@/layout/DashboardLayout";
 
 export const metadata: Metadata = {
   title: "Phần mềm quản lý tiết chuẩn - UEF",
