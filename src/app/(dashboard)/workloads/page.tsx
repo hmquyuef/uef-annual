@@ -1,5 +1,6 @@
 "use client";
 
+import LineChart from "@/components/charts/LineChart";
 import CustomModal from "@/components/CustomModal";
 import CustomNotification from "@/components/CustomNotification";
 import FormWorkloadType from "@/components/forms/workloads/formWorkloadType";
@@ -26,10 +27,12 @@ import {
   Breadcrumb,
   Button,
   Card,
+  Descriptions,
   Select,
+  Spin,
   Statistic,
   StatisticProps,
-  Tooltip
+  Tooltip,
 } from "antd";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
@@ -197,18 +200,6 @@ const Workloads = () => {
     setEndTime(unixNow);
   }, [defaultValues]);
 
-  // useEffect(() => {
-  //   setLoading(true);
-  //   const fetchData = async () => {
-  //     updatedDataCategories;
-  //     await getListWorkloadTypes();
-  //   };
-  //   fetchData();
-  //   setTimeout(() => {
-  //     setLoading(false);
-  //   }, 500);
-  // }, [updatedDataCategories]);
-
   useEffect(() => {
     const dateIndices = dataCategories.reduce<Record<string, number>>(
       (acc, date, index) => {
@@ -349,11 +340,19 @@ const Workloads = () => {
                     <div>
                       <div>
                         <p className="whitespace-wrap text-ellipsis">
-                          {type.name}
+                          Biểu mẫu:{" "}
+                          <span className="font-medium text-neutral-600">
+                            {type.name}
+                          </span>
                         </p>
-                        <p>Thuộc nhóm: {type.groupName}</p>
+                        <p>
+                          Thuộc nhóm:{" "}
+                          <span className="font-medium text-neutral-600">
+                            {type.groupName}
+                          </span>
+                        </p>
                       </div>
-                      {/* <div className="mb-[-40px]">
+                      <div className="mb-[-40px]">
                         <span>Biểu đồ thêm mới dữ liệu</span>
                         {loading ? (
                           <>
@@ -367,13 +366,16 @@ const Workloads = () => {
                               <LineChart
                                 start={startIndex}
                                 end={endIndex}
-                                categories={dataCategories}
-                                seriesData={type?.infoChart?.series}
+                                categories={dataCategories.slice(
+                                  startIndex,
+                                  endIndex + 1
+                                )}
+                                seriesData={type.infoChart.series}
                               />
                             </div>
                           </>
                         )}
-                      </div> */}
+                      </div>
                     </div>
                   }
                 />

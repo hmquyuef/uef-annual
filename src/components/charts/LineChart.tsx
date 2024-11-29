@@ -1,9 +1,12 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import React, { FC, useEffect, useState } from "react";
 import { ApexOptions } from "apexcharts";
-import ReactApexChart from "react-apexcharts";
-
+// Import động ReactApexChart
+const ReactApexChart = dynamic(() => import("react-apexcharts"), {
+  ssr: false,
+});
 interface LineChartProps {
   start: number;
   end: number;
