@@ -143,8 +143,8 @@ const FormPermission: FC<FormPermissionProps> = ({
     };
     const permissionForm: Partial<any> = {
       id: initialData?.id || "",
-      userId: dataUsers?.items?.find((user) => user.userName === selectedKey)
-        ?.id,
+      userName: dataUsers?.items?.find((user) => user.userName === selectedKey)
+        ?.userName,
       email: dataUsers?.items?.find((user) => user.userName === selectedKey)
         ?.email,
       appId: selectedKeyApp,

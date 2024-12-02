@@ -18,7 +18,7 @@ export interface RolePermissionItem {
 
 export interface AddUpdatePermissionItem {
   id?: string;
-  userId: string;
+  userName: string;
   appId: string;
   roleIds: string[];
   isActived: boolean;
@@ -26,7 +26,7 @@ export interface AddUpdatePermissionItem {
 
 export interface PermissionResponses {
   totalCount: number;
-  items: PermissionItem[];
+  items: [];
 }
 
 export async function getAllPermissions(): Promise<PermissionResponses> {

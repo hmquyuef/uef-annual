@@ -1,5 +1,5 @@
 enum PageTitles {
-    HOME = "Trang chủ - UEF",
+    HOME = "Bảng điều khiển - UEF",
     BM = "Biểu mẫu - UEF",
     BM01 = "Biểu mẫu 01 - UEF",
     BM02 = "Biểu mẫu 02 - UEF",
@@ -12,6 +12,7 @@ enum PageTitles {
     ROLES = "Vai trò - UEF",
     PERMISSIONS = "Phân quyền - UEF",
     MENUS = "Chức năng - UEF",
+    SCHOOL_YEARS = "Thời gian năm học - UEF",
     NOT_FOUND = "Không tìm thấy trang - UEF",
     NOT_PERMISSIONS = "Từ chối truy cập - UEF",
 }

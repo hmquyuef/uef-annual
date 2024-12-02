@@ -38,6 +38,9 @@ enum Messages {
     UPDATE_ACTIVITY = "Cập nhật thông tin tham gia hoạt động thành công!",
     APPROVED_ACTIVITY= "Phê duyệt thông tin hoạt động thành công!",
     REJECTED_ACTIVITY = "Đã từ chối phê duyệt thông tin hoạt động!",
+
+    ADD_SCHOOLYEARS = "Thêm mới thời gian năm học thành công!",
+    UPDATE_SCHOOLYEARS = "Cập nhật thời gian năm học thành công!",
 }
 
 export default Messages;

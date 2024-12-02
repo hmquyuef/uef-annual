@@ -22,6 +22,7 @@ import {
   GetProps,
   Input,
   PaginationProps,
+  Select,
   Skeleton,
   Table,
   TableColumnsType,
@@ -34,12 +35,14 @@ import { allExpanded, darkStyles, JsonView } from "react-json-view-lite";
 import "react-json-view-lite/dist/index.css";
 import Cookies from "js-cookie";
 import CustomNotification from "@/components/CustomNotification";
+import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 
 type SearchProps = GetProps<typeof Input.Search>;
 const { Search } = Input;
 
 const LogsActivities = () => {
   const [loading, setLoading] = useState(false);
+  const [defaultYears, setDefaultYears] = useState<any>();
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [data, setData] = useState<LogActivityItem[]>([]);
   const [logActivities, setLogActivities] = useState<
@@ -56,9 +59,18 @@ const LogsActivities = () => {
   const [status, setStatus] = useState<
     "success" | "error" | "info" | "warning"
   >("success");
+  const [selectedKey, setSelectedKey] = useState<any>();
 
-  const getListLogActivities = async () => {
-    const response = await getAllLogActivities();
+  const getDefaultYears = async () => {
+    const response = await getAllSchoolYears();
+    setDefaultYears(response.items);
+    const yearId = response.items.filter((x: any) => x.isDefault)[0] as any;
+    setSelectedKey(yearId);
+    getListLogActivities(yearId.id);
+  };
+
+  const getListLogActivities = async (yearId: string) => {
+    const response = await getAllLogActivities(yearId);
     setLogActivities(response);
     setData(response.items);
   };
@@ -234,7 +246,7 @@ const LogsActivities = () => {
         setNotificationOpen(true);
         setStatus("success");
         setMessage("Thông báo");
-        await getListLogActivities();
+        await getDefaultYears();
         setSelectedRowKeys([]);
       }
     } catch (error) {
@@ -254,10 +266,21 @@ const LogsActivities = () => {
     setRole(response.items[0]);
   };
 
+  const handleChangeYear = (value: any) => {
+    setLoading(true);
+    const temp = defaultYears.filter((x: any) => x.id === value)[0] as any;
+    setSelectedKey(temp);
+    getListLogActivities(temp.id);
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  };
+
   useEffect(() => {
     setLoading(true);
     document.title = PageTitles.LOGS_ACTIVITY;
-    getListLogActivities();
+    getDefaultYears();
     const token = Cookies.get("s_t");
     if (token) {
       const decodedRole = jwtDecode<{
@@ -305,9 +328,9 @@ const LogsActivities = () => {
           ]}
         />
       </section>
-      <section className="grid grid-cols-3 mb-4">
+      <section className="grid grid-cols-3 mb-3">
         <div className="col-span-2">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             {loading ? (
               <>
                 <Skeleton.Input active size="small" style={{ width: "100%" }} />
@@ -316,18 +339,37 @@ const LogsActivities = () => {
               </>
             ) : (
               <>
-                <div>
-                  <Search
-                    placeholder="Tìm kiếm hoạt động..."
-                    onSearch={onSearch}
-                    enterButton
+                <div className="flex flex-col justify-center gap-2">
+                  <span className="text-[14px] font-medium text-neutral-500">
+                    Tìm kiếm:
+                  </span>
+                  <Search placeholder=" " onSearch={onSearch} enterButton />
+                </div>
+                <div className="flex flex-col justify-center gap-2">
+                  <span className="text-[14px] font-medium text-neutral-500">
+                    Năm học:
+                  </span>
+                  <Select
+                    showSearch
+                    optionFilterProp="label"
+                    filterSort={(optionA, optionB) =>
+                      (optionA?.title ?? "").localeCompare(optionB?.title ?? "")
+                    }
+                    options={defaultYears?.map((year: any) => ({
+                      value: year.id,
+                      label: year.title,
+                    }))}
+                    //
+                    value={selectedKey && selectedKey.title}
+                    onChange={(value) => handleChangeYear(value)}
+                    className="w-fit"
                   />
                 </div>
               </>
             )}
           </div>
         </div>
-        <div className="flex justify-end gap-4">
+        <div className="flex justify-end items-end gap-4">
           {loading ? (
             <>
               <Skeleton.Input active size="small" />
@@ -368,6 +410,7 @@ const LogsActivities = () => {
         status={status}
         isOpen={isNotificationOpen}
       />
+      <hr className="mb-3"/>
       <section>
         <Table<LogActivityItem>
           key={"table-logs-history"}
@@ -388,7 +431,9 @@ const LogsActivities = () => {
           rowSelection={rowSelection}
           columns={columns}
           dataSource={data}
-          locale={{ emptyText: <Empty description="Không có dữ liệu..."></Empty> }}
+          locale={{
+            emptyText: <Empty description="Không có dữ liệu..."></Empty>,
+          }}
           onChange={handleTableChange}
         />
       </section>

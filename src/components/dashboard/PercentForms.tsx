@@ -5,20 +5,12 @@ import { Progress } from "antd";
 import { FC, useEffect, useState } from "react";
 
 interface PercentFormsProps {
-  name: string;
-  countItems: number;
-  total: number;
+  data: any;
   color: string;
 }
 
-const PercentForms: FC<PercentFormsProps> = ({
-  name,
-  countItems,
-  total,
-  color,
-}) => {
+const PercentForms: FC<PercentFormsProps> = ({ data, color }) => {
   const [datapercent, setDataPercent] = useState<number | 0>(0);
-  const percent = parseFloat(((countItems / total) * 100).toFixed(2));
   const getColor = (color: string): string => {
     switch (color) {
       case "blue":
@@ -38,11 +30,13 @@ const PercentForms: FC<PercentFormsProps> = ({
   useEffect(() => {
     const interval = setInterval(() => {
       setDataPercent((prev) =>
-        prev < percent ? prev + (percent % 15) : percent
+        prev < data.approvedPercent
+          ? prev + (data.approvedPercent % 15)
+          : data.approvedPercent
       );
     }, 100);
     return () => clearInterval(interval);
-  }, [percent]);
+  }, [data.approvedPercent]);
   return (
     <div className="grid grid-cols-5 gap-3">
       <FastBackwardOutlined
@@ -51,10 +45,10 @@ const PercentForms: FC<PercentFormsProps> = ({
       <div className="col-span-4 flex flex-col justify-center">
         <div className="flex justify-between">
           <span className={`text-${color}-400 font-semibold text-[14px]`}>
-            {name} ({countItems}/{total})
+            {data.formName} ({data.totalApprovedItems}/{data.totalItems})
           </span>
           <span className={`text-${color}-400 font-semibold text-[14px]`}>
-            {percent}%
+            {data.approvedPercent}%
           </span>
         </div>
         <Progress

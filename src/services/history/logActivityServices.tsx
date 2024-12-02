@@ -4,6 +4,7 @@ export interface LogActivityItem {
   id: string;
   username: string;
   functionName: string;
+  method: string;
   path: string;
   query: string;
   ip: string;
@@ -18,10 +19,11 @@ export interface LogActivityResponses {
   items: LogActivityItem[];
 }
 
-export async function getAllLogActivities(): Promise<LogActivityResponses> {
-  const response = await apiClient.get<LogActivityResponses>(
-    "api/log-activity"
-  );
+export async function getAllLogActivities(
+  years: string
+): Promise<LogActivityResponses> {
+  let url = `api/log-activity?Years=${years}`;
+  const response = await apiClient.get<LogActivityResponses>(url);
   return response.data;
 }
 
