@@ -1,9 +1,14 @@
 enum Messages {
+    BREAD_CRUMB_HOME = "Trang chủ",
+    BREAD_CRUMB_SEARCH = "Tra cứu thông tin nhân sự",
+
+    NO_DATA = "Không có dữ liệu!",
+
     ERROR = "Đã có lỗi xảy ra!",
     ERROR_IMPORT = "Vui lòng kiểm tra lại các tệp tin!",
     ERROR_EXCEL = "Vui lòng chọn đúng tệp tin Excel!",
     ERROR_PDF = "Vui lòng chọn đúng tệp tin PDF!",
-
+    
     TITLE_ADD_CLASSLEADER = "Thêm mới thông tin chủ nhiệm lớp",
     TITLE_UPDATE_CLASSLEADER = "Cập nhật thông tin chủ nhiệm lớp",
     ADD_CLASSLEADERS = "Thêm mới thông tin chủ nhiệm lớp thành công!",
@@ -41,6 +46,12 @@ enum Messages {
 
     ADD_SCHOOLYEARS = "Thêm mới thời gian năm học thành công!",
     UPDATE_SCHOOLYEARS = "Cập nhật thời gian năm học thành công!",
+
+    TITLE_ADD_UNITS = "Thêm mới đơn vị",
+    TITLE_UPDATE_UNITS = "Cập nhật đơn vị",
+    TITLE_DELETE_UNITS = "Xóa các đơn vị",
+    ADD_UNITS = "Thêm mới đơn vị thành công!",
+    UPDATE_UNITS = "Cập nhật đơn vị thành công!",
 }
 
 export default Messages;

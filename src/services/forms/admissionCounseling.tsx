@@ -26,10 +26,13 @@ export interface AdmissionCounselingResponse {
   totalCount: number;
 }
 
-export async function getAllAdmissionCounseling(): Promise<AdmissionCounselingResponse> {
-  const response = await apiClient.get<AdmissionCounselingResponse>(
-    "api/admissions-counseling"
-  );
+export async function getAllAdmissionCounseling(
+  yearId: string
+): Promise<AdmissionCounselingResponse> {
+  let url = yearId
+    ? `api/admissions-counseling?Years=${yearId}`
+    : "api/leaders";
+  const response = await apiClient.get<AdmissionCounselingResponse>(url);
   return response.data;
 }
 

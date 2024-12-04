@@ -1,7 +1,9 @@
 "use client";
 
 import MultiLineChart from "@/components/charts/MultiLineChart";
+import FaculitiesForms from "@/components/dashboard/FaculitiesForms";
 import PercentForms from "@/components/dashboard/PercentForms";
+import TopCBForms from "@/components/dashboard/TopCBForms";
 import TotalFormCard from "@/components/dashboard/TotalFormCard";
 import { getAllLogActivities } from "@/services/history/logActivityServices";
 import {
@@ -126,7 +128,7 @@ const Home = () => {
   }, [valueMultiLine]);
 
   return (
-    <div>
+    <section>
       <div className="mb-3">
         <Breadcrumb
           items={[
@@ -190,8 +192,8 @@ const Home = () => {
               </div>
             </>
           )}
-          <div>
-            <div className="grid grid-cols-5 gap-4 h-[400px] mb-4">
+          <section className="mb-4">
+            <div className="grid grid-cols-5 gap-4">
               <div className="bg-white flex flex-col rounded-lg shadow-lg cursor-pointer">
                 <div className="px-4 py-3 flex justify-between items-center">
                   <span className="text-neutral-400 font-semibold text-[14px]">
@@ -203,10 +205,7 @@ const Home = () => {
                 <div className="h-full p-3 flex justify-center mt-2">
                   {dataHistory && dataHistory.length > 0 ? (
                     <>
-                      <Timeline
-                        items={dataHistory}
-                        className="h-fit mt-3 mb-[-100px]"
-                      />
+                      <Timeline items={dataHistory} className="h-fit mt-3" />
                     </>
                   ) : (
                     <div className="flex items-center">
@@ -275,10 +274,37 @@ const Home = () => {
                 )}
               </div>
             </div>
-          </div>
+          </section>
+          <section className="grid grid-cols-3 gap-4 mb-4">
+            <FaculitiesForms />
+            <div className="bg-white flex flex-col rounded-lg shadow-lg cursor-pointer">
+              <div className="px-4 py-3 flex justify-between items-center">
+                <span className="text-neutral-400 font-semibold text-[14px]">
+                  Các hoạt động gần đây
+                </span>
+                <Button type="text" shape="circle" icon={<MoreOutlined />} />
+              </div>
+              <hr />
+              <div className="h-full p-3 flex justify-center mt-2">
+                {dataHistory && dataHistory.length > 0 ? (
+                  <>
+                    <Timeline
+                      items={dataHistory}
+                      className="h-fit mt-3 mb-[-100px]"
+                    />
+                  </>
+                ) : (
+                  <div className="flex items-center">
+                    <Empty description="Không có dữ liệu..."></Empty>
+                  </div>
+                )}
+              </div>
+            </div>
+            <TopCBForms />
+          </section>
         </>
       )}
-    </div>
+    </section>
   );
 };
 export default Home;

@@ -10,10 +10,7 @@ import {
   putUpdateApprovedClassAssistant,
   putUpdateClassAssistant,
 } from "@/services/forms/assistantsServices";
-import {
-  getListUnitsFromHrm,
-  UnitHRMItem,
-} from "@/services/units/unitsServices";
+import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
 import PageTitles from "@/utility/Constraints";
 import {
   convertTimestampToDate,
@@ -22,6 +19,7 @@ import {
   setCellStyle,
 } from "@/utility/Utilities";
 import {
+  ArrowsAltOutlined,
   CheckOutlined,
   CloseCircleOutlined,
   CloseOutlined,
@@ -30,6 +28,7 @@ import {
   FileProtectOutlined,
   PlusOutlined,
   SafetyOutlined,
+  ShrinkOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -67,17 +66,19 @@ import {
   getRoleByName,
   RoleItem,
 } from "@/services/roles/rolesServices";
+import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import { FileItem } from "@/services/uploads/uploadsServices";
 import Messages from "@/utility/Messages";
-import locale from "antd/locale/vi_VN";
-import dayjs, { Dayjs } from "dayjs";
-import "dayjs/locale/vi";
+import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
+
+import locale from "antd/locale/vi_VN";
+import dayjs from "dayjs";
+import "dayjs/locale/vi";
 dayjs.locale("vi");
 
 type SearchProps = GetProps<typeof Input.Search>;
 const { Search } = Input;
-const { RangePicker } = DatePicker;
 
 const BM02 = () => {
   const [loading, setLoading] = useState(false);
@@ -93,15 +94,20 @@ const BM02 = () => {
   const [selectedItem, setSelectedItem] = useState<
     Partial<ClassAssistantItem> | undefined
   >(undefined);
-  const [units, setUnits] = useState<UnitHRMItem[]>([]);
+  const [units, setUnits] = useState<UnitItem[]>([]);
   const [selectedKeyUnit, setSelectedKeyUnit] = useState<Key | null>(null);
   const [message, setMessage] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<
     "success" | "error" | "info" | "warning"
   >("success");
-  const [startDate, setStartDate] = useState<number | null>(null);
-  const [endDate, setEndDate] = useState<number | null>(null);
+  const [defaultYears, setDefaultYears] = useState<any>();
+  const [selectedKey, setSelectedKey] = useState<any>();
+  const [startDate, setStartDate] = useState<number | 0>(0);
+  const [minStartDate, setMinStartDate] = useState<number | 0>(0);
+  const [endDate, setEndDate] = useState<number | 0>(0);
+  const [maxEndDate, setMaxEndDate] = useState<number | 0>(0);
+  const [advanced, setAdvanced] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
   const [role, setRole] = useState<RoleItem>();
   const [isBlock, setIsBlock] = useState(false);
@@ -109,22 +115,38 @@ const BM02 = () => {
   const [reason, setReason] = useState("");
   const [isPayments, setIsPayments] = useState<PaymentApprovedItem>();
   const [isShowPdf, setIsShowPdf] = useState(false);
-  const [selectedDates, setSelectedDates] = useState<
-    [Dayjs | null, Dayjs | null] | null
-  >(null);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 15,
   });
-  const getListClassAssistants = async () => {
-    const response = await getAllClassAssistants();
+
+  const getDefaultYears = async () => {
+    const { items } = await getAllSchoolYears();
+    if (items) {
+      setDefaultYears(items);
+      const defaultYear = items.find((x: any) => x.isDefault);
+      if (defaultYear) {
+        const { id, startDate, endDate } = defaultYear;
+        setSelectedKey(defaultYear);
+        getListClassAssistants(id);
+        setStartDate(startDate);
+        setMinStartDate(startDate);
+        setEndDate(endDate);
+        setMaxEndDate(endDate);
+      }
+    }
+  };
+
+  const getListClassAssistants = async (yearId: string) => {
+    const response = await getAllClassAssistants(yearId);
     setclassAssistants(response);
     setData(response.items);
     setNotificationOpen(false);
   };
-  const getAllUnitsFromHRM = async () => {
-    const response = await getListUnitsFromHrm();
-    setUnits(response.model);
+
+  const getListUnits = async () => {
+    const response = await getAllUnits("true");
+    setUnits(response.items);
   };
 
   const onSelectChange = (newSelectedRowKeys: Key[]) => {
@@ -422,8 +444,9 @@ const BM02 = () => {
   const onSearch: SearchProps["onSearch"] = (value) => {
     if ((value === "" && !selectedKeyUnit) || selectedKeyUnit === "all")
       setData(classAssistants?.items || []);
-    const selectedUnit = units.find((unit) => unit.id === selectedKeyUnit);
-
+    const selectedUnit = units.find(
+      (unit: UnitItem) => unit.idHrm === selectedKeyUnit
+    );
     const filteredData = classAssistants?.items.filter((item) => {
       const matchesName =
         item.userName.toLowerCase().includes(value.toLowerCase()) ||
@@ -456,7 +479,7 @@ const BM02 = () => {
         setDescription(
           `Đã xóa thành công ${selectedKeysArray.length} thông tin!`
         );
-        await getListClassAssistants();
+        await getListClassAssistants(selectedKey.id);
         setSelectedRowKeys([]);
       }
     } catch (error) {
@@ -491,7 +514,7 @@ const BM02 = () => {
       setNotificationOpen(true);
       setStatus("success");
       setMessage("Thông báo");
-      await getListClassAssistants();
+      await getListClassAssistants(selectedKey.id);
       setIsOpen(false);
       setSelectedItem(undefined);
       setMode("add");
@@ -529,7 +552,7 @@ const BM02 = () => {
       setNotificationOpen(true);
       setStatus("success");
       setMessage("Thông báo");
-      await getListClassAssistants();
+      await getListClassAssistants(selectedKey.id);
       setIsOpen(false);
       setSelectedItem(undefined);
       setMode("add");
@@ -539,7 +562,7 @@ const BM02 = () => {
       setNotificationOpen(true);
       setStatus("error");
       setMessage("Thông báo");
-      setDescription("Đã có lỗi xảy ra!");
+      setDescription(Messages.ERROR);
       setIsUpload(false);
     }
   };
@@ -850,7 +873,7 @@ const BM02 = () => {
       setNotificationOpen(true);
       setStatus("success");
       setMessage("Thông báo");
-      await getListClassAssistants();
+      await getListClassAssistants(selectedKey.id);
       setIsOpen(false);
       setSelectedItem(undefined);
       setMode("add");
@@ -860,6 +883,19 @@ const BM02 = () => {
       setMessage("Thông báo");
       setDescription(Messages.ERROR);
     }
+  };
+
+  const handleChangeYear = (value: any) => {
+    setLoading(true);
+    const temp = defaultYears.filter((x: any) => x.id === value)[0] as any;
+    setSelectedKey(temp);
+    getListClassAssistants(temp.id);
+    setStartDate(temp.startDate);
+    setEndDate(temp.endDate);
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+    }, 500);
+    return () => clearTimeout(timeoutId);
   };
 
   useEffect(() => {
@@ -873,7 +909,7 @@ const BM02 = () => {
         pageSize,
       });
     }
-    Promise.all([getListClassAssistants(), getAllUnitsFromHRM()]);
+    Promise.all([getDefaultYears(), getListUnits()]);
     const token = Cookies.get("s_t");
     if (token) {
       const decodedRole = jwtDecode<{
@@ -895,182 +931,241 @@ const BM02 = () => {
     <div>
       <div className="grid grid-cols-3 mb-4">
         <div className="col-span-2">
-          <div className="grid grid-cols-3 gap-4">
-            {loading ? (
-              <>
-                <Skeleton.Input active size="small" style={{ width: "100%" }} />
-                <Skeleton.Input active size="small" style={{ width: "100%" }} />
-                <Skeleton.Input active size="small" style={{ width: "100%" }} />
-              </>
-            ) : (
-              <>
-                <Search
-                  placeholder="Tìm kiếm hoạt động..."
-                  onSearch={onSearch}
-                  enterButton
-                />
-                <Select
-                  showSearch
-                  allowClear
-                  // size="large"
-                  placeholder="Tất cả đơn vị"
-                  optionFilterProp="label"
-                  filterSort={(optionA, optionB) =>
-                    (optionA?.label ?? "")
-                      .toLowerCase()
-                      .localeCompare((optionB?.label ?? "").toLowerCase())
-                  }
-                  options={units.map((unit) => ({
-                    value: unit.id,
-                    label: unit.name,
-                  }))}
-                  value={selectedKeyUnit}
-                  onChange={(value) => {
-                    setSelectedKeyUnit(value);
-                  }}
-                />
-                <ConfigProvider locale={locale}>
-                  <RangePicker
-                    placeholder={["Từ ngày", "Đến ngày"]}
-                    format={"DD/MM/YYYY"}
-                    value={
-                      selectedDates || [
-                        dayjs(`01/09/${dayjs().year()}`, "DD/MM/YYYY"),
-                        dayjs(`31/08/${dayjs().year() + 1}`, "DD/MM/YYYY"),
-                      ]
-                    }
-                    onChange={(dates, dateStrings) => {
-                      if (dates) {
-                        const [startDate, endDate] = dateStrings;
-                        const startTimestamp = startDate
-                          ? new Date(
-                              startDate.split("/").reverse().join("-")
-                            ).valueOf() / 1000
-                          : null;
-                        const endTimestamp = endDate
-                          ? new Date(
-                              endDate.split("/").reverse().join("-")
-                            ).valueOf() / 1000
-                          : null;
-                        setStartDate(startTimestamp);
-                        setEndDate(endTimestamp);
-                        setSelectedDates(dates);
-                      } else {
-                        setSelectedDates(null);
-                        setStartDate(
-                          new Date(`01/09/${dayjs().year()}`).valueOf() / 1000
-                        );
-                        setEndDate(
-                          new Date(`31/08/${dayjs().year() + 1}`).valueOf() /
-                            1000
-                        );
+          <AnimatePresence>
+            <motion.div
+              initial={{ height: "h-fit", opacity: 1 }}
+              animate={
+                advanced
+                  ? { height: "auto", opacity: 1 }
+                  : { height: 57, opacity: 1 }
+              }
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              className={`grid ${
+                advanced ? "grid-rows-2" : "grid-cols-1"
+              } gap-2`}
+            >
+              <div className="grid grid-cols-6 gap-3">
+                <div className="col-span-2 flex flex-col justify-center gap-1">
+                  <span className="text-[14px] text-neutral-500">
+                    Tìm kiếm:
+                  </span>
+                  <Search placeholder=" " onSearch={onSearch} enterButton />
+                </div>
+                <div
+                  className="col-span-2"
+                  hidden={role && role.name === "secretary"}
+                >
+                  <div className="flex flex-col justify-center gap-1">
+                    <span className="text-[14px] text-neutral-500">
+                      Đơn vị:
+                    </span>
+                    <Select
+                      showSearch
+                      allowClear
+                      placeholder="Tất cả đơn vị"
+                      optionFilterProp="label"
+                      filterSort={(optionA, optionB) =>
+                        (optionA?.label ?? "")
+                          .toLowerCase()
+                          .localeCompare((optionB?.label ?? "").toLowerCase())
                       }
-                    }}
-                  />
-                </ConfigProvider>
-              </>
-            )}
-          </div>
-        </div>
-        <div className="flex justify-end gap-4">
-          {loading ? (
-            <>
-              <Skeleton.Input active size="small" />
-              <Skeleton.Input active size="small" />
-              <Skeleton.Input active size="small" />
-            </>
-          ) : (
-            <>
-              {role?.displayRole.isApprove && role?.displayRole.isReject && (
-                <>
-                  <Tooltip
-                    placement="top"
-                    title="Phê duyệt dữ liệu"
-                    arrow={true}
-                  >
-                    <Dropdown
-                      menu={{ items: itemsApproved }}
-                      trigger={["click"]}
-                    >
-                      <a onClick={(e) => e.preventDefault()}>
-                        <Button
-                          type="primary"
-                          icon={<FileProtectOutlined />}
-                          disabled={selectedRowKeys.length === 0}
-                        >
-                          Phê duyệt{" "}
-                          {selectedRowKeys.length !== 0
-                            ? `(${selectedRowKeys.length})`
-                            : ""}
-                        </Button>
-                      </a>
-                    </Dropdown>
-                  </Tooltip>
-                </>
-              )}
-              {role?.displayRole.isExport && (
-                <>
-                  <Tooltip
-                    placement="top"
-                    title="Xuất dữ liệu Excel"
-                    arrow={true}
-                  >
-                    <Button
-                      icon={<FileExcelOutlined />}
-                      onClick={handleExportExcel}
-                      iconPosition="start"
-                      style={{
-                        backgroundColor: "#52c41a",
-                        borderColor: "#52c41a",
-                        color: "#fff",
+                      options={units.map((unit: UnitItem, index) => ({
+                        value: unit.idHrm,
+                        label: unit.name,
+                        key: `${unit.idHrm}-${index}`,
+                      }))}
+                      value={selectedKeyUnit}
+                      onChange={(value) => {
+                        setSelectedKeyUnit(value);
                       }}
-                    >
-                      Xuất Excel
-                    </Button>
-                  </Tooltip>
-                </>
-              )}
-
-              {role?.displayRole.isCreate && (
-                <>
-                  <Tooltip
-                    placement="top"
-                    title={"Thêm mới hoạt động"}
-                    arrow={true}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-end">
+                  <Button
+                    color="primary"
+                    variant="filled"
+                    icon={advanced ? <ShrinkOutlined /> : <ArrowsAltOutlined />}
+                    onClick={() => setAdvanced(!advanced)}
                   >
-                    <Dropdown menu={{ items }} trigger={["click"]}>
-                      <a onClick={(e) => e.preventDefault()}>
-                        <Button type="primary" icon={<PlusOutlined />}>
-                          Thêm hoạt động
-                        </Button>
-                      </a>
-                    </Dropdown>
-                  </Tooltip>
-                </>
-              )}
-
-              {role?.displayRole.isDelete && (
-                <>
-                  <Tooltip
-                    placement="top"
-                    title="Xóa các hoạt động"
-                    arrow={true}
+                    {advanced ? "Thu nhỏ" : "Mở rộng"}
+                  </Button>
+                </div>
+              </div>
+              <AnimatePresence>
+                {advanced && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="grid grid-cols-6 gap-3"
                   >
+                    <div className="flex flex-col justify-center gap-1">
+                      <span className="text-[14px] text-neutral-500">
+                        Năm học:
+                      </span>
+                      <Select
+                        showSearch
+                        optionFilterProp="label"
+                        filterSort={(optionA, optionB) =>
+                          (optionA?.title ?? "").localeCompare(
+                            optionB?.title ?? ""
+                          )
+                        }
+                        options={defaultYears?.map((year: any) => ({
+                          value: year.id,
+                          label: year.title,
+                        }))}
+                        //
+                        value={selectedKey && selectedKey.title}
+                        onChange={(value) => handleChangeYear(value)}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="flex flex-col justify-center gap-1">
+                      <span className="text-[14px] text-neutral-500">
+                        Từ ngày:
+                      </span>
+                      <ConfigProvider locale={locale}>
+                        <DatePicker
+                          placeholder="dd/mm/yyyy"
+                          format="DD/MM/YYYY"
+                          minDate={dayjs
+                            .unix(minStartDate)
+                            .tz("Asia/Ho_Chi_Minh")}
+                          maxDate={dayjs
+                            .unix(maxEndDate)
+                            .tz("Asia/Ho_Chi_Minh")}
+                          value={
+                            startDate
+                              ? dayjs.unix(startDate).tz("Asia/Ho_Chi_Minh")
+                              : null
+                          }
+                          onChange={(date) => {
+                            if (date) {
+                              const timestamp = dayjs(date)
+                                .tz("Asia/Ho_Chi_Minh")
+                                .unix();
+                              setStartDate(timestamp);
+                            } else {
+                              setStartDate(0);
+                            }
+                          }}
+                        />
+                      </ConfigProvider>
+                    </div>
+                    <div className="flex flex-col justify-center gap-1">
+                      <span className="text-[14px] text-neutral-500">
+                        Đến ngày:
+                      </span>
+                      <ConfigProvider locale={locale}>
+                        <DatePicker
+                          placeholder="dd/mm/yyyy"
+                          format="DD/MM/YYYY"
+                          minDate={dayjs
+                            .unix(minStartDate)
+                            .tz("Asia/Ho_Chi_Minh")}
+                          maxDate={dayjs
+                            .unix(maxEndDate)
+                            .tz("Asia/Ho_Chi_Minh")}
+                          value={
+                            endDate
+                              ? dayjs.unix(endDate).tz("Asia/Ho_Chi_Minh")
+                              : null
+                          }
+                          onChange={(date) => {
+                            if (date) {
+                              const timestamp = dayjs(date)
+                                .tz("Asia/Ho_Chi_Minh")
+                                .unix();
+                              setEndDate(timestamp);
+                            } else {
+                              setEndDate(0);
+                            }
+                          }}
+                        />
+                      </ConfigProvider>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+        <div className="flex justify-end mt-6 gap-3">
+          {role?.displayRole.isApprove && role?.displayRole.isReject && (
+            <>
+              <Tooltip placement="top" title="Phê duyệt dữ liệu" arrow={true}>
+                <Dropdown menu={{ items: itemsApproved }} trigger={["click"]}>
+                  <a onClick={(e) => e.preventDefault()}>
                     <Button
-                      type="dashed"
+                      type="primary"
+                      icon={<FileProtectOutlined />}
                       disabled={selectedRowKeys.length === 0}
-                      danger
-                      onClick={handleDelete}
-                      icon={<DeleteOutlined />}
                     >
-                      Xóa{" "}
+                      Phê duyệt{" "}
                       {selectedRowKeys.length !== 0
                         ? `(${selectedRowKeys.length})`
                         : ""}
                     </Button>
-                  </Tooltip>
-                </>
-              )}
+                  </a>
+                </Dropdown>
+              </Tooltip>
+            </>
+          )}
+          {role?.displayRole.isExport && (
+            <>
+              <Tooltip placement="top" title="Xuất dữ liệu Excel" arrow={true}>
+                <Button
+                  icon={<FileExcelOutlined />}
+                  onClick={handleExportExcel}
+                  iconPosition="start"
+                  style={{
+                    backgroundColor: "#52c41a",
+                    borderColor: "#52c41a",
+                    color: "#fff",
+                  }}
+                >
+                  Xuất Excel
+                </Button>
+              </Tooltip>
+            </>
+          )}
+          {role?.displayRole.isCreate && (
+            <>
+              <Tooltip
+                placement="top"
+                title={"Thêm mới hoạt động"}
+                arrow={true}
+              >
+                <Dropdown menu={{ items }} trigger={["click"]}>
+                  <a onClick={(e) => e.preventDefault()}>
+                    <Button type="primary" icon={<PlusOutlined />}>
+                      Thêm hoạt động
+                    </Button>
+                  </a>
+                </Dropdown>
+              </Tooltip>
+            </>
+          )}
+          {role?.displayRole.isDelete && (
+            <>
+              <Tooltip placement="top" title="Xóa các hoạt động" arrow={true}>
+                <Button
+                  type="dashed"
+                  disabled={selectedRowKeys.length === 0}
+                  danger
+                  onClick={handleDelete}
+                  icon={<DeleteOutlined />}
+                >
+                  Xóa{" "}
+                  {selectedRowKeys.length !== 0
+                    ? `(${selectedRowKeys.length})`
+                    : ""}
+                </Button>
+              </Tooltip>
             </>
           )}
         </div>
@@ -1149,6 +1244,7 @@ const BM02 = () => {
           <Input value={reason} onChange={(e) => setReason(e.target.value)} />
         </Modal>
       </div>
+      <hr className="mb-3" />
       {loading ? (
         <>
           <Card>
@@ -1176,7 +1272,9 @@ const BM02 = () => {
             rowSelection={rowSelection}
             columns={columns}
             dataSource={data}
-            locale={{ emptyText: <Empty description="Không có dữ liệu..."></Empty> }}
+            locale={{
+              emptyText: <Empty description="Không có dữ liệu..."></Empty>,
+            }}
             onChange={handleTableChange}
           />
         </>

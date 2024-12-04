@@ -26,8 +26,9 @@ export interface QAResponse {
   totalCount: number;
 }
 
-export async function getAllQAs(): Promise<QAResponse> {
-  const response = await apiClient.get<QAResponse>("api/qae");
+export async function getAllQAs(yearId: string): Promise<QAResponse> {
+  let url = yearId ? `api/qae?Years=${yearId}` : "api/qae";
+  const response = await apiClient.get<QAResponse>(url);
   return response.data;
 }
 

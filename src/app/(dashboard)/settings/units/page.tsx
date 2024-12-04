@@ -1,23 +1,10 @@
 "use client";
 
-import CustomModal from "@/components/CustomModal";
-import CustomNotification from "@/components/CustomNotification";
-import FormSchoolYear from "@/components/schoolYears/FormSchoolYear";
-import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
-import {
-  deleteSchoolYears,
-  getAllSchoolYears,
-  postSchoolYear,
-  putSchoolYear,
-  SchoolYearsResponses,
-} from "@/services/schoolYears/schoolYearsServices";
 import PageTitles from "@/utility/Constraints";
-import Messages from "@/utility/Messages";
-import { convertTimestampToDate } from "@/utility/Utilities";
 import {
   CheckOutlined,
-  ContactsOutlined,
   DeleteOutlined,
+  GoldOutlined,
   HomeOutlined,
   PlusOutlined,
   SettingOutlined,
@@ -32,16 +19,28 @@ import {
   Tag,
   Tooltip,
 } from "antd";
-import { TableRowSelection } from "antd/es/table/interface";
+import { Key, useCallback, useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
-import { Key, useCallback, useEffect, useState } from "react";
+import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
+import {
+  deleteUnits,
+  getAllUnits,
+  postUnit,
+  putUnit,
+  UnitsResponse,
+} from "@/services/units/unitsServices";
+import { convertTimestampToDate } from "@/utility/Utilities";
+import { TableRowSelection } from "antd/es/table/interface";
+import CustomNotification from "@/components/CustomNotification";
+import CustomModal from "@/components/CustomModal";
+import FormUnit from "@/components/forms/units/formUnit";
+import Messages from "@/utility/Messages";
 
-const SchoolYear = () => {
+const Units = () => {
+  const [role, setRole] = useState<RoleItem>();
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
-  const [schoolYears, setSchoolYears] = useState<
-    SchoolYearsResponses | undefined
-  >(undefined);
+  const [units, setUnits] = useState<UnitsResponse | undefined>(undefined);
   const [isOpen, setIsOpen] = useState(false);
   const [mode, setMode] = useState<"add" | "edit">("add");
   const [isNotificationOpen, setNotificationOpen] = useState(false);
@@ -50,7 +49,6 @@ const SchoolYear = () => {
   const [selectedItem, setSelectedItem] = useState<Partial<any> | undefined>(
     undefined
   );
-  const [role, setRole] = useState<RoleItem>();
   const [status, setStatus] = useState<
     "success" | "error" | "info" | "warning"
   >("success");
@@ -70,63 +68,31 @@ const SchoolYear = () => {
       className: "text-center w-[20px]",
     },
     {
-      title: "NĂM HỌC",
-      dataIndex: "title",
-      key: "title",
+      title: "ĐƠN VỊ",
+      dataIndex: "name",
+      key: "name",
       className: "max-w-24",
-      render: (title: string) => (
+      render: (name: string, record: any) => (
         <span
           className="text-blue-500 font-medium cursor-pointer"
           onClick={() => {
             setMode("edit");
             setIsOpen(true);
             setSelectedItem(
-              schoolYears?.items.find((item: any) => item.title === title)
+              units?.items.find((item: any) => item.idHrm === record.idHrm)
             );
           }}
         >
-          {title}
+          {name}
         </span>
       ),
     },
     {
-      title: "TỪ NGÀY",
-      dataIndex: "startDate",
-      key: "startDate",
-      render: (startDate: number) =>
-        startDate ? convertTimestampToDate(startDate) : "",
-      className: "text-center w-[100px]",
-    },
-    {
-      title: "ĐẾN NGÀY",
-      dataIndex: "endDate",
-      key: "endDate",
-      render: (endDate: number) =>
-        endDate ? convertTimestampToDate(endDate) : "",
-      className: "text-center w-[100px]",
-    },
-    {
-      title: (
-        <div className="py-1">
-          THIẾT LẬP <br /> MẶC ĐỊNH
-        </div>
-      ),
-      dataIndex: "isDefault",
-      key: "isDefault",
-      render: (isDefault: boolean) => {
-        return (
-          <>
-            {isDefault && (
-              <>
-                <span className="text-green-600">
-                  <CheckOutlined />
-                </span>
-              </>
-            )}
-          </>
-        );
-      },
-      className: "text-center w-[100px]",
+      title: "MÃ ĐƠN VỊ",
+      dataIndex: "code",
+      key: "code",
+      render: (code: string) => <>{code}</>,
+      className: "text-center max-w-8",
     },
     {
       title: "TRẠNG THÁI",
@@ -154,7 +120,7 @@ const SchoolYear = () => {
       dataIndex: "description",
       key: "description",
       render: (description: string) => <span>{description}</span>,
-      className: "m-w-24",
+      className: "max-w-24",
     },
   ];
 
@@ -177,33 +143,23 @@ const SchoolYear = () => {
     });
   };
 
-  const getSchoolYears = async () => {
-    const response = await getAllSchoolYears();
-    setSchoolYears(response);
-    setNotificationOpen(false);
-  };
-  const getDisplayRole = async (name: string) => {
-    const response = await getRoleByName(name);
-    setRole(response.items[0]);
-  };
-
   const handleSubmit = async (formData: Partial<any>) => {
     try {
       if (mode === "edit" && selectedItem) {
-        const response = await putSchoolYear(formData.id as string, formData);
+        const response = await putUnit(formData.id as string, formData);
         if (response) {
-          setDescription(Messages.UPDATE_SCHOOLYEARS);
+          setDescription(Messages.UPDATE_UNITS);
         }
       } else {
-        const response = await postSchoolYear(formData);
+        const response = await postUnit(formData);
         if (response) {
-          setDescription(Messages.ADD_SCHOOLYEARS);
+          setDescription(Messages.ADD_UNITS);
         }
       }
       setNotificationOpen(true);
       setStatus("success");
       setMessage("Thông báo");
-      await getSchoolYears();
+      await getListUnits();
       setIsOpen(false);
       setSelectedItem(undefined);
       setMode("add");
@@ -219,14 +175,12 @@ const SchoolYear = () => {
     try {
       const selectedKeysArray = Array.from(selectedRowKeys) as string[];
       if (selectedKeysArray.length > 0) {
-        await deleteSchoolYears(selectedKeysArray);
+        await deleteUnits(selectedKeysArray);
         setNotificationOpen(true);
         setStatus("success");
         setMessage("Thông báo");
-        setDescription(
-          `Đã xóa thành công ${selectedKeysArray.length} thời gian năm học!`
-        );
-        await getSchoolYears();
+        setDescription(`Đã xóa thành công ${selectedKeysArray.length} đơn vị!`);
+        await getListUnits();
         setSelectedRowKeys([]);
       }
     } catch (error) {
@@ -234,9 +188,20 @@ const SchoolYear = () => {
     }
   }, [selectedRowKeys]);
 
+  const getListUnits = async () => {
+    const response = await getAllUnits();
+    setUnits(response);
+    setNotificationOpen(false);
+  };
+
+  const getDisplayRole = async (name: string) => {
+    const response = await getRoleByName(name);
+    setRole(response.items[0]);
+  };
+
   useEffect(() => {
-    document.title = PageTitles.SCHOOL_YEARS;
-    getSchoolYears();
+    document.title = PageTitles.UNITS;
+    getListUnits();
     const token = Cookies.get("s_t");
     if (token) {
       const decodedRole = jwtDecode<{
@@ -275,8 +240,8 @@ const SchoolYear = () => {
             {
               title: (
                 <>
-                  <ContactsOutlined />
-                  <span>Thời gian năm học</span>
+                  <GoldOutlined />
+                  <span>Đơn vị</span>
                 </>
               ),
             },
@@ -286,7 +251,11 @@ const SchoolYear = () => {
       <div className="flex justify-end gap-4 mb-4">
         {role?.displayRole.isCreate && (
           <>
-            <Tooltip placement="top" title={"Thêm mới vai trò"} arrow={true}>
+            <Tooltip
+              placement="top"
+              title={Messages.TITLE_ADD_UNITS}
+              arrow={true}
+            >
               <Button
                 type="primary"
                 onClick={() => {
@@ -296,14 +265,18 @@ const SchoolYear = () => {
                 icon={<PlusOutlined />}
                 iconPosition="start"
               >
-                Thêm vai trò
+                Thêm đơn vị
               </Button>
             </Tooltip>
           </>
         )}
         {role?.displayRole.isDelete && (
           <>
-            <Tooltip placement="top" title="Xóa các hoạt động" arrow={true}>
+            <Tooltip
+              placement="top"
+              title={Messages.TITLE_DELETE_UNITS}
+              arrow={true}
+            >
               <Button
                 type="dashed"
                 disabled={selectedRowKeys.length === 0}
@@ -329,7 +302,11 @@ const SchoolYear = () => {
         <CustomModal
           isOpen={isOpen}
           width={"25vw"}
-          title={mode === "edit" ? "Cập nhật vai trò" : "Thêm mới vai trò"}
+          title={
+            mode === "edit"
+              ? Messages.TITLE_UPDATE_UNITS
+              : Messages.TITLE_ADD_UNITS
+          }
           role={role || undefined}
           onOk={() => {
             const formElement = document.querySelector("form");
@@ -344,7 +321,7 @@ const SchoolYear = () => {
             setMode("add");
           }}
           bodyContent={
-            <FormSchoolYear
+            <FormUnit
               onSubmit={handleSubmit}
               initialData={selectedItem as Partial<RoleItem>}
               mode={mode}
@@ -352,7 +329,7 @@ const SchoolYear = () => {
           }
         />
         <Table<any>
-          key={"table-roles"}
+          key={"table-units"}
           className="custom-table-header shadow-md rounded-md"
           bordered
           rowKey={(item) => item.id}
@@ -360,7 +337,7 @@ const SchoolYear = () => {
           size="small"
           pagination={{
             ...pagination,
-            total: schoolYears?.totalCount,
+            total: units?.totalCount,
             showTotal: showTotal,
             showSizeChanger: true,
             position: ["bottomRight"],
@@ -369,8 +346,8 @@ const SchoolYear = () => {
           }}
           rowSelection={rowSelection}
           columns={columns}
-          dataSource={schoolYears?.items}
-          locale={{ emptyText: <Empty description="No Data"></Empty> }}
+          dataSource={units?.items.sort((a: any, b: any) => a.name.localeCompare(b.name))}
+          locale={{ emptyText: <Empty description={Messages.NO_DATA}></Empty> }}
           onChange={handleTableChange}
         />
       </div>
@@ -378,4 +355,4 @@ const SchoolYear = () => {
   );
 };
 
-export default SchoolYear;
+export default Units;

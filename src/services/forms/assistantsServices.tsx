@@ -27,10 +27,11 @@ export interface ClassAssistantResponse {
   totalCount: number;
 }
 
-export async function getAllClassAssistants(): Promise<ClassAssistantResponse> {
-  const response = await apiClient.get<ClassAssistantResponse>(
-    "api/assistants"
-  );
+export async function getAllClassAssistants(
+  yearId: string
+): Promise<ClassAssistantResponse> {
+  let url = yearId ? `api/assistants?Years=${yearId}` : "api/leaders";
+  const response = await apiClient.get<ClassAssistantResponse>(url);
   return response.data;
 }
 

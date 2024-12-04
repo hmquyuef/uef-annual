@@ -13,6 +13,7 @@ enum PageTitles {
     PERMISSIONS = "Phân quyền - UEF",
     MENUS = "Chức năng - UEF",
     SCHOOL_YEARS = "Thời gian năm học - UEF",
+    UNITS = "Đơn vị - UEF",
     NOT_FOUND = "Không tìm thấy trang - UEF",
     NOT_PERMISSIONS = "Từ chối truy cập - UEF",
 }

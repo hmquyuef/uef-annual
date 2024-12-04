@@ -109,28 +109,18 @@ export interface ResultItemForBM05 {
 }
 
 export async function getDataExportByUserName(
-  userName: string,
-  startDate: number | null,
-  endDate: number | null
+  data: Partial<any>
 ): Promise<DetailUserItem> {
-  let url = `api/export/${userName}`;
-  if (startDate !== null && endDate !== null) {
-    url += `?startDate=${startDate}&endDate=${endDate}`;
-  }
-  const response = await apiClient.get<DetailUserItem>(url);
+  const response = await apiClient.post<DetailUserItem>("api/export", data);
   return response.data;
 }
 
 export async function getDataExportByUserNameWithForms(
-  userName: string,
-  startDate: number | null,
-  endDate: number | null,
-  forms: string
+  data: Partial<any>
 ): Promise<ExportDetailForUser> {
-  let url = `api/export/${userName}/${forms}`;
-  if (startDate !== null && endDate !== null) {
-    url += `?startDate=${startDate}&endDate=${endDate}`;
-  }
-  const response = await apiClient.get<ExportDetailForUser>(url);
+  const response = await apiClient.post<ExportDetailForUser>(
+    "api/export/forms",
+    data
+  );
   return response.data;
 }

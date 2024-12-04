@@ -1,7 +1,7 @@
 import apiClient from "../apiClient";
 import { AttackmentItem } from "./Attackment";
 import { ImportResponse } from "./formsServices";
-import {PaymentApprovedItem} from "./PaymentApprovedItem";
+import { PaymentApprovedItem } from "./PaymentApprovedItem";
 export interface ClassLeaderItem {
   id: string;
   userName: string;
@@ -27,8 +27,11 @@ export interface ClassLeadersResponse {
   totalCount: number;
 }
 
-export async function getAllClassLeaders(): Promise<ClassLeadersResponse> {
-  const response = await apiClient.get<ClassLeadersResponse>("api/leaders");
+export async function getAllClassLeaders(
+  years?: string
+): Promise<ClassLeadersResponse> {
+  let url = years ? `api/leaders?Years=${years}` : "api/leaders";
+  const response = await apiClient.get<ClassLeadersResponse>(url);
   return response.data;
 }
 
@@ -53,10 +56,7 @@ export async function putUpdateClassLeader(
 export async function putUpdateApprovedClassLeader(
   data: Partial<any>
 ): Promise<any> {
-  const response = await apiClient.put<any>(
-    `/api/leaders/approved`,
-    data
-  );
+  const response = await apiClient.put<any>(`/api/leaders/approved`, data);
   return response.data;
 }
 

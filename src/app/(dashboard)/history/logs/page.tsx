@@ -339,13 +339,13 @@ const LogsActivities = () => {
               </>
             ) : (
               <>
-                <div className="flex flex-col justify-center gap-2">
+                <div className="flex flex-col justify-center gap-1">
                   <span className="text-[14px] font-medium text-neutral-500">
                     Tìm kiếm:
                   </span>
                   <Search placeholder=" " onSearch={onSearch} enterButton />
                 </div>
-                <div className="flex flex-col justify-center gap-2">
+                <div className="flex flex-col justify-center gap-1">
                   <span className="text-[14px] font-medium text-neutral-500">
                     Năm học:
                   </span>
@@ -410,7 +410,7 @@ const LogsActivities = () => {
         status={status}
         isOpen={isNotificationOpen}
       />
-      <hr className="mb-3"/>
+      <hr className="mb-3" />
       <section>
         <Table<LogActivityItem>
           key={"table-logs-history"}

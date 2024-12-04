@@ -18,21 +18,11 @@ export interface ExportResponse {
 }
 
 export async function getDataExportByUnitCode(
-  code: string | null,
-  startDate: number | null,
-  endDate: number | null
+  data: Partial<any>
 ): Promise<ExportResponse> {
-  let url = "api/export";
-  if (code !== null) {
-    url += `?unitCode=${code}`;
-  }
-  if (startDate !== null) {
-    url +=
-      code !== null
-        ? `&startDate=${startDate}&endDate=${endDate}`
-        : `?startDate=${startDate}&endDate=${endDate}`;
-  }
-
-  const response = await apiClient.get<ExportResponse>(url);
+  const response = await apiClient.post<ExportResponse>(
+    "api/export/bm05",
+    data
+  );
   return response.data;
 }

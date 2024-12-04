@@ -13,6 +13,7 @@ import {
   getUsersFromHRM,
   UsersFromHRMResponse,
 } from "@/services/users/usersServices";
+import PageTitles from "@/utility/Constraints";
 import { convertTimestampToDate } from "@/utility/Utilities";
 import {
   CheckOutlined,
@@ -27,6 +28,7 @@ import {
 import {
   Breadcrumb,
   Button,
+  Card,
   Collapse,
   ConfigProvider,
   DatePicker,
@@ -35,28 +37,28 @@ import {
   Empty,
   MenuProps,
   Select,
+  Skeleton,
   Table,
   TableColumnsType,
   Tooltip,
 } from "antd";
-import { Key, useEffect, useState } from "react";
-import PageTitles from "@/utility/Constraints";
-import locale from "antd/locale/vi_VN";
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
-import timezone from "dayjs/plugin/timezone";
 import Link from "next/link";
-dayjs.extend(utc);
-dayjs.extend(timezone);
+import { Key, useEffect, useState } from "react";
+import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
+import Messages from "@/utility/Messages";
 
-const { RangePicker } = DatePicker;
+import dayjs from "dayjs";
+import locale from "antd/locale/vi_VN";
+import "dayjs/locale/vi";
+dayjs.locale("vi");
+
 const SearchMembers = () => {
+  const [loading, setLoading] = useState(false);
   const [selectedKey, setSelectedKey] = useState<Key | null>(null);
   const [usersHRM, setUsersHRM] = useState<UsersFromHRMResponse | undefined>(
     undefined
   );
   const [selectedUserName, setSelectedUserName] = useState("");
-  const [year, setYear] = useState("2024");
   const [detailUser, setDetailUser] = useState<DetailUserItem | undefined>(
     undefined
   );
@@ -67,19 +69,43 @@ const SearchMembers = () => {
     Item[]
   >([]);
   const [dataActivities, setDataActivities] = useState<Item[]>([]);
-  const [startDate, setStartDate] = useState<number | null>(null);
-  const [endDate, setEndDate] = useState<number | null>(null);
+  const [defaultYears, setDefaultYears] = useState<any>();
+  const [selectedKeyYear, setSelectedKeyYear] = useState<any>();
+  const [startDate, setStartDate] = useState<number | 0>(0);
+  const [minStartDate, setMinStartDate] = useState<number | 0>(0);
+  const [endDate, setEndDate] = useState<number | 0>(0);
+  const [maxEndDate, setMaxEndDate] = useState<number | 0>(0);
+
+  const getDefaultYears = async () => {
+    const { items } = await getAllSchoolYears();
+    if (items) {
+      setDefaultYears(items);
+      const defaultYear = items.find((x: any) => x.isDefault);
+      if (defaultYear) {
+        const { startDate, endDate } = defaultYear;
+        setSelectedKeyYear(defaultYear);
+        setStartDate(startDate);
+        setMinStartDate(startDate);
+        setEndDate(endDate);
+        setMaxEndDate(endDate);
+      }
+    }
+  };
+
   const getUsersHRM = async () => {
     const response = await getUsersFromHRM();
     setUsersHRM(response);
   };
 
   const handleSearch = async () => {
-    const response = await getDataExportByUserName(
-      selectedUserName,
-      startDate,
-      endDate
-    );
+    setLoading(true);
+    const formData: Partial<any> = {
+      userName: selectedUserName,
+      years: selectedKeyYear.id,
+      startDate: startDate,
+      endDate: endDate,
+    };
+    const response = await getDataExportByUserName(formData);
     if (response) {
       setDetailUser(response);
       setDataClassLeaders(response.classLeaders.items);
@@ -88,7 +114,31 @@ const SearchMembers = () => {
       setDataAdmissionCounseling(response.admissionCounseling.items);
       setDataActivities(response.activities.items);
     }
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+    }, 500);
+    return () => clearTimeout(timeoutId);
   };
+
+  const formConfigs = [
+    { key: "2-1", label: "BM01 - Chủ nhiệm lớp", formName: "BM01" },
+    {
+      key: "2-2",
+      label: "BM02 - Cố vấn học tập, trợ giảng, phụ đạo",
+      formName: "BM02",
+    },
+    { key: "2-3", label: "BM03 - Tư vấn tuyển sinh", formName: "BM03" },
+    {
+      key: "2-4",
+      label: "BM04 - Tham gia hỏi vấn đáp Tiếng Anh",
+      formName: "BM04",
+    },
+    {
+      key: "2-5",
+      label: "BM05 - Các hoạt động khác được BGH phê duyệt",
+      formName: "BM05",
+    },
+  ];
 
   const items: MenuProps["items"] = [
     {
@@ -106,70 +156,27 @@ const SearchMembers = () => {
       key: "2",
       label: "Biểu mẫu",
       icon: <FilterOutlined />,
-      children: [
-        {
-          key: "2-1",
-          label: (
-            <p
-              onClick={() =>
-                handleExportForBM(selectedUserName, startDate, endDate, "BM01")
-              }
-            >
-              BM01 - Chủ nhiệm lớp
-            </p>
-          ),
-        },
-        {
-          key: "2-2",
-          label: (
-            <p
-              onClick={() =>
-                handleExportForBM(selectedUserName, startDate, endDate, "BM02")
-              }
-            >
-              BM02 - Cố vấn học tập, trợ giảng, phụ đạo
-            </p>
-          ),
-        },
-        {
-          key: "2-3",
-          label: (
-            <p
-              onClick={() =>
-                handleExportForBM(selectedUserName, startDate, endDate, "BM03")
-              }
-            >
-              BM03 - Tư vấn tuyển sinh
-            </p>
-          ),
-        },
-        {
-          key: "2-4",
-          label: (
-            <p
-              onClick={() =>
-                handleExportForBM(selectedUserName, startDate, endDate, "BM04")
-              }
-            >
-              BM04 - Tham gia hỏi vấn đáp Tiếng Anh
-            </p>
-          ),
-        },
-        {
-          key: "2-5",
-          label: (
-            <p
-              onClick={() =>
-                handleExportForBM(selectedUserName, startDate, endDate, "BM05")
-              }
-            >
-              BM05 - Các hoạt động khác được BGH phê duyệt
-            </p>
-          ),
-        },
-      ],
+      children: formConfigs.map(({ key, label, formName }) => ({
+        key,
+        label: (
+          <p
+            onClick={() => {
+              const formData: Partial<any> = {
+                userName: selectedUserName,
+                years: selectedKeyYear.id,
+                startDate: startDate,
+                endDate: endDate,
+              };
+              handleExportForBM({ ...formData, ...{ formName } });
+            }}
+          >
+            {label}
+          </p>
+        ),
+      })),
     },
   ];
+
   //render table InfoUser
   const columnsInfoUser: TableColumnsType<DetailUserItem> = [
     {
@@ -474,13 +481,22 @@ const SearchMembers = () => {
     },
   ];
 
+  const handleChangeYear = (value: any) => {
+    const temp = defaultYears.filter((x: any) => x.id === value)[0] as any;
+    setSelectedKeyYear(temp);
+    setStartDate(temp.startDate);
+    setMinStartDate(temp.startDate);
+    setEndDate(temp.endDate);
+    setMaxEndDate(temp.endDate);
+  };
+
   useEffect(() => {
     document.title = PageTitles.SEARCH;
-    getUsersHRM();
+    Promise.all([getDefaultYears(), getUsersHRM()]);
   }, []);
 
   return (
-    <div>
+    <section>
       <div className="mb-3">
         <Breadcrumb
           items={[
@@ -489,7 +505,7 @@ const SearchMembers = () => {
               title: (
                 <>
                   <HomeOutlined />
-                  <span>Trang chủ</span>
+                  <span>{Messages.BREAD_CRUMB_HOME}</span>
                 </>
               ),
             },
@@ -497,16 +513,16 @@ const SearchMembers = () => {
               title: (
                 <>
                   <ProfileOutlined />
-                  <span>Tra cứu thông tin nhân sự</span>
+                  <span>{Messages.BREAD_CRUMB_SEARCH}</span>
                 </>
               ),
             },
           ]}
         />
       </div>
-      <div className="grid grid-cols-4 gap-6 mb-4">
-        <div className="w-full flex flex-col gap-2">
-          {/* <p className="font-medium text-neutral-500 text-sm">MÃ SỐ CB-GV-NV</p> */}
+      <div className="grid grid-cols-10 gap-4 mb-3">
+        <div className="col-span-2 flex flex-col justify-center gap-1">
+          <span className="text-[14px] text-neutral-500">Tìm kiếm:</span>
           <Select
             showSearch
             placeholder="Tìm kiếm CB-GV-NV"
@@ -528,29 +544,64 @@ const SearchMembers = () => {
             }}
           />
         </div>
-        <ConfigProvider locale={locale}>
-          <RangePicker
-            placeholder={["Từ ngày", "Đến ngày"]}
-            format={"DD/MM/YYYY"}
-            defaultValue={[
-              dayjs(`01/09/${dayjs().year()}`, "DD/MM/YYYY"),
-              dayjs(`31/08/${dayjs().year() + 1}`, "DD/MM/YYYY"),
-            ]}
-            onChange={(dates, dateStrings) => {
-              const [startDate, endDate] = dateStrings;
-              const startTimestamp = startDate
-                ? new Date(startDate.split("/").reverse().join("-")).valueOf() /
-                  1000
-                : null;
-              const endTimestamp = endDate
-                ? new Date(endDate.split("/").reverse().join("-")).valueOf() /
-                  1000
-                : null;
-              setStartDate(startTimestamp);
-              setEndDate(endTimestamp);
-            }}
+        <div className="flex flex-col justify-center gap-1">
+          <span className="text-[14px] text-neutral-500">Năm học:</span>
+          <Select
+            showSearch
+            optionFilterProp="label"
+            filterSort={(optionA, optionB) =>
+              (optionA?.title ?? "").localeCompare(optionB?.title ?? "")
+            }
+            options={defaultYears?.map((year: any) => ({
+              value: year.id,
+              label: year.title,
+            }))}
+            //
+            value={selectedKeyYear && selectedKeyYear.title}
+            onChange={(value) => handleChangeYear(value)}
+            className="w-full"
           />
-        </ConfigProvider>
+        </div>
+        <div className="flex flex-col justify-center gap-1">
+          <span className="text-[14px] text-neutral-500">Từ ngày:</span>
+          <ConfigProvider locale={locale}>
+            <DatePicker
+              placeholder="dd/mm/yyyy"
+              format="DD/MM/YYYY"
+              minDate={dayjs.unix(minStartDate)}
+              maxDate={dayjs.unix(maxEndDate)}
+              value={startDate ? dayjs.unix(startDate) : null}
+              onChange={(date) => {
+                if (date) {
+                  const timestamp = dayjs(date).unix();
+                  setStartDate(timestamp);
+                } else {
+                  setStartDate(0);
+                }
+              }}
+            />
+          </ConfigProvider>
+        </div>
+        <div className="flex flex-col justify-center gap-1">
+          <span className="text-[14px] text-neutral-500">Đến ngày:</span>
+          <ConfigProvider locale={locale}>
+            <DatePicker
+              placeholder="dd/mm/yyyy"
+              format="DD/MM/YYYY"
+              minDate={dayjs.unix(minStartDate)}
+              maxDate={dayjs.unix(maxEndDate)}
+              value={endDate ? dayjs.unix(endDate) : null}
+              onChange={(date) => {
+                if (date) {
+                  const timestamp = dayjs(date).unix();
+                  setEndDate(timestamp);
+                } else {
+                  setEndDate(0);
+                }
+              }}
+            />
+          </ConfigProvider>
+        </div>
         <div className="grid grid-cols-3 gap-6">
           <div className="flex items-end">
             <Button
@@ -564,406 +615,428 @@ const SearchMembers = () => {
           </div>
         </div>
       </div>
-      <div>
-        {detailUser && (
-          <>
-            <div className="mt-6">
-              <Divider
-                orientation="left"
-                className="uppercase"
-                style={{ borderColor: "#1677FF", color: "#1677FF" }}
-              >
-                Thông tin nhân sự
-              </Divider>
-            </div>
-            <div className="my-6">
-              <Table<DetailUserItem>
-                key={"table-detail-info-user"}
-                className="custom-table-header shadow-md rounded-md"
-                bordered
-                rowKey={(item) => item.id}
-                rowHoverable
-                size="small"
-                pagination={false}
-                columns={columnsInfoUser}
-                dataSource={[detailUser]}
-                locale={{
-                  emptyText: <Empty description="No Data"></Empty>,
-                }}
-              />
-            </div>
-            <div className="mt-6">
-              <Divider
-                orientation="left"
-                className="uppercase"
-                style={{ borderColor: "#1677FF", color: "#1677FF" }}
-              >
-                Danh sách các hoạt động
-              </Divider>
-            </div>
-            {detailUser.classLeaders && (
-              <>
-                <div className="mb-4">
-                  <Collapse
-                    key={Math.random().toString(36).substr(2, 9)}
-                    collapsible="header"
-                    className="mb-4"
-                    expandIconPosition="end"
-                    items={[
-                      {
-                        key: "1",
-                        label: (
-                          <strong>
-                            {String(
-                              detailUser.classLeaders.shortName
-                            ).toUpperCase()}{" "}
-                            -{" "}
-                            {String(detailUser.classLeaders.name).toUpperCase()}{" "}
-                            ({detailUser.classLeaders.totalItems} SỰ KIỆN)
-                          </strong>
-                        ),
-                        children: (
-                          <>
-                            <Table<Item>
-                              key={"table-for-classLeaders"}
-                              className="custom-table-header shadow-md rounded-md"
-                              bordered
-                              rowKey={Math.random().toString(36).substr(2, 9)}
-                              rowHoverable
-                              size="small"
-                              pagination={false}
-                              summary={(items) => {
-                                let total = 0;
-                                items.forEach((item) => {
-                                  total += Number(item.standarNumber);
-                                });
-                                return (
-                                  <Table.Summary.Row>
-                                    <Table.Summary.Cell
-                                      colSpan={2}
-                                      index={0}
-                                      className="text-end font-semibold"
-                                    >
-                                      TỔNG SỐ TIẾT CHUẨN
-                                    </Table.Summary.Cell>
-                                    <Table.Summary.Cell
-                                      index={2}
-                                      className="text-center font-semibold"
-                                    >
-                                      {total}
-                                    </Table.Summary.Cell>
-                                  </Table.Summary.Row>
-                                );
-                              }}
-                              columns={columns}
-                              dataSource={dataClassLeaders}
-                              locale={{
-                                emptyText: (
-                                  <Empty description="No Data"></Empty>
-                                ),
-                              }}
-                            />
-                          </>
-                        ),
-                      },
-                    ]}
-                  />
-                </div>
-              </>
-            )}
-            {detailUser.assistants && (
-              <>
-                <div className="mb-4">
-                  <Collapse
-                    key={Math.random().toString(36).substr(2, 9)}
-                    collapsible="header"
-                    defaultActiveKey={["1"]}
-                    className="mb-4"
-                    expandIconPosition="end"
-                    items={[
-                      {
-                        key: "2",
-                        label: (
-                          <strong>
-                            {String(
-                              detailUser.assistants.shortName
-                            ).toUpperCase()}{" "}
-                            - {String(detailUser.assistants.name).toUpperCase()}{" "}
-                            ({detailUser.assistants.totalItems} SỰ KIỆN)
-                          </strong>
-                        ),
-                        children: (
-                          <>
-                            <Table<Item>
-                              key={"table-for-assistants"}
-                              className="custom-table-header shadow-md rounded-md mb-4"
-                              bordered
-                              rowKey={Math.random().toString(36).substr(2, 9)}
-                              rowHoverable
-                              size="small"
-                              pagination={false}
-                              summary={(items) => {
-                                let total = 0;
-                                items.forEach((item) => {
-                                  total += Number(item.standarNumber);
-                                });
-                                return (
-                                  <Table.Summary.Row>
-                                    <Table.Summary.Cell
-                                      colSpan={2}
-                                      index={0}
-                                      className="text-end font-semibold"
-                                    >
-                                      TỔNG SỐ TIẾT CHUẨN
-                                    </Table.Summary.Cell>
-                                    <Table.Summary.Cell
-                                      index={2}
-                                      className="text-center font-semibold"
-                                    >
-                                      {total}
-                                    </Table.Summary.Cell>
-                                  </Table.Summary.Row>
-                                );
-                              }}
-                              columns={columns}
-                              dataSource={dataAssistants}
-                              locale={{
-                                emptyText: (
-                                  <Empty description="No Data"></Empty>
-                                ),
-                              }}
-                            />
-                          </>
-                        ),
-                      },
-                    ]}
-                  />
-                </div>
-              </>
-            )}
-            {detailUser.admissionCounseling && (
-              <>
-                <div className="mb-4">
-                  <Collapse
-                    key={Math.random().toString(36).substr(2, 9)}
-                    collapsible="header"
-                    defaultActiveKey={["1"]}
-                    className="mb-4"
-                    expandIconPosition="end"
-                    items={[
-                      {
-                        key: "2",
-                        label: (
-                          <strong>
-                            {String(
-                              detailUser.admissionCounseling.shortName
-                            ).toUpperCase()}{" "}
-                            -{" "}
-                            {String(
-                              detailUser.admissionCounseling.name
-                            ).toUpperCase()}{" "}
-                            ({detailUser.admissionCounseling.totalItems} SỰ
-                            KIỆN)
-                          </strong>
-                        ),
-                        children: (
-                          <>
-                            <Table<Item>
-                              key={"table-for-assistants"}
-                              className="custom-table-header shadow-md rounded-md mb-4"
-                              bordered
-                              rowKey={Math.random().toString(36).substr(2, 9)}
-                              rowHoverable
-                              size="small"
-                              pagination={false}
-                              summary={(items) => {
-                                let total = 0;
-                                items.forEach((item) => {
-                                  total += Number(item.standarNumber);
-                                });
-                                return (
-                                  <Table.Summary.Row>
-                                    <Table.Summary.Cell
-                                      colSpan={2}
-                                      index={0}
-                                      className="text-end font-semibold"
-                                    >
-                                      TỔNG SỐ TIẾT CHUẨN
-                                    </Table.Summary.Cell>
-                                    <Table.Summary.Cell
-                                      index={2}
-                                      className="text-center font-semibold"
-                                    >
-                                      {total}
-                                    </Table.Summary.Cell>
-                                  </Table.Summary.Row>
-                                );
-                              }}
-                              columns={columns}
-                              dataSource={dataAdmissionCounseling}
-                              locale={{
-                                emptyText: (
-                                  <Empty description="No Data"></Empty>
-                                ),
-                              }}
-                            />
-                          </>
-                        ),
-                      },
-                    ]}
-                  />
-                </div>
-              </>
-            )}
-            {detailUser.qAs && (
-              <>
-                <div className="mb-4">
-                  <Collapse
-                    key={Math.random().toString(36).substr(2, 9)}
-                    collapsible="header"
-                    defaultActiveKey={["1"]}
-                    className="mb-4"
-                    expandIconPosition="end"
-                    items={[
-                      {
-                        key: "3",
-                        label: (
-                          <strong>
-                            {String(detailUser.qAs.shortName).toUpperCase()} -{" "}
-                            {String(detailUser.qAs.name).toUpperCase()} (
-                            {detailUser.qAs.totalItems} SỰ KIỆN)
-                          </strong>
-                        ),
-                        children: (
-                          <>
-                            <Table<Item>
-                              key={"table-for-QAES"}
-                              className="custom-table-header shadow-md rounded-md mb-4"
-                              bordered
-                              rowKey={Math.random().toString(36).substr(2, 9)}
-                              rowHoverable
-                              size="small"
-                              pagination={false}
-                              summary={(items) => {
-                                let total = 0;
-                                items.forEach((item) => {
-                                  total += Number(item.standarNumber);
-                                });
-                                return (
-                                  <Table.Summary.Row>
-                                    <Table.Summary.Cell
-                                      colSpan={2}
-                                      index={0}
-                                      className="text-end font-semibold"
-                                    >
-                                      TỔNG SỐ TIẾT CHUẨN
-                                    </Table.Summary.Cell>
-                                    <Table.Summary.Cell
-                                      index={2}
-                                      className="text-center font-semibold"
-                                    >
-                                      {total}
-                                    </Table.Summary.Cell>
-                                  </Table.Summary.Row>
-                                );
-                              }}
-                              columns={columns}
-                              dataSource={dataQAEs}
-                              locale={{
-                                emptyText: (
-                                  <Empty description="No Data"></Empty>
-                                ),
-                              }}
-                            />
-                          </>
-                        ),
-                      },
-                    ]}
-                  />
-                </div>
-              </>
-            )}
-            {detailUser.activities && (
-              <>
-                <div className="mb-4">
-                  <Collapse
-                    key={Math.random().toString(36).substr(2, 9)}
-                    collapsible="header"
-                    defaultActiveKey={["1"]}
-                    className="mb-4"
-                    expandIconPosition="end"
-                    items={[
-                      {
-                        key: "5",
-                        label: (
-                          <strong>
-                            {String(
-                              detailUser.activities.shortName
-                            ).toUpperCase()}{" "}
-                            - {String(detailUser.activities.name).toUpperCase()}{" "}
-                            ({detailUser.activities.totalItems} SỰ KIỆN)
-                          </strong>
-                        ),
-                        children: (
-                          <>
-                            <Table<Item>
-                              key={"table-for-activities"}
-                              className="custom-table-header shadow-md rounded-md mb-4"
-                              bordered
-                              rowKey={Math.random().toString(36).substr(2, 9)}
-                              rowHoverable
-                              size="small"
-                              pagination={false}
-                              summary={(items) => {
-                                let total = 0;
-                                items.forEach((item) => {
-                                  total += Number(item.standarNumber);
-                                });
-                                return (
-                                  <Table.Summary.Row>
-                                    <Table.Summary.Cell
-                                      colSpan={2}
-                                      index={0}
-                                      className="text-end font-semibold"
-                                    >
-                                      TỔNG SỐ TIẾT CHUẨN
-                                    </Table.Summary.Cell>
-                                    <Table.Summary.Cell
-                                      index={2}
-                                      className="text-center font-semibold"
-                                    >
-                                      {total}
-                                    </Table.Summary.Cell>
-                                  </Table.Summary.Row>
-                                );
-                              }}
-                              columns={columnsBM05}
-                              dataSource={dataActivities}
-                              locale={{
-                                emptyText: (
-                                  <Empty description="No Data"></Empty>
-                                ),
-                              }}
-                            />
-                          </>
-                        ),
-                      },
-                    ]}
-                  />
-                </div>
-              </>
-            )}
-          </>
-        )}
-        {!detailUser && (
-          <>
-            <div className="h-[calc(100svh-300px)] flex justify-center items-center">
-              <Empty description="Chưa có dữ liệu thông tin nhân sự"></Empty>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
+      <hr className="mb-3" />
+      {loading ? (
+        <>
+          <Card>
+            <Skeleton active />
+          </Card>
+        </>
+      ) : (
+        <>
+          {detailUser ? (
+            <>
+              <div className="mt-6">
+                <Divider
+                  orientation="left"
+                  className="uppercase"
+                  style={{ borderColor: "#1677FF", color: "#1677FF" }}
+                >
+                  Thông tin nhân sự
+                </Divider>
+              </div>
+              <div className="my-6">
+                <Table<DetailUserItem>
+                  key={"table-detail-info-user"}
+                  className="custom-table-header shadow-md rounded-md"
+                  bordered
+                  rowKey={(item) => item.id}
+                  rowHoverable
+                  size="small"
+                  pagination={false}
+                  columns={columnsInfoUser}
+                  dataSource={[detailUser]}
+                  locale={{
+                    emptyText: <Empty description={Messages.NO_DATA}></Empty>,
+                  }}
+                />
+              </div>
+              <div className="mt-6">
+                <Divider
+                  orientation="left"
+                  className="uppercase"
+                  style={{ borderColor: "#1677FF", color: "#1677FF" }}
+                >
+                  Danh sách các hoạt động
+                </Divider>
+              </div>
+              {detailUser.classLeaders && (
+                <>
+                  <div className="mb-4">
+                    <Collapse
+                      key={Math.random().toString(36).substr(2, 9)}
+                      collapsible="header"
+                      className="mb-4"
+                      expandIconPosition="end"
+                      items={[
+                        {
+                          key: "1",
+                          label: (
+                            <strong>
+                              {String(
+                                detailUser.classLeaders.shortName
+                              ).toUpperCase()}{" "}
+                              -{" "}
+                              {String(
+                                detailUser.classLeaders.name
+                              ).toUpperCase()}{" "}
+                              ({detailUser.classLeaders.totalItems} SỰ KIỆN)
+                            </strong>
+                          ),
+                          children: (
+                            <>
+                              <Table<Item>
+                                key={"table-for-classLeaders"}
+                                className="custom-table-header shadow-md rounded-md"
+                                bordered
+                                rowKey={Math.random().toString(36).substr(2, 9)}
+                                rowHoverable
+                                size="small"
+                                pagination={false}
+                                summary={(items) => {
+                                  let total = 0;
+                                  items.forEach((item) => {
+                                    total += Number(item.standarNumber);
+                                  });
+                                  return (
+                                    <Table.Summary.Row>
+                                      <Table.Summary.Cell
+                                        colSpan={2}
+                                        index={0}
+                                        className="text-end font-semibold"
+                                      >
+                                        TỔNG SỐ TIẾT CHUẨN
+                                      </Table.Summary.Cell>
+                                      <Table.Summary.Cell
+                                        index={2}
+                                        className="text-center font-semibold"
+                                      >
+                                        {total}
+                                      </Table.Summary.Cell>
+                                    </Table.Summary.Row>
+                                  );
+                                }}
+                                columns={columns}
+                                dataSource={dataClassLeaders}
+                                locale={{
+                                  emptyText: (
+                                    <Empty
+                                      description={Messages.NO_DATA}
+                                    ></Empty>
+                                  ),
+                                }}
+                              />
+                            </>
+                          ),
+                        },
+                      ]}
+                    />
+                  </div>
+                </>
+              )}
+              {detailUser.assistants && (
+                <>
+                  <div className="mb-4">
+                    <Collapse
+                      key={Math.random().toString(36).substr(2, 9)}
+                      collapsible="header"
+                      defaultActiveKey={["1"]}
+                      className="mb-4"
+                      expandIconPosition="end"
+                      items={[
+                        {
+                          key: "2",
+                          label: (
+                            <strong>
+                              {String(
+                                detailUser.assistants.shortName
+                              ).toUpperCase()}{" "}
+                              -{" "}
+                              {String(detailUser.assistants.name).toUpperCase()}{" "}
+                              ({detailUser.assistants.totalItems} SỰ KIỆN)
+                            </strong>
+                          ),
+                          children: (
+                            <>
+                              <Table<Item>
+                                key={"table-for-assistants"}
+                                className="custom-table-header shadow-md rounded-md mb-4"
+                                bordered
+                                rowKey={Math.random().toString(36).substr(2, 9)}
+                                rowHoverable
+                                size="small"
+                                pagination={false}
+                                summary={(items) => {
+                                  let total = 0;
+                                  items.forEach((item) => {
+                                    total += Number(item.standarNumber);
+                                  });
+                                  return (
+                                    <Table.Summary.Row>
+                                      <Table.Summary.Cell
+                                        colSpan={2}
+                                        index={0}
+                                        className="text-end font-semibold"
+                                      >
+                                        TỔNG SỐ TIẾT CHUẨN
+                                      </Table.Summary.Cell>
+                                      <Table.Summary.Cell
+                                        index={2}
+                                        className="text-center font-semibold"
+                                      >
+                                        {total}
+                                      </Table.Summary.Cell>
+                                    </Table.Summary.Row>
+                                  );
+                                }}
+                                columns={columns}
+                                dataSource={dataAssistants}
+                                locale={{
+                                  emptyText: (
+                                    <Empty
+                                      description={Messages.NO_DATA}
+                                    ></Empty>
+                                  ),
+                                }}
+                              />
+                            </>
+                          ),
+                        },
+                      ]}
+                    />
+                  </div>
+                </>
+              )}
+              {detailUser.admissionCounseling && (
+                <>
+                  <div className="mb-4">
+                    <Collapse
+                      key={Math.random().toString(36).substr(2, 9)}
+                      collapsible="header"
+                      defaultActiveKey={["1"]}
+                      className="mb-4"
+                      expandIconPosition="end"
+                      items={[
+                        {
+                          key: "2",
+                          label: (
+                            <strong>
+                              {String(
+                                detailUser.admissionCounseling.shortName
+                              ).toUpperCase()}{" "}
+                              -{" "}
+                              {String(
+                                detailUser.admissionCounseling.name
+                              ).toUpperCase()}{" "}
+                              ({detailUser.admissionCounseling.totalItems} SỰ
+                              KIỆN)
+                            </strong>
+                          ),
+                          children: (
+                            <>
+                              <Table<Item>
+                                key={"table-for-assistants"}
+                                className="custom-table-header shadow-md rounded-md mb-4"
+                                bordered
+                                rowKey={Math.random().toString(36).substr(2, 9)}
+                                rowHoverable
+                                size="small"
+                                pagination={false}
+                                summary={(items) => {
+                                  let total = 0;
+                                  items.forEach((item) => {
+                                    total += Number(item.standarNumber);
+                                  });
+                                  return (
+                                    <Table.Summary.Row>
+                                      <Table.Summary.Cell
+                                        colSpan={2}
+                                        index={0}
+                                        className="text-end font-semibold"
+                                      >
+                                        TỔNG SỐ TIẾT CHUẨN
+                                      </Table.Summary.Cell>
+                                      <Table.Summary.Cell
+                                        index={2}
+                                        className="text-center font-semibold"
+                                      >
+                                        {total}
+                                      </Table.Summary.Cell>
+                                    </Table.Summary.Row>
+                                  );
+                                }}
+                                columns={columns}
+                                dataSource={dataAdmissionCounseling}
+                                locale={{
+                                  emptyText: (
+                                    <Empty
+                                      description={Messages.NO_DATA}
+                                    ></Empty>
+                                  ),
+                                }}
+                              />
+                            </>
+                          ),
+                        },
+                      ]}
+                    />
+                  </div>
+                </>
+              )}
+              {detailUser.qAs && (
+                <>
+                  <div className="mb-4">
+                    <Collapse
+                      key={Math.random().toString(36).substr(2, 9)}
+                      collapsible="header"
+                      defaultActiveKey={["1"]}
+                      className="mb-4"
+                      expandIconPosition="end"
+                      items={[
+                        {
+                          key: "3",
+                          label: (
+                            <strong>
+                              {String(detailUser.qAs.shortName).toUpperCase()} -{" "}
+                              {String(detailUser.qAs.name).toUpperCase()} (
+                              {detailUser.qAs.totalItems} SỰ KIỆN)
+                            </strong>
+                          ),
+                          children: (
+                            <>
+                              <Table<Item>
+                                key={"table-for-QAES"}
+                                className="custom-table-header shadow-md rounded-md mb-4"
+                                bordered
+                                rowKey={Math.random().toString(36).substr(2, 9)}
+                                rowHoverable
+                                size="small"
+                                pagination={false}
+                                summary={(items) => {
+                                  let total = 0;
+                                  items.forEach((item) => {
+                                    total += Number(item.standarNumber);
+                                  });
+                                  return (
+                                    <Table.Summary.Row>
+                                      <Table.Summary.Cell
+                                        colSpan={2}
+                                        index={0}
+                                        className="text-end font-semibold"
+                                      >
+                                        TỔNG SỐ TIẾT CHUẨN
+                                      </Table.Summary.Cell>
+                                      <Table.Summary.Cell
+                                        index={2}
+                                        className="text-center font-semibold"
+                                      >
+                                        {total}
+                                      </Table.Summary.Cell>
+                                    </Table.Summary.Row>
+                                  );
+                                }}
+                                columns={columns}
+                                dataSource={dataQAEs}
+                                locale={{
+                                  emptyText: (
+                                    <Empty
+                                      description={Messages.NO_DATA}
+                                    ></Empty>
+                                  ),
+                                }}
+                              />
+                            </>
+                          ),
+                        },
+                      ]}
+                    />
+                  </div>
+                </>
+              )}
+              {detailUser.activities && (
+                <>
+                  <div className="mb-4">
+                    <Collapse
+                      key={Math.random().toString(36).substr(2, 9)}
+                      collapsible="header"
+                      defaultActiveKey={["1"]}
+                      className="mb-4"
+                      expandIconPosition="end"
+                      items={[
+                        {
+                          key: "5",
+                          label: (
+                            <strong>
+                              {String(
+                                detailUser.activities.shortName
+                              ).toUpperCase()}{" "}
+                              -{" "}
+                              {String(detailUser.activities.name).toUpperCase()}{" "}
+                              ({detailUser.activities.totalItems} SỰ KIỆN)
+                            </strong>
+                          ),
+                          children: (
+                            <>
+                              <Table<Item>
+                                key={"table-for-activities"}
+                                className="custom-table-header shadow-md rounded-md mb-4"
+                                bordered
+                                rowKey={Math.random().toString(36).substr(2, 9)}
+                                rowHoverable
+                                size="small"
+                                pagination={false}
+                                summary={(items) => {
+                                  let total = 0;
+                                  items.forEach((item) => {
+                                    total += Number(item.standarNumber);
+                                  });
+                                  return (
+                                    <Table.Summary.Row>
+                                      <Table.Summary.Cell
+                                        colSpan={2}
+                                        index={0}
+                                        className="text-end font-semibold"
+                                      >
+                                        TỔNG SỐ TIẾT CHUẨN
+                                      </Table.Summary.Cell>
+                                      <Table.Summary.Cell
+                                        index={2}
+                                        className="text-center font-semibold"
+                                      >
+                                        {total}
+                                      </Table.Summary.Cell>
+                                    </Table.Summary.Row>
+                                  );
+                                }}
+                                columns={columnsBM05}
+                                dataSource={dataActivities}
+                                locale={{
+                                  emptyText: (
+                                    <Empty
+                                      description={Messages.NO_DATA}
+                                    ></Empty>
+                                  ),
+                                }}
+                              />
+                            </>
+                          ),
+                        },
+                      ]}
+                    />
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="h-[calc(100svh-300px)] flex justify-center items-center">
+                <Empty description={Messages.NO_DATA}></Empty>
+              </div>
+            </>
+          )}
+        </>
+      )}
+    </section>
   );
 };
 export default SearchMembers;

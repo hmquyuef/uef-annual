@@ -71,8 +71,11 @@ export interface ActivitiesResponse {
   totalCount: number;
 }
 
-export async function getAllActivities(): Promise<ActivitiesResponse> {
-  const response = await apiClient.get<ActivitiesResponse>("api/activities");
+export async function getAllActivities(
+  yearId: string
+): Promise<ActivitiesResponse> {
+  let url = yearId ? `api/activities?Years=${yearId}` : "api/leaders";
+  const response = await apiClient.get<ActivitiesResponse>(url);
   return response.data;
 }
 

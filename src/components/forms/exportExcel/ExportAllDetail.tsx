@@ -525,18 +525,8 @@ export const handleExportAll = async (detailUser: DetailUserItem) => {
   );
 };
 
-export const handleExportForBM = async (
-  userName: string,
-  startDate: number | null,
-  endDate: number | null,
-  forms: string
-) => {
-  const response = await getDataExportByUserNameWithForms(
-    userName,
-    startDate,
-    endDate,
-    forms
-  );
+export const handleExportForBM = async (formData: Partial<any>) => {
+  const response = await getDataExportByUserNameWithForms(formData);
   if (response === null) {
     return;
   }
@@ -572,7 +562,7 @@ export const handleExportForBM = async (
     ["Đơn vị:", "", `${response?.unitName}`],
   ];
 
-  switch (forms.toUpperCase()) {
+  switch (formData.formName.toUpperCase()) {
     case "BM01":
       const exportBM01: ExportDetailForUser = {
         id: response.id,
@@ -783,7 +773,7 @@ export const handleExportForBM = async (
           "",
           "",
           "",
-          ""
+          "",
         ],
       ];
       resultsDataArray = [
@@ -994,7 +984,7 @@ export const handleExportForBM = async (
     { s: { r: 11, c: 2 }, e: { r: 11, c: 4 } },
   ];
 
-  if (forms.toUpperCase() === "BM01") {
+  if (formData.formName.toUpperCase() === "BM01") {
     for (
       let row = defaultInfo.length + 1;
       row <= range.e.r - defaultFooterInfo.length;
@@ -1049,7 +1039,7 @@ export const handleExportForBM = async (
     }
   }
 
-  if (forms.toUpperCase() === "BM02") {
+  if (formData.formName.toUpperCase() === "BM02") {
     for (
       let row = defaultInfo.length + 2;
       row <= range.e.r - defaultFooterInfo.length;
@@ -1119,7 +1109,7 @@ export const handleExportForBM = async (
       }
     }
   }
-  if (forms.toUpperCase() === "BM03") {
+  if (formData.formName.toUpperCase() === "BM03") {
     for (
       let row = defaultInfo.length + 2;
       row <= range.e.r - defaultFooterInfo.length;
@@ -1187,7 +1177,7 @@ export const handleExportForBM = async (
       }
     }
   }
-  if (forms.toUpperCase() === "BM04") {
+  if (formData.formName.toUpperCase() === "BM04") {
     for (
       let row = defaultInfo.length + 2;
       row <= range.e.r - defaultFooterInfo.length;
@@ -1259,7 +1249,7 @@ export const handleExportForBM = async (
     }
   }
 
-  if (forms.toUpperCase() === "BM05") {
+  if (formData.formName.toUpperCase() === "BM05") {
     for (
       let row = defaultInfo.length + 2;
       row <= range.e.r - defaultFooterInfo.length;
@@ -1368,7 +1358,7 @@ export const handleExportForBM = async (
       if (row === range.e.r - 4) {
         worksheet["!rows"] = [];
         worksheet["!rows"][range.e.r - 4] = { hpx: 35 };
-        if (forms.toUpperCase() === "BM05") {
+        if (formData.formName.toUpperCase() === "BM05") {
           worksheet["!rows"][5] = { hpx: 40 };
         }
       }
@@ -1394,7 +1384,7 @@ export const handleExportForBM = async (
   saveAs(
     blob,
     "Export-" +
-      forms.toUpperCase() +
+      formData.formName.toUpperCase() +
       "-" +
       response.userName +
       "-" +

@@ -5,8 +5,8 @@ import {
   AddUpdateActivityItem,
 } from "@/services/forms/formsServices";
 import {
-  getListUnitsFromHrm,
-  UnitHRMItem,
+  getAllUnits,
+  UnitItem
 } from "@/services/units/unitsServices";
 import {
   deleteFiles,
@@ -55,11 +55,11 @@ import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
 import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
+import { DisplayRoleItem } from "@/services/roles/rolesServices";
 import { convertTimestampToFullDateTime } from "@/utility/Utilities";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
-import { DisplayRoleItem } from "@/services/roles/rolesServices";
 dayjs.locale("vi");
 interface FormActivityProps {
   onSubmit: (formData: Partial<AddUpdateActivityItem>) => void;
@@ -94,7 +94,7 @@ const FormActivity: FC<FormActivityProps> = ({
   const [description, setDescription] = useState("");
   const [filteredUsersFromHRM, setFilteredUsersFromHRM] =
     useState<UsersFromHRMResponse | null>(null);
-  const [filteredUnitsHRM, setFilteredUnitsHRM] = useState<UnitHRMItem[]>([]);
+  const [filteredUnitsHRM, setFilteredUnitsHRM] = useState<UnitItem[]>([]);
   const [tableUsers, setTableUsers] = useState<ActivityInput[]>([]);
   const [selectedKey, setSelectedKey] = useState<Key | null>(null);
   const [selectedKeyUnit, setSelectedKeyUnit] = useState<Key | null>(null);
@@ -111,9 +111,9 @@ const FormActivity: FC<FormActivityProps> = ({
   function onDocumentLoadSuccess({ numPages }: { numPages: number }): void {
     setNumPages(numPages);
   }
-  const getAllUnitsFromHRM = async () => {
-    const response = await getListUnitsFromHrm();
-    setFilteredUnitsHRM(response.model);
+  const getListUnits = async () => {
+    const response = await getAllUnits("true");
+    setFilteredUnitsHRM(response.items);
   };
 
   const getAllUsersFromHRM = async (id: Key) => {
@@ -325,7 +325,7 @@ const FormActivity: FC<FormActivityProps> = ({
   };
 
   useEffect(() => {
-    getAllUnitsFromHRM();
+    getListUnits();
   }, []);
 
   useEffect(() => {
@@ -488,9 +488,10 @@ const FormActivity: FC<FormActivityProps> = ({
                   .toLowerCase()
                   .localeCompare((optionB?.label ?? "").toLowerCase())
               }
-              options={filteredUnitsHRM.map((unit) => ({
-                value: unit.id,
+              options={filteredUnitsHRM.map((unit: UnitItem, index) => ({
+                value: unit.idHrm,
                 label: unit.name,
+                key: `${unit.idHrm}-${index}`,
               }))}
               value={selectedKeyUnit}
               onChange={(value) => {

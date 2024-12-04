@@ -1,15 +1,31 @@
 "use client";
 
+import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 import { QAItem } from "@/services/forms/qaServices";
+import { DisplayRoleItem } from "@/services/roles/rolesServices";
 import {
-  getListUnitsFromHrm,
-  UnitHRMItem,
+  getAllUnits,
+  UnitItem
 } from "@/services/units/unitsServices";
+import {
+  deleteFiles,
+  FileItem,
+  postFiles,
+} from "@/services/uploads/uploadsServices";
 import {
   getUsersFromHRMbyId,
   UsersFromHRM,
   UsersFromHRMResponse,
 } from "@/services/users/usersServices";
+import { convertTimestampToFullDateTime } from "@/utility/Utilities";
+import {
+  CloseOutlined,
+  CloudUploadOutlined,
+  MinusCircleOutlined,
+  SafetyOutlined,
+  ZoomInOutlined,
+  ZoomOutOutlined,
+} from "@ant-design/icons";
 import {
   Button,
   ConfigProvider,
@@ -20,28 +36,12 @@ import {
   Spin,
   Tag,
 } from "antd";
-import { FC, FormEvent, Key, useEffect, useMemo, useState } from "react";
 import locale from "antd/locale/vi_VN";
-import moment from "moment";
 import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
-import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
-import {
-  CloseOutlined,
-  CloudUploadOutlined,
-  MinusCircleOutlined,
-  SafetyOutlined,
-  ZoomInOutlined,
-  ZoomOutOutlined,
-} from "@ant-design/icons";
-import { convertTimestampToFullDateTime } from "@/utility/Utilities";
-import { DisplayRoleItem } from "@/services/roles/rolesServices";
-import {
-  deleteFiles,
-  FileItem,
-  postFiles,
-} from "@/services/uploads/uploadsServices";
+import utc from "dayjs/plugin/utc";
+import moment from "moment";
+import { FC, FormEvent, Key, useEffect, useMemo, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Document, Page } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
@@ -69,8 +69,8 @@ const FormBM04: FC<FormBM04Props> = ({
   displayRole,
 }) => {
   const { TextArea } = Input;
-  const [units, setUnits] = useState<UnitHRMItem[]>([]);
-  const [defaultUnits, setDefaultUnits] = useState<UnitHRMItem[]>([]);
+  const [units, setUnits] = useState<UnitItem[]>([]);
+  const [defaultUnits, setDefaultUnits] = useState<UnitItem[]>([]);
   const [users, setUsers] = useState<UsersFromHRMResponse | undefined>(
     undefined
   );
@@ -98,9 +98,9 @@ const FormBM04: FC<FormBM04Props> = ({
     setNumPages(numPages);
   }
 
-  const getListUnitsFromHRM = async () => {
-    const response = await getListUnitsFromHrm();
-    setUnits(response.model);
+  const getListUnits = async () => {
+    const response = await getAllUnits("true");
+    setUnits(response.items);
   };
 
   const getUsersFromHRMByUnitId = async (unitId: string) => {
@@ -128,7 +128,7 @@ const FormBM04: FC<FormBM04Props> = ({
       const formData = new FormData();
       formData.append("FunctionName", "qae");
       formData.append("file", acceptedFiles[0]);
-      
+
       if (listPicture && listPicture.path !== "") {
         await deleteFiles(
           listPicture.path.replace("https://api-annual.uef.edu.vn/", "")
@@ -178,7 +178,7 @@ const FormBM04: FC<FormBM04Props> = ({
   };
 
   useEffect(() => {
-    getListUnitsFromHRM();
+    getListUnits();
   }, []);
 
   useEffect(() => {
@@ -188,8 +188,8 @@ const FormBM04: FC<FormBM04Props> = ({
   useEffect(() => {
     const loadUsers = async () => {
       if (mode === "edit" && initialData !== undefined) {
-        const units = await getListUnitsFromHrm();
-        const unit = units.model.find(
+        const units = await getAllUnits("true");
+        const unit = units.items.find(
           (unit) => unit.code === initialData.unitName
         );
         if (unit) {
@@ -355,9 +355,10 @@ const FormBM04: FC<FormBM04Props> = ({
                   .toLowerCase()
                   .localeCompare((optionB?.label ?? "").toLowerCase())
               }
-              options={units.map((unit) => ({
-                value: unit.id,
+              options={units.map((unit: UnitItem, index) => ({
+                value: unit.idHrm,
                 label: unit.name,
+                key: `${unit.idHrm}-${index}`,
               }))}
               value={defaultUnits.length > 0 ? defaultUnits[0].id : undefined}
               onChange={(value) => {
