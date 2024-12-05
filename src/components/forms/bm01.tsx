@@ -38,9 +38,7 @@ import {
   FileProtectOutlined,
   PlusOutlined,
   SafetyOutlined,
-  SearchOutlined,
-  SettingOutlined,
-  ShrinkOutlined,
+  ShrinkOutlined
 } from "@ant-design/icons";
 import {
   Button,
@@ -66,6 +64,7 @@ import { TableRowSelection } from "antd/es/table/interface";
 import saveAs from "file-saver";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
+import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { Key, useCallback, useEffect, useState } from "react";
 import * as XLSX from "sheetjs-style";
@@ -73,7 +72,6 @@ import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
 import FormBM01 from "./activity/formBM01";
 import FromUpload from "./activity/formUpload";
-import { AnimatePresence, motion } from "motion/react";
 
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";

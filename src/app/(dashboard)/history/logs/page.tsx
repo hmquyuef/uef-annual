@@ -150,15 +150,39 @@ const LogsActivities = () => {
       title: "ĐƯỜNG DẪN",
       dataIndex: "path",
       key: "path",
-      render: (path: string) => <>{path}</>,
+      render: (path: string) => (
+        <>
+          <>
+            <Tooltip title={path} placement="bottomLeft">
+              {path}
+            </Tooltip>
+          </>
+        </>
+      ),
+      className: "max-w-[10rem] whitespace-nowrap overflow-hidden text-ellipsis",
     },
     {
       title: "QUERY",
       dataIndex: "query",
       key: "query",
-      render: (query: string) => <>{query}</>,
+      render: (query: string) => (
+        <>
+          <Tooltip
+            title={
+              <JsonView
+                data={query}
+                shouldExpandNode={allExpanded}
+                style={darkStyles}
+              />
+            }
+            placement="bottomLeft"
+          >
+            {query}
+          </Tooltip>
+        </>
+      ),
       className:
-        "max-w-[20rem] whitespace-nowrap overflow-hidden text-ellipsis",
+        "max-w-[15rem] whitespace-nowrap overflow-hidden text-ellipsis",
     },
     {
       title: "REQUEST BODY",
@@ -179,10 +203,10 @@ const LogsActivities = () => {
         </Tooltip>
       ),
       className:
-        "max-w-[20rem] whitespace-nowrap overflow-hidden text-ellipsis",
+        "max-w-[15rem] whitespace-nowrap overflow-hidden text-ellipsis",
     },
     {
-      title: "THỜI GIAN XỬ LÝ",
+      title: <div className="py-1">THỜI GIAN XỬ LÝ</div>,
       dataIndex: "elapsedTime",
       key: "elapsedTime",
       render: (elapsedTime: number) => <>{elapsedTime}ms</>,
@@ -196,7 +220,7 @@ const LogsActivities = () => {
       className: "text-center w-[60px]",
     },
     {
-      title: "IP",
+      title: "ĐỊA CHỈ IP",
       dataIndex: "ip",
       key: "ip",
       render: (requestBody: string) => <>{requestBody}</>,
@@ -207,7 +231,7 @@ const LogsActivities = () => {
       key: "creationTime",
       render: (creationTime: number) =>
         creationTime ? convertTimestampToFullDateTime(creationTime) : "",
-      className: "text-center w-[100px]",
+      className: "text-center w-[110px]",
     },
   ];
 

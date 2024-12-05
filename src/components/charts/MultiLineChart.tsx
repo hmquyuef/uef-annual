@@ -83,8 +83,6 @@ const MultiLineChart: FC<MultiLineChartProps> = ({
   };
 
   useEffect(() => {
-    console.log('categories :>> ', categories);
-    console.log('seriesData :>> ', seriesData);
     const timeout = setTimeout(() => {
       setDataSeries(seriesData);
     }, 500);

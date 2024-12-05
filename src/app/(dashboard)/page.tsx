@@ -1,14 +1,16 @@
 "use client";
 
+import BarChart from "@/components/charts/BarChart";
 import MultiLineChart from "@/components/charts/MultiLineChart";
-import FaculitiesForms from "@/components/dashboard/FaculitiesForms";
 import PercentForms from "@/components/dashboard/PercentForms";
-import TopCBForms from "@/components/dashboard/TopCBForms";
+import TopHumanChart from "@/components/dashboard/TopHumanChart";
 import TotalFormCard from "@/components/dashboard/TotalFormCard";
 import { getAllLogActivities } from "@/services/history/logActivityServices";
 import {
   getAllReports,
   getAllReportsWithTypeTime,
+  getDataFaculties,
+  getDataHuman,
 } from "@/services/reports/reportsServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import PageTitles from "@/utility/Constraints";
@@ -37,8 +39,11 @@ const Home = () => {
   const [dataMultiLine, setDataMultiLine] = useState<any>();
   const [dataHistory, setDataHistory] = useState<any>();
   const [valueMultiLine, setValueMultiLine] = useState("Tháng");
+  const [dataFaculties, setDataFaculties] = useState<any>();
+  const [dataHuman, setDataHuman] = useState<any>();
 
   const getDefaultYears = async () => {
+    setLoading(true);
     const response = await getAllSchoolYears();
     setDefaultYears(response.items);
     const yearId = response.items.filter((x: any) => x.isDefault)[0] as any;
@@ -47,7 +52,13 @@ const Home = () => {
       getReports(yearId.id),
       getMultiLieChart(yearId.id, valueMultiLine),
       getHistory(yearId.id),
+      getFacultiesChart(yearId.id),
+      getHumanChart(yearId.id),
     ]);
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+    }, 500);
+    return () => clearTimeout(timeoutId);
   };
 
   const getReports = async (id: string) => {
@@ -107,6 +118,16 @@ const Home = () => {
     );
   };
 
+  const getFacultiesChart = async (yearId: string) => {
+    const response = await getDataFaculties(yearId);
+    setDataFaculties(response);
+  };
+
+  const getHumanChart = async (yearId: string) => {
+    const response = await getDataHuman(yearId);
+    setDataHuman(response.items);
+  };
+
   const handleChangeYear = (value: any) => {
     setLoading(true);
     const temp = defaultYears.filter((x: any) => x.id === value)[0] as any;
@@ -115,6 +136,8 @@ const Home = () => {
       getReports(temp.id),
       getMultiLieChart(temp.id, valueMultiLine),
       getHistory(temp.id),
+      getFacultiesChart(temp.id),
+      getHumanChart(temp.id),
     ]);
     const timeoutId = setTimeout(() => {
       setLoading(false);
@@ -276,7 +299,27 @@ const Home = () => {
             </div>
           </section>
           <section className="grid grid-cols-3 gap-4 mb-4">
-            <FaculitiesForms />
+            <div className="bg-white flex flex-col rounded-lg shadow-lg cursor-pointer">
+              <div className="px-4 py-3 flex justify-between items-center">
+                <span className="text-neutral-400 font-semibold text-[14px]">
+                  Thống kê sự kiện theo Khoa
+                </span>
+                <Button type="text" shape="circle" icon={<MoreOutlined />} />
+              </div>
+              <hr />
+              <div className="h-full p-3 flex justify-center mt-2">
+                {dataFaculties && (
+                  <>
+                    <div className="my-[-20px] w-full">
+                      <BarChart
+                        categories={dataFaculties.categories ?? []}
+                        seriesData={dataFaculties.data ?? []}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
             <div className="bg-white flex flex-col rounded-lg shadow-lg cursor-pointer">
               <div className="px-4 py-3 flex justify-between items-center">
                 <span className="text-neutral-400 font-semibold text-[14px]">
@@ -300,7 +343,7 @@ const Home = () => {
                 )}
               </div>
             </div>
-            <TopCBForms />
+            {dataHuman && <TopHumanChart data={dataHuman} />}
           </section>
         </>
       )}

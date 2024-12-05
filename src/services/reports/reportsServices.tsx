@@ -31,3 +31,15 @@ export async function getAllReportsWithTypeTime(
   const response = await apiClient.get<any>(url);
   return response.data;
 }
+
+export async function getDataFaculties(yearId: string): Promise<any> {
+  let url = `api/reports/faculties?Years=${yearId}`;
+  const response = await apiClient.get<any>(url);
+  return response.data;
+}
+
+export async function getDataHuman(yearId: string): Promise<any> {
+  let url = `api/reports/human?Years=${yearId}`;
+  const response = await apiClient.get<any>(url);
+  return response.data;
+}
