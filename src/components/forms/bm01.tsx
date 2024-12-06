@@ -38,7 +38,7 @@ import {
   FileProtectOutlined,
   PlusOutlined,
   SafetyOutlined,
-  ShrinkOutlined
+  ShrinkOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -316,6 +316,15 @@ const BM01 = () => {
           </>
         );
       },
+    },
+    {
+      title: <div className="bg-orange-400 p-1">NGÀY NHẬP VĂN BẢN</div>,
+      dataIndex: "entryDate",
+      key: "entryDate",
+      sorter: (a, b) => a.entryDate - b.entryDate,
+      render: (fromDate: number) =>
+        fromDate ? convertTimestampToDate(fromDate) : "",
+      className: "text-center w-[70px]",
     },
     {
       title: (

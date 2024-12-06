@@ -1,6 +1,7 @@
 "use client";
 
 import BarChart from "@/components/charts/BarChart";
+import DonutChart from "@/components/charts/DonutChart";
 import MultiLineChart from "@/components/charts/MultiLineChart";
 import PercentForms from "@/components/dashboard/PercentForms";
 import TopHumanChart from "@/components/dashboard/TopHumanChart";
@@ -8,11 +9,14 @@ import TotalFormCard from "@/components/dashboard/TotalFormCard";
 import { getAllLogActivities } from "@/services/history/logActivityServices";
 import {
   getAllReports,
-  getAllReportsWithTypeTime,
   getDataFaculties,
+  getDataFacultiesById,
   getDataHuman,
+  getReportMultiMonths,
+  getReportMultiYears,
 } from "@/services/reports/reportsServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
+import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
 import PageTitles from "@/utility/Constraints";
 import { convertTimestampToFullDateTime } from "@/utility/Utilities";
 import {
@@ -29,31 +33,47 @@ import {
   Spin,
   Timeline,
 } from "antd";
-import { useEffect, useState } from "react";
+import { Key, useEffect, useState } from "react";
 
 const Home = () => {
   const [loading, setLoading] = useState(false);
   const [defaultYears, setDefaultYears] = useState<any>();
   const [selectedKey, setSelectedKey] = useState<any>();
   const [dataReports, setDataReports] = useState<any>();
-  const [dataMultiLine, setDataMultiLine] = useState<any>();
+  const [dataMultiLineMonths, setDataMultiLineMonths] = useState<any>();
+  const [dataMultiLineYears, setDataMultiLineYears] = useState<any>();
+  const [typeChart, setTypeChart] = useState<string>("month");
   const [dataHistory, setDataHistory] = useState<any>();
-  const [valueMultiLine, setValueMultiLine] = useState("Tháng");
   const [dataFaculties, setDataFaculties] = useState<any>();
+  const [dataFacultyById, setDataFacultyById] = useState<any>();
   const [dataHuman, setDataHuman] = useState<any>();
+  const [units, setUnits] = useState<UnitItem[]>([]);
+  const [selectedKeyUnit, setSelectedKeyUnit] = useState<Key | null>(null);
+
+  const getListUnits = async () => {
+    const response = await getAllUnits("true");
+    const temp = response.items.sort((a, b) => a.name.localeCompare(b.name));
+    setUnits(temp);
+    setSelectedKeyUnit(temp[0].id);
+  };
 
   const getDefaultYears = async () => {
     setLoading(true);
-    const response = await getAllSchoolYears();
-    setDefaultYears(response.items);
-    const yearId = response.items.filter((x: any) => x.isDefault)[0] as any;
+    const [responseSchoolYear, responseUnits] = await Promise.all([
+      getAllSchoolYears(),
+      getAllUnits("true"),
+    ]);
+    setDefaultYears(responseSchoolYear.items);
+    const yearId = responseSchoolYear.items.filter((x: any) => x.isDefault)[0] as any;
     setSelectedKey(yearId);
+    const tempUnits = responseUnits.items.sort((a, b) => a.name.localeCompare(b.name));
     Promise.all([
       getReports(yearId.id),
-      getMultiLieChart(yearId.id, valueMultiLine),
+      getMultiLineMonths(yearId.id),
       getHistory(yearId.id),
       getFacultiesChart(yearId.id),
       getHumanChart(yearId.id),
+      getFacultiesChartById(yearId.id, tempUnits[0].id),
     ]);
     const timeoutId = setTimeout(() => {
       setLoading(false);
@@ -66,10 +86,16 @@ const Home = () => {
     setDataReports(response);
   };
 
-  const getMultiLieChart = async (id: string, type: string) => {
-    let temp = type === "Tháng" ? "month" : type === "Quý" ? "quarter" : "year";
-    const response = await getAllReportsWithTypeTime(id, temp);
-    setDataMultiLine(response);
+  const getMultiLineMonths = async (id: string) => {
+    const response = await getReportMultiMonths(id);
+    setDataMultiLineMonths(response);
+    setTypeChart("month");
+  };
+
+  const getMultiLineYears = async () => {
+    const response = await getReportMultiYears();
+    setDataMultiLineYears(response);
+    setTypeChart("year");
   };
 
   const getHistory = async (id: string) => {
@@ -123,6 +149,11 @@ const Home = () => {
     setDataFaculties(response);
   };
 
+  const getFacultiesChartById = async (yearId: string, id: string) => {
+    const response = await getDataFacultiesById(yearId, id);
+    setDataFacultyById(response);
+  };
+
   const getHumanChart = async (yearId: string) => {
     const response = await getDataHuman(yearId);
     setDataHuman(response.items);
@@ -134,10 +165,11 @@ const Home = () => {
     setSelectedKey(temp);
     Promise.all([
       getReports(temp.id),
-      getMultiLieChart(temp.id, valueMultiLine),
+      getMultiLineMonths(temp.id),
       getHistory(temp.id),
       getFacultiesChart(temp.id),
       getHumanChart(temp.id),
+      getFacultiesChartById(temp.id, units[0].id),
     ]);
     const timeoutId = setTimeout(() => {
       setLoading(false);
@@ -145,10 +177,18 @@ const Home = () => {
     return () => clearTimeout(timeoutId);
   };
 
+  const handleChangeMultiLineType = async (value: string) => {
+    if (value === "Tháng") {
+      getMultiLineMonths(selectedKey.id);
+    } else {
+      getMultiLineYears();
+    }
+  };
+
   useEffect(() => {
     document.title = PageTitles.HOME;
-    getDefaultYears();
-  }, [valueMultiLine]);
+    Promise.all([getDefaultYears(), getListUnits()]);
+  }, []);
 
   return (
     <section>
@@ -244,25 +284,38 @@ const Home = () => {
                   </span>
                   <div className="flex gap-4">
                     <Segmented
-                      options={["Thêm mới", "Cập nhật", "Phê duyệt"]}
-                    />
-                    <Segmented
-                      options={["Tháng", "Quý"]}
-                      value={valueMultiLine}
-                      onChange={setValueMultiLine}
+                      options={["Tháng", "Năm"]}
+                      onChange={(value) => handleChangeMultiLineType(value)}
                     />
                   </div>
                 </div>
                 <hr />
                 <div className="h-full px-3 py-2 flex items-center justify-center">
-                  {dataMultiLine && (
+                  {typeChart === "month" ? (
                     <>
-                      <div className="my-[-20px] w-full">
-                        <MultiLineChart
-                          categories={dataMultiLine.categories}
-                          seriesData={dataMultiLine.data}
-                        />
-                      </div>
+                      {dataMultiLineMonths && (
+                        <>
+                          <div className="my-[-20px] w-full">
+                            <MultiLineChart
+                              categories={dataMultiLineMonths.categories}
+                              seriesData={dataMultiLineMonths.data}
+                            />
+                          </div>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {dataMultiLineYears && (
+                        <>
+                          <div className="my-[-20px] w-full">
+                            <MultiLineChart
+                              categories={dataMultiLineYears.categories}
+                              seriesData={dataMultiLineYears.data}
+                            />
+                          </div>
+                        </>
+                      )}
                     </>
                   )}
                 </div>
@@ -325,21 +378,35 @@ const Home = () => {
                 <span className="text-neutral-400 font-semibold text-[14px]">
                   Các hoạt động gần đây
                 </span>
-                <Button type="text" shape="circle" icon={<MoreOutlined />} />
+                <Select
+                  showSearch
+                  placeholder=" "
+                  optionFilterProp="label"
+                  filterSort={(optionA, optionB) =>
+                    (optionA?.label ?? "")
+                      .toLowerCase()
+                      .localeCompare((optionB?.label ?? "").toLowerCase())
+                  }
+                  options={units.map((unit: UnitItem, index) => ({
+                    value: unit.id,
+                    label: unit.name,
+                    key: `${unit.idHrm}-${index}`,
+                  }))}
+                  value={selectedKeyUnit}
+                  onChange={(value) => {
+                    setSelectedKeyUnit(value);
+                    getFacultiesChartById(selectedKey.id, value as string);
+                  }}
+                  className="w-3/5"
+                />
               </div>
               <hr />
               <div className="h-full p-3 flex justify-center mt-2">
-                {dataHistory && dataHistory.length > 0 ? (
-                  <>
-                    <Timeline
-                      items={dataHistory}
-                      className="h-fit mt-3 mb-[-100px]"
-                    />
-                  </>
-                ) : (
-                  <div className="flex items-center">
-                    <Empty description="Không có dữ liệu..."></Empty>
-                  </div>
+                {dataFacultyById && (
+                  <DonutChart
+                    categories={dataFacultyById.categories}
+                    seriesData={dataFacultyById.data}
+                  />
                 )}
               </div>
             </div>

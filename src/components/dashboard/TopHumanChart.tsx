@@ -101,7 +101,7 @@ const TopHumanChart: FC<TopHumanChartProps> = ({ data }) => {
     <div className="bg-white w-full flex flex-col rounded-lg shadow-lg cursor-pointer">
       <div className="px-4 py-3 flex justify-between items-center">
         <span className="text-neutral-400 font-semibold text-[14px]">
-          Top các CB-GV-NV có nhiều hoạt động
+          TOP 7 CB-GV-NV chăm chỉ
         </span>
         <Button type="text" shape="circle" icon={<MoreOutlined />} />
       </div>

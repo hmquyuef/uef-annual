@@ -302,6 +302,8 @@ const BM05 = () => {
       title: <div className="bg-orange-400 p-1">NGÀY NHẬP VĂN BẢN</div>,
       dataIndex: ["determinations", "entryDate"],
       key: "entryDate",
+      sorter: (a, b) =>
+        a.determinations?.entryDate - b.determinations?.entryDate,
       render: (fromDate: number) =>
         fromDate ? convertTimestampToDate(fromDate) : "",
       className: "text-center w-[100px]",

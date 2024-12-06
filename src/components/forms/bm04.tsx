@@ -303,6 +303,15 @@ const BM04 = () => {
       },
     },
     {
+      title: <div className="bg-orange-400 p-1">NGÀY NHẬP VĂN BẢN</div>,
+      dataIndex: "entryDate",
+      key: "entryDate",
+      sorter: (a, b) => a.entryDate - b.entryDate,
+      render: (fromDate: number) =>
+        fromDate ? convertTimestampToDate(fromDate) : "",
+      className: "text-center w-[70px]",
+    },
+    {
       title: (
         <div className="bg-rose-500 p-1 rounded-tr-lg">
           PHÊ DUYỆT <br /> THANH TOÁN

@@ -23,17 +23,26 @@ export async function getAllReports(years: string): Promise<ReportResponses> {
   return response.data;
 }
 
-export async function getAllReportsWithTypeTime(
-  years: string,
-  typeTime: string
-): Promise<any> {
-  let url = `/api/reports/multiline?Years=${years}&TypeTime=${typeTime}`;
+export async function getReportMultiMonths(years: string): Promise<any> {
+  let url = `api/reports/multi-months?Years=${years}`;
+  const response = await apiClient.get<any>(url);
+  return response.data;
+}
+
+export async function getReportMultiYears(): Promise<any> {
+  let url = "api/reports/multi-years";
   const response = await apiClient.get<any>(url);
   return response.data;
 }
 
 export async function getDataFaculties(yearId: string): Promise<any> {
   let url = `api/reports/faculties?Years=${yearId}`;
+  const response = await apiClient.get<any>(url);
+  return response.data;
+}
+
+export async function getDataFacultiesById(yearId: string, id: string): Promise<any> {
+  let url = `api/reports/faculties/${id}?Years=${yearId}`;
   const response = await apiClient.get<any>(url);
   return response.data;
 }
