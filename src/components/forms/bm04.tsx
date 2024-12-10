@@ -216,7 +216,7 @@ const BM04 = () => {
       title: "SỐ LƯỢNG SINH VIÊN",
       dataIndex: "totalStudent",
       key: "totalStudent",
-      className: "text-center w-[70px]",
+      className: "text-center w-[60px]",
       render: (totalStudent: string) => <>{totalStudent}</>,
     },
     {
@@ -279,7 +279,7 @@ const BM04 = () => {
       ),
       dataIndex: ["attackment", "path"],
       key: "path",
-      className: "text-center w-[90px]",
+      className: "text-center w-[80px]",
       sorter: (a, b) => a.attackment?.path.localeCompare(b.attackment?.path),
       render: (path: string) => {
         return path !== "" && path !== undefined ? (
@@ -309,7 +309,7 @@ const BM04 = () => {
       sorter: (a, b) => a.entryDate - b.entryDate,
       render: (fromDate: number) =>
         fromDate ? convertTimestampToDate(fromDate) : "",
-      className: "text-center w-[70px]",
+      className: "text-center w-[80px]",
     },
     {
       title: (

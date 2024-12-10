@@ -1,7 +1,5 @@
 import {
-  BellOutlined,
   IdcardOutlined,
-  InfoCircleOutlined,
   LogoutOutlined,
   MailOutlined,
   UserOutlined,
@@ -18,8 +16,9 @@ interface TopHeadersProps {
 
 const handleMenuClick: MenuProps["onClick"] = async (e) => {
   if (e.key === "3") {
-    Cookies.remove("s_t");
-    Cookies.remove("s_r");
+    ["s_t", "s_r", "m_i", "m_k", "p_s"].forEach((cookie) =>
+      Cookies.remove(cookie)
+    );
     await signOut({ callbackUrl: "/login" });
   }
 };

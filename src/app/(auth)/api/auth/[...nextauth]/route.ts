@@ -8,8 +8,6 @@ const authOptions = {
             clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
             authorization: {
                 params: {
-                    prompt: 'consent',
-                    //prompt: 'select_account',
                     hd: 'uef.edu.vn',
                     domain_hint: 'uef.edu.vn',
                     access_type: "offline",
