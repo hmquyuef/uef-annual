@@ -286,7 +286,7 @@ const SchoolYear = () => {
       <div className="flex justify-end gap-4 mb-4">
         {role?.displayRole.isCreate && (
           <>
-            <Tooltip placement="top" title={"Thêm mới vai trò"} arrow={true}>
+            <Tooltip placement="top" title={"Thêm mới năm học"} arrow={true}>
               <Button
                 type="primary"
                 onClick={() => {
@@ -303,7 +303,7 @@ const SchoolYear = () => {
         )}
         {role?.displayRole.isDelete && (
           <>
-            <Tooltip placement="top" title="Xóa các hoạt động" arrow={true}>
+            <Tooltip placement="top" title="Xóa năm học" arrow={true}>
               <Button
                 type="dashed"
                 disabled={selectedRowKeys.length === 0}
@@ -329,7 +329,7 @@ const SchoolYear = () => {
         <CustomModal
           isOpen={isOpen}
           width={"25vw"}
-          title={mode === "edit" ? "Cập nhật vai trò" : "Thêm mới vai trò"}
+          title={mode === "edit" ? "Cập nhật thời gian năm học" : "Thêm mới thời gian năm học"}
           role={role || undefined}
           onOk={() => {
             const formElement = document.querySelector("form");
@@ -352,7 +352,7 @@ const SchoolYear = () => {
           }
         />
         <Table<any>
-          key={"table-roles"}
+          key={"table-school-years"}
           className="custom-table-header shadow-md rounded-md"
           bordered
           rowKey={(item) => item.id}

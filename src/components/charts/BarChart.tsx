@@ -35,7 +35,16 @@ const BarChart: FC<BarChartProps> = ({ categories, seriesData }) => {
       },
     },
     dataLabels: {
-      enabled: false,
+      enabled: true,
+      offsetY: -16,
+      style: {
+        fontSize: "11px",
+        colors: ["#000000a0"],
+      },
+      textAnchor: "middle",
+      formatter: function (val) {
+        return val.toString();
+      },
     },
     legend: {
       show: false,
@@ -43,15 +52,18 @@ const BarChart: FC<BarChartProps> = ({ categories, seriesData }) => {
     colors: ["#53fbdd"],
     plotOptions: {
       bar: {
-        columnWidth: "40%",
+        columnWidth: "45%",
         distributed: true,
         borderRadius: 6,
         borderRadiusApplication: "end",
         horizontal: false,
+        dataLabels: {
+          position: "top",
+        },
       },
     },
     xaxis: {
-      categories: categories ?? [],
+      categories: categories,
     },
   };
 

@@ -30,11 +30,11 @@ const MultiLineChart: FC<MultiLineChartProps> = ({
       },
       dropShadow: {
         enabled: true,
-        color: '#000',
+        color: "#000",
         top: 18,
         left: 5,
         blur: 12,
-        opacity: 0.5
+        opacity: 0.5,
       },
       animations: {
         enabled: true,
@@ -58,7 +58,7 @@ const MultiLineChart: FC<MultiLineChartProps> = ({
       },
     },
     markers: {
-      size: 4
+      size: 4,
     },
     stroke: {
       curve: "smooth",
@@ -74,8 +74,14 @@ const MultiLineChart: FC<MultiLineChartProps> = ({
     legend: {
       position: "bottom",
       horizontalAlign: "center",
+      formatter: (seriesName: string, opts: any) => {
+        const seriesIndex = opts.seriesIndex;
+        const total = opts.w.globals.seriesTotals[seriesIndex];
+        const color = opts.w.config.colors[seriesIndex];
+        return `<span style="color:${color}">${seriesName} - </span><strong style="color:${color}">${total}</strong>`;
+      },
     },
-    colors: ["#3399ff", "#22C55E", "#ff3333", "#ff6600", "#9966ff"],
+    colors: ["#3399ff", "#22C55E", "#ff6600", "#ff3333", "#9966ff"],
     grid: {
       borderColor: "#e7e7e7",
       strokeDashArray: 4,

@@ -34,7 +34,7 @@ const DonutChart: FC<DonutChartProps> = ({ categories, seriesData }) => {
         },
       },
     },
-    colors: ["#3399ff", "#22C55E", "#ff3333", "#ff6600", "#9966ff"],
+    colors: ["#3399ff", "#22C55E", "#ff6600", "#ff3333", "#9966ff"],
     fill: {
       type: "gradient",
       gradient: {
@@ -44,8 +44,8 @@ const DonutChart: FC<DonutChartProps> = ({ categories, seriesData }) => {
         gradientToColors: [
           "#3399ff",
           "#22C55E",
-          "#ff3333",
           "#ff6600",
+          "#ff3333",
           "#9966ff",
         ],
         inverseColors: false,

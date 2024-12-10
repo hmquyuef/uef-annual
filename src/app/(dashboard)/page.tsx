@@ -280,7 +280,7 @@ const Home = () => {
               <div className="bg-white col-span-3 flex flex-col rounded-lg shadow-lg cursor-pointer">
                 <div className="px-4 py-3 flex justify-between items-center">
                   <span className="text-neutral-400 font-semibold text-[14px]">
-                    Thống kê các biểu mẫu theo thời gian
+                    Thống kê các hoạt động theo thời gian
                   </span>
                   <div className="flex gap-4">
                     <Segmented
@@ -355,7 +355,7 @@ const Home = () => {
             <div className="bg-white flex flex-col rounded-lg shadow-lg cursor-pointer">
               <div className="px-4 py-3 flex justify-between items-center">
                 <span className="text-neutral-400 font-semibold text-[14px]">
-                  Thống kê sự kiện theo Khoa
+                  Thống kê hoạt động theo đơn vị
                 </span>
                 <Button type="text" shape="circle" icon={<MoreOutlined />} />
               </div>
@@ -376,7 +376,7 @@ const Home = () => {
             <div className="bg-white flex flex-col rounded-lg shadow-lg cursor-pointer">
               <div className="px-4 py-3 flex justify-between items-center">
                 <span className="text-neutral-400 font-semibold text-[14px]">
-                  Tổng hợp sự kiện theo
+                  Tổng hợp hoạt động theo
                 </span>
                 <Select
                   showSearch
