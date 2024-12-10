@@ -1,20 +1,15 @@
 "use client";
 
 import {
-  GoogleOutlined,
-  LockOutlined,
-  LoginOutlined,
-  UserOutlined,
+  GoogleOutlined
 } from "@ant-design/icons";
-import { Button, Checkbox, Divider, Input } from "antd";
+import { Button, Divider } from "antd";
 import { signIn } from "next-auth/react";
-import { useState } from "react";
 
 const Login = () => {
-  const [userName, setUserName] = useState("");
-  const [password, setPassword] = useState("");
-  const [passwordVisible, setPasswordVisible] = useState(false);
-  const [remember, setRemember] = useState(false);
+  // const [userName, setUserName] = useState("");
+  // const [password, setPassword] = useState("");
+  // const [remember, setRemember] = useState(false);
   // const { data: session } = useSession();
   // const router = useRouter();
   // const getToken = async (email: string) => {
@@ -95,7 +90,7 @@ const Login = () => {
             Sử dụng tài khoản
             <span className="text-rose-500 font-medium">email UEF</span>
           </Button>
-          <Divider plain>
+          {/* <Divider plain>
             <span className="text-neutral-400">hoặc</span>
           </Divider>
           <div className="flex flex-col gap-1 mb-4">
@@ -143,7 +138,7 @@ const Login = () => {
             className="w-full"
           >
             Đăng nhập
-          </Button>
+          </Button> */}
         </form>
       </div>
     </section>
