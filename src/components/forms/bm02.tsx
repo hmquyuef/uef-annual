@@ -2,7 +2,6 @@
 
 import {
   ClassAssistantItem,
-  ClassAssistantResponse,
   deleteClassAssistants,
   getAllClassAssistants,
   ImportClassAssistants,
@@ -83,9 +82,9 @@ const { Search } = Input;
 const BM02 = () => {
   const [loading, setLoading] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
-  const [classAssistants, setclassAssistants] = useState<
-    ClassAssistantResponse | undefined
-  >(undefined);
+  const [classAssistants, setclassAssistants] = useState<ClassAssistantItem[]>(
+    []
+  );
   const [data, setData] = useState<ClassAssistantItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isUpload, setIsUpload] = useState(false);
@@ -139,7 +138,7 @@ const BM02 = () => {
 
   const getListClassAssistants = async (yearId: string) => {
     const response = await getAllClassAssistants(yearId);
-    setclassAssistants(response);
+    setclassAssistants(response.items);
     setData(response.items);
     setNotificationOpen(false);
   };
@@ -452,11 +451,11 @@ const BM02 = () => {
 
   const onSearch: SearchProps["onSearch"] = (value) => {
     if ((value === "" && !selectedKeyUnit) || selectedKeyUnit === "all")
-      setData(classAssistants?.items || []);
+      setData(classAssistants || []);
     const selectedUnit = units.find(
       (unit: UnitItem) => unit.idHrm === selectedKeyUnit
     );
-    const filteredData = classAssistants?.items.filter((item) => {
+    const filteredData = classAssistants.filter((item) => {
       const matchesName =
         item.userName.toLowerCase().includes(value.toLowerCase()) ||
         item.fullName.toLowerCase().includes(value.toLowerCase()) ||
@@ -472,10 +471,6 @@ const BM02 = () => {
     });
     setData(filteredData || []);
   };
-
-  useEffect(() => {
-    onSearch("");
-  }, [selectedKeyUnit, startDate, endDate]);
 
   const handleDelete = useCallback(async () => {
     try {
@@ -933,9 +928,29 @@ const BM02 = () => {
       if (decodedUserName.sub) {
         setUserName(decodedUserName.sub);
       }
+      if (role === "secretary") {
+        const decodedUnitId = jwtDecode<{
+          family_name: string;
+        }>(token);
+        const unitId = decodedUnitId.family_name;
+        if (unitId && unitId !== selectedKeyUnit) {
+          setSelectedKeyUnit(unitId.toLowerCase());
+        }
+      }
     }
     setLoading(false);
+    onSearch("");
   }, []);
+
+  useEffect(() => {
+    if (
+      classAssistants.length > 0 &&
+      units.length > 0 &&
+      (selectedKeyUnit || startDate || endDate)
+    ) {
+      onSearch("");
+    }
+  }, [classAssistants, units, selectedKeyUnit, startDate, endDate]);
   return (
     <div>
       <div className="grid grid-cols-3 mb-4">

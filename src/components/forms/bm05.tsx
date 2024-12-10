@@ -409,10 +409,10 @@ const BM05 = () => {
       setData(activities);
       return;
     }
-
     const selectedUnit = units.find(
       (unit: UnitItem) => unit.idHrm === selectedKeyUnit
     );
+
     const filteredData = activities.filter((item) => {
       const matchesNameOrDocument =
         item.name.toLowerCase().includes(value.toLowerCase()) ||
@@ -438,10 +438,6 @@ const BM05 = () => {
     });
     setData(filteredData);
   };
-
-  useEffect(() => {
-    onSearch("");
-  }, [selectedKeyUnit, startDate, endDate]);
 
   const handleDelete = useCallback(async () => {
     try {
@@ -922,9 +918,29 @@ const BM05 = () => {
       if (decodedUserName.sub) {
         setUserName(decodedUserName.sub);
       }
+      if (role === "secretary") {
+        const decodedUnitId = jwtDecode<{
+          family_name: string;
+        }>(token);
+        const unitId = decodedUnitId.family_name;
+        if (unitId && unitId !== selectedKeyUnit) {
+          setSelectedKeyUnit(unitId.toLowerCase());
+        }
+      }
     }
     setLoading(false);
+    onSearch("");
   }, []);
+
+  useEffect(() => {
+    if (
+      activities.length > 0 &&
+      units.length > 0 &&
+      (selectedKeyUnit || startDate || endDate)
+    ) {
+      onSearch("");
+    }
+  }, [activities, units, selectedKeyUnit, startDate, endDate]);
 
   return (
     <div>

@@ -2,7 +2,6 @@
 
 import {
   ClassLeaderItem,
-  ClassLeadersResponse,
   deleteClassLeaders,
   getAllClassLeaders,
   ImportClassLeaders,
@@ -84,9 +83,7 @@ const { Search } = Input;
 const BM01 = () => {
   const [loading, setLoading] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
-  const [classLeaders, setClassLeaders] = useState<
-    ClassLeadersResponse | undefined
-  >(undefined);
+  const [classLeaders, setClassLeaders] = useState<ClassLeaderItem[]>([]);
   const [data, setData] = useState<ClassLeaderItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isUpload, setIsUpload] = useState(false);
@@ -139,7 +136,7 @@ const BM01 = () => {
 
   const getListClassLeaders = async (yearId: string) => {
     const response = await getAllClassLeaders(yearId);
-    setClassLeaders(response);
+    setClassLeaders(response.items);
     setData(response.items);
     setNotificationOpen(false);
   };
@@ -459,11 +456,11 @@ const BM01 = () => {
 
   const onSearch: SearchProps["onSearch"] = (value) => {
     if ((value === "" && !selectedKeyUnit) || selectedKeyUnit === "all")
-      setData(classLeaders?.items || []);
+      setData(classLeaders || []);
     const selectedUnit = units.find(
       (unit: UnitItem) => unit.idHrm === selectedKeyUnit
     );
-    const filteredData = classLeaders?.items.filter((item) => {
+    const filteredData = classLeaders.filter((item) => {
       const matchesName =
         item.userName.toLowerCase().includes(value.toLowerCase()) ||
         item.fullName.toLowerCase().includes(value.toLowerCase());
@@ -478,10 +475,6 @@ const BM01 = () => {
     });
     setData(filteredData || []);
   };
-
-  useEffect(() => {
-    onSearch("");
-  }, [selectedKeyUnit, startDate, endDate]);
 
   const handleDelete = useCallback(async () => {
     try {
@@ -955,13 +948,25 @@ const BM01 = () => {
           family_name: string;
         }>(token);
         const unitId = decodedUnitId.family_name;
-        setSelectedKeyUnit(unitId);
-      } else {
-        setSelectedKeyUnit(null);
+        if (unitId && unitId !== selectedKeyUnit) {
+          setSelectedKeyUnit(unitId.toLowerCase());
+        }
       }
     }
     setLoading(false);
+    onSearch("");
   }, []);
+
+  useEffect(() => {
+    if (
+      classLeaders.length > 0 &&
+      units.length > 0 &&
+      (selectedKeyUnit || startDate || endDate)
+    ) {
+      onSearch("");
+    }
+  }, [classLeaders, units, selectedKeyUnit, startDate, endDate]);
+
   return (
     <div>
       <div className="grid grid-cols-3 mb-3">

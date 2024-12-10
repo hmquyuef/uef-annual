@@ -83,8 +83,8 @@ const BM03 = () => {
   const [loading, setLoading] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [admissionCounseling, setAdmissionCounseling] = useState<
-    AdmissionCounselingResponse | undefined
-  >(undefined);
+    AdmissionCounselingItem[]
+  >([]);
   const [data, setData] = useState<AdmissionCounselingItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isUpload, setIsUpload] = useState(false);
@@ -138,7 +138,7 @@ const BM03 = () => {
 
   const getListAdmissionCounseling = async (yearId: string) => {
     const response = await getAllAdmissionCounseling(yearId);
-    setAdmissionCounseling(response);
+    setAdmissionCounseling(response.items);
     setData(response.items);
     setNotificationOpen(false);
   };
@@ -437,12 +437,12 @@ const BM03 = () => {
 
   const onSearch: SearchProps["onSearch"] = (value) => {
     if ((value === "" && !selectedKeyUnit) || selectedKeyUnit === "all")
-      setData(admissionCounseling?.items || []);
+      setData(admissionCounseling || []);
     const selectedUnit = units.find(
       (unit: UnitItem) => unit.idHrm === selectedKeyUnit
     );
 
-    const filteredData = admissionCounseling?.items.filter((item) => {
+    const filteredData = admissionCounseling.filter((item) => {
       const matchesName =
         item.userName.toLowerCase().includes(value.toLowerCase()) ||
         item.fullName.toLowerCase().includes(value.toLowerCase()) ||
@@ -458,10 +458,6 @@ const BM03 = () => {
     });
     setData(filteredData || []);
   };
-
-  useEffect(() => {
-    onSearch("");
-  }, [selectedKeyUnit, startDate, endDate]);
 
   const handleDelete = useCallback(async () => {
     try {
@@ -919,9 +915,29 @@ const BM03 = () => {
       if (decodedUserName.sub) {
         setUserName(decodedUserName.sub);
       }
+      if (role === "secretary") {
+        const decodedUnitId = jwtDecode<{
+          family_name: string;
+        }>(token);
+        const unitId = decodedUnitId.family_name;
+        if (unitId && unitId !== selectedKeyUnit) {
+          setSelectedKeyUnit(unitId.toLowerCase());
+        }
+      }
     }
     setLoading(false);
+    onSearch("");
   }, []);
+
+  useEffect(() => {
+    if (
+      admissionCounseling.length > 0 &&
+      units.length > 0 &&
+      (selectedKeyUnit || startDate || endDate)
+    ) {
+      onSearch("");
+    }
+  }, [admissionCounseling, units, selectedKeyUnit, startDate, endDate]);
   return (
     <div>
       <div className="grid grid-cols-3 mb-4">
