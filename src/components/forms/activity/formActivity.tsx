@@ -4,10 +4,7 @@ import {
   ActivityInput,
   AddUpdateActivityItem,
 } from "@/services/forms/formsServices";
-import {
-  getAllUnits,
-  UnitItem
-} from "@/services/units/unitsServices";
+import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
 import {
   deleteFiles,
   FileItem,
@@ -411,6 +408,7 @@ const FormActivity: FC<FormActivityProps> = ({
             </span>
             <ConfigProvider locale={locale}>
               <DatePicker
+                allowClear={false}
                 placeholder="dd/mm/yyyy"
                 format={"DD/MM/YYYY"}
                 value={deterFromDate ? moment(deterFromDate) : null}
@@ -429,6 +427,7 @@ const FormActivity: FC<FormActivityProps> = ({
             <span className="font-medium text-neutral-600">Ngày hoạt động</span>
             <ConfigProvider locale={locale}>
               <DatePicker
+                allowClear={false}
                 placeholder="dd/mm/yyyy"
                 format={"DD/MM/YYYY"}
                 value={deterEventDate ? moment(deterEventDate) : null}

@@ -3,10 +3,7 @@
 import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 import { QAItem } from "@/services/forms/qaServices";
 import { DisplayRoleItem } from "@/services/roles/rolesServices";
-import {
-  getAllUnits,
-  UnitItem
-} from "@/services/units/unitsServices";
+import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
 import {
   deleteFiles,
   FileItem,
@@ -269,6 +266,7 @@ const FormBM04: FC<FormBM04Props> = ({
             </p>
             <ConfigProvider locale={locale}>
               <DatePicker
+                allowClear={false}
                 placeholder="dd/mm/yyyy"
                 format="DD/MM/YYYY"
                 value={
@@ -291,6 +289,7 @@ const FormBM04: FC<FormBM04Props> = ({
             <p className="font-medium text-neutral-600">Từ ngày</p>
             <ConfigProvider locale={locale}>
               <DatePicker
+                allowClear={false}
                 placeholder="dd/mm/yyyy"
                 format="DD/MM/YYYY"
                 value={
@@ -311,6 +310,7 @@ const FormBM04: FC<FormBM04Props> = ({
             <p className="font-medium text-neutral-600">Đến ngày</p>
             <ConfigProvider locale={locale}>
               <DatePicker
+                allowClear={false}
                 placeholder="dd/mm/yyyy"
                 format="DD/MM/YYYY"
                 value={

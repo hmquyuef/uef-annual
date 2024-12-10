@@ -566,6 +566,7 @@ const SearchMembers = () => {
           <span className="text-[14px] text-neutral-500">Từ ngày:</span>
           <ConfigProvider locale={locale}>
             <DatePicker
+              allowClear={false}
               placeholder="dd/mm/yyyy"
               format="DD/MM/YYYY"
               minDate={dayjs.unix(minStartDate)}
@@ -586,6 +587,7 @@ const SearchMembers = () => {
           <span className="text-[14px] text-neutral-500">Đến ngày:</span>
           <ConfigProvider locale={locale}>
             <DatePicker
+              allowClear={false}
               placeholder="dd/mm/yyyy"
               format="DD/MM/YYYY"
               minDate={dayjs.unix(minStartDate)}

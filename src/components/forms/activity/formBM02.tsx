@@ -273,6 +273,7 @@ const FormBM02: FC<FormBM02Props> = ({
             </p>
             <ConfigProvider locale={locale}>
               <DatePicker
+                allowClear={false}
                 placeholder="dd/mm/yyyy"
                 format="DD/MM/YYYY"
                 value={
@@ -295,6 +296,7 @@ const FormBM02: FC<FormBM02Props> = ({
             <p className="font-medium text-neutral-600">Từ ngày</p>
             <ConfigProvider locale={locale}>
               <DatePicker
+                allowClear={false}
                 placeholder="dd/mm/yyyy"
                 format="DD/MM/YYYY"
                 value={
@@ -315,6 +317,7 @@ const FormBM02: FC<FormBM02Props> = ({
             <p className="font-medium text-neutral-600">Đến ngày</p>
             <ConfigProvider locale={locale}>
               <DatePicker
+                allowClear={false}
                 placeholder="dd/mm/yyyy"
                 format="DD/MM/YYYY"
                 value={

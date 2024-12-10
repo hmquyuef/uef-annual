@@ -280,7 +280,7 @@ const Home = () => {
               <div className="bg-white col-span-3 flex flex-col rounded-lg shadow-lg cursor-pointer">
                 <div className="px-4 py-3 flex justify-between items-center">
                   <span className="text-neutral-400 font-semibold text-[14px]">
-                    Tầng suất sử dụng
+                    Thống kê các biểu mẫu theo thời gian
                   </span>
                   <div className="flex gap-4">
                     <Segmented
@@ -376,7 +376,7 @@ const Home = () => {
             <div className="bg-white flex flex-col rounded-lg shadow-lg cursor-pointer">
               <div className="px-4 py-3 flex justify-between items-center">
                 <span className="text-neutral-400 font-semibold text-[14px]">
-                  Các hoạt động gần đây
+                  Tổng hợp sự kiện theo
                 </span>
                 <Select
                   showSearch

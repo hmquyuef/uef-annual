@@ -76,6 +76,7 @@ const FormSchoolYear: FC<FormSchoolYearProps> = ({
           <span className="font-medium text-neutral-600">Từ ngày</span>
           <ConfigProvider locale={locale}>
             <DatePicker
+              allowClear={false}
               placeholder="dd/mm/yyyy"
               format="DD/MM/YYYY"
               value={
@@ -96,6 +97,7 @@ const FormSchoolYear: FC<FormSchoolYearProps> = ({
           <span className="font-medium text-neutral-600">Đến ngày</span>
           <ConfigProvider locale={locale}>
             <DatePicker
+              allowClear={false}
               placeholder="dd/mm/yyyy"
               format="DD/MM/YYYY"
               value={toDate ? dayjs.unix(toDate).tz("Asia/Ho_Chi_Minh") : null}

@@ -55,12 +55,20 @@ const DonutChart: FC<DonutChartProps> = ({ categories, seriesData }) => {
       },
     },
     legend: {
-      position: "bottom",
+      position: "right",
+      offsetY: 80,
+      formatter: (seriesName: string, opts: any) => {
+        const value = opts.w.config.series[opts.seriesIndex];
+        const color = opts.w.config.colors[opts.seriesIndex];
+        return `<span style="color:${color}">${seriesName} - </span><strong style="color:${color}">${value}</strong>`;
+      },
     },
     labels: categories,
     dataLabels: {
       enabled: true,
-      formatter: (val: number) => `${val.toFixed(1)}%`,
+      formatter: (val: number) => {
+        return `${val.toFixed(1)}%`;
+      },
     },
     plotOptions: {
       pie: {

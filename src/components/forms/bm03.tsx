@@ -1025,6 +1025,7 @@ const BM03 = () => {
                       </span>
                       <ConfigProvider locale={locale}>
                         <DatePicker
+                          allowClear={false}
                           placeholder="dd/mm/yyyy"
                           format="DD/MM/YYYY"
                           minDate={dayjs
@@ -1057,6 +1058,7 @@ const BM03 = () => {
                       </span>
                       <ConfigProvider locale={locale}>
                         <DatePicker
+                          allowClear={false}
                           placeholder="dd/mm/yyyy"
                           format="DD/MM/YYYY"
                           minDate={dayjs
