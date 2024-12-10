@@ -169,13 +169,13 @@ const BM04 = () => {
       dataIndex: "stt",
       key: "stt",
       render: (_, __, index) => <>{index + 1}</>,
-      className: "text-center w-[1rem]",
+      className: "text-center w-[3rem]",
     },
     {
       title: "MÃ SỐ CB-GV-NV",
       dataIndex: "userName",
       key: "userName",
-      className: "w-[5rem]",
+      className: "w-[8rem]",
       render: (userName: string, record: QAItem) => {
         return (
           <span
@@ -216,7 +216,7 @@ const BM04 = () => {
       title: "SỐ LƯỢNG SINH VIÊN",
       dataIndex: "totalStudent",
       key: "totalStudent",
-      className: "text-center w-[60px]",
+      className: "text-center w-[80px]",
       render: (totalStudent: string) => <>{totalStudent}</>,
     },
     {
@@ -269,7 +269,7 @@ const BM04 = () => {
           </>
         );
       },
-      className: "text-center w-[70px]",
+      className: "text-center w-[80px]",
     },
     {
       title: (
@@ -279,7 +279,7 @@ const BM04 = () => {
       ),
       dataIndex: ["attackment", "path"],
       key: "path",
-      className: "text-center w-[80px]",
+      className: "text-center w-[100px]",
       sorter: (a, b) => a.attackment?.path.localeCompare(b.attackment?.path),
       render: (path: string) => {
         return path !== "" && path !== undefined ? (
@@ -309,7 +309,7 @@ const BM04 = () => {
       sorter: (a, b) => a.entryDate - b.entryDate,
       render: (fromDate: number) =>
         fromDate ? convertTimestampToDate(fromDate) : "",
-      className: "text-center w-[80px]",
+      className: "text-center w-[100px]",
     },
     {
       title: (

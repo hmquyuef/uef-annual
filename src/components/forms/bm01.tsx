@@ -167,13 +167,13 @@ const BM01 = () => {
       dataIndex: "stt",
       key: "stt",
       render: (_, __, index) => <>{index + 1}</>,
-      className: "text-center w-[1rem]",
+      className: "text-center w-[2rem]",
     },
     {
       title: "MÃ SỐ CB-GV-NV",
       dataIndex: "userName",
       key: "userName",
-      className: "w-[5rem]",
+      className: "w-[6rem]",
       render: (userName: string, record: ClassLeaderItem) => {
         return (
           <span
@@ -321,7 +321,7 @@ const BM01 = () => {
       sorter: (a, b) => a.entryDate - b.entryDate,
       render: (fromDate: number) =>
         fromDate ? convertTimestampToDate(fromDate) : "",
-      className: "text-center w-[70px]",
+      className: "text-center w-[90px]",
     },
     {
       title: (
