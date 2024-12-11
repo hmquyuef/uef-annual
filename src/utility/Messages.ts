@@ -1,6 +1,7 @@
 enum Messages {
     BREAD_CRUMB_HOME = "Trang chủ",
     BREAD_CRUMB_SEARCH = "Tra cứu thông tin nhân sự",
+    SUMMARY_ACTIVITIES = "Tổng kết hoạt động",
 
     NO_DATA = "Không có dữ liệu!",
 

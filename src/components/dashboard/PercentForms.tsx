@@ -7,9 +7,10 @@ import { FC, useEffect, useState } from "react";
 interface PercentFormsProps {
   data: any;
   color: string;
+  src: string;
 }
 
-const PercentForms: FC<PercentFormsProps> = ({ data, color }) => {
+const PercentForms: FC<PercentFormsProps> = ({ data, color, src }) => {
   const [datapercent, setDataPercent] = useState<number | 0>(0);
   const getColor = (color: string): string => {
     switch (color) {
@@ -39,8 +40,13 @@ const PercentForms: FC<PercentFormsProps> = ({ data, color }) => {
   }, [data.approvedPercent]);
   return (
     <div className="grid grid-cols-5 gap-3">
-      <FastBackwardOutlined
+      {/* <FastBackwardOutlined
         className={`bg-${color}-100 text-${color}-600 p-3 text-2xl rounded-lg`}
+      /> */}
+      <img
+        src={`/${src}`}
+        width={60}
+        className={`p-3 rounded-lg bg-${color}-100`}
       />
       <div className="col-span-4 flex flex-col justify-center">
         <div className="flex justify-between">

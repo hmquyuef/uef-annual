@@ -7,9 +7,10 @@ import { FC, useEffect, useState } from "react";
 interface TotalFormCardProps {
   data: any;
   color: string;
+  src: string;
 }
 
-const TotalFormCard: FC<TotalFormCardProps> = ({ data, color }) => {
+const TotalFormCard: FC<TotalFormCardProps> = ({ data, color, src }) => {
   const [totalItems, setTotalItems] = useState<number>(0);
 
   useEffect(() => {
@@ -63,8 +64,10 @@ const TotalFormCard: FC<TotalFormCardProps> = ({ data, color }) => {
                 </span>
               </div>
             </div>
-            <FastBackwardOutlined
-              className={`p-3 text-2xl rounded-lg bg-${color}-100`}
+            <img
+              src={`/${src}`}
+              width={60}
+              className={`p-3 rounded-lg bg-${color}-100`}
             />
           </div>
           <div className="flex justify-end items-end">
@@ -73,13 +76,6 @@ const TotalFormCard: FC<TotalFormCardProps> = ({ data, color }) => {
             >
               tỉ lệ: {data.percentage}%
             </span>
-            {/* <span
-              className={clsx(
-                `text-[13px] text-${color}-400 hover:text-${color}-500 hover:underline`
-              )}
-            >
-              Xem chi tiết
-            </span> */}
           </div>
         </div>
       </div>

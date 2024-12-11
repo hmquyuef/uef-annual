@@ -64,9 +64,13 @@ const Home = () => {
       getAllUnits("true"),
     ]);
     setDefaultYears(responseSchoolYear.items);
-    const yearId = responseSchoolYear.items.filter((x: any) => x.isDefault)[0] as any;
+    const yearId = responseSchoolYear.items.filter(
+      (x: any) => x.isDefault
+    )[0] as any;
     setSelectedKey(yearId);
-    const tempUnits = responseUnits.items.sort((a, b) => a.name.localeCompare(b.name));
+    const tempUnits = responseUnits.items.sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
     Promise.all([
       getReports(yearId.id),
       getMultiLineMonths(yearId.id),
@@ -247,11 +251,31 @@ const Home = () => {
           {dataReports && (
             <>
               <div className="grid grid-cols-5 gap-4 mb-4">
-                <TotalFormCard data={dataReports.form_BM01} color="blue" />
-                <TotalFormCard data={dataReports.form_BM02} color="green" />
-                <TotalFormCard data={dataReports.form_BM03} color="orange" />
-                <TotalFormCard data={dataReports.form_BM04} color="red" />
-                <TotalFormCard data={dataReports.form_BM05} color="violet" />
+                <TotalFormCard
+                  data={dataReports.form_BM01}
+                  color="blue"
+                  src="class-leader.svg"
+                />
+                <TotalFormCard
+                  data={dataReports.form_BM02}
+                  color="green"
+                  src="assistant.svg"
+                />
+                <TotalFormCard
+                  data={dataReports.form_BM03}
+                  color="orange"
+                  src="admission.svg"
+                />
+                <TotalFormCard
+                  data={dataReports.form_BM04}
+                  color="red"
+                  src="qae.svg"
+                />
+                <TotalFormCard
+                  data={dataReports.form_BM05}
+                  color="violet"
+                  src="activity.svg"
+                />
               </div>
             </>
           )}
@@ -330,20 +354,31 @@ const Home = () => {
                 <hr />
                 {dataReports && (
                   <>
-                    <div className="h-full px-3 flex flex-col items-center justify-center gap-[18px]">
-                      <PercentForms data={dataReports.form_BM01} color="blue" />
+                    <div className="h-full px-3 flex flex-col items-center justify-center gap-[14px]">
+                      <PercentForms
+                        data={dataReports.form_BM01}
+                        color="blue"
+                        src="class-leader.svg"
+                      />
                       <PercentForms
                         data={dataReports.form_BM02}
                         color="green"
+                        src="assistant.svg"
                       />
                       <PercentForms
                         data={dataReports.form_BM03}
                         color="orange"
+                        src="admission.svg"
                       />
-                      <PercentForms data={dataReports.form_BM04} color="red" />
+                      <PercentForms
+                        data={dataReports.form_BM04}
+                        color="red"
+                        src="qae.svg"
+                      />
                       <PercentForms
                         data={dataReports.form_BM05}
                         color="violet"
+                        src="activity.svg"
                       />
                     </div>
                   </>
