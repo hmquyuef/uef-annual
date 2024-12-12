@@ -39,10 +39,9 @@ export interface WorkloadTypesResponse {
 }
 
 export async function getWorkloadTypes(
-  start: number,
-  end: number
+  yearId: string
 ): Promise<WorkloadTypesResponse> {
-  let url = `api/workload/types?StartTime=${start}&EndTime=${end}`;
+  let url = `api/workload/types?Years=${yearId}`;
   const response = await apiClient.get<WorkloadTypesResponse>(url);
   return response.data;
 }

@@ -105,9 +105,6 @@ const BM05 = () => {
   const [maxEndDate, setMaxEndDate] = useState<number | 0>(0);
   const [advanced, setAdvanced] = useState(false);
   const [isShowPdf, setIsShowPdf] = useState(false);
-  const [selectedDates, setSelectedDates] = useState<
-    [Dayjs | null, Dayjs | null] | null
-  >(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [role, setRole] = useState<RoleItem>();
   const [isBlock, setIsBlock] = useState(false);

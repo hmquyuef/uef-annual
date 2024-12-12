@@ -35,6 +35,7 @@ import { TableRowSelection } from "antd/es/table/interface";
 import { Key, useCallback, useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import Cookies from "js-cookie";
+import Messages from "@/utility/Messages";
 
 const Roles = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
@@ -241,7 +242,7 @@ const Roles = () => {
       setNotificationOpen(true);
       setStatus("error");
       setMessage("Thông báo");
-      setDescription("Đã có lỗi xảy ra!");
+      setDescription(Messages.ERROR);
     }
   };
   const handleDelete = useCallback(async () => {
@@ -262,6 +263,7 @@ const Roles = () => {
       console.error("Error deleting selected items:", error);
     }
   }, [selectedRowKeys]);
+
   const getDisplayRole = async (name: string) => {
     const response = await getRoleByName(name);
     setRole(response.items[0]);

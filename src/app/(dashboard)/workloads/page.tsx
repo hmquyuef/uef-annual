@@ -8,12 +8,17 @@ import NotFound from "@/components/NotFound";
 import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import {
+  getWorkloadGroups,
+  WorkloadGroupItem,
+} from "@/services/workloads/groupsServices";
+import {
   AddUpdateWorkloadType,
   getWorkloadTypes,
   putUpdateWorkloadType,
   WorkloadTypeItem,
 } from "@/services/workloads/typesServices";
 import PageTitles from "@/utility/Constraints";
+import Messages from "@/utility/Messages";
 import { convertTimestampToDayMonth } from "@/utility/Utilities";
 import {
   CheckOutlined,
@@ -28,6 +33,7 @@ import {
   Breadcrumb,
   Button,
   Card,
+  Divider,
   Select,
   Spin,
   Statistic,
@@ -44,8 +50,11 @@ import CountUp from "react-countup";
 const Workloads = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [defaultYears, setDefaultYears] = useState<any>();
+  const [selectedKey, setSelectedKey] = useState<any>();
   const [userName, setUserName] = useState<string | null>(null);
   const [types, setTypes] = useState<WorkloadTypeItem[]>([]);
+  const [groups, setGroups] = useState<WorkloadGroupItem[]>([]);
   const [isOpened, setIsOpened] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [isAccess, setIsAccess] = useState(true);
@@ -60,21 +69,31 @@ const Workloads = () => {
     Partial<WorkloadTypeItem> | undefined
   >(undefined);
   const [role, setRole] = useState<RoleItem>();
-  const [dataCategories, setDataCategories] = useState<string[]>([]);
-  const [startIndex, setStartIndex] = useState<number>(0);
-  const [endIndex, setEndIndex] = useState<number>(0);
-  const [defaultValues, setDefaultValues] = useState<string>("7");
-  const [startTime, setStartTime] = useState<number>(0);
-  const [endTime, setEndTime] = useState<number>(0);
 
-  const getListWorkloadTypes = async () => {
-    const response = await getWorkloadTypes(startTime, endTime);
+  const getDefaultYears = async () => {
+    setLoading(true);
+    const response = await getAllSchoolYears();
+    setDefaultYears(response.items);
+    const yearId = response.items.filter((x: any) => x.isDefault)[0] as any;
+    setSelectedKey(yearId);
+    await Promise.all([
+      getListWorkloadTypes(yearId.id),
+      getListWorkloadGroups(),
+    ]);
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  };
+
+  const getListWorkloadTypes = async (yearId: string) => {
+    const response = await getWorkloadTypes(yearId);
     setTypes(response.items);
-    response.items.forEach((item) => {
-      setDataCategories(
-        item.infoChart.categories.map((i) => convertTimestampToDayMonth(i))
-      );
-    });
+  };
+
+  const getListWorkloadGroups = async () => {
+    const response = await getWorkloadGroups();
+    setGroups(response.items);
   };
 
   const formatter: StatisticProps["formatter"] = (value) => (
@@ -87,7 +106,7 @@ const Workloads = () => {
     setSelectedItem(type);
     setTitle(`Chỉnh sửa ${type.name}`);
     setIsOpened(true);
-    await getListWorkloadTypes();
+    await getListWorkloadTypes(selectedKey);
   };
 
   const actions = (type: WorkloadTypeItem): React.ReactNode[] => [
@@ -175,47 +194,25 @@ const Workloads = () => {
       setNotificationOpen(true);
       setStatus("error");
       setMessage("Thông báo");
-      setDescription("Đã có lỗi xảy ra!");
+      setDescription(Messages.ERROR);
     }
+  };
+
+  const handleChangeYear = async (value: any) => {
+    setLoading(true);
+    const temp = defaultYears.filter((x: any) => x.id === value)[0] as any;
+    setSelectedKey(temp);
+    await Promise.all([getListWorkloadTypes(temp.id), getListWorkloadGroups()]);
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+    }, 500);
+    return () => clearTimeout(timeoutId);
   };
 
   const getDisplayRole = async (name: string) => {
     const response = await getRoleByName(name);
     setRole(response.items[0]);
   };
-
-  const handleChange = (value: string) => {
-    setDefaultValues(value);
-  };
-
-  const updatedDataCategories = useMemo(async () => {
-    const formatType = Number(defaultValues) >= 7 ? "days" : "months";
-    const now = moment(new Date()).format("DD/MM/YYYY");
-    const unixNow = moment(now, "DD/MM/YYYY").unix();
-    const timeEnd = moment()
-      .subtract(Number(defaultValues), formatType)
-      .format("DD/MM/YYYY");
-    const unixEnd = moment(timeEnd, "DD/MM/YYYY").unix();
-    setStartTime(unixEnd);
-    setEndTime(unixNow);
-  }, [defaultValues]);
-
-  useEffect(() => {
-    const dateIndices = dataCategories.reduce<Record<string, number>>(
-      (acc, date, index) => {
-        acc[date] = index;
-        return acc;
-      },
-      {}
-    );
-    const formatType = Number(defaultValues) >= 7 ? "days" : "months";
-    const now = moment(new Date()).format("DD/MM");
-    const end = moment()
-      .subtract(Number(defaultValues), formatType)
-      .format("DD/MM");
-    setStartIndex(dateIndices[end]);
-    setEndIndex(dateIndices[now]);
-  }, [defaultValues, dataCategories]);
 
   useEffect(() => {
     setLoading(true);
@@ -235,15 +232,11 @@ const Workloads = () => {
         setUserName(decodedToken.sub);
       }
     }
-    const fetchData = async () => {
-      updatedDataCategories;
-      await getListWorkloadTypes();
-    };
-    fetchData();
+    getDefaultYears();
     setTimeout(() => {
       setLoading(false);
     }, 500);
-  }, [updatedDataCategories]);
+  }, []);
 
   return (
     <div>
@@ -255,7 +248,16 @@ const Workloads = () => {
               title: (
                 <>
                   <HomeOutlined />
-                  <span>Trang chủ</span>
+                  <span>{Messages.BREAD_CRUMB_HOME}</span>
+                </>
+              ),
+            },
+            {
+              href: "",
+              title: (
+                <>
+                  <HomeOutlined />
+                  <span>{Messages.BREAD_CRUMB_WORKLOAD}</span>
                 </>
               ),
             },
@@ -263,126 +265,123 @@ const Workloads = () => {
               title: (
                 <>
                   <ProfileOutlined />
-                  <span>Danh sách biểu mẫu</span>
+                  <span>{Messages.BREAD_CRUMB_WORKLOAD_TYPES}</span>
                 </>
               ),
             },
           ]}
         />
       </div>
-      <div className="mb-4">
-        <span>Thống kê biểu đồ trong </span>
-        <Select
-          defaultValue={defaultValues}
-          style={{ width: 120 }}
-          onChange={handleChange}
-          options={[
-            { value: "7", label: "7 ngày" },
-            { value: "14", label: "14 ngày" },
-            { value: "1", label: "1 tháng" },
-            { value: "3", label: "3 tháng" },
-            { value: "6", label: "6 tháng" },
-          ]}
-        />
+      <div className="grid grid-cols-6 gap-5 mb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-[14px] font-medium text-neutral-500">
+            Năm học:
+          </span>
+          <Select
+            showSearch
+            optionFilterProp="label"
+            filterSort={(optionA, optionB) =>
+              (optionA?.title ?? "").localeCompare(optionB?.title ?? "")
+            }
+            options={defaultYears?.map((year: any) => ({
+              value: year.id,
+              label: year.title,
+            }))}
+            //
+            value={selectedKey && selectedKey.title}
+            onChange={(value) => handleChangeYear(value)}
+            className="w-fit"
+          />
+        </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {types &&
-          types.map((type) => (
-            <Card
-              key={type.id}
-              actions={actions(type)}
-              size="small"
-              className="hover:shadow-lg transition-transform duration-300 hover:-translate-y-2"
-            >
-              <div
-                onClick={() => {
-                  if (userName && type.emails?.includes(userName)) {
-                    router.push("/workloads/" + type.href);
-                  } else {
-                    setIsAccess(false);
-                    setIsOpened(true);
-                    setTitle("");
-                  }
-                }}
-                className="cursor-pointer"
+      {groups &&
+        groups.map((group) => (
+          <>
+            <div className="mb-4">
+              <Divider
+                orientation="left"
+                className="uppercase"
+                style={{ borderColor: "#1677FF", color: "#1677FF" }}
               >
-                <Card.Meta
-                  title={
-                    <div className="flex justify-between items-center gap-2">
-                      <p>{type.shortName}</p>
-                      {userName && type.emails?.includes(userName) ? (
-                        <>
-                          <Tooltip
-                            placement="top"
-                            title={"Đã được cấp quyền"}
-                            arrow={true}
-                          >
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              shape="circle"
-                              style={{
-                                backgroundColor: "#52c41a",
-                                borderColor: "#52c41a",
-                                color: "#fff",
-                              }}
-                              icon={<CheckOutlined />}
-                            ></Button>
-                          </Tooltip>
-                        </>
-                      ) : (
-                        <></>
-                      )}
-                    </div>
-                  }
-                  className="h-fit"
-                  description={
-                    <div>
-                      <div>
-                        <p className="whitespace-wrap text-ellipsis">
-                          Biểu mẫu:{" "}
-                          <span className="font-medium text-neutral-600">
-                            {type.name}
-                          </span>
-                        </p>
-                        <p>
-                          Thuộc nhóm:{" "}
-                          <span className="font-medium text-neutral-600">
-                            {type.groupName}
-                          </span>
-                        </p>
-                      </div>
-                      <div className="mb-[-40px]">
-                        <span>Biểu đồ thêm mới dữ liệu</span>
-                        {loading ? (
-                          <>
-                            <Spin tip="Đang tải dữ liệu...">
-                              {<div className="p-[80px]" />}
-                            </Spin>
-                          </>
-                        ) : (
-                          <>
-                            <div className="mt-[-15px]">
-                              <LineChart
-                                start={startIndex}
-                                end={endIndex}
-                                categories={dataCategories.slice(
-                                  startIndex,
-                                  endIndex + 1
+                {group.name}
+              </Divider>
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 px-2">
+                {types &&
+                  types
+                    .filter((x) => x.workloadGroupId === group.id)
+                    .map((type) => (
+                      <Card
+                        key={type.id}
+                        actions={actions(type)}
+                        size="small"
+                        className="hover:shadow-lg transition-transform duration-300 hover:-translate-y-2"
+                      >
+                        <div
+                          onClick={() => {
+                            if (userName && type.emails?.includes(userName)) {
+                              router.push("/workloads/" + type.href);
+                            } else {
+                              setIsAccess(false);
+                              setIsOpened(true);
+                              setTitle("");
+                            }
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <Card.Meta
+                            title={
+                              <div className="flex justify-between items-center gap-2">
+                                <p>{type.shortName}</p>
+                                {userName && type.emails?.includes(userName) ? (
+                                  <>
+                                    <Tooltip
+                                      placement="top"
+                                      title={"Đã được cấp quyền"}
+                                      arrow={true}
+                                    >
+                                      <Button
+                                        size="small"
+                                        variant="outlined"
+                                        shape="circle"
+                                        style={{
+                                          backgroundColor: "#52c41a",
+                                          borderColor: "#52c41a",
+                                          color: "#fff",
+                                        }}
+                                        icon={<CheckOutlined />}
+                                      ></Button>
+                                    </Tooltip>
+                                  </>
+                                ) : (
+                                  <></>
                                 )}
-                                seriesData={type.infoChart.series}
-                              />
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  }
-                />
+                              </div>
+                            }
+                            className="h-fit"
+                            description={
+                              <div className="min-h-16">
+                                <p className="whitespace-wrap text-ellipsis">
+                                  Biểu mẫu:{" "}
+                                  <span className="font-medium text-neutral-600">
+                                    {type.name}
+                                  </span>
+                                </p>
+                                <p>
+                                  Thuộc nhóm:{" "}
+                                  <span className="font-medium text-neutral-600">
+                                    {type.groupName}
+                                  </span>
+                                </p>
+                              </div>
+                            }
+                          />
+                        </div>
+                      </Card>
+                    ))}
               </div>
-            </Card>
-          ))}
-      </div>
+            </div>
+          </>
+        ))}
       <CustomNotification
         message={message}
         description={description}

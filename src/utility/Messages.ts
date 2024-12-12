@@ -2,6 +2,9 @@ enum Messages {
     BREAD_CRUMB_HOME = "Trang chủ",
     BREAD_CRUMB_SEARCH = "Tra cứu thông tin nhân sự",
     SUMMARY_ACTIVITIES = "Tổng kết hoạt động",
+    BREAD_CRUMB_WORKLOAD = "Khối lượng công tác",
+    BREAD_CRUMB_WORKLOAD_TYPES = "Danh sách biểu mẫu",
+    BREAD_CRUMB_WORKLOAD_GROUPS = "Quản lý nhóm biểu mẫu",
 
     NO_DATA = "Không có dữ liệu!",
 
