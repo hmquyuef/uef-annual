@@ -1,10 +1,10 @@
 "use client";
 
-import LineChart from "@/components/charts/LineChart";
 import CustomModal from "@/components/CustomModal";
 import CustomNotification from "@/components/CustomNotification";
 import FormWorkloadType from "@/components/forms/workloads/formWorkloadType";
 import NotFound from "@/components/NotFound";
+import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
 import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import {
@@ -14,18 +14,19 @@ import {
 import {
   AddUpdateWorkloadType,
   getWorkloadTypes,
+  postAddWorkloadType,
   putUpdateWorkloadType,
   WorkloadTypeItem,
 } from "@/services/workloads/typesServices";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
-import { convertTimestampToDayMonth } from "@/utility/Utilities";
 import {
   CheckOutlined,
   EditOutlined,
   HomeOutlined,
   InfoCircleOutlined,
   PieChartOutlined,
+  PlusOutlined,
   ProfileOutlined,
   SafetyOutlined,
 } from "@ant-design/icons";
@@ -34,27 +35,31 @@ import {
   Button,
   Card,
   Divider,
+  Input,
   Select,
-  Spin,
   Statistic,
   StatisticProps,
   Tooltip,
 } from "antd";
+import { SearchProps } from "antd/es/input";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
-import moment from "moment";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import CountUp from "react-countup";
 
 const Workloads = () => {
+  const { Search } = Input;
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [defaultYears, setDefaultYears] = useState<any>();
   const [selectedKey, setSelectedKey] = useState<any>();
+  const [selectedKeyGroup, setSelectedKeyGroup] = useState<any>();
   const [userName, setUserName] = useState<string | null>(null);
+  const [tempTypes, setTempTypes] = useState<WorkloadTypeItem[]>([]);
   const [types, setTypes] = useState<WorkloadTypeItem[]>([]);
   const [groups, setGroups] = useState<WorkloadGroupItem[]>([]);
+  const [tempGroups, setTempGroups] = useState<WorkloadGroupItem[]>([]);
   const [isOpened, setIsOpened] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [isAccess, setIsAccess] = useState(true);
@@ -73,13 +78,14 @@ const Workloads = () => {
   const getDefaultYears = async () => {
     setLoading(true);
     const response = await getAllSchoolYears();
-    setDefaultYears(response.items);
     const yearId = response.items.filter((x: any) => x.isDefault)[0] as any;
+    setDefaultYears(response.items);
     setSelectedKey(yearId);
     await Promise.all([
       getListWorkloadTypes(yearId.id),
       getListWorkloadGroups(),
     ]);
+
     const timeoutId = setTimeout(() => {
       setLoading(false);
     }, 500);
@@ -89,16 +95,33 @@ const Workloads = () => {
   const getListWorkloadTypes = async (yearId: string) => {
     const response = await getWorkloadTypes(yearId);
     setTypes(response.items);
+    setTempTypes(response.items);
+    setNotificationOpen(false);
   };
 
   const getListWorkloadGroups = async () => {
     const response = await getWorkloadGroups();
     setGroups(response.items);
+    setTempGroups(response.items);
   };
 
   const formatter: StatisticProps["formatter"] = (value) => (
     <CountUp end={value as number} duration={3} separator="," />
   );
+
+  const onSearch: SearchProps["onSearch"] = (value) => {
+    if (value === "") setTempTypes(types || []);
+
+    const filteredData = types.filter((item) => {
+      const matchesName =
+        item.name.toLowerCase().includes(value.toLowerCase()) ||
+        item.shortName.toLowerCase().includes(value.toLowerCase()) ||
+        item.groupName.toLowerCase().includes(value.toLowerCase());
+
+      return matchesName;
+    });
+    setTempTypes(filteredData || []);
+  };
 
   const handleEllipsis = async (type: WorkloadTypeItem) => {
     setMode("edit");
@@ -106,7 +129,6 @@ const Workloads = () => {
     setSelectedItem(type);
     setTitle(`Chỉnh sửa ${type.name}`);
     setIsOpened(true);
-    await getListWorkloadTypes(selectedKey);
   };
 
   const actions = (type: WorkloadTypeItem): React.ReactNode[] => [
@@ -182,14 +204,21 @@ const Workloads = () => {
           formData
         );
         if (response) {
-          setNotificationOpen(true);
-          setStatus("success");
-          setMessage("Thông báo");
           setDescription("Cập nhật biểu mẫu thành công!");
         }
+      } else {
+        const response = await postAddWorkloadType(formData);
+        if (response) {
+          setDescription("Khởi tạo biểu mẫu thành công!");
+        }
       }
+      setNotificationOpen(true);
+
+      setStatus("success");
+      setMessage("Thông báo");
       setIsOpened(false);
       setSelectedItem(undefined);
+      await getListWorkloadTypes(selectedKey.id);
     } catch (error) {
       setNotificationOpen(true);
       setStatus("error");
@@ -207,6 +236,13 @@ const Workloads = () => {
       setLoading(false);
     }, 500);
     return () => clearTimeout(timeoutId);
+  };
+
+  const handleChangeGroup = async (value: any) => {
+    if (value === undefined) return setTempGroups(groups);
+    const temp = groups.filter((x) => x.id === value);
+    setTempGroups(temp);
+    setSelectedKeyGroup(temp);
   };
 
   const getDisplayRole = async (name: string) => {
@@ -239,7 +275,7 @@ const Workloads = () => {
   }, []);
 
   return (
-    <div>
+    <section>
       <div className="mb-3">
         <Breadcrumb
           items={[
@@ -272,11 +308,33 @@ const Workloads = () => {
           ]}
         />
       </div>
-      <div className="grid grid-cols-6 gap-5 mb-3">
-        <div className="flex items-center gap-2">
-          <span className="text-[14px] font-medium text-neutral-500">
-            Năm học:
-          </span>
+      <div className="grid grid-cols-9 gap-5 mb-3">
+        <div className="col-span-2 flex flex-col justify-center gap-1">
+          <span className="text-[14px] text-neutral-500">Tìm kiếm:</span>
+          <Search placeholder=" " onSearch={onSearch} enterButton />
+        </div>
+        <div className="flex flex-col justify-center gap-1">
+          <span className="text-[14px] text-neutral-500">Nhóm:</span>
+          <Select
+            allowClear
+            showSearch
+            placeholder="Tất cả nhóm"
+            optionFilterProp="label"
+            filterSort={(optionA, optionB) =>
+              (optionA?.label ?? "").localeCompare(optionB?.label ?? "")
+            }
+            options={groups?.map((group: any) => ({
+              value: group.id,
+              label: group.name,
+            }))}
+            //
+            value={selectedKeyGroup && selectedKeyGroup.name}
+            onChange={(value) => handleChangeGroup(value)}
+            className="w-full"
+          />
+        </div>
+        <div className="flex flex-col justify-center gap-1">
+          <span className="text-[14px] text-neutral-500">Năm học:</span>
           <Select
             showSearch
             optionFilterProp="label"
@@ -290,98 +348,122 @@ const Workloads = () => {
             //
             value={selectedKey && selectedKey.title}
             onChange={(value) => handleChangeYear(value)}
-            className="w-fit"
+            className="w-full"
           />
         </div>
       </div>
-      {groups &&
-        groups.map((group) => (
-          <>
-            <div className="mb-4">
-              <Divider
-                orientation="left"
-                className="uppercase"
-                style={{ borderColor: "#1677FF", color: "#1677FF" }}
-              >
-                {group.name}
-              </Divider>
-              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 px-2">
-                {types &&
-                  types
-                    .filter((x) => x.workloadGroupId === group.id)
-                    .map((type) => (
-                      <Card
-                        key={type.id}
-                        actions={actions(type)}
-                        size="small"
-                        className="hover:shadow-lg transition-transform duration-300 hover:-translate-y-2"
-                      >
-                        <div
-                          onClick={() => {
-                            if (userName && type.emails?.includes(userName)) {
-                              router.push("/workloads/" + type.href);
-                            } else {
-                              setIsAccess(false);
-                              setIsOpened(true);
-                              setTitle("");
-                            }
-                          }}
-                          className="cursor-pointer"
+      <hr className="mb-3" />
+      {loading ? (
+        <>
+          <LoadingSkeleton />
+        </>
+      ) : (
+        <>
+          {tempGroups &&
+            tempGroups.map((group) => (
+              <>
+                <Divider
+                  orientation="left"
+                  className="uppercase"
+                  style={{ borderColor: "#1677FF", color: "#1677FF" }}
+                >
+                  {group.name}
+                </Divider>
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 px-2 mb-3">
+                  {tempTypes &&
+                    tempTypes
+                      .filter((x) => x.workloadGroupId === group.id)
+                      .map((type) => (
+                        <Card
+                          key={type.id}
+                          actions={actions(type)}
+                          size="small"
+                          className="hover:shadow-lg transition-transform duration-300 hover:-translate-y-2"
                         >
-                          <Card.Meta
-                            title={
-                              <div className="flex justify-between items-center gap-2">
-                                <p>{type.shortName}</p>
-                                {userName && type.emails?.includes(userName) ? (
-                                  <>
-                                    <Tooltip
-                                      placement="top"
-                                      title={"Đã được cấp quyền"}
-                                      arrow={true}
-                                    >
-                                      <Button
-                                        size="small"
-                                        variant="outlined"
-                                        shape="circle"
-                                        style={{
-                                          backgroundColor: "#52c41a",
-                                          borderColor: "#52c41a",
-                                          color: "#fff",
-                                        }}
-                                        icon={<CheckOutlined />}
-                                      ></Button>
-                                    </Tooltip>
-                                  </>
-                                ) : (
-                                  <></>
-                                )}
-                              </div>
-                            }
-                            className="h-fit"
-                            description={
-                              <div className="min-h-16">
-                                <p className="whitespace-wrap text-ellipsis">
-                                  Biểu mẫu:{" "}
-                                  <span className="font-medium text-neutral-600">
-                                    {type.name}
-                                  </span>
-                                </p>
-                                <p>
-                                  Thuộc nhóm:{" "}
-                                  <span className="font-medium text-neutral-600">
-                                    {type.groupName}
-                                  </span>
-                                </p>
-                              </div>
-                            }
-                          />
-                        </div>
-                      </Card>
-                    ))}
-              </div>
-            </div>
-          </>
-        ))}
+                          <div
+                            onClick={() => {
+                              if (userName && type.emails?.includes(userName)) {
+                                router.push("/workloads/" + type.href);
+                              } else {
+                                setIsAccess(false);
+                                setIsOpened(true);
+                                setTitle("");
+                              }
+                            }}
+                            className="cursor-pointer"
+                          >
+                            <Card.Meta
+                              title={
+                                <div className="flex justify-between items-center gap-2">
+                                  <p className="whitespace-nowrap overflow-hidden text-ellipsis">
+                                    {type.shortName}
+                                  </p>
+                                  {userName &&
+                                  type.emails?.includes(userName) ? (
+                                    <>
+                                      <Tooltip
+                                        placement="top"
+                                        title={"Đã được cấp quyền"}
+                                        arrow={true}
+                                      >
+                                        <Button
+                                          size="small"
+                                          variant="outlined"
+                                          shape="circle"
+                                          style={{
+                                            backgroundColor: "#52c41a",
+                                            borderColor: "#52c41a",
+                                            color: "#fff",
+                                          }}
+                                          icon={<CheckOutlined />}
+                                        ></Button>
+                                      </Tooltip>
+                                    </>
+                                  ) : (
+                                    <></>
+                                  )}
+                                </div>
+                              }
+                              className="h-fit"
+                              description={
+                                <div className="min-h-16">
+                                  <p className="whitespace-wrap text-ellipsis">
+                                    Biểu mẫu:{" "}
+                                    <span className="font-medium text-neutral-600">
+                                      {type.name}
+                                    </span>
+                                  </p>
+                                  <p>
+                                    Thuộc nhóm:{" "}
+                                    <span className="font-medium text-neutral-600">
+                                      {type.groupName}
+                                    </span>
+                                  </p>
+                                </div>
+                              }
+                            />
+                          </div>
+                        </Card>
+                      ))}
+                  <Button
+                    color="primary"
+                    variant="filled"
+                    icon={<PlusOutlined />}
+                    onClick={() => {
+                      setMode("add");
+                      setTitle(`Thêm mới biểu mẫu thuộc nhóm ${group.name}`);
+                      setSelectedKeyGroup(group.id);
+                      setIsOpened(true);
+                    }}
+                    className="w-fit"
+                  >
+                    Thêm mới
+                  </Button>
+                </div>
+              </>
+            ))}
+        </>
+      )}
       <CustomNotification
         message={message}
         description={description}
@@ -405,7 +487,14 @@ const Workloads = () => {
           setMode("add");
         }}
         bodyContent={
-          isAccess ? (
+          mode === "add" ? (
+            <FormWorkloadType
+              onSubmit={handleSubmit}
+              initialData={{}}
+              workloadGroupId={selectedKeyGroup}
+              mode={mode}
+            />
+          ) : isAccess ? (
             <>
               <FormWorkloadType
                 onSubmit={handleSubmit}
@@ -420,7 +509,7 @@ const Workloads = () => {
           )
         }
       />
-    </div>
+    </section>
   );
 };
 

@@ -1,5 +1,8 @@
 "use client";
 
+import CustomModal from "@/components/CustomModal";
+import CustomNotification from "@/components/CustomNotification";
+import FormWorkloadGroup from "@/components/forms/workloads/formWorkloadGroup";
 import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
 import {
   deleteWorkloadGroup,
@@ -8,6 +11,8 @@ import {
   putUpdateWorkloadGroup,
   WorkloadGroupItem,
 } from "@/services/workloads/groupsServices";
+import PageTitles from "@/utility/Constraints";
+import Messages from "@/utility/Messages";
 import { convertTimestampToDate } from "@/utility/Utilities";
 import {
   CheckCircleOutlined,
@@ -15,32 +20,24 @@ import {
   DeleteOutlined,
   FileDoneOutlined,
   HomeOutlined,
-  PlusOutlined,
-  ProfileOutlined,
+  PlusOutlined
 } from "@ant-design/icons";
 import {
   Breadcrumb,
   Button,
-  Dropdown,
   Empty,
   GetProps,
   Input,
-  MenuProps,
   PaginationProps,
   Table,
   TableColumnsType,
   Tag,
-  Tooltip,
+  Tooltip
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
-import { Key, useCallback, useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
-import PageTitles from "@/utility/Constraints";
-import CustomNotification from "@/components/CustomNotification";
-import CustomModal from "@/components/CustomModal";
-import FormWorkloadGroup from "@/components/forms/workloads/formWorkloadGroup";
-import Messages from "@/utility/Messages";
+import { Key, useCallback, useEffect, useState } from "react";
 type SearchProps = GetProps<typeof Input.Search>;
 
 const WorkloadGroups = () => {
@@ -87,7 +84,7 @@ const WorkloadGroups = () => {
       title: "MÔ TẢ",
       dataIndex: "description",
       key: "description",
-      className: "max-w-24",
+      className: "max-w-32",
     },
     {
       title: (

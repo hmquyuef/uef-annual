@@ -309,7 +309,7 @@ const BM04 = () => {
       sorter: (a, b) => a.entryDate - b.entryDate,
       render: (fromDate: number) =>
         fromDate ? convertTimestampToDate(fromDate) : "",
-      className: "text-center w-[100px]",
+      className: "text-center w-[80px]",
     },
     {
       title: (

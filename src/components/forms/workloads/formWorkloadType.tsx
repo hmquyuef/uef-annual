@@ -9,11 +9,12 @@ import {
   WorkloadGroupResponse,
 } from "@/services/workloads/groupsServices";
 import { AddUpdateWorkloadType } from "@/services/workloads/typesServices";
-import { Input, Select, SelectProps, Tag } from "antd";
+import { Input, InputNumber, Select, SelectProps, Tag } from "antd";
 import { FormEvent, useEffect, useState } from "react";
 interface FormWorkloadTypeProps {
   onSubmit: (formData: Partial<AddUpdateWorkloadType>) => void;
   initialData?: Partial<AddUpdateWorkloadType>;
+  workloadGroupId?: string;
   mode: "add" | "edit";
 }
 
@@ -22,15 +23,19 @@ type TagRender = SelectProps["tagRender"];
 const FormWorkloadType: React.FC<FormWorkloadTypeProps> = ({
   onSubmit,
   initialData,
+  workloadGroupId,
   mode,
 }) => {
   const [name, setName] = useState("");
   const [shortName, setShortName] = useState("");
   const [href, setHref] = useState("");
+  const [position, setPosition] = useState<number | 0>(0);
   const [workloadGroups, setWorkloadGroups] = useState<
     WorkloadGroupResponse | undefined
   >(undefined);
-  const [selectedGroupId, setSelectedGroupId] = useState<string>("");
+  const [selectedGroupId, setSelectedGroupId] = useState<string>(
+    workloadGroupId || ""
+  );
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [usersHRM, setUsersHRM] = useState<UsersFromHRMResponse | undefined>(
     undefined
@@ -84,22 +89,24 @@ const FormWorkloadType: React.FC<FormWorkloadTypeProps> = ({
       emails: selectedItems.join(","),
       isActived: true,
     };
-    console.log("formData :>> ", formData);
     onSubmit(formData);
   };
   useEffect(() => {
+    console.log("initialData :>> ", initialData);
     const loadUsers = async () => {
       if (mode === "edit" && initialData !== undefined) {
         setName(initialData.name || "");
         setShortName(initialData.shortName || "");
         setHref(initialData.href || "");
+        setPosition(initialData.position || 0);
         setSelectedGroupId(initialData.workloadGroupId || "");
         setSelectedItems(initialData.emails?.split(",") || []);
       } else {
         setName("");
         setShortName("");
         setHref("");
-        setSelectedGroupId("");
+        setPosition(0);
+        setSelectedGroupId(workloadGroupId || "");
         setSelectedItems([]);
       }
     };
@@ -130,9 +137,7 @@ const FormWorkloadType: React.FC<FormWorkloadTypeProps> = ({
       <div className="grid grid-cols-6 gap-5 mb-4">
         <div className="col-span-3">
           <div className="flex flex-col gap-1">
-            <p className="font-medium text-neutral-600">
-              Thuộc nhóm <span className="text-red-500">(*)</span>
-            </p>
+            <p className="font-medium text-neutral-600">Thuộc nhóm</p>
             <Select
               showSearch
               value={selectedGroupId}
@@ -152,11 +157,20 @@ const FormWorkloadType: React.FC<FormWorkloadTypeProps> = ({
             />
           </div>
         </div>
-        <div className="col-span-3">
-          <div className="flex flex-col gap-1">
-            <p className="font-medium text-neutral-600">Đường dẫn</p>
-            <Input value={href} onChange={(e) => setHref(e.target.value)} />
-          </div>
+        <div className="col-span-2 flex flex-col gap-1">
+          <p className="font-medium text-neutral-600">Đường dẫn</p>
+          <Input value={href} onChange={(e) => setHref(e.target.value)} />
+        </div>
+        <div className="flex flex-col gap-1">
+          <p className="font-medium text-neutral-600">Vị trí</p>
+          <InputNumber
+            min={0}
+            value={position}
+            onChange={(value) => {
+              setPosition(value || 0);
+            }}
+            style={{ width: "100%" }}
+          />
         </div>
       </div>
       <div className="flex flex-col gap-1 mb-4">

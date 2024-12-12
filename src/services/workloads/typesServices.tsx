@@ -20,6 +20,7 @@ export interface AddUpdateWorkloadType {
   name: string;
   shortName: string;
   href: string;
+  position: number;
   workloadGroupId: string;
   emails: string;
   isActived: boolean;
