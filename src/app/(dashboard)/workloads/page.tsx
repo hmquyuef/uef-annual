@@ -385,6 +385,7 @@ const Workloads = () => {
                               if (userName && type.emails?.includes(userName)) {
                                 router.push("/workloads/" + type.href);
                               } else {
+                                setMode("edit");
                                 setIsAccess(false);
                                 setIsOpened(true);
                                 setTitle("");
@@ -445,20 +446,26 @@ const Workloads = () => {
                           </div>
                         </Card>
                       ))}
-                  <Button
-                    color="primary"
-                    variant="filled"
-                    icon={<PlusOutlined />}
-                    onClick={() => {
-                      setMode("add");
-                      setTitle(`Thêm mới biểu mẫu thuộc nhóm ${group.name}`);
-                      setSelectedKeyGroup(group.id);
-                      setIsOpened(true);
-                    }}
-                    className="w-fit"
-                  >
-                    Thêm mới
-                  </Button>
+                  {role && role.name === "admin" && (
+                    <>
+                      <Button
+                        color="primary"
+                        variant="filled"
+                        icon={<PlusOutlined />}
+                        onClick={() => {
+                          setMode("add");
+                          setTitle(
+                            `Thêm mới biểu mẫu thuộc nhóm ${group.name}`
+                          );
+                          setSelectedKeyGroup(group.id);
+                          setIsOpened(true);
+                        }}
+                        className="w-fit"
+                      >
+                        Thêm mới
+                      </Button>
+                    </>
+                  )}
                 </div>
               </>
             ))}
