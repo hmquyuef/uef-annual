@@ -183,6 +183,7 @@ const Workloads = () => {
             if (userName && type.emails?.includes(userName)) {
               router.push("/workloads/" + type.href.toLowerCase());
             } else {
+              setMode("edit");
               setIsAccess(false);
               setIsOpened(true);
               setTitle("");
