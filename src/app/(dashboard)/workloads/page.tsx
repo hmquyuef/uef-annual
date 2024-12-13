@@ -85,7 +85,6 @@ const Workloads = () => {
       getListWorkloadTypes(yearId.id),
       getListWorkloadGroups(),
     ]);
-
     const timeoutId = setTimeout(() => {
       setLoading(false);
     }, 500);
@@ -131,42 +130,32 @@ const Workloads = () => {
     setIsOpened(true);
   };
 
-  const actions = (type: WorkloadTypeItem): React.ReactNode[] => [
-    <div
-      key="report"
-      onClick={() => {
-        if (userName && type.emails?.includes(userName)) {
-          router.push("/workloads/" + type.href.toLowerCase());
-        } else {
-          setIsAccess(false);
-          setIsOpened(true);
-          setTitle("");
-        }
-      }}
-      className="flex justify-center gap-1 text-blue-500"
-    >
-      <PieChartOutlined />
-      <Statistic
-        value={type.totalItems}
-        formatter={formatter}
-        suffix="sự kiện"
-        valueStyle={{ fontSize: "14px", color: "rgb(59 130 246)" }}
-      />
-    </div>,
-    <div
-      key="report-approved"
-      className="flex justify-center gap-1 text-green-500"
-    >
-      <SafetyOutlined />
-      <Statistic
-        value={type.totalApprovedItems}
-        formatter={formatter}
-        suffix="đã duyệt"
-        valueStyle={{ fontSize: "14px", color: "rgb(34 197 94)" }}
-      />
-    </div>,
-    role && role.name === "admin" ? (
-      <>
+  const actions = (type: WorkloadTypeItem): React.ReactNode[] => {
+    const actionItems: React.ReactNode[] = [
+      <div key="report" className="flex justify-center gap-1 text-blue-500">
+        <PieChartOutlined />
+        <Statistic
+          value={type.totalItems}
+          formatter={formatter}
+          suffix="sự kiện"
+          valueStyle={{ fontSize: "14px", color: "rgb(59 130 246)" }}
+        />
+      </div>,
+      <div
+        key="report-approved"
+        className="flex justify-center gap-1 text-green-500"
+      >
+        <SafetyOutlined />
+        <Statistic
+          value={type.totalApprovedItems}
+          formatter={formatter}
+          suffix="đã duyệt"
+          valueStyle={{ fontSize: "14px", color: "rgb(34 197 94)" }}
+        />
+      </div>,
+    ];
+    if (role && role.name === "admin") {
+      actionItems.push(
         <div
           key="edit"
           onClick={() => handleEllipsis(type)}
@@ -175,28 +164,11 @@ const Workloads = () => {
           <EditOutlined />
           <span>Chỉnh sửa</span>
         </div>
-      </>
-    ) : (
-      <>
-        <div
-          onClick={() => {
-            if (userName && type.emails?.includes(userName)) {
-              router.push("/workloads/" + type.href.toLowerCase());
-            } else {
-              setMode("edit");
-              setIsAccess(false);
-              setIsOpened(true);
-              setTitle("");
-            }
-          }}
-          className="flex justify-center gap-1"
-        >
-          <InfoCircleOutlined />
-          <span>xem chi tiết</span>
-        </div>
-      </>
-    ),
-  ];
+      );
+    }
+
+    return actionItems;
+  };
   const handleSubmit = async (formData: Partial<AddUpdateWorkloadType>) => {
     try {
       if (mode === "edit" && selectedItem) {
@@ -240,10 +212,21 @@ const Workloads = () => {
   };
 
   const handleChangeGroup = async (value: any) => {
-    if (value === undefined) return setTempGroups(groups);
+    setLoading(true);
+    if (value === undefined) {
+      const timeoutId = setTimeout(() => {
+        setLoading(false);
+        setTempGroups(groups);
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    }
     const temp = groups.filter((x) => x.id === value);
     setTempGroups(temp);
     setSelectedKeyGroup(temp);
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+    }, 500);
+    return () => clearTimeout(timeoutId);
   };
 
   const getDisplayRole = async (name: string) => {
@@ -270,9 +253,10 @@ const Workloads = () => {
       }
     }
     getDefaultYears();
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       setLoading(false);
     }, 500);
+    return () => clearTimeout(timeoutId);
   }, []);
 
   return (
@@ -309,29 +293,23 @@ const Workloads = () => {
           ]}
         />
       </div>
-      <div className="grid grid-cols-9 gap-5 mb-3">
-        <div className="col-span-2 flex flex-col justify-center gap-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-9 gap-5 mb-3">
+        <div className="xl:col-span-2 flex flex-col justify-center gap-1">
           <span className="text-[14px] text-neutral-500">Tìm kiếm:</span>
           <Search placeholder=" " onSearch={onSearch} enterButton />
         </div>
-        <div className="flex flex-col justify-center gap-1">
+        <div className="xl:col-span-2 flex flex-col justify-center gap-1">
           <span className="text-[14px] text-neutral-500">Nhóm:</span>
           <Select
             allowClear
-            showSearch
             placeholder="Tất cả nhóm"
             optionFilterProp="label"
-            filterSort={(optionA, optionB) =>
-              (optionA?.label ?? "").localeCompare(optionB?.label ?? "")
-            }
             options={groups?.map((group: any) => ({
               value: group.id,
               label: group.name,
             }))}
-            //
             value={selectedKeyGroup && selectedKeyGroup.name}
             onChange={(value) => handleChangeGroup(value)}
-            className="w-full"
           />
         </div>
         <div className="flex flex-col justify-center gap-1">
@@ -363,110 +341,91 @@ const Workloads = () => {
           {tempGroups &&
             tempGroups.map((group) => (
               <>
-                <Divider
-                  orientation="left"
-                  className="uppercase"
-                  style={{ borderColor: "#1677FF", color: "#1677FF" }}
-                >
-                  {group.name}
-                </Divider>
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 px-2 mb-3">
-                  {tempTypes &&
-                    tempTypes
-                      .filter((x) => x.workloadGroupId === group.id)
-                      .map((type) => (
-                        <Card
-                          key={type.id}
-                          actions={actions(type)}
-                          size="small"
-                          className="hover:shadow-lg transition-transform duration-300 hover:-translate-y-2"
-                        >
-                          <div
-                            onClick={() => {
-                              if (userName && type.emails?.includes(userName)) {
-                                router.push("/workloads/" + type.href);
-                              } else {
-                                setMode("edit");
-                                setIsAccess(false);
-                                setIsOpened(true);
-                                setTitle("");
-                              }
-                            }}
-                            className="cursor-pointer"
+                <div className="h-fit pb-4">
+                  <Divider
+                    orientation="left"
+                    className="uppercase"
+                    style={{ borderColor: "#1677FF", color: "#1677FF" }}
+                  >
+                    {group.name}
+                  </Divider>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-2">
+                    {tempTypes &&
+                      tempTypes
+                        .filter((x) => x.workloadGroupId === group.id)
+                        .map((type) => (
+                          <Card
+                            key={type.id}
+                            actions={actions(type)}
+                            size="small"
+                            className="hover:shadow-lg transition-transform duration-300 hover:-translate-y-2"
                           >
-                            <Card.Meta
-                              title={
-                                <div className="flex justify-between items-center gap-2">
-                                  <p className="whitespace-nowrap overflow-hidden text-ellipsis">
-                                    {type.shortName}
-                                  </p>
-                                  {userName &&
-                                  type.emails?.includes(userName) ? (
-                                    <>
-                                      <Tooltip
-                                        placement="top"
-                                        title={"Đã được cấp quyền"}
-                                        arrow={true}
-                                      >
-                                        <Button
-                                          size="small"
-                                          variant="outlined"
-                                          shape="circle"
-                                          style={{
-                                            backgroundColor: "#52c41a",
-                                            borderColor: "#52c41a",
-                                            color: "#fff",
-                                          }}
-                                          icon={<CheckOutlined />}
-                                        ></Button>
-                                      </Tooltip>
-                                    </>
-                                  ) : (
-                                    <></>
-                                  )}
-                                </div>
-                              }
-                              className="h-fit"
-                              description={
-                                <div className="min-h-16">
-                                  <p className="whitespace-wrap text-ellipsis">
-                                    Biểu mẫu:{" "}
-                                    <span className="font-medium text-neutral-600">
-                                      {type.name}
-                                    </span>
-                                  </p>
-                                  <p>
-                                    Thuộc nhóm:{" "}
-                                    <span className="font-medium text-neutral-600">
-                                      {type.groupName}
-                                    </span>
-                                  </p>
-                                </div>
-                              }
-                            />
-                          </div>
-                        </Card>
-                      ))}
-                  {role && role.name === "admin" && (
-                    <>
-                      <Button
-                        color="primary"
-                        variant="filled"
-                        icon={<PlusOutlined />}
-                        onClick={() => {
-                          setMode("add");
-                          setTitle(
-                            `Thêm mới biểu mẫu thuộc nhóm ${group.name}`
-                          );
-                          setSelectedKeyGroup(group.id);
-                          setIsOpened(true);
-                        }}
-                        className="w-fit"
-                      >
-                        Thêm mới
-                      </Button>
-                    </>
-                  )}
+                            <div
+                              onClick={() => {
+                                if (
+                                  userName &&
+                                  type.emails?.includes(userName)
+                                ) {
+                                  router.push("/workloads/" + type.href);
+                                } else {
+                                  setMode("edit");
+                                  setIsAccess(false);
+                                  setIsOpened(true);
+                                  setTitle("");
+                                }
+                              }}
+                              className="cursor-pointer"
+                            >
+                              <div className="flex justify-between items-center gap-2 mb-2">
+                                <p className="text-base font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+                                  {type.shortName}
+                                </p>
+                                {userName && type.emails?.includes(userName) ? (
+                                  <>
+                                    <Tooltip
+                                      placement="top"
+                                      title={"Đã được cấp quyền"}
+                                      arrow={true}
+                                    >
+                                      <img src="/ticker.svg" width={24} />
+                                    </Tooltip>
+                                  </>
+                                ) : (
+                                  <></>
+                                )}
+                              </div>
+                              <div className="min-h-10">
+                                <span className="text-neutral-400">
+                                  Biểu mẫu:{" "}
+                                </span>{" "}
+                                <span className="font-medium text-neutral-500 whitespace-wrap text-ellipsis">
+                                  {type.name}
+                                </span>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                    {role && role.name === "admin" && (
+                      <>
+                        <Button
+                          color="primary"
+                          variant="filled"
+                          icon={<PlusOutlined />}
+                          onClick={() => {
+                            setMode("add");
+                            setTitle(
+                              `Thêm mới biểu mẫu thuộc nhóm ${group.name}`
+                            );
+                            setSelectedKeyGroup(group.id);
+                            setIsOpened(true);
+                          }}
+                          className="w-fit"
+                        >
+                          Thêm mới
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </>
             ))}
