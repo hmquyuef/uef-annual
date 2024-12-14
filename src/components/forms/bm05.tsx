@@ -7,7 +7,6 @@ import {
   AddUpdateActivityItem,
   deleteActivities,
   getAllActivities,
-  ImportActivities,
   postAddActivity,
   putUpdateActivity,
   putUpdateApprovedActivity,
@@ -23,9 +22,8 @@ import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
 import {
   convertTimestampToDate,
-  convertTimestampToFullDateTime,
   defaultFooterInfo,
-  setCellStyle,
+  setCellStyle
 } from "@/utility/Utilities";
 import {
   ArrowsAltOutlined,
@@ -41,24 +39,17 @@ import {
 } from "@ant-design/icons";
 import {
   Button,
-  Card,
   ConfigProvider,
   DatePicker,
   Dropdown,
-  Empty,
   Input,
   MenuProps,
   Modal,
-  PaginationProps,
   Select,
-  Skeleton,
-  Spin,
-  Table,
   TableColumnsType,
   Tag,
-  Tooltip,
+  Tooltip
 } from "antd";
-import { TableRowSelection } from "antd/es/table/interface";
 import { saveAs } from "file-saver";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
@@ -68,12 +59,13 @@ import { Key, useCallback, useEffect, useState } from "react";
 import * as XLSX from "sheetjs-style";
 import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
-import FormActivity from "./activity/formActivity";
 
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import locale from "antd/locale/vi_VN";
-import dayjs, { Dayjs } from "dayjs";
+import dayjs from "dayjs";
 import "dayjs/locale/vi";
+import FormBM05 from "./activity/formBM05";
+import TemplateForms from "./workloads/TemplateForms";
 dayjs.locale("vi");
 
 const { Search } = Input;
@@ -86,7 +78,6 @@ const BM05 = () => {
   const [selectedKeyUnit, setSelectedKeyUnit] = useState<Key | null>(null);
   const [data, setData] = useState<ActivityItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [isUpload, setIsUpload] = useState(false);
   const [mode, setMode] = useState<"add" | "edit">("add");
   const [isNotificationOpen, setNotificationOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<
@@ -111,10 +102,6 @@ const BM05 = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [reason, setReason] = useState("");
   const [isPayments, setIsPayments] = useState<PaymentApprovedItem>();
-  const [pagination, setPagination] = useState({
-    current: 1,
-    pageSize: 15,
-  });
 
   const getDefaultYears = async () => {
     const { items } = await getAllSchoolYears();
@@ -138,40 +125,14 @@ const BM05 = () => {
     setActivities(response.items);
     setData(response.items);
     setNotificationOpen(false);
-    setIsUpload(false);
   };
 
   const getListUnits = async () => {
     const response = await getAllUnits("true");
     setUnits(response.items);
   };
-  const onSelectChange = (newSelectedRowKeys: Key[]) => {
-    setSelectedRowKeys(newSelectedRowKeys);
-  };
-  const rowSelection: TableRowSelection<ActivityItem> = {
-    selectedRowKeys,
-    getCheckboxProps: (record: ActivityItem) => ({
-      disabled: record.payments?.isBlockData ?? false,
-    }),
-    onChange: onSelectChange,
-  };
-  const showTotal: PaginationProps["showTotal"] = (total) => (
-    <p className="w-full text-start">
-      Đã chọn {selectedRowKeys.length} / {total} dòng dữ liệu
-    </p>
-  );
 
-  //render columns
   const columns: TableColumnsType<ActivityItem> = [
-    {
-      title: "STT",
-      dataIndex: "stt",
-      key: "stt",
-      render: (_, __, index) => (
-        <>{pagination.pageSize * (pagination.current - 1) + index + 1}</>
-      ),
-      className: "text-center w-[40px]",
-    },
     {
       title: "TÊN HOẠT ĐỘNG",
       dataIndex: "name",
@@ -294,80 +255,6 @@ const BM05 = () => {
           </>
         );
       },
-    },
-    {
-      title: <div className="bg-orange-400 p-1">NGÀY NHẬP VĂN BẢN</div>,
-      dataIndex: ["determinations", "entryDate"],
-      key: "entryDate",
-      sorter: (a, b) =>
-        a.determinations?.entryDate - b.determinations?.entryDate,
-      render: (fromDate: number) =>
-        fromDate ? convertTimestampToDate(fromDate) : "",
-      className: "text-center w-[100px]",
-    },
-    {
-      title: (
-        <div className="bg-rose-500 p-1 rounded-tr-lg">
-          PHÊ DUYỆT <br /> THANH TOÁN
-        </div>
-      ),
-      dataIndex: ["payments", "isRejected"],
-      key: "isRejected",
-      render: (isRejected: boolean, record: ActivityItem) => {
-        const time = record.payments?.approvedTime
-          ? convertTimestampToFullDateTime(record.payments.approvedTime)
-          : "";
-        const reason = record.payments?.reason;
-        return (
-          <>
-            {record.payments ? (
-              <>
-                {isRejected ? (
-                  <Tooltip
-                    title={
-                      <>
-                        <div>- P.TC đã từ chối vào lúc {time}</div>
-                        <div>- Lý do: {reason}</div>
-                      </>
-                    }
-                  >
-                    <span className="text-red-500">
-                      <CloseOutlined className="me-1" /> Từ chối
-                    </span>
-                  </Tooltip>
-                ) : (
-                  <Tooltip
-                    title={
-                      <>
-                        <div>- P.TC đã phê duyệt vào lúc {time}</div>
-                      </>
-                    }
-                  >
-                    <span className="text-green-500">
-                      <SafetyOutlined className="me-1" /> Đã duyệt
-                    </span>
-                  </Tooltip>
-                )}
-              </>
-            ) : (
-              <>
-                <Tooltip
-                  title={
-                    <>
-                      <div>- Đợi phê duyệt từ P.TC</div>
-                    </>
-                  }
-                >
-                  <span className="text-sky-500 flex justify-center items-center gap-2">
-                    <Spin size="small" /> Chờ duyệt
-                  </span>
-                </Tooltip>
-              </>
-            )}
-          </>
-        );
-      },
-      className: "text-center w-[110px]",
     },
   ];
 
@@ -506,32 +393,6 @@ const BM05 = () => {
       setStatus("error");
       setMessage("Thông báo");
       setDescription(Messages.ERROR);
-    }
-  };
-
-  const handleSubmitUpload = async (file: File) => {
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const response = await ImportActivities(formData);
-      if (response) {
-        setNotificationOpen(true);
-        setStatus("success");
-        setMessage("Thông báo");
-        setDescription(`Tải lên thành công ${response.totalCount} hoạt động!`);
-      }
-      await getListActivities(selectedKey.id);
-      setIsOpen(false);
-      setSelectedItem(undefined);
-      setMode("add");
-      setIsUpload(false);
-    } catch (error) {
-      setIsOpen(false);
-      setNotificationOpen(true);
-      setStatus("error");
-      setMessage("Thông báo");
-      setDescription(Messages.ERROR);
-      setIsUpload(false);
     }
   };
 
@@ -819,16 +680,6 @@ const BM05 = () => {
     }
   };
 
-  const handleTableChange = (pagination: PaginationProps) => {
-    setPagination({
-      current: pagination.current || 1,
-      pageSize: pagination.pageSize || 15,
-    });
-    Cookies.set(
-      "p_s",
-      JSON.stringify([pagination.current, pagination.pageSize])
-    );
-  };
   const handleApproved = async (isRejected: boolean) => {
     const formData = {
       ids: selectedRowKeys.length > 0 ? selectedRowKeys : [selectedItem?.id],
@@ -892,14 +743,7 @@ const BM05 = () => {
   useEffect(() => {
     setLoading(true);
     document.title = PageTitles.BM05;
-    const pageState = Cookies.get("p_s");
-    if (pageState) {
-      const [current, pageSize] = JSON.parse(pageState);
-      setPagination({
-        current,
-        pageSize,
-      });
-    }
+
     Promise.all([getDefaultYears(), getListUnits()]);
     const token = Cookies.get("s_t");
     if (token) {
@@ -1187,100 +1031,76 @@ const BM05 = () => {
             </>
           )}
         </div>
-        <CustomNotification
-          message={message}
-          description={description}
-          status={status}
-          isOpen={isNotificationOpen}
-        />
-        <CustomModal
-          isOpen={isOpen}
-          width={isShowPdf ? "85vw" : ""}
-          title={mode === "edit" ? "Cập nhật hoạt động" : "Thêm mới hoạt động"}
-          role={role || undefined}
-          isBlock={isBlock}
-          onApprove={() => handleApproved(false)}
-          onReject={() => setIsModalVisible(true)}
-          onOk={() => {
-            const formElement = document.querySelector("form");
-            formElement?.dispatchEvent(
-              new Event("submit", { cancelable: true, bubbles: true })
-            );
-          }}
-          onCancel={() => {
-            setNotificationOpen(false);
-            setIsOpen(false);
-            setSelectedItem(undefined);
-            setMode("add");
-            setIsUpload(false);
-            setIsShowPdf(false);
-          }}
-          bodyContent={
-            <FormActivity
-              key="form-activity-bm05"
-              onSubmit={handleSubmit}
-              handleShowPDF={setIsShowPdf}
-              initialData={selectedItem as Partial<AddUpdateActivityItem>}
-              mode={mode}
-              numberActivity={data.length}
-              isBlock={isBlock}
-              isPayment={isPayments}
-              displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
-            />
-          }
-        />
-        <Modal
-          open={isModalVisible}
-          onCancel={() => {
-            setIsModalVisible(false);
-            setReason("");
-          }}
-          onOk={() => {
-            setIsModalVisible(false);
-            handleApproved(true);
-            setReason("");
-          }}
-          title="Lý do từ chối"
-          width={700}
-        >
-          <Input value={reason} onChange={(e) => setReason(e.target.value)} />
-        </Modal>
       </div>
-      <hr className="mb-3" />
-      {loading ? (
-        <>
-          <Card>
-            <Skeleton active />
-          </Card>
-        </>
-      ) : (
-        <>
-          <Table<ActivityItem>
-            key={"table-activity-bm05"}
-            className="custom-table-header shadow-md rounded-md bg-white"
-            bordered
-            rowKey={(item) => item.id}
-            rowHoverable
-            size="small"
-            pagination={{
-              ...pagination,
-              total: data.length,
-              showTotal: showTotal,
-              showSizeChanger: true,
-              position: ["bottomRight"],
-              defaultPageSize: 15,
-              pageSizeOptions: ["15", "25", "50", "100"],
-            }}
-            rowSelection={rowSelection}
-            columns={columns}
-            dataSource={data}
-            locale={{
-              emptyText: <Empty description="Không có dữ liệu..."></Empty>,
-            }}
-            onChange={handleTableChange}
+      <CustomNotification
+        message={message}
+        description={description}
+        status={status}
+        isOpen={isNotificationOpen}
+      />
+      <CustomModal
+        isOpen={isOpen}
+        width={isShowPdf ? "85vw" : ""}
+        title={mode === "edit" ? "Cập nhật hoạt động" : "Thêm mới hoạt động"}
+        role={role || undefined}
+        isBlock={isBlock}
+        onApprove={() => handleApproved(false)}
+        onReject={() => setIsModalVisible(true)}
+        onOk={() => {
+          const formElement = document.querySelector("form");
+          formElement?.dispatchEvent(
+            new Event("submit", { cancelable: true, bubbles: true })
+          );
+        }}
+        onCancel={() => {
+          setNotificationOpen(false);
+          setIsOpen(false);
+          setSelectedItem(undefined);
+          setMode("add");
+          setIsShowPdf(false);
+        }}
+        bodyContent={
+          <FormBM05
+            key="form-activity-bm05"
+            onSubmit={handleSubmit}
+            handleShowPDF={setIsShowPdf}
+            initialData={selectedItem as Partial<AddUpdateActivityItem>}
+            mode={mode}
+            numberActivity={data.length}
+            isBlock={isBlock}
+            isPayment={isPayments}
+            displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
           />
-        </>
-      )}
+        }
+      />
+      <Modal
+        open={isModalVisible}
+        onCancel={() => {
+          setIsModalVisible(false);
+          setReason("");
+        }}
+        onOk={() => {
+          setIsModalVisible(false);
+          handleApproved(true);
+          setReason("");
+        }}
+        title="Lý do từ chối"
+        width={700}
+      >
+        <Input value={reason} onChange={(e) => setReason(e.target.value)} />
+      </Modal>
+      <hr className="mb-3" />
+      <TemplateForms
+        loading={loading}
+        data={data}
+        title={columns}
+        onEdit={handleEdit}
+        onSetBlock={setIsBlock}
+        onSetPayments={setIsPayments}
+        onSelectionChange={(selectedRowKeys) =>
+          setSelectedRowKeys(selectedRowKeys)
+        }
+      />
     </div>
   );
 };

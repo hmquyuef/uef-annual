@@ -47,6 +47,7 @@ import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import CountUp from "react-countup";
+import Colors from "../../../utility/Colors";
 
 const Workloads = () => {
   const { Search } = Input;
@@ -340,94 +341,92 @@ const Workloads = () => {
         <>
           {tempGroups &&
             tempGroups.map((group) => (
-              <>
-                <div className="h-fit pb-4">
-                  <Divider
-                    orientation="left"
-                    className="uppercase"
-                    style={{ borderColor: "#1677FF", color: "#1677FF" }}
-                  >
-                    {group.name}
-                  </Divider>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-2">
-                    {tempTypes &&
-                      tempTypes
-                        .filter((x) => x.workloadGroupId === group.id)
-                        .map((type) => (
-                          <Card
-                            key={type.id}
-                            actions={actions(type)}
-                            size="small"
-                            className="hover:shadow-lg transition-transform duration-300 hover:-translate-y-2"
-                          >
-                            <div
-                              onClick={() => {
-                                if (
-                                  userName &&
-                                  type.emails?.includes(userName)
-                                ) {
-                                  router.push("/workloads/" + type.href);
-                                } else {
-                                  setMode("edit");
-                                  setIsAccess(false);
-                                  setIsOpened(true);
-                                  setTitle("");
-                                }
-                              }}
-                              className="cursor-pointer"
-                            >
-                              <div className="flex justify-between items-center gap-2 mb-2">
-                                <p className="text-base font-medium whitespace-nowrap overflow-hidden text-ellipsis">
-                                  {type.shortName}
-                                </p>
-                                {userName && type.emails?.includes(userName) ? (
-                                  <>
-                                    <Tooltip
-                                      placement="top"
-                                      title={"Đã được cấp quyền"}
-                                      arrow={true}
-                                    >
-                                      <img src="/ticker.svg" width={24} />
-                                    </Tooltip>
-                                  </>
-                                ) : (
-                                  <></>
-                                )}
-                              </div>
-                              <div className="min-h-10">
-                                <span className="text-neutral-400">
-                                  Biểu mẫu:{" "}
-                                </span>{" "}
-                                <span className="font-medium text-neutral-500 whitespace-wrap text-ellipsis">
-                                  {type.name}
-                                </span>
-                              </div>
-                            </div>
-                          </Card>
-                        ))}
-                    {role && role.name === "admin" && (
-                      <>
-                        <Button
-                          color="primary"
-                          variant="filled"
-                          icon={<PlusOutlined />}
-                          onClick={() => {
-                            setMode("add");
-                            setTitle(
-                              `Thêm mới biểu mẫu thuộc nhóm ${group.name}`
-                            );
-                            setSelectedKeyGroup(group.id);
-                            setIsOpened(true);
-                          }}
-                          className="w-fit"
+              <div className="h-fit pb-4">
+                <Divider
+                  key={group.name}
+                  orientation="left"
+                  className="uppercase"
+                  style={{ borderColor: Colors.BLUE, color: Colors.BLUE }}
+                >
+                  {group.name}
+                </Divider>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-2">
+                  {tempTypes &&
+                    tempTypes
+                      .filter((x) => x.workloadGroupId === group.id)
+                      .map((type) => (
+                        <Card
+                          key={type.id}
+                          actions={actions(type)}
+                          size="small"
+                          className="hover:shadow-lg transition-transform duration-300 hover:-translate-y-1 hover:shadow-blue-200"
                         >
-                          Thêm mới
-                        </Button>
-                      </>
-                    )}
-                  </div>
+                          <div
+                            onClick={() => {
+                              if (userName && type.emails?.includes(userName)) {
+                                router.push("/workloads/" + type.href);
+                              } else {
+                                setMode("edit");
+                                setIsAccess(false);
+                                setIsOpened(true);
+                                setTitle("");
+                              }
+                            }}
+                            className="cursor-pointer"
+                          >
+                            <div className="flex justify-between items-center gap-2 mb-2">
+                              <p className="text-base font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+                                {type.shortName}
+                              </p>
+                              {userName && type.emails?.includes(userName) ? (
+                                <>
+                                  <Tooltip
+                                    key={type.id + "-tooltip-access"}
+                                    placement="top"
+                                    title={"Đã được cấp quyền"}
+                                    arrow={true}
+                                  >
+                                    <img src="/ticker.svg" width={24} />
+                                  </Tooltip>
+                                </>
+                              ) : (
+                                <></>
+                              )}
+                            </div>
+                            <div className="min-h-10">
+                              <span className="text-neutral-400">
+                                Biểu mẫu:{" "}
+                              </span>{" "}
+                              <span className="font-medium text-neutral-500 whitespace-wrap text-ellipsis">
+                                {type.name}
+                              </span>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                  {role && role.name === "admin" && (
+                    <>
+                      <Button
+                        key={group.id + "-add-button"}
+                        color="primary"
+                        variant="filled"
+                        icon={<PlusOutlined />}
+                        onClick={() => {
+                          setMode("add");
+                          setTitle(
+                            `Thêm mới biểu mẫu thuộc nhóm ${group.name}`
+                          );
+                          setSelectedKeyGroup(group.id);
+                          setIsOpened(true);
+                        }}
+                        className="w-fit"
+                      >
+                        Thêm mới
+                      </Button>
+                    </>
+                  )}
                 </div>
-              </>
+              </div>
             ))}
         </>
       )}

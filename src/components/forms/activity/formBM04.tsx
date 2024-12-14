@@ -175,14 +175,6 @@ const FormBM04: FC<FormBM04Props> = ({
   };
 
   useEffect(() => {
-    getListUnits();
-  }, []);
-
-  useEffect(() => {
-    handleShowPDF(showPDF);
-  }, [showPDF]);
-
-  useEffect(() => {
     const loadUsers = async () => {
       if (mode === "edit" && initialData !== undefined) {
         const units = await getAllUnits("true");
@@ -191,7 +183,7 @@ const FormBM04: FC<FormBM04Props> = ({
         );
         if (unit) {
           setDefaultUnits([unit]);
-          const usersTemp = await getUsersFromHRMbyId(unit.id);
+          const usersTemp = await getUsersFromHRMbyId(unit.idHrm);
           const userTemp = usersTemp.items.find(
             (user) =>
               user.userName.toUpperCase() ===
@@ -240,9 +232,11 @@ const FormBM04: FC<FormBM04Props> = ({
         setDescription("");
       }
     };
+    getListUnits();
     loadUsers();
     setShowPDF(false);
-  }, [initialData, mode]);
+    handleShowPDF(showPDF);
+  }, [initialData, mode, handleShowPDF, showPDF]);
   return (
     <div
       className={`grid ${showPDF ? "grid-cols-2 gap-4" : "grid-cols-1"} mb-2`}

@@ -8,15 +8,13 @@ import {
   putUpdateApprovedQA,
   putUpdateQA,
   QAItem,
-  QAResponse,
 } from "@/services/forms/qaServices";
 import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
 import PageTitles from "@/utility/Constraints";
 import {
   convertTimestampToDate,
-  convertTimestampToFullDateTime,
   defaultFooterInfo,
-  setCellStyle,
+  setCellStyle
 } from "@/utility/Utilities";
 import {
   ArrowsAltOutlined,
@@ -32,24 +30,17 @@ import {
 } from "@ant-design/icons";
 import {
   Button,
-  Card,
   ConfigProvider,
   DatePicker,
   Dropdown,
-  Empty,
   GetProps,
   Input,
   MenuProps,
   Modal,
-  PaginationProps,
   Select,
-  Skeleton,
-  Spin,
-  Table,
   TableColumnsType,
-  Tooltip,
+  Tooltip
 } from "antd";
-import { TableRowSelection } from "antd/es/table/interface";
 import saveAs from "file-saver";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
@@ -68,13 +59,14 @@ import {
 } from "@/services/roles/rolesServices";
 import { FileItem } from "@/services/uploads/uploadsServices";
 import Messages from "@/utility/Messages";
-import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
+import Link from "next/link";
 
-import locale from "antd/locale/vi_VN";
-import dayjs, { Dayjs } from "dayjs";
-import "dayjs/locale/vi";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
+import locale from "antd/locale/vi_VN";
+import dayjs from "dayjs";
+import "dayjs/locale/vi";
+import TemplateForms from "./workloads/TemplateForms";
 dayjs.locale("vi");
 
 type SearchProps = GetProps<typeof Input.Search>;
@@ -114,10 +106,6 @@ const BM04 = () => {
   const [reason, setReason] = useState("");
   const [isPayments, setIsPayments] = useState<PaymentApprovedItem>();
   const [isShowPdf, setIsShowPdf] = useState(false);
-  const [pagination, setPagination] = useState({
-    current: 1,
-    pageSize: 15,
-  });
 
   const getDefaultYears = async () => {
     const { items } = await getAllSchoolYears();
@@ -148,29 +136,7 @@ const BM04 = () => {
     setUnits(response.items);
   };
 
-  const onSelectChange = (newSelectedRowKeys: Key[]) => {
-    setSelectedRowKeys(newSelectedRowKeys);
-  };
-  const rowSelection: TableRowSelection<QAItem> = {
-    selectedRowKeys,
-    getCheckboxProps: (record: QAItem) => ({
-      disabled: record.payments?.isBlockData ?? false,
-    }),
-    onChange: onSelectChange,
-  };
-  const showTotal: PaginationProps["showTotal"] = (total) => (
-    <p className="w-full text-start">
-      Đã chọn {selectedRowKeys.length} / {total} dòng dữ liệu
-    </p>
-  );
   const columns: TableColumnsType<QAItem> = [
-    {
-      title: "STT",
-      dataIndex: "stt",
-      key: "stt",
-      render: (_, __, index) => <>{index + 1}</>,
-      className: "text-center w-[3rem]",
-    },
     {
       title: "MÃ SỐ CB-GV-NV",
       dataIndex: "userName",
@@ -302,79 +268,6 @@ const BM04 = () => {
         );
       },
     },
-    {
-      title: <div className="bg-orange-400 p-1">NGÀY NHẬP VĂN BẢN</div>,
-      dataIndex: "entryDate",
-      key: "entryDate",
-      sorter: (a, b) => a.entryDate - b.entryDate,
-      render: (fromDate: number) =>
-        fromDate ? convertTimestampToDate(fromDate) : "",
-      className: "text-center w-[80px]",
-    },
-    {
-      title: (
-        <div className="bg-rose-500 p-1 rounded-tr-lg">
-          PHÊ DUYỆT <br /> THANH TOÁN
-        </div>
-      ),
-      dataIndex: ["payments", "isRejected"],
-      key: "isRejected",
-      render: (isRejected: boolean, record: QAItem) => {
-        const time = record.payments?.approvedTime
-          ? convertTimestampToFullDateTime(record.payments.approvedTime)
-          : "";
-        const reason = record.payments?.reason;
-        return (
-          <>
-            {record.payments ? (
-              <>
-                {isRejected ? (
-                  <Tooltip
-                    title={
-                      <>
-                        <div>- P.TC đã từ chối vào lúc {time}</div>
-                        <div>- Lý do: {reason}</div>
-                      </>
-                    }
-                  >
-                    <span className="text-red-500">
-                      <CloseOutlined className="me-1" /> Từ chối
-                    </span>
-                  </Tooltip>
-                ) : (
-                  <Tooltip
-                    title={
-                      <>
-                        <div>- P.TC đã phê duyệt vào lúc {time}</div>
-                      </>
-                    }
-                  >
-                    <span className="text-green-500">
-                      <SafetyOutlined className="me-1" /> Đã duyệt
-                    </span>
-                  </Tooltip>
-                )}
-              </>
-            ) : (
-              <>
-                <Tooltip
-                  title={
-                    <>
-                      <div>- Đợi phê duyệt từ P.TC</div>
-                    </>
-                  }
-                >
-                  <span className="text-sky-500 flex justify-center items-center gap-2">
-                    <Spin size="small" /> Chờ duyệt
-                  </span>
-                </Tooltip>
-              </>
-            )}
-          </>
-        );
-      },
-      className: "text-center w-[110px]",
-    },
   ];
 
   const items: MenuProps["items"] = [
@@ -482,6 +375,7 @@ const BM04 = () => {
       console.error("Error deleting selected items:", error);
     }
   }, [selectedRowKeys]);
+
   const handleEdit = (classLeader: QAItem) => {
     const updatedActivity: Partial<QAItem> = {
       ...classLeader,
@@ -490,6 +384,7 @@ const BM04 = () => {
     setMode("edit");
     setIsOpen(true);
   };
+
   const handleSubmit = async (formData: Partial<QAItem>) => {
     try {
       if (mode === "edit" && selectedItem) {
@@ -886,27 +781,11 @@ const BM04 = () => {
     const response = await getRoleByName(name);
     setRole(response.items[0]);
   };
-  const handleTableChange = (pagination: PaginationProps) => {
-    setPagination({
-      current: pagination.current || 1,
-      pageSize: pagination.pageSize || 15,
-    });
-    Cookies.set(
-      "p_s",
-      JSON.stringify([pagination.current, pagination.pageSize])
-    );
-  };
+
   useEffect(() => {
     setLoading(true);
     document.title = PageTitles.BM04;
-    const pageState = Cookies.get("p_s");
-    if (pageState) {
-      const [current, pageSize] = JSON.parse(pageState);
-      setPagination({
-        current,
-        pageSize,
-      });
-    }
+
     Promise.all([getDefaultYears(), getListUnits()]);
     const token = Cookies.get("s_t");
     if (token) {
@@ -1264,40 +1143,17 @@ const BM04 = () => {
         </Modal>
       </div>
       <hr className="mb-3" />
-      {loading ? (
-        <>
-          <Card>
-            <Skeleton active />
-          </Card>
-        </>
-      ) : (
-        <>
-          <Table<QAItem>
-            key={"table-qae-bm04"}
-            className="custom-table-header shadow-md rounded-md"
-            bordered
-            rowKey={(item) => item.id}
-            rowHoverable
-            size="small"
-            pagination={{
-              ...pagination,
-              total: data.length,
-              showTotal: showTotal,
-              showSizeChanger: true,
-              position: ["bottomRight"],
-              defaultPageSize: 15,
-              pageSizeOptions: ["15", "25", "50", "100"],
-            }}
-            rowSelection={rowSelection}
-            columns={columns}
-            dataSource={data}
-            locale={{
-              emptyText: <Empty description="Không có dữ liệu..."></Empty>,
-            }}
-            onChange={handleTableChange}
-          />
-        </>
-      )}
+      <TemplateForms
+        loading={loading}
+        data={data}
+        title={columns}
+        onEdit={handleEdit}
+        onSetBlock={setIsBlock}
+        onSetPayments={setIsPayments}
+        onSelectionChange={(selectedRowKeys) =>
+          setSelectedRowKeys(selectedRowKeys)
+        }
+      />
     </div>
   );
 };

@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import React, { FC, useEffect, useState } from "react";
 import { ApexOptions } from "apexcharts";
+import Colors from "@/utility/Colors";
 // Import động ReactApexChart
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -81,7 +82,13 @@ const MultiLineChart: FC<MultiLineChartProps> = ({
         return `<span style="color:${color}">${seriesName} - </span><strong style="color:${color}">${total}</strong>`;
       },
     },
-    colors: ["#3399ff", "#22C55E", "#ff6600", "#ff3333", "#9966ff"],
+    colors: [
+      Colors.BLUE,
+      Colors.GREEN,
+      Colors.ORANGE,
+      Colors.RED,
+      Colors.PURPLE,
+    ],
     grid: {
       borderColor: "#e7e7e7",
       strokeDashArray: 4,

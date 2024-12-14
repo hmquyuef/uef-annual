@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  getAllUnits,
-  getListUnitsFromHrm,
-  UnitItem,
-} from "@/services/units/unitsServices";
+import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
 import {
   getUsersFromHRMbyId,
   UsersFromHRM,
@@ -180,14 +176,6 @@ const FormBM03: FC<FormBM03Props> = ({
   };
 
   useEffect(() => {
-    getListUnits();
-  }, []);
-
-  useEffect(() => {
-    handleShowPDF(showPDF);
-  }, [showPDF]);
-
-  useEffect(() => {
     const loadUsers = async () => {
       if (mode === "edit" && initialData !== undefined) {
         const units = await getAllUnits("true");
@@ -196,7 +184,7 @@ const FormBM03: FC<FormBM03Props> = ({
         );
         if (unit) {
           setDefaultUnits([unit]);
-          const usersTemp = await getUsersFromHRMbyId(unit.id);
+          const usersTemp = await getUsersFromHRMbyId(unit.idHrm);
           const userTemp = usersTemp.items.find(
             (user) =>
               user.userName.toUpperCase() ===
@@ -245,9 +233,11 @@ const FormBM03: FC<FormBM03Props> = ({
         setDescription("");
       }
     };
+    getListUnits();
     loadUsers();
     setShowPDF(false);
-  }, [initialData, mode]);
+    handleShowPDF(showPDF);
+  }, [initialData, mode, handleShowPDF, showPDF]);
   return (
     <div
       className={`grid ${showPDF ? "grid-cols-2 gap-4" : "grid-cols-1"} mb-2`}

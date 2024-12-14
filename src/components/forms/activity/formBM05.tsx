@@ -58,7 +58,7 @@ import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 dayjs.locale("vi");
-interface FormActivityProps {
+interface FormBM05Props {
   onSubmit: (formData: Partial<AddUpdateActivityItem>) => void;
   handleShowPDF: (isVisible: boolean) => void;
   initialData?: Partial<AddUpdateActivityItem>;
@@ -71,7 +71,7 @@ interface FormActivityProps {
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.mjs`;
 
-const FormActivity: FC<FormActivityProps> = ({
+const FormBM05: FC<FormBM05Props> = ({
   onSubmit,
   handleShowPDF,
   initialData,
@@ -772,4 +772,4 @@ const FormActivity: FC<FormActivityProps> = ({
     </div>
   );
 };
-export default FormActivity;
+export default FormBM05;

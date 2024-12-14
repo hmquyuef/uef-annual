@@ -121,8 +121,6 @@ const FormBM01: FC<FormBM01Props> = ({
       setIsUploaded(false);
       setListPicture({ type: "", path: "", name: "", size: 0 });
       setPathPDF("");
-    } else {
-      console.log("Không có file nào để xóa.");
     }
   };
 
@@ -182,14 +180,6 @@ const FormBM01: FC<FormBM01Props> = ({
   };
 
   useEffect(() => {
-    getListUnits();
-  }, []);
-
-  useEffect(() => {
-    handleShowPDF(showPDF);
-  }, [showPDF]);
-
-  useEffect(() => {
     const loadUsers = async () => {
       if (mode === "edit" && initialData !== undefined) {
         const units = await getAllUnits("true");
@@ -198,7 +188,7 @@ const FormBM01: FC<FormBM01Props> = ({
         );
         if (unit) {
           setDefaultUnits([unit]);
-          const usersTemp = await getUsersFromHRMbyId(unit.id);
+          const usersTemp = await getUsersFromHRMbyId(unit.idHrm);
           const userTemp = usersTemp.items.find(
             (user) =>
               user.userName.toUpperCase() ===
@@ -255,9 +245,12 @@ const FormBM01: FC<FormBM01Props> = ({
         setDescription("");
       }
     };
+    getListUnits();
     loadUsers();
+    handleShowPDF(showPDF);
     setShowPDF(false);
-  }, [initialData, mode]);
+  }, [initialData, mode, handleShowPDF, showPDF]);
+
   return (
     <div
       className={`grid ${showPDF ? "grid-cols-2 gap-4" : "grid-cols-1"} mb-2`}
