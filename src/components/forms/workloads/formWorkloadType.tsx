@@ -85,6 +85,7 @@ const FormWorkloadType: React.FC<FormWorkloadTypeProps> = ({
       name: name,
       shortName: shortName,
       href: href,
+      position: position,
       workloadGroupId: selectedGroupId,
       emails: selectedItems.join(","),
       isActived: true,

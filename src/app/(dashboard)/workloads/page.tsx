@@ -35,6 +35,7 @@ import {
   Button,
   Card,
   Divider,
+  Empty,
   Input,
   Select,
   Statistic,
@@ -339,11 +340,25 @@ const Workloads = () => {
         </>
       ) : (
         <>
-          {tempGroups &&
-            tempGroups.map((group) => (
-              <div className="h-fit pb-4">
+          {(() => {
+            const filteredGroups = tempGroups?.filter((group) =>
+              tempTypes?.some(
+                (type) =>
+                  type.workloadGroupId === group.id &&
+                  userName &&
+                  type.emails?.includes(userName)
+              )
+            );
+            if (!filteredGroups?.length) {
+              return (
+                <div className="h-[calc(100svh-300px)] flex justify-center items-center">
+                  <Empty description={Messages.NO_DATA} />
+                </div>
+              );
+            }
+            return filteredGroups.map((group) => (
+              <div className="h-fit pb-4" key={group.id}>
                 <Divider
-                  key={group.name}
                   orientation="left"
                   className="uppercase"
                   style={{ borderColor: Colors.BLUE, color: Colors.BLUE }}
@@ -351,10 +366,11 @@ const Workloads = () => {
                   {group.name}
                 </Divider>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-2">
-                  {tempTypes &&
-                    tempTypes
-                      .filter((x) => x.workloadGroupId === group.id)
-                      .map((type) => (
+                  {tempTypes
+                    ?.filter((type) => type.workloadGroupId === group.id)
+                    .map((type) =>
+                      (userName && type.emails?.includes(userName)) ||
+                      role?.name === "admin" ? (
                         <Card
                           key={type.id}
                           actions={actions(type)}
@@ -375,59 +391,58 @@ const Workloads = () => {
                             className="cursor-pointer"
                           >
                             <div className="flex justify-between items-center gap-2 mb-2">
-                              <p className="text-base font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+                              <span className="text-base font-medium whitespace-nowrap overflow-hidden text-ellipsis">
                                 {type.shortName}
-                              </p>
-                              {userName && type.emails?.includes(userName) ? (
-                                <>
+                              </span>
+                              {userName &&
+                                type.emails?.includes(userName) &&
+                                role?.name === "admin" && (
                                   <Tooltip
-                                    key={type.id + "-tooltip-access"}
+                                    key={`${type.id}-tooltip-access`}
                                     placement="top"
                                     title={"Đã được cấp quyền"}
                                     arrow={true}
                                   >
-                                    <img src="/ticker.svg" width={24} />
+                                    <div className="flex items-center gap-1 text-green-500">
+                                      <img src="/ticker.svg" width={24} />
+                                      {/* <span>Được cấp quyền</span> */}
+                                    </div>
                                   </Tooltip>
-                                </>
-                              ) : (
-                                <></>
-                              )}
+                                )}
                             </div>
                             <div className="min-h-10">
                               <span className="text-neutral-400">
                                 Biểu mẫu:{" "}
-                              </span>{" "}
-                              <span className="font-medium text-neutral-500 whitespace-wrap text-ellipsis">
+                              </span>
+                              <span className="font-medium text-neutral-600 whitespace-wrap text-ellipsis">
                                 {type.name}
                               </span>
                             </div>
                           </div>
                         </Card>
-                      ))}
-                  {role && role.name === "admin" && (
-                    <>
-                      <Button
-                        key={group.id + "-add-button"}
-                        color="primary"
-                        variant="filled"
-                        icon={<PlusOutlined />}
-                        onClick={() => {
-                          setMode("add");
-                          setTitle(
-                            `Thêm mới biểu mẫu thuộc nhóm ${group.name}`
-                          );
-                          setSelectedKeyGroup(group.id);
-                          setIsOpened(true);
-                        }}
-                        className="w-fit"
-                      >
-                        Thêm mới
-                      </Button>
-                    </>
+                      ) : null
+                    )}
+                  {role?.name === "admin" && (
+                    <Button
+                      key={`${group.id}-add-button`}
+                      color="primary"
+                      variant="filled"
+                      icon={<PlusOutlined />}
+                      onClick={() => {
+                        setMode("add");
+                        setTitle(`Thêm mới biểu mẫu thuộc nhóm ${group.name}`);
+                        setSelectedKeyGroup(group.id);
+                        setIsOpened(true);
+                      }}
+                      className="w-fit"
+                    >
+                      Thêm mới
+                    </Button>
                   )}
                 </div>
               </div>
-            ))}
+            ));
+          })()}
         </>
       )}
       <CustomNotification

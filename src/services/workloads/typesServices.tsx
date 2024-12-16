@@ -8,6 +8,7 @@ export interface WorkloadTypeItem {
   workloadGroupId: string;
   groupName: string;
   emails: string;
+  position: number;
   totalItems: number;
   infoChart: ItemChart;
   totalApprovedItems: number;
@@ -47,20 +48,11 @@ export async function getWorkloadTypes(
   return response.data;
 }
 
-export async function getWorkloadTypesByShortName(
-  shortName: string
+export async function getWorkloadTypesByHref(
+  href: string
 ): Promise<WorkloadTypesResponse> {
   const response = await apiClient.get<WorkloadTypesResponse>(
-    `api/workload/types?Filters=${shortName}`
-  );
-  return response.data;
-}
-
-export async function getWorkloadTypeById(
-  id: string
-): Promise<WorkloadTypeItem> {
-  const response = await apiClient.get<WorkloadTypeItem>(
-    `api/workload/types/${id}`
+    `api/workload/types?Href=${href}`
   );
   return response.data;
 }

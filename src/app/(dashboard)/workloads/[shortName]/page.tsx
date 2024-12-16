@@ -2,8 +2,8 @@
 
 import DynamicComponent from "@/components/DynamicComponent";
 import {
-  getWorkloadTypesByShortName,
-  WorkloadTypeItem,
+  getWorkloadTypesByHref,
+  WorkloadTypeItem
 } from "@/services/workloads/typesServices";
 import { HomeOutlined, ProfileOutlined } from "@ant-design/icons";
 import { Breadcrumb } from "antd";
@@ -14,8 +14,9 @@ const WorkloadPage = () => {
   const { shortName } = useParams();
   const [item, setItem] = useState<WorkloadTypeItem[]>([]);
   const getWorkloadType = async () => {
-    const response = await getWorkloadTypesByShortName(shortName.toString());
+    const response = await getWorkloadTypesByHref(shortName.toString());
     setItem(response.items);
+    console.log("response :>> ", response);
   };
   useEffect(() => {
     getWorkloadType();
@@ -55,9 +56,7 @@ const WorkloadPage = () => {
         />
       </div>
       {shortName && shortName.length > 0 ? (
-        <DynamicComponent
-          params={{ shortName: shortName.toString() }}
-        />
+        <DynamicComponent params={{ shortName: shortName.toString() }} />
       ) : null}
     </div>
   );
