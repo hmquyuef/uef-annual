@@ -3,11 +3,7 @@
 import { ClassAssistantItem } from "@/services/forms/assistantsServices";
 import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 import { DisplayRoleItem } from "@/services/roles/rolesServices";
-import {
-  getAllUnits,
-  getListUnitsFromHrm,
-  UnitItem,
-} from "@/services/units/unitsServices";
+import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
 import {
   deleteFiles,
   FileItem,
@@ -18,15 +14,7 @@ import {
   UsersFromHRM,
   UsersFromHRMResponse,
 } from "@/services/users/usersServices";
-import { convertTimestampToFullDateTime } from "@/utility/Utilities";
-import {
-  CloseOutlined,
-  CloudUploadOutlined,
-  MinusCircleOutlined,
-  SafetyOutlined,
-  ZoomInOutlined,
-  ZoomOutOutlined,
-} from "@ant-design/icons";
+import { CloudUploadOutlined, MinusCircleOutlined } from "@ant-design/icons";
 import {
   Button,
   ConfigProvider,
@@ -34,8 +22,6 @@ import {
   Input,
   InputNumber,
   Select,
-  Spin,
-  Tag,
 } from "antd";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
@@ -44,9 +30,10 @@ import utc from "dayjs/plugin/utc";
 import moment from "moment";
 import { FC, FormEvent, Key, useEffect, useMemo, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { Document, Page } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
+import InfoApproved from "./infoApproved";
+import InfoPDF from "./infoPDF";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -92,13 +79,7 @@ const FormBM02: FC<FormBM02Props> = ({
   );
   const [isUploaded, setIsUploaded] = useState<boolean>(false);
   const [pathPDF, setPathPDF] = useState<string>("");
-  const [numPages, setNumPages] = useState<number>(1);
-  const [scale, setScale] = useState<number>(1.0);
   const [showPDF, setShowPDF] = useState<boolean>(false);
-
-  function onDocumentLoadSuccess({ numPages }: { numPages: number }): void {
-    setNumPages(numPages);
-  }
 
   const getListUnits = async () => {
     const response = await getAllUnits("true");
@@ -178,6 +159,25 @@ const FormBM02: FC<FormBM02Props> = ({
   };
 
   useEffect(() => {
+    const resetForm = () => {
+      const formattedDate = moment(new Date()).format("DD/MM/YYYY");
+      const timestamp = moment(formattedDate, "DD/MM/YYYY").valueOf();
+      setEntryDate(timestamp);
+      setDefaultUnits([]);
+      setDefaultUsers([]);
+      setSemester("");
+      setClassCode("");
+      setActivityName("");
+      setStandardValues(0);
+      setFromDate(0);
+      setToDate(0);
+      setDocumentDate(0);
+      setListPicture(undefined);
+      setIsUploaded(false);
+      setPathPDF("");
+      setProof("");
+      setDescription("");
+    };
     const loadUsers = async () => {
       if (mode === "edit" && initialData !== undefined) {
         const units = await getAllUnits("true");
@@ -218,30 +218,14 @@ const FormBM02: FC<FormBM02Props> = ({
         setProof(initialData.proof || "");
         setDescription(initialData.note || "");
       } else {
-        const formattedDate = moment(new Date()).format("DD/MM/YYYY");
-        const timestamp = moment(formattedDate, "DD/MM/YYYY").valueOf();
-        setEntryDate(timestamp);
-        setDefaultUnits([]);
-        setDefaultUsers([]);
-        setSemester("");
-        setClassCode("");
-        setActivityName("");
-        setStandardValues(0);
-        setFromDate(0);
-        setToDate(0);
-        setDocumentDate(0);
-        setListPicture(undefined);
-        setIsUploaded(false);
-        setPathPDF("");
-        setProof("");
-        setDescription("");
+        resetForm();
       }
     };
     getListUnits();
     loadUsers();
     setShowPDF(false);
-    handleShowPDF(showPDF);
-  }, [initialData, mode, handleShowPDF, showPDF]);
+    handleShowPDF(false);
+  }, [initialData, mode, handleShowPDF]);
   return (
     <div
       className={`grid ${showPDF ? "grid-cols-2 gap-4" : "grid-cols-1"} mb-2`}
@@ -359,7 +343,7 @@ const FormBM02: FC<FormBM02Props> = ({
                 label: unit.name,
                 key: `${unit.idHrm}-${index}`,
               }))}
-              value={defaultUnits.length > 0 ? defaultUnits[0].id : undefined}
+              value={defaultUnits.length > 0 ? defaultUnits[0].name : undefined}
               onChange={(value) => {
                 getUsersFromHRMByUnitId(value);
               }}
@@ -474,7 +458,8 @@ const FormBM02: FC<FormBM02Props> = ({
                               className="text-sm ms-1 cursor-pointer text-blue-500 hover:text-blue-600"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setShowPDF(!showPDF);
+                                setShowPDF(true);
+                                handleShowPDF(true);
                               }}
                             >
                               xem chi tiết
@@ -518,147 +503,16 @@ const FormBM02: FC<FormBM02Props> = ({
             onChange={(e) => setDescription(e.target.value)}
           />
         </div>
-        {mode === "edit" && (
-          <>
-            <div className="flex flex-col gap-[2px]">
-              <span className="font-medium text-neutral-600">
-                Trạng thái phê duyệt thanh toán
-              </span>
-              <div>
-                {isPayment ? (
-                  <>
-                    {isPayment.isRejected ? (
-                      <>
-                        <div>
-                          <span className="text-red-500">
-                            <CloseOutlined className="me-1" /> Từ chối
-                          </span>
-                          {" - "}P.TC đã từ chối vào lúc{" "}
-                          <strong>
-                            {convertTimestampToFullDateTime(
-                              isPayment.approvedTime
-                            )}
-                          </strong>
-                        </div>
-                        <div>- Lý do: {isPayment.reason}</div>
-                      </>
-                    ) : (
-                      <>
-                        <div>
-                          <span className="text-green-500">
-                            <SafetyOutlined className="me-1" /> Đã duyệt
-                          </span>
-                          {" - "}P.TC đã phê duyệt vào lúc{" "}
-                          <strong>
-                            {convertTimestampToFullDateTime(
-                              isPayment.approvedTime
-                            )}
-                          </strong>
-                        </div>
-                      </>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      <span className="text-sky-500">
-                        <Spin size="small" className="mx-1" /> Chờ duyệt
-                      </span>{" "}
-                      {" - "} Đợi phê duyệt từ P.TC
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          </>
-        )}
+        <InfoApproved mode={mode} isPayment={isPayment} />
       </form>
-      {showPDF === true && (
-        <div>
-          <hr className="mt-1 mb-2" />
-          {pathPDF && pathPDF !== "" && (
-            <>
-              <div className="grid grid-cols-2 mb-[3px]">
-                <span className="font-medium text-neutral-600">
-                  Chế độ xem chi tiết
-                </span>
-                <div className="flex justify-end items-center">
-                  <Tag
-                    icon={<ZoomInOutlined />}
-                    color="processing"
-                    className="cursor-pointer"
-                    onClick={() => setScale((prevScale) => prevScale + 0.1)}
-                  >
-                    Phóng to
-                  </Tag>
-                  <Tag
-                    icon={<ZoomOutOutlined />}
-                    color="processing"
-                    className="cursor-pointer"
-                    onClick={() =>
-                      setScale((prevScale) => Math.max(prevScale - 0.1, 0.1))
-                    }
-                  >
-                    Thu nhỏ
-                  </Tag>
-                  <Tag
-                    icon={<CloseOutlined />}
-                    color="error"
-                    className="cursor-pointer"
-                    onClick={() => setShowPDF(!showPDF)}
-                  >
-                    Đóng
-                  </Tag>
-                </div>
-              </div>
-              <div
-                className="flex flex-col overflow-x-auto overflow-y-auto rounded-md shadow-md"
-                style={{
-                  maxHeight: "72vh",
-                }}
-              >
-                <Document
-                  file={`https://api-annual.uef.edu.vn/${pathPDF}`}
-                  onLoadSuccess={onDocumentLoadSuccess}
-                  loading={
-                    <div className="flex justify-center items-center h-full">
-                      <span>Đang tải...</span>
-                    </div>
-                  }
-                  error={
-                    <div
-                      className="flex flex-col items-center justify-center"
-                      style={{
-                        maxHeight: `calc(100vh - ${
-                          document
-                            .querySelector("form")
-                            ?.getBoundingClientRect().top
-                        }px - 42px)`,
-                      }}
-                    >
-                      <img
-                        src="/review.svg"
-                        width={"100px"}
-                        alt="review"
-                        className="mb-4"
-                      />
-                      <span>Không tìm thấy tệp tin phù hợp</span>
-                    </div>
-                  }
-                >
-                  {Array.from(new Array(numPages), (_, index) => (
-                    <Page
-                      key={`page_${index + 1}`}
-                      pageNumber={index + 1}
-                      scale={scale}
-                    />
-                  ))}
-                </Document>
-              </div>
-            </>
-          )}
-        </div>
-      )}
+      <InfoPDF
+        path={pathPDF}
+        isShowPDF={showPDF}
+        onSetShowPDF={(value) => {
+          setShowPDF(value);
+          handleShowPDF(value);
+        }}
+      />
     </div>
   );
 };

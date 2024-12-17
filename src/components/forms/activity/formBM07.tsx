@@ -16,8 +16,12 @@ import {
 } from "@/services/users/usersServices";
 import {
   CloseCircleOutlined,
+  CloseOutlined,
   CloudUploadOutlined,
   MinusCircleOutlined,
+  SafetyOutlined,
+  ZoomInOutlined,
+  ZoomOutOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -26,8 +30,10 @@ import {
   Input,
   InputNumber,
   Select,
+  Spin,
   Table,
   TableColumnsType,
+  Tag,
   Tooltip,
 } from "antd";
 import moment from "moment";
@@ -41,19 +47,18 @@ import {
   useState,
 } from "react";
 import { useDropzone } from "react-dropzone";
-import { pdfjs } from "react-pdf";
+import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
 import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 import { DisplayRoleItem } from "@/services/roles/rolesServices";
+import { convertTimestampToFullDateTime } from "@/utility/Utilities";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
-import InfoApproved from "./infoApproved";
-import InfoPDF from "./infoPDF";
 dayjs.locale("vi");
-interface FormBM05Props {
+interface FormBM07Props {
   onSubmit: (formData: Partial<AddUpdateActivityItem>) => void;
   handleShowPDF: (isVisible: boolean) => void;
   initialData?: Partial<AddUpdateActivityItem>;
@@ -66,7 +71,7 @@ interface FormBM05Props {
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.mjs`;
 
-const FormBM05: FC<FormBM05Props> = ({
+const FormBM07: FC<FormBM07Props> = ({
   onSubmit,
   handleShowPDF,
   initialData,
@@ -96,8 +101,13 @@ const FormBM05: FC<FormBM05Props> = ({
   );
   const [isUploaded, setIsUploaded] = useState<boolean>(false);
   const [pathPDF, setPathPDF] = useState<string>("");
+  const [numPages, setNumPages] = useState<number>(1);
+  const [scale, setScale] = useState<number>(1.0);
   const [showPDF, setShowPDF] = useState<boolean>(false);
 
+  function onDocumentLoadSuccess({ numPages }: { numPages: number }): void {
+    setNumPages(numPages);
+  }
   const getListUnits = async () => {
     const response = await getAllUnits("true");
     setFilteredUnitsHRM(response.items);
@@ -312,21 +322,14 @@ const FormBM05: FC<FormBM05Props> = ({
   };
 
   useEffect(() => {
-    const resetForm = () => {
-      const formattedDate = moment(new Date()).format("DD/MM/YYYY");
-      const timestamp = moment(formattedDate, "DD/MM/YYYY").valueOf();
-      setDeterEntryDate(timestamp);
-      setName("");
-      setDeterNumber("");
-      setDeterFromDate(0);
-      setDeterEventDate(0);
-      setTableUsers([]);
-      setListPicture(undefined);
-      setIsUploaded(false);
-      setDescription("");
-      setPathPDF("");
-      setDocumentNumber("");
-    };
+    getListUnits();
+  }, []);
+
+  useEffect(() => {
+    handleShowPDF(showPDF);
+  }, [showPDF]);
+
+  useEffect(() => {
     const loadUsers = async () => {
       if (mode === "edit" && initialData !== undefined) {
         setName(initialData.name || "");
@@ -361,16 +364,26 @@ const FormBM05: FC<FormBM05Props> = ({
         setPathPDF(initialData.determinations?.file.path || "");
         setDocumentNumber(initialData.documentNumber || "");
       } else {
-        resetForm();
+        const formattedDate = moment(new Date()).format("DD/MM/YYYY");
+        const timestamp = moment(formattedDate, "DD/MM/YYYY").valueOf();
+        setDeterEntryDate(timestamp);
+        setName("");
+        setDeterNumber("");
+        setDeterFromDate(0);
+        setDeterEventDate(0);
+        setTableUsers([]);
+        setListPicture(undefined);
+        setIsUploaded(false);
+        setDescription("");
+        setPathPDF("");
+        setDocumentNumber("");
       }
     };
     loadUsers();
-    getListUnits();
     setSelectedKey(null);
     setSelectedKeyUnit(null);
     setShowPDF(false);
-    handleShowPDF(false);
-  }, [initialData, mode, numberActivity, handleShowPDF]);
+  }, [initialData, mode, numberActivity]);
 
   return (
     <div
@@ -579,8 +592,7 @@ const FormBM05: FC<FormBM05Props> = ({
                               className="text-sm ms-1 cursor-pointer text-blue-500 hover:text-blue-600"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setShowPDF(true);
-                                handleShowPDF(true);
+                                setShowPDF(!showPDF);
                               }}
                             >
                               xem chi tiết
@@ -616,17 +628,148 @@ const FormBM05: FC<FormBM05Props> = ({
             )}
           </div>
         </div>
-        <InfoApproved mode={mode} isPayment={isPayment} />
+        {mode === "edit" && (
+          <>
+            <div className="flex flex-col gap-[2px]">
+              <span className="font-medium text-neutral-600">
+                Trạng thái phê duyệt thanh toán
+              </span>
+              <div>
+                {isPayment ? (
+                  <>
+                    {isPayment.isRejected ? (
+                      <>
+                        <div>
+                          <span className="text-red-500">
+                            <CloseOutlined className="me-1" /> Từ chối
+                          </span>
+                          {" - "}P.TC đã từ chối vào lúc{" "}
+                          <strong>
+                            {convertTimestampToFullDateTime(
+                              isPayment.approvedTime
+                            )}
+                          </strong>
+                        </div>
+                        <div>- Lý do: {isPayment.reason}</div>
+                      </>
+                    ) : (
+                      <>
+                        <div>
+                          <span className="text-green-500">
+                            <SafetyOutlined className="me-1" /> Đã duyệt
+                          </span>
+                          {" - "}P.TC đã phê duyệt vào lúc{" "}
+                          <strong>
+                            {convertTimestampToFullDateTime(
+                              isPayment.approvedTime
+                            )}
+                          </strong>
+                        </div>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <span className="text-sky-500">
+                        <Spin size="small" className="mx-1" /> Chờ duyệt
+                      </span>{" "}
+                      {" - "} Đợi phê duyệt từ P.TC
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </form>
-      <InfoPDF
-        path={pathPDF}
-        isShowPDF={showPDF}
-        onSetShowPDF={(value) => {
-          setShowPDF(value);
-          handleShowPDF(value);
-        }}
-      />
+      {showPDF === true && (
+        <div>
+          <hr className="mt-1 mb-2" />
+          {pathPDF && pathPDF !== "" && (
+            <>
+              <div className="grid grid-cols-2 mb-[3px]">
+                <span className="font-medium text-neutral-600">
+                  Chế độ xem chi tiết
+                </span>
+                <div className="flex justify-end items-center">
+                  <Tag
+                    icon={<ZoomInOutlined />}
+                    color="processing"
+                    className="cursor-pointer"
+                    onClick={() => setScale((prevScale) => prevScale + 0.1)}
+                  >
+                    Phóng to
+                  </Tag>
+                  <Tag
+                    icon={<ZoomOutOutlined />}
+                    color="processing"
+                    className="cursor-pointer"
+                    onClick={() =>
+                      setScale((prevScale) => Math.max(prevScale - 0.1, 0.1))
+                    }
+                  >
+                    Thu nhỏ
+                  </Tag>
+                  <Tag
+                    icon={<CloseOutlined />}
+                    color="error"
+                    className="cursor-pointer"
+                    onClick={() => setShowPDF(!showPDF)}
+                  >
+                    Đóng
+                  </Tag>
+                </div>
+              </div>
+              <div
+                className="flex flex-col overflow-x-auto overflow-y-auto rounded-md shadow-md"
+                style={{
+                  maxHeight: "72vh",
+                }}
+              >
+                <Document
+                  file={`https://api-annual.uef.edu.vn/${pathPDF}`}
+                  onLoadSuccess={onDocumentLoadSuccess}
+                  loading={
+                    <div className="flex justify-center items-center h-full">
+                      <span>Đang tải...</span>
+                    </div>
+                  }
+                  error={
+                    <div
+                      className="flex flex-col items-center justify-center"
+                      style={{
+                        maxHeight: `calc(100vh - ${
+                          document
+                            .querySelector("form")
+                            ?.getBoundingClientRect().top
+                        }px - 42px)`,
+                      }}
+                    >
+                      <img
+                        src="/review.svg"
+                        width={"100px"}
+                        alt="review"
+                        className="mb-4"
+                      />
+                      <span>Không tìm thấy tệp tin phù hợp</span>
+                    </div>
+                  }
+                >
+                  {Array.from(new Array(numPages), (_, index) => (
+                    <Page
+                      key={`page_${index + 1}`}
+                      pageNumber={index + 1}
+                      scale={scale}
+                    />
+                  ))}
+                </Document>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 };
-export default FormBM05;
+export default FormBM07;
