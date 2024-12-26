@@ -24,3 +24,9 @@ export async function deleteFiles(
     `api/files/delete?filePath=${filePath}`
   );
 }
+
+export async function deleteMultiFiles(listPaths: string[]): Promise<void> {
+  await apiClient.delete("api/files", {
+    data: listPaths,
+  });
+}

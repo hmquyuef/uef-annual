@@ -41,10 +41,6 @@ import {
   useState,
 } from "react";
 import { useDropzone } from "react-dropzone";
-import { pdfjs } from "react-pdf";
-import "react-pdf/dist/Page/AnnotationLayer.css";
-import "react-pdf/dist/Page/TextLayer.css";
-
 import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 import { DisplayRoleItem } from "@/services/roles/rolesServices";
 import locale from "antd/locale/vi_VN";
@@ -63,8 +59,6 @@ interface FormBM05Props {
   isPayment?: PaymentApprovedItem;
   displayRole: DisplayRoleItem;
 }
-
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.mjs`;
 
 const FormBM05: FC<FormBM05Props> = ({
   onSubmit,

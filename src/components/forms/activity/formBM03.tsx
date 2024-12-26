@@ -33,8 +33,6 @@ import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 import moment from "moment";
 import { useDropzone } from "react-dropzone";
-import "react-pdf/dist/Page/AnnotationLayer.css";
-import "react-pdf/dist/Page/TextLayer.css";
 import InfoApproved from "./infoApproved";
 import InfoPDF from "./infoPDF";
 dayjs.extend(utc);

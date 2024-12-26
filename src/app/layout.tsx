@@ -17,12 +17,7 @@ export default function RootLayout({
     <SessionWrapper>
       <html lang="en">
         <body>
-          <AntdRegistry>
-            {children}
-            {/* <DashboardLayout>
-              <div className="px-4 py-3">{children}</div>
-            </DashboardLayout> */}
-          </AntdRegistry>
+          <AntdRegistry>{children}</AntdRegistry>
         </body>
       </html>
     </SessionWrapper>

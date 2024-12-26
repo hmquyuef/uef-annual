@@ -5,6 +5,8 @@ enum Messages {
     BREAD_CRUMB_WORKLOAD = "Khối lượng công tác",
     BREAD_CRUMB_WORKLOAD_TYPES = "Danh sách biểu mẫu",
     BREAD_CRUMB_WORKLOAD_GROUPS = "Quản lý nhóm biểu mẫu",
+    BREAD_CRUMB_DOCUMENT = "Văn bản",
+    BREAD_CRUMB_DOCUMENT_MANAGER = "Quản lý văn bản",
 
     NO_DATA = "Không có dữ liệu!",
 
@@ -47,6 +49,21 @@ enum Messages {
     UPDATE_ACTIVITY = "Cập nhật thông tin tham gia hoạt động thành công!",
     APPROVED_ACTIVITY= "Phê duyệt thông tin hoạt động thành công!",
     REJECTED_ACTIVITY = "Đã từ chối phê duyệt thông tin hoạt động!",
+
+    TITLE_ADD_REGULATION_LABOR = "Thêm mới thông tin nội quy lao động",
+    TITLE_UPDATE_REGULATION_LABOR = "Cập nhật thông tin nội quy lao động",
+    ADD_REGULATION_LABOR = "Thêm mới thông tin nội quy lao động thành công!",
+    UPDATE_REGULATION_LABOR = "Cập nhật thông tin nội quy lao động thành công!",
+    APPROVED_REGULATION_LABOR = "Phê duyệt thông nội quy lao động thành công!",
+    REJECTED_REGULATION_LABOR = "Đã từ chối phê duyệt thông nội quy lao động!",
+
+    TITLE_ADD_REGULATION_TEACHING = "Thêm mới thông tin nội quy giảng dạy",
+    TITLE_UPDATE_REGULATION_TEACHING = "Cập nhật thông tin nội quy giảng dạy",
+    ADD_REGULATION_TEACHING = "Thêm mới thông tin nội quy giảng dạy thành công!",
+    UPDATE_REGULATION_TEACHING = "Cập nhật thông tin nội quy giảng dạy thành công!",
+    APPROVED_REGULATION_TEACHING = "Phê duyệt thông nội quy giảng dạy thành công!",
+    REJECTED_REGULATION_TEACHING = "Đã từ chối phê duyệt thông nội quy giảng dạy!",
+
 
     ADD_SCHOOLYEARS = "Thêm mới thời gian năm học thành công!",
     UPDATE_SCHOOLYEARS = "Cập nhật thời gian năm học thành công!",

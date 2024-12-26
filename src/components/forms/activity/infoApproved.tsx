@@ -16,7 +16,7 @@ const InfoApproved: FC<InfoApprovedProps> = ({ mode, isPayment }) => {
     <div>
       {mode === "edit" && (
         <>
-          <div className="flex flex-col gap-[2px]">
+          <div className="flex flex-col gap-1 mt-1">
             <span className="font-medium text-neutral-600">
               Trạng thái phê duyệt thanh toán
             </span>

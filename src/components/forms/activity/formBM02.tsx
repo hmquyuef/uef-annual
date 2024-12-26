@@ -30,8 +30,6 @@ import utc from "dayjs/plugin/utc";
 import moment from "moment";
 import { FC, FormEvent, Key, useEffect, useMemo, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import "react-pdf/dist/Page/AnnotationLayer.css";
-import "react-pdf/dist/Page/TextLayer.css";
 import InfoApproved from "./infoApproved";
 import InfoPDF from "./infoPDF";
 dayjs.extend(utc);

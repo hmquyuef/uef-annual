@@ -74,11 +74,12 @@ const TemplateForms: FC<TemplateFormsProps> = ({
         return <>{pageSize * (current - 1) + index + 1}</>;
       },
       className: "text-center w-[40px]",
+      fixed: "left",
     },
     ...title,
     {
       title: (
-        <div className="bg-orange-400 py-1">
+        <div className="py-1">
           NGÀY NHẬP <br /> VĂN BẢN
         </div>
       ),
@@ -93,16 +94,18 @@ const TemplateForms: FC<TemplateFormsProps> = ({
         const fromDate = record.entryDate || record.determinations?.entryDate;
         return fromDate ? convertTimestampToDate(fromDate) : "";
       },
-      className: "text-center w-[100px]",
+      className: "customInfoColors text-center w-[100px]",
+      fixed: "right",
     },
     {
       title: (
-        <div className="bg-rose-500 p-1 rounded-tr-lg">
+        <div className="rounded-tr-lg">
           PHÊ DUYỆT <br /> THANH TOÁN
         </div>
       ),
       dataIndex: ["payments", "isRejected"],
       key: "isRejected",
+      fixed: "right",
       render: (isRejected: boolean, record: any) => {
         const time = record.payments?.approvedTime
           ? convertTimestampToFullDateTime(record.payments.approvedTime)
@@ -157,7 +160,7 @@ const TemplateForms: FC<TemplateFormsProps> = ({
           </>
         );
       },
-      className: "text-center w-[110px]",
+      className: "customApprovedColors w-[110px]",
     },
   ];
   const columns: TableColumnsType<any> = tempColumns.map((column) => {
@@ -217,9 +220,8 @@ const TemplateForms: FC<TemplateFormsProps> = ({
       ) : (
         <>
           <Table<any>
-            className="custom-table-header shadow-md rounded-md"
-            bordered
             rowKey={(item) => item.id}
+            bordered
             rowHoverable
             size="small"
             pagination={{
@@ -238,6 +240,7 @@ const TemplateForms: FC<TemplateFormsProps> = ({
               emptyText: <Empty description={Messages.NO_DATA}></Empty>,
             }}
             onChange={handleTableChange}
+            className="custom-table-header shadow-md rounded-md"
           />
         </>
       )}

@@ -79,3 +79,25 @@ export const defaultFooterInfo = [
   [""],
   ["LÃNH ĐẠO ĐƠN VỊ", "", "", "", "", "", "", "", "NGƯỜI LẬP"],
 ];
+
+export const formatSize = (size: number | undefined): string => {
+  if (!size) return "0 B";
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let index = 0;
+  while (size >= 1024 && index < units.length - 1) {
+    size /= 1024;
+    index++;
+  }
+  return `${size.toFixed(2)} ${units[index]}`;
+};
+
+export const parseSize = (sizeStr: string): number => {
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  const regex = /^(\d+(?:\.\d+)?)\s*(B|KB|MB|GB|TB)$/i;
+  const match = sizeStr.match(regex);
+  if (!match) return 0;
+  const value = parseFloat(match[1]);
+  const unit = match[2].toUpperCase();
+  const index = units.indexOf(unit);
+  return value * Math.pow(1024, index);
+};

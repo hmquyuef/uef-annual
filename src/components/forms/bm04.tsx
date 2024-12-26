@@ -71,7 +71,6 @@ dayjs.locale("vi");
 
 type SearchProps = GetProps<typeof Input.Search>;
 const { Search } = Input;
-const { RangePicker } = DatePicker;
 
 const BM04 = () => {
   const [loading, setLoading] = useState(false);
@@ -245,7 +244,7 @@ const BM04 = () => {
       ),
       dataIndex: ["attackment", "path"],
       key: "path",
-      className: "text-center w-[100px]",
+      className: "customInfoColors text-center w-[100px]",
       sorter: (a, b) => a.attackment?.path.localeCompare(b.attackment?.path),
       render: (path: string) => {
         return path !== "" && path !== undefined ? (

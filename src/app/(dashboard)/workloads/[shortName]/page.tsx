@@ -16,7 +16,6 @@ const WorkloadPage = () => {
   const getWorkloadType = async () => {
     const response = await getWorkloadTypesByHref(shortName.toString());
     setItem(response.items);
-    console.log("response :>> ", response);
   };
   useEffect(() => {
     getWorkloadType();

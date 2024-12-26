@@ -2,18 +2,25 @@
 
 import {
   CloseOutlined,
+  CloudDownloadOutlined,
   ZoomInOutlined,
   ZoomOutOutlined,
 } from "@ant-design/icons";
 import { Tag } from "antd";
+import axios from "axios";
+import saveAs from "file-saver";
 import { FC, useState } from "react";
-import { Document, Page } from "react-pdf";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
 
 interface InfoPDFProps {
   isShowPDF: boolean;
-  onSetShowPDF: (showPDF: boolean) => void;
+  onSetShowPDF?: (showPDF: boolean) => void;
   path: string;
 }
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.mjs`;
 
 const InfoPDF: FC<InfoPDFProps> = ({ isShowPDF, onSetShowPDF, path }) => {
   const [scale, setScale] = useState<number>(1.0);
@@ -21,6 +28,19 @@ const InfoPDF: FC<InfoPDFProps> = ({ isShowPDF, onSetShowPDF, path }) => {
   function onDocumentLoadSuccess({ numPages }: { numPages: number }): void {
     setNumPages(numPages);
   }
+  const handleDownload = async (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const fileName = path.split("/").pop();
+    const linkSource = `https://api-annual.uef.edu.vn/${path}`;
+    const response = await axios.get(linkSource, {
+      responseType: "blob",
+    });
+    const blob = new Blob([response.data], {
+      type: "application/pdf",
+    });
+    saveAs(blob, fileName);
+  };
   return (
     <div>
       {isShowPDF && (
@@ -28,11 +48,19 @@ const InfoPDF: FC<InfoPDFProps> = ({ isShowPDF, onSetShowPDF, path }) => {
           <hr className="mt-1 mb-2" />
           {path && path !== "" && (
             <>
-              <div className="grid grid-cols-2 mb-[3px]">
+              <div className="grid grid-cols-2 mb-2">
                 <span className="font-medium text-neutral-600">
                   Chế độ xem chi tiết
                 </span>
                 <div className="flex justify-end items-center">
+                  <Tag
+                    icon={<CloudDownloadOutlined />}
+                    color="success"
+                    className="cursor-pointer"
+                    onClick={handleDownload}
+                  >
+                    Tải về
+                  </Tag>
                   <Tag
                     icon={<ZoomInOutlined />}
                     color="processing"
@@ -55,7 +83,7 @@ const InfoPDF: FC<InfoPDFProps> = ({ isShowPDF, onSetShowPDF, path }) => {
                     icon={<CloseOutlined />}
                     color="error"
                     className="cursor-pointer"
-                    onClick={() => onSetShowPDF(false)}
+                    onClick={() => onSetShowPDF && onSetShowPDF(false)}
                   >
                     Đóng
                   </Tag>

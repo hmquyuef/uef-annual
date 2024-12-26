@@ -204,7 +204,7 @@ const BM05 = () => {
       ),
       dataIndex: ["determinations", "file", "path"],
       key: "path",
-      className: "text-center w-[95px]",
+      className: "customInfoColors w-[95px]",
       sorter: (a, b) =>
         a.determinations?.file?.path.localeCompare(
           b.determinations?.file?.path
@@ -232,13 +232,13 @@ const BM05 = () => {
     },
     {
       title: (
-        <div className="bg-orange-400 p-1">
+        <div className="p-1">
           SỐ LƯU <br /> VĂN BẢN
         </div>
       ),
       dataIndex: "documentNumber",
       key: "documentNumber",
-      className: "text-center w-[5rem]",
+      className: "customInfoColors w-[5rem]",
       render: (number: string, item: ActivityItem) => {
         const path = item.determinations?.file?.path;
         return (

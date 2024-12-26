@@ -167,14 +167,11 @@ const Menus = () => {
     try {
       if (mode === "edit" && selectedItem) {
         const response = await putUpdateMenu(formData.id as string, formData);
-        console.log("response :>> ", response);
         if (response) {
-         
           setDescription("Cập nhật chức năng thành công!");
         }
       } else {
         const response = await postAddMenu(formData);
-        console.log("response :>> ", response);
         if (response) {
           setDescription("Thêm mới chức năng thành công!");
         }

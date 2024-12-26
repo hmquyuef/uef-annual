@@ -20,6 +20,14 @@
   padding: 0px !important;
 }
 
+.custom-table-header .ant-table-thead > tr > .customApprovedColors {
+  background-color: rgb(244 63 94 / var(--tw-bg-opacity, 1)) !important;
+}
+
+.custom-table-header .ant-table-thead > tr > .customInfoColors {
+  background-color: rgb(251 146 60 / var(--tw-bg-opacity, 1)) !important;
+}
+
 .custom-table-header .ant-table-thead > tr > th > .ant-table-column-sorters {
   background-color: rgb(251 146 60 / var(--tw-bg-opacity)) !important;
 }
@@ -42,6 +50,34 @@
   top: 5px !important;
   right: 9px !important;
   transform: none !important;
+}
+
+.ant-tree-treenode {
+  width: 100% !important;
+}
+
+.ant-tree-treenode-motion {
+  width: 100% !important;
+}
+
+.ant-tree-node-content-wrapper {
+  width: 100% !important;
+}
+
+.ant-tree-node-content-wrapper {
+  width: 100% !important;
+}
+
+.pdf-viewer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdf-viewer canvas {
+  max-width: 100%;
+  height: auto;
 }
 
 /* :root {

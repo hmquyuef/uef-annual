@@ -63,11 +63,11 @@ import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
 import FormBM01 from "./activity/formBM01";
 import FromUpload from "./activity/formUpload";
+import TemplateForms from "./workloads/TemplateForms";
 
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
-import TemplateForms from "./workloads/TemplateForms";
 dayjs.locale("vi");
 
 type SearchProps = GetProps<typeof Input.Search>;
@@ -391,7 +391,6 @@ const BM01 = () => {
   }, [selectedRowKeys]);
 
   const handleEdit = (classLeader: ClassLeaderItem) => {
-    console.log("classLeader :>> ", classLeader);
     const updatedActivity: Partial<ClassLeaderItem> = {
       ...classLeader,
     };

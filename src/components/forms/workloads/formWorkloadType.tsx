@@ -93,7 +93,6 @@ const FormWorkloadType: React.FC<FormWorkloadTypeProps> = ({
     onSubmit(formData);
   };
   useEffect(() => {
-    console.log("initialData :>> ", initialData);
     const loadUsers = async () => {
       if (mode === "edit" && initialData !== undefined) {
         setName(initialData.name || "");
