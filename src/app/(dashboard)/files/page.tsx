@@ -401,7 +401,7 @@ const FilesManager = () => {
             </div>
           </div>
           {/* <div className="border-l border-neutral-200"> */}
-          <div >
+          <div className="border-neutral-200">
             {path && path ? (
               <>
                 <div className="flex justify-center items-center h-full bg-red-200">
