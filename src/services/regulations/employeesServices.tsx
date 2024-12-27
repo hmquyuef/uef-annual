@@ -1,7 +1,7 @@
 import apiClient from "../apiClient";
 import { PaymentApprovedItem } from "../forms/PaymentApprovedItem";
 
-export interface LaborRegulationItem {
+export interface EmployeesRegulationItem {
   id: string;
   userName: string;
   fullName: string;
@@ -21,56 +21,56 @@ export interface LaborRegulationItem {
   note: string;
 }
 
-export interface LaborRegulationsResponse {
-  items: LaborRegulationItem[];
+export interface EmployeesRegulationsResponse {
+  items: EmployeesRegulationItem[];
   totalCount: number;
 }
 
-export async function getAllLaborRegulations(
+export async function getAllEmployeesRegulations(
   yearId: string
-): Promise<LaborRegulationsResponse> {
+): Promise<EmployeesRegulationsResponse> {
   let url = yearId
-    ? `api/regulations/labors?Years=${yearId}`
-    : "api/regulations/labors";
-  const response = await apiClient.get<LaborRegulationsResponse>(url);
+    ? `api/regulations/employees?Years=${yearId}`
+    : "api/regulations/employees";
+  const response = await apiClient.get<EmployeesRegulationsResponse>(url);
   return response.data;
 }
 
-export async function postLaborRegulation(data: Partial<any>): Promise<any> {
-  const response = await apiClient.post<any>("api/regulations/labors", data);
+export async function postEmployeesRegulation(data: Partial<any>): Promise<any> {
+  const response = await apiClient.post<any>("api/regulations/employees", data);
   return response.data;
 }
 
-export async function putLaborRegulation(
+export async function putEmployeesRegulation(
   id: string,
   data: Partial<any>
 ): Promise<any> {
   const response = await apiClient.put<any>(
-    `api/regulations/labors/${id}`,
+    `api/regulations/employees/${id}`,
     data
   );
   return response.data;
 }
 
-export async function putApprovedgetLaborRegulation(
+export async function putApprovedgetEmployeesRegulation(
   data: Partial<any>
 ): Promise<any> {
   const response = await apiClient.put<any>(
-    `/api/regulations/labors/approved`,
+    `/api/regulations/employees/approved`,
     data
   );
   return response.data;
 }
 
-export async function deleteLaborRegulations(ids: string[]): Promise<void> {
-  await apiClient.delete("api/regulations/labors", {
+export async function deleteEmployeesRegulations(ids: string[]): Promise<void> {
+  await apiClient.delete("api/regulations/employees", {
     data: ids,
   });
 }
 
-export async function ImportLaborRegulations(data: FormData): Promise<any> {
+export async function ImportEmployeesRegulations(data: FormData): Promise<any> {
   const response = await apiClient.post<any>(
-    "api/regulations/labors/import",
+    "api/regulations/employees/import",
     data,
     {
       headers: {

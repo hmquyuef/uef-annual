@@ -28,10 +28,6 @@
   background-color: rgb(251 146 60 / var(--tw-bg-opacity, 1)) !important;
 }
 
-.custom-table-header .ant-table-thead > tr > th > .ant-table-column-sorters {
-  background-color: rgb(251 146 60 / var(--tw-bg-opacity)) !important;
-}
-
 .custom-table-header .ant-table-tbody > tr:hover > td {
   background-color: rgb(59 130 246 / 0.15) !important;
 }

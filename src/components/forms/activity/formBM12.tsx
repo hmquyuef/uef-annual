@@ -16,12 +16,8 @@ import {
 } from "@/services/users/usersServices";
 import {
   CloseCircleOutlined,
-  CloseOutlined,
   CloudUploadOutlined,
-  MinusCircleOutlined,
-  SafetyOutlined,
-  ZoomInOutlined,
-  ZoomOutOutlined,
+  MinusCircleOutlined
 } from "@ant-design/icons";
 import {
   Button,
@@ -30,11 +26,9 @@ import {
   Input,
   InputNumber,
   Select,
-  Spin,
   Table,
   TableColumnsType,
-  Tag,
-  Tooltip,
+  Tooltip
 } from "antd";
 import moment from "moment";
 import {
@@ -47,38 +41,28 @@ import {
   useState,
 } from "react";
 import { useDropzone } from "react-dropzone";
-import { Document, Page, pdfjs } from "react-pdf";
+import { pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
-import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 import { DisplayRoleItem } from "@/services/roles/rolesServices";
-import { convertTimestampToFullDateTime } from "@/utility/Utilities";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 dayjs.locale("vi");
-interface FormBM05Props {
+interface FormBM12Props {
   onSubmit: (formData: Partial<AddUpdateActivityItem>) => void;
-  handleShowPDF: (isVisible: boolean) => void;
   initialData?: Partial<AddUpdateActivityItem>;
   mode: "add" | "edit";
-  numberActivity?: number;
-  isBlock: boolean;
-  isPayment?: PaymentApprovedItem;
   displayRole: DisplayRoleItem;
 }
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.mjs`;
 
-const FormBM05: FC<FormBM05Props> = ({
+const FormBM12: FC<FormBM12Props> = ({
   onSubmit,
-  handleShowPDF,
   initialData,
   mode,
-  numberActivity,
-  isBlock,
-  isPayment,
   displayRole,
 }) => {
   const { TextArea } = Input;
@@ -235,7 +219,7 @@ const FormBM05: FC<FormBM05Props> = ({
           <div>
             <Tooltip placement="right" title="Xóa dữ liệu" arrow={true}>
               <Button
-                disabled={isBlock || displayRole.isDelete === false}
+                disabled={displayRole.isDelete === false}
                 color="danger"
                 variant="text"
                 onClick={() => onRemoveUsers(id)}
@@ -287,7 +271,7 @@ const FormBM05: FC<FormBM05Props> = ({
 
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
-    disabled: isBlock || displayRole.isUpload === false,
+    disabled: displayRole.isUpload === false,
   });
 
   const handleSubmit = async (e: FormEvent) => {
@@ -324,10 +308,6 @@ const FormBM05: FC<FormBM05Props> = ({
   useEffect(() => {
     getListUnits();
   }, []);
-
-  useEffect(() => {
-    handleShowPDF(showPDF);
-  }, [showPDF]);
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -383,7 +363,7 @@ const FormBM05: FC<FormBM05Props> = ({
     setSelectedKey(null);
     setSelectedKeyUnit(null);
     setShowPDF(false);
-  }, [initialData, mode, numberActivity]);
+  }, [initialData, mode]);
 
   return (
     <div
@@ -477,9 +457,7 @@ const FormBM05: FC<FormBM05Props> = ({
             <Select
               showSearch
               disabled={
-                isBlock ||
-                displayRole.isCreate === false ||
-                displayRole.isUpdate === false
+                displayRole.isCreate === false || displayRole.isUpdate === false
               }
               optionFilterProp="label"
               filterSort={(optionA, optionB) =>
@@ -506,9 +484,7 @@ const FormBM05: FC<FormBM05Props> = ({
             <Select
               showSearch
               disabled={
-                isBlock ||
-                displayRole.isCreate === false ||
-                displayRole.isUpdate === false
+                displayRole.isCreate === false || displayRole.isUpdate === false
               }
               optionFilterProp="label"
               defaultValue={""}
@@ -604,7 +580,7 @@ const FormBM05: FC<FormBM05Props> = ({
                       <div className="flex gap-3 items-center mt-2">
                         <Button
                           danger
-                          disabled={isBlock || displayRole.isUpload === false}
+                          disabled={displayRole.isUpload === false}
                           color="danger"
                           onClick={handleDeletePicture}
                           size="small"
@@ -615,7 +591,7 @@ const FormBM05: FC<FormBM05Props> = ({
                         <Button
                           type="primary"
                           size="small"
-                          disabled={isBlock || displayRole.isUpload === false}
+                          disabled={displayRole.isUpload === false}
                           icon={<CloudUploadOutlined />}
                         >
                           Chọn tệp thay thế
@@ -628,148 +604,8 @@ const FormBM05: FC<FormBM05Props> = ({
             )}
           </div>
         </div>
-        {mode === "edit" && (
-          <>
-            <div className="flex flex-col gap-[2px]">
-              <span className="font-medium text-neutral-600">
-                Trạng thái phê duyệt thanh toán
-              </span>
-              <div>
-                {isPayment ? (
-                  <>
-                    {isPayment.isRejected ? (
-                      <>
-                        <div>
-                          <span className="text-red-500">
-                            <CloseOutlined className="me-1" /> Từ chối
-                          </span>
-                          {" - "}P.TC đã từ chối vào lúc{" "}
-                          <strong>
-                            {convertTimestampToFullDateTime(
-                              isPayment.approvedTime
-                            )}
-                          </strong>
-                        </div>
-                        <div>- Lý do: {isPayment.reason}</div>
-                      </>
-                    ) : (
-                      <>
-                        <div>
-                          <span className="text-green-500">
-                            <SafetyOutlined className="me-1" /> Đã duyệt
-                          </span>
-                          {" - "}P.TC đã phê duyệt vào lúc{" "}
-                          <strong>
-                            {convertTimestampToFullDateTime(
-                              isPayment.approvedTime
-                            )}
-                          </strong>
-                        </div>
-                      </>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      <span className="text-sky-500">
-                        <Spin size="small" className="mx-1" /> Chờ duyệt
-                      </span>{" "}
-                      {" - "} Đợi phê duyệt từ P.TC
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          </>
-        )}
       </form>
-      {showPDF === true && (
-        <div>
-          <hr className="mt-1 mb-2" />
-          {pathPDF && pathPDF !== "" && (
-            <>
-              <div className="grid grid-cols-2 mb-[3px]">
-                <span className="font-medium text-neutral-600">
-                  Chế độ xem chi tiết
-                </span>
-                <div className="flex justify-end items-center">
-                  <Tag
-                    icon={<ZoomInOutlined />}
-                    color="processing"
-                    className="cursor-pointer"
-                    onClick={() => setScale((prevScale) => prevScale + 0.1)}
-                  >
-                    Phóng to
-                  </Tag>
-                  <Tag
-                    icon={<ZoomOutOutlined />}
-                    color="processing"
-                    className="cursor-pointer"
-                    onClick={() =>
-                      setScale((prevScale) => Math.max(prevScale - 0.1, 0.1))
-                    }
-                  >
-                    Thu nhỏ
-                  </Tag>
-                  <Tag
-                    icon={<CloseOutlined />}
-                    color="error"
-                    className="cursor-pointer"
-                    onClick={() => setShowPDF(!showPDF)}
-                  >
-                    Đóng
-                  </Tag>
-                </div>
-              </div>
-              <div
-                className="flex flex-col overflow-x-auto overflow-y-auto rounded-md shadow-md"
-                style={{
-                  maxHeight: "72vh",
-                }}
-              >
-                <Document
-                  file={`https://api-annual.uef.edu.vn/${pathPDF}`}
-                  onLoadSuccess={onDocumentLoadSuccess}
-                  loading={
-                    <div className="flex justify-center items-center h-full">
-                      <span>Đang tải...</span>
-                    </div>
-                  }
-                  error={
-                    <div
-                      className="flex flex-col items-center justify-center"
-                      style={{
-                        maxHeight: `calc(100vh - ${
-                          document
-                            .querySelector("form")
-                            ?.getBoundingClientRect().top
-                        }px - 42px)`,
-                      }}
-                    >
-                      <img
-                        src="/review.svg"
-                        width={"100px"}
-                        alt="review"
-                        className="mb-4"
-                      />
-                      <span>Không tìm thấy tệp tin phù hợp</span>
-                    </div>
-                  }
-                >
-                  {Array.from(new Array(numPages), (_, index) => (
-                    <Page
-                      key={`page_${index + 1}`}
-                      pageNumber={index + 1}
-                      scale={scale}
-                    />
-                  ))}
-                </Document>
-              </div>
-            </>
-          )}
-        </div>
-      )}
     </div>
   );
 };
-export default FormBM05;
+export default FormBM12;

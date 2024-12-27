@@ -79,7 +79,7 @@ const TemplateForms: FC<TemplateFormsProps> = ({
     ...title,
     {
       title: (
-        <div className="py-1">
+        <div className="py-1 rounded-tr-lg">
           NGÀY NHẬP <br /> VĂN BẢN
         </div>
       ),
@@ -163,6 +163,11 @@ const TemplateForms: FC<TemplateFormsProps> = ({
       className: "customApprovedColors w-[110px]",
     },
   ];
+
+  if (!onSetPayments) {
+    tempColumns.pop();
+  }
+
   const columns: TableColumnsType<any> = tempColumns.map((column) => {
     if (column.key === "userName" || column.key === "name") {
       return {

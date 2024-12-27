@@ -1,15 +1,5 @@
 "use client";
 
-import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
-import {
-  deleteTeachingRegulations,
-  getAllTeachingRegulations,
-  ImportTeachingRegulations,
-  postTeachingRegulation,
-  putApprovedgetTeachingRegulation,
-  putTeachingRegulation,
-  TeachingRegulationItem,
-} from "@/services/regulations/tachingServices";
 import {
   DisplayRoleItem,
   getRoleByName,
@@ -22,12 +12,9 @@ import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
 import {
   ArrowsAltOutlined,
-  CloseCircleOutlined,
   DeleteOutlined,
   FileExcelOutlined,
-  FileProtectOutlined,
   PlusOutlined,
-  SafetyOutlined,
   ShrinkOutlined,
 } from "@ant-design/icons";
 import {
@@ -38,7 +25,6 @@ import {
   GetProps,
   Input,
   MenuProps,
-  Modal,
   Select,
   TableColumnsType,
   Tooltip,
@@ -55,14 +41,22 @@ import FromUpload from "./activity/formUpload";
 import TemplateForms from "./workloads/TemplateForms";
 
 import {
+  deleteLecturerRegulations,
+  getAllLecturerRegulations,
+  ImportLecturerRegulations,
+  LecturerRegulationItem,
+  postLecturerRegulation,
+  putLecturerRegulation,
+} from "@/services/regulations/lecturersServices";
+import {
   convertTimestampToDate,
   defaultFooterInfo,
   setCellStyle,
 } from "@/utility/Utilities";
-import * as XLSX from "sheetjs-style";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
+import * as XLSX from "sheetjs-style";
 dayjs.locale("vi");
 
 const BM13 = () => {
@@ -70,7 +64,7 @@ const BM13 = () => {
   const { Search } = Input;
   const [loading, setLoading] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
-  const [teaching, setTeaching] = useState<TeachingRegulationItem[]>([]);
+  const [lecturer, setLecturer] = useState<LecturerRegulationItem[]>([]);
   const [data, setData] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isUpload, setIsUpload] = useState(false);
@@ -93,12 +87,7 @@ const BM13 = () => {
   const [endDate, setEndDate] = useState<number | 0>(0);
   const [maxEndDate, setMaxEndDate] = useState<number | 0>(0);
   const [advanced, setAdvanced] = useState(false);
-  const [userName, setUserName] = useState<string | null>(null);
   const [role, setRole] = useState<RoleItem>();
-  const [isBlock, setIsBlock] = useState(false);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [reason, setReason] = useState("");
-  const [isPayments, setIsPayments] = useState<PaymentApprovedItem>();
   const [isShowPdf, setIsShowPdf] = useState(false);
 
   const getDefaultYears = async () => {
@@ -119,8 +108,8 @@ const BM13 = () => {
   };
 
   const getListTeachingRegulations = async (yearId: string) => {
-    const response = await getAllTeachingRegulations(yearId);
-    setTeaching(response.items);
+    const response = await getAllLecturerRegulations(yearId);
+    setLecturer(response.items);
     setData(response.items);
     setNotificationOpen(false);
   };
@@ -130,21 +119,19 @@ const BM13 = () => {
     setUnits(response.items);
   };
 
-  const columns: TableColumnsType<TeachingRegulationItem> = [
+  const columns: TableColumnsType<LecturerRegulationItem> = [
     {
       title: "MÃ SỐ CB-GV-NV",
       dataIndex: "userName",
       key: "userName",
       className: "w-[6rem]",
       fixed: "left",
-      render: (userName: string, record: TeachingRegulationItem) => {
+      render: (userName: string, record: LecturerRegulationItem) => {
         return (
           <span
             className="text-blue-500 font-semibold cursor-pointer"
             onClick={() => {
               handleEdit(record);
-              setIsBlock(record.payments?.isBlockData ?? false);
-              setIsPayments(record.payments);
             }}
           >
             {userName}
@@ -242,39 +229,13 @@ const BM13 = () => {
     },
   ];
 
-  const itemsApproved: MenuProps["items"] = [
-    {
-      key: "1",
-      label: (
-        <p onClick={() => handleApproved(false)} className="font-medium">
-          Chấp nhận
-        </p>
-      ),
-      icon: <SafetyOutlined />,
-      style: { color: "#52c41a" },
-    },
-    {
-      type: "divider",
-    },
-    {
-      key: "2",
-      label: (
-        <p onClick={() => setIsModalVisible(true)} className="font-medium">
-          Từ chối
-        </p>
-      ),
-      icon: <CloseCircleOutlined />,
-      style: { color: "rgb(220 38 38)" },
-    },
-  ];
-
   const onSearch: SearchProps["onSearch"] = (value) => {
     if ((value === "" && !selectedKeyUnit) || selectedKeyUnit === "all")
-      setData(teaching || []);
+      setData(lecturer || []);
     const selectedUnit = units.find(
       (unit: UnitItem) => unit.idHrm === selectedKeyUnit
     );
-    const filteredData = teaching.filter((item) => {
+    const filteredData = lecturer.filter((item) => {
       const matchesName =
         item.userName.toLowerCase().includes(value.toLowerCase()) ||
         item.fullName.toLowerCase().includes(value.toLowerCase());
@@ -294,7 +255,7 @@ const BM13 = () => {
     try {
       const selectedKeysArray = Array.from(selectedRowKeys) as string[];
       if (selectedKeysArray.length > 0) {
-        await deleteTeachingRegulations(selectedKeysArray);
+        await deleteLecturerRegulations(selectedKeysArray);
         setDescription(
           `Đã xóa thành công ${selectedKeysArray.length} thông tin chủ nhiệm lớp!`
         );
@@ -321,7 +282,7 @@ const BM13 = () => {
   const handleSubmit = async (formData: Partial<any>) => {
     try {
       if (mode === "edit" && selectedItem) {
-        const response = await putTeachingRegulation(
+        const response = await putLecturerRegulation(
           formData.id as string,
           formData
         );
@@ -329,7 +290,7 @@ const BM13 = () => {
           setDescription(Messages.UPDATE_CLASSLEADERS);
         }
       } else {
-        const response = await postTeachingRegulation(formData);
+        const response = await postLecturerRegulation(formData);
         if (response) {
           setDescription(Messages.ADD_CLASSLEADERS);
         }
@@ -361,7 +322,7 @@ const BM13 = () => {
       formData.append("Name", fileAttackment.name);
       formData.append("Size", fileAttackment.size.toString());
 
-      const response = await ImportTeachingRegulations(formData);
+      const response = await ImportLecturerRegulations(formData);
       if (response) {
         setNotificationOpen(true);
         setStatus("success");
@@ -661,48 +622,6 @@ const BM13 = () => {
     }
   };
 
-  const handleApproved = async (isRejected: boolean) => {
-    const formData = {
-      ids: selectedRowKeys.length > 0 ? selectedRowKeys : [selectedItem?.id],
-      paymentInfo: {
-        approver: userName,
-        approvedTime: Math.floor(Date.now() / 1000),
-        isRejected: isRejected,
-        reason: reason,
-        isBlockData: true,
-      },
-    };
-    try {
-      if (selectedRowKeys.length > 0 || selectedItem) {
-        const response = await putApprovedgetTeachingRegulation(formData);
-        if (response) {
-          setDescription(
-            isRejected
-              ? `${Messages.REJECTED_REGULATION_TEACHING} (${
-                  selectedRowKeys.length > 0 ? selectedRowKeys.length : 1
-                } dòng)`
-              : `${Messages.APPROVED_REGULATION_TEACHING} (${
-                  selectedRowKeys.length > 0 ? selectedRowKeys.length : 1
-                } dòng)`
-          );
-        }
-      }
-      setSelectedRowKeys([]);
-      setNotificationOpen(true);
-      setStatus("success");
-      setMessage("Thông báo");
-      await getListTeachingRegulations(selectedKey.id);
-      setIsOpen(false);
-      setSelectedItem(undefined);
-      setMode("add");
-    } catch (error) {
-      setNotificationOpen(true);
-      setStatus("error");
-      setMessage("Thông báo");
-      setDescription(Messages.ERROR);
-    }
-  };
-
   const handleChangeYear = (value: any) => {
     setLoading(true);
     const temp = defaultYears.filter((x: any) => x.id === value)[0] as any;
@@ -736,10 +655,7 @@ const BM13 = () => {
           "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
         ];
       getDisplayRole(role as string);
-      const decodedUserName = jwtDecode(token);
-      if (decodedUserName.sub) {
-        setUserName(decodedUserName.sub);
-      }
+
       if (role === "secretary") {
         const decodedUnitId = jwtDecode<{
           family_name: string;
@@ -756,13 +672,13 @@ const BM13 = () => {
 
   useEffect(() => {
     if (
-      teaching.length > 0 &&
+      lecturer.length > 0 &&
       units.length > 0 &&
       (selectedKeyUnit || startDate || endDate)
     ) {
       onSearch("");
     }
-  }, [teaching, units, selectedKeyUnit, startDate, endDate]);
+  }, [lecturer, units, selectedKeyUnit, startDate, endDate]);
   return (
     <div>
       <div className="grid grid-cols-3 mb-3">
@@ -937,26 +853,6 @@ const BM13 = () => {
           </AnimatePresence>
         </div>
         <div className="flex justify-end mt-6 gap-3">
-          {role?.displayRole.isApprove && role?.displayRole.isReject && (
-            <>
-              <Tooltip placement="top" title="Phê duyệt dữ liệu" arrow={true}>
-                <Dropdown menu={{ items: itemsApproved }} trigger={["click"]}>
-                  <a onClick={(e) => e.preventDefault()}>
-                    <Button
-                      type="primary"
-                      icon={<FileProtectOutlined />}
-                      disabled={selectedRowKeys.length === 0}
-                    >
-                      Phê duyệt{" "}
-                      {selectedRowKeys.length !== 0
-                        ? `(${selectedRowKeys.length})`
-                        : ""}
-                    </Button>
-                  </a>
-                </Dropdown>
-              </Tooltip>
-            </>
-          )}
           {role?.displayRole.isExport && (
             <>
               <Tooltip placement="top" title="Xuất dữ liệu Excel" arrow={true}>
@@ -1029,9 +925,6 @@ const BM13 = () => {
           );
         }}
         role={role || undefined}
-        isBlock={isBlock}
-        onApprove={() => handleApproved(false)}
-        onReject={() => setIsModalVisible(true)}
         onCancel={() => {
           setNotificationOpen(false);
           setIsOpen(false);
@@ -1057,38 +950,18 @@ const BM13 = () => {
                 onSubmit={handleSubmit}
                 initialData={selectedItem as Partial<any>}
                 mode={mode}
-                isBlock={isBlock}
-                isPayment={isPayments}
                 displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
               />
             </>
           )
         }
       />
-      <Modal
-        open={isModalVisible}
-        onCancel={() => {
-          setIsModalVisible(false);
-          setReason("");
-        }}
-        onOk={() => {
-          setIsModalVisible(false);
-          handleApproved(true);
-          setReason("");
-        }}
-        title="Lý do từ chối"
-        width={700}
-      >
-        <Input value={reason} onChange={(e) => setReason(e.target.value)} />
-      </Modal>
       <hr className="mb-3" />
       <TemplateForms
         loading={loading}
         data={data}
         title={columns}
         onEdit={handleEdit}
-        onSetBlock={setIsBlock}
-        onSetPayments={setIsPayments}
         onSelectionChange={(selectedRowKeys) =>
           setSelectedRowKeys(selectedRowKeys)
         }

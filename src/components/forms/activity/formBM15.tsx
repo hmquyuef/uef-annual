@@ -1,6 +1,5 @@
 "use client";
 
-import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 import { DisplayRoleItem } from "@/services/roles/rolesServices";
 import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
 import {
@@ -14,15 +13,12 @@ import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import moment from "moment";
 import { FC, FormEvent, Key, useEffect, useState } from "react";
-import InfoApproved from "./infoApproved";
 dayjs.locale("vi");
 
 interface FormBM15Props {
   onSubmit: (formData: Partial<any>) => void;
   initialData?: Partial<any>;
   mode: "add" | "edit";
-  isBlock: boolean;
-  isPayment?: PaymentApprovedItem;
   displayRole: DisplayRoleItem;
 }
 
@@ -30,8 +26,6 @@ const FormBM15: FC<FormBM15Props> = ({
   onSubmit,
   initialData,
   mode,
-  isBlock,
-  isPayment,
   displayRole,
 }) => {
   const [attendanceDays, setAttendanceDays] = useState<number>(0);
@@ -155,9 +149,7 @@ const FormBM15: FC<FormBM15Props> = ({
             <Select
               showSearch
               disabled={
-                isBlock ||
-                displayRole.isCreate === false ||
-                displayRole.isUpdate === false
+                displayRole.isCreate === false || displayRole.isUpdate === false
               }
               optionFilterProp="label"
               filterSort={(optionA, optionB) =>
@@ -183,9 +175,7 @@ const FormBM15: FC<FormBM15Props> = ({
             <Select
               showSearch
               disabled={
-                isBlock ||
-                displayRole.isCreate === false ||
-                displayRole.isUpdate === false
+                displayRole.isCreate === false || displayRole.isUpdate === false
               }
               optionFilterProp="label"
               defaultValue={""}
@@ -336,8 +326,6 @@ const FormBM15: FC<FormBM15Props> = ({
             />
           </div>
         </div>
-        <hr />
-        <InfoApproved mode={mode} isPayment={isPayment} />
       </form>
     </div>
   );

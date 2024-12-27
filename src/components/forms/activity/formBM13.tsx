@@ -10,19 +10,15 @@ import { ConfigProvider, DatePicker, Input, InputNumber, Select } from "antd";
 import moment from "moment";
 import { FC, FormEvent, Key, useEffect, useState } from "react";
 
-import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 import { DisplayRoleItem } from "@/services/roles/rolesServices";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
-import InfoApproved from "./infoApproved";
 dayjs.locale("vi");
 interface FormBM13Props {
   onSubmit: (formData: Partial<any>) => void;
   initialData?: Partial<any>;
   mode: "add" | "edit";
-  isBlock: boolean;
-  isPayment?: PaymentApprovedItem;
   displayRole: DisplayRoleItem;
 }
 
@@ -30,8 +26,6 @@ const FormBM13: FC<FormBM13Props> = ({
   onSubmit,
   initialData,
   mode,
-  isBlock,
-  isPayment,
   displayRole,
 }) => {
   const { TextArea } = Input;
@@ -131,9 +125,7 @@ const FormBM13: FC<FormBM13Props> = ({
             <Select
               showSearch
               disabled={
-                isBlock ||
-                displayRole.isCreate === false ||
-                displayRole.isUpdate === false
+                displayRole.isCreate === false || displayRole.isUpdate === false
               }
               optionFilterProp="label"
               filterSort={(optionA, optionB) =>
@@ -159,9 +151,7 @@ const FormBM13: FC<FormBM13Props> = ({
             <Select
               showSearch
               disabled={
-                isBlock ||
-                displayRole.isCreate === false ||
-                displayRole.isUpdate === false
+                displayRole.isCreate === false || displayRole.isUpdate === false
               }
               optionFilterProp="label"
               defaultValue={""}
@@ -242,8 +232,6 @@ const FormBM13: FC<FormBM13Props> = ({
             onChange={(e) => setNote(e.target.value)}
           />
         </div>
-        <hr />
-        <InfoApproved mode={mode} isPayment={isPayment} />
       </form>
     </div>
   );
