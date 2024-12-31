@@ -6,12 +6,16 @@ export interface LaborUnionItem {
   id: string;
   contents: string;
   documentNumber: string;
+  internalNumber: string;
   documentDate: number;
   fromDate: number;
   toDate: number;
   entryDate: number;
+  eventVenue: string;
+  sponsor: string;
   members: MembersInfomations[];
-  attackment: AttackmentItem;
+  attackmentFile: AttackmentItem;
+  attackmentExcel: AttackmentItem;
   note: string;
 }
 
@@ -46,6 +50,17 @@ export async function putLaborUnion(
   return response.data;
 }
 
+export async function putListMembersLaborUnion(
+  id: string,
+  data: Partial<any>
+): Promise<any> {
+  const response = await apiClient.put<any>(
+    `api/general/union/labor/members/${id}`,
+    data
+  );
+  return response.data;
+}
+
 export async function deleteLaborUnions(ids: string[]): Promise<void> {
   await apiClient.delete("api/general/union/labor", {
     data: ids,
@@ -62,6 +77,19 @@ export async function ImportLaborUnions(data: FormData): Promise<any> {
       },
     }
   );
-
   return response.data;
 }
+
+// export async function ImportLaborUnions(data: FormData): Promise<any> {
+//   const response = await apiClient.post<any>(
+//     "api/general/union/labor/import",
+//     data,
+//     {
+//       headers: {
+//         "Content-Type": "multipart/form-data",
+//       },
+//     }
+//   );
+
+//   return response.data;
+// }

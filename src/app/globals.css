@@ -64,18 +64,6 @@
   width: 100% !important;
 }
 
-.pdf-viewer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.pdf-viewer canvas {
-  max-width: 100%;
-  height: auto;
-}
-
 /* :root {
   --background: #ffffff;
   --foreground: #171717;

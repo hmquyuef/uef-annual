@@ -17,13 +17,14 @@ import {
   getRoleByName,
   RoleItem,
 } from "@/services/roles/rolesServices";
+import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
 import {
   convertTimestampToDate,
   defaultFooterInfo,
-  setCellStyle
+  setCellStyle,
 } from "@/utility/Utilities";
 import {
   ArrowsAltOutlined,
@@ -48,7 +49,7 @@ import {
   Select,
   TableColumnsType,
   Tag,
-  Tooltip
+  Tooltip,
 } from "antd";
 import { saveAs } from "file-saver";
 import Cookies from "js-cookie";
@@ -59,13 +60,13 @@ import { Key, useCallback, useEffect, useState } from "react";
 import * as XLSX from "sheetjs-style";
 import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
+import FormBM05 from "./activity/formBM05";
+import TemplateForms from "./workloads/TemplateForms";
 
-import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
+import Colors from "@/utility/Colors";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
-import FormBM05 from "./activity/formBM05";
-import TemplateForms from "./workloads/TemplateForms";
 dayjs.locale("vi");
 
 const { Search } = Input;
@@ -122,6 +123,7 @@ const BM05 = () => {
 
   const getListActivities = async (yearId: string) => {
     const response = await getAllActivities(yearId);
+    console.log("response :>> ", response);
     setActivities(response.items);
     setData(response.items);
     setNotificationOpen(false);
@@ -181,7 +183,19 @@ const BM05 = () => {
       title: "ĐƠN VỊ",
       dataIndex: ["participants", 0, "unitName"],
       key: "unitName",
-      render: (unitName: string) => <p>{unitName}</p>,
+      render: (unitName: string, record: ActivityItem) => {
+        const uniqueUnitNames = Array.from(
+          new Set(
+            record.participants.map((participant) => participant.unitName)
+          )
+        );
+        const tempUniqueUnitNames = uniqueUnitNames.join(", ");
+        return (
+          <>
+            <p>{tempUniqueUnitNames}</p>
+          </>
+        );
+      },
       className: "text-center w-[6rem]",
     },
     {
@@ -204,7 +218,7 @@ const BM05 = () => {
       ),
       dataIndex: ["determinations", "file", "path"],
       key: "path",
-      className: "customInfoColors w-[95px]",
+      className: "customInfoColors text-center w-[95px]",
       sorter: (a, b) =>
         a.determinations?.file?.path.localeCompare(
           b.determinations?.file?.path
@@ -243,15 +257,19 @@ const BM05 = () => {
         const path = item.determinations?.file?.path;
         return (
           <>
-            <p className="ml-2">
-              <Tag
-                color={`${
-                  path !== "" && path !== undefined ? "blue" : "error"
-                }`}
-              >
-                {number}
-              </Tag>
-            </p>
+            {number && (
+              <>
+                <p className="ml-2">
+                  <Tag
+                    color={`${
+                      path !== "" && path !== undefined ? "blue" : "error"
+                    }`}
+                  >
+                    {number}
+                  </Tag>
+                </p>
+              </>
+            )}
           </>
         );
       },
@@ -267,7 +285,7 @@ const BM05 = () => {
         </p>
       ),
       icon: <SafetyOutlined />,
-      style: { color: "#52c41a" },
+      style: { color: Colors.GREEN },
     },
     {
       type: "divider",
@@ -275,12 +293,12 @@ const BM05 = () => {
     {
       key: "2",
       label: (
-        <p onClick={() => setIsModalVisible(true)} className="font-medium">
+        <span onClick={() => setIsModalVisible(true)} className="font-medium">
           Từ chối
-        </p>
+        </span>
       ),
       icon: <CloseCircleOutlined />,
-      style: { color: "rgb(220 38 38)" },
+      style: { color: Colors.RED },
     },
   ];
 
@@ -304,12 +322,18 @@ const BM05 = () => {
         item.determinations.number
           .toLocaleLowerCase()
           .includes(value.toLocaleLowerCase());
+
       const matchesUnit = selectedUnit
-        ? item.participants[0]?.unitName
-            .toString()
-            .includes(
-              selectedUnit.code.toString().replace(/&/g, "-").replace(/_/g, "")
-            )
+        ? item.participants.some((participant) =>
+            participant.unitName
+              .toString()
+              .includes(
+                selectedUnit.code
+                  .toString()
+                  .replace(/&/g, "-")
+                  .replace(/_/g, "")
+              )
+          )
         : true;
 
       const matchesDate =

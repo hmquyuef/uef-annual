@@ -4,6 +4,7 @@ enum Colors {
     ORANGE = "#ff6600",
     RED = "#ff3333",
     PURPLE = "#9966ff",
+    WHITE = "#ffffff",
 }
 
 export default Colors;

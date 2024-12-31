@@ -24,7 +24,7 @@ import Messages from "@/utility/Messages";
 import {
   convertTimestampToDate,
   defaultFooterInfo,
-  setCellStyle
+  setCellStyle,
 } from "@/utility/Utilities";
 import {
   ArrowsAltOutlined,
@@ -49,7 +49,7 @@ import {
   Modal,
   Select,
   TableColumnsType,
-  Tooltip
+  Tooltip,
 } from "antd";
 
 import saveAs from "file-saver";

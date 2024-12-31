@@ -6,10 +6,13 @@ export interface SchoolLevelItem {
   id: string;
   contents: string;
   documentNumber: string;
+  internalNumber: string;
   documentDate: number;
   fromDate: number;
   toDate: number;
   entryDate: number;
+  eventVenue: string;
+  sponsor: string
   members: MembersInfomations[];
   attackment: AttackmentItem;
   note: string;
