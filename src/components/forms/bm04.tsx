@@ -14,7 +14,7 @@ import PageTitles from "@/utility/Constraints";
 import {
   convertTimestampToDate,
   defaultFooterInfo,
-  setCellStyle
+  setCellStyle,
 } from "@/utility/Utilities";
 import {
   ArrowsAltOutlined,
@@ -39,7 +39,7 @@ import {
   Modal,
   Select,
   TableColumnsType,
-  Tooltip
+  Tooltip,
 } from "antd";
 import saveAs from "file-saver";
 import Cookies from "js-cookie";
@@ -67,12 +67,13 @@ import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import TemplateForms from "./workloads/TemplateForms";
+import Colors from "@/utility/Colors";
 dayjs.locale("vi");
 
 type SearchProps = GetProps<typeof Input.Search>;
-const { Search } = Input;
 
 const BM04 = () => {
+  const { Search } = Input;
   const [loading, setLoading] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [qaes, setQAEs] = useState<QAItem[]>([]);
@@ -80,17 +81,11 @@ const BM04 = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isUpload, setIsUpload] = useState(false);
   const [mode, setMode] = useState<"add" | "edit">("add");
-  const [isNotificationOpen, setNotificationOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Partial<QAItem> | undefined>(
     undefined
   );
   const [units, setUnits] = useState<UnitItem[]>([]);
   const [selectedKeyUnit, setSelectedKeyUnit] = useState<Key | null>(null);
-  const [message, setMessage] = useState("");
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState<
-    "success" | "error" | "info" | "warning"
-  >("success");
   const [defaultYears, setDefaultYears] = useState<any>();
   const [selectedKey, setSelectedKey] = useState<any>();
   const [startDate, setStartDate] = useState<number | 0>(0);
@@ -105,6 +100,18 @@ const BM04 = () => {
   const [reason, setReason] = useState("");
   const [isPayments, setIsPayments] = useState<PaymentApprovedItem>();
   const [isShowPdf, setIsShowPdf] = useState(false);
+
+  const [formNotification, setFormNotification] = useState<{
+    message: string;
+    description: string;
+    status: "success" | "error" | "info" | "warning";
+    isOpen: boolean;
+  }>({
+    message: "",
+    description: "",
+    status: "success",
+    isOpen: false,
+  });
 
   const getDefaultYears = async () => {
     const { items } = await getAllSchoolYears();
@@ -127,7 +134,6 @@ const BM04 = () => {
     const response = await getAllQAs(yearId);
     setQAEs(response.items);
     setData(response.items);
-    setNotificationOpen(false);
   };
 
   const getListUnits = async () => {
@@ -213,28 +219,50 @@ const BM04 = () => {
       className: "text-center w-[100px]",
     },
     {
-      title: (
-        <>
-          THỜI GIAN <br /> HOẠT ĐỘNG
-        </>
-      ),
-      dataIndex: "fromDate",
-      key: "fromDate",
-      render: (_, record: QAItem) => {
-        return (
-          <>
-            {record.fromDate && record.toDate ? (
-              <div className="flex flex-col">
-                <span>{convertTimestampToDate(record.fromDate)}</span>
-                <span>{convertTimestampToDate(record.toDate)}</span>
-              </div>
-            ) : (
-              ""
-            )}
-          </>
-        );
-      },
-      className: "text-center w-[80px]",
+      title: <div className="py-1">THỜI GIA HOẠT ĐỘNG</div>,
+      dataIndex: "eventTime",
+      key: "eventTime",
+      className: "text-center w-[140px]",
+      children: [
+        {
+          title: <div className="py-1">TỪ NGÀY</div>,
+          dataIndex: "fromDate",
+          key: "fromDate",
+          render: (_, record: QAItem) => {
+            return (
+              <>
+                {record.fromDate ? (
+                  <div className="flex flex-col">
+                    <span>{convertTimestampToDate(record.fromDate)}</span>
+                  </div>
+                ) : (
+                  ""
+                )}
+              </>
+            );
+          },
+          className: "text-center w-[70px]",
+        },
+        {
+          title: <div className="py-1">ĐẾN NGÀY</div>,
+          dataIndex: "fromDate",
+          key: "fromDate",
+          render: (_, record: QAItem) => {
+            return (
+              <>
+                {record.toDate ? (
+                  <div className="flex flex-col">
+                    <span>{convertTimestampToDate(record.toDate)}</span>
+                  </div>
+                ) : (
+                  ""
+                )}
+              </>
+            );
+          },
+          className: "text-center w-[70px]",
+        },
+      ],
     },
     {
       title: (
@@ -284,7 +312,7 @@ const BM04 = () => {
         </p>
       ),
       icon: <PlusOutlined />,
-      style: { color: "#1890ff" },
+      style: { color: Colors.BLUE },
     },
     {
       type: "divider",
@@ -304,7 +332,7 @@ const BM04 = () => {
         </p>
       ),
       icon: <FileExcelOutlined />,
-      style: { color: "#52c41a" },
+      style: { color: Colors.GREEN },
     },
   ];
 
@@ -317,7 +345,7 @@ const BM04 = () => {
         </p>
       ),
       icon: <SafetyOutlined />,
-      style: { color: "#52c41a" },
+      style: { color: Colors.GREEN },
     },
     {
       type: "divider",
@@ -330,7 +358,7 @@ const BM04 = () => {
         </p>
       ),
       icon: <CloseCircleOutlined />,
-      style: { color: "rgb(220 38 38)" },
+      style: { color: Colors.RED },
     },
   ];
 
@@ -361,18 +389,23 @@ const BM04 = () => {
       const selectedKeysArray = Array.from(selectedRowKeys) as string[];
       if (selectedKeysArray.length > 0) {
         await deleteQAs(selectedKeysArray);
-        setNotificationOpen(true);
-        setStatus("success");
-        setMessage("Thông báo");
-        setDescription(
-          `Đã xóa thành công ${selectedKeysArray.length} thông tin!`
-        );
+        setFormNotification((prev) => ({
+          ...prev,
+          isOpen: true,
+          status: "success",
+          message: "Thông báo",
+          description: `Đã xóa thành công ${selectedKeysArray.length} dòng thông tin!`,
+        }));
         await getListQAs(selectedKey.id);
         setSelectedRowKeys([]);
       }
     } catch (error) {
       console.error("Error deleting selected items:", error);
     }
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   }, [selectedRowKeys]);
 
   const handleEdit = (classLeader: QAItem) => {
@@ -389,32 +422,43 @@ const BM04 = () => {
       if (mode === "edit" && selectedItem) {
         const response = await putUpdateQA(formData.id as string, formData);
         if (response) {
-          setDescription(
-            "Cập nhật thông tin tham gia hỏi vấn đáp thi xếp lớp Anh văn đầu vào thành công!"
-          );
+          setFormNotification((prev) => ({
+            ...prev,
+            description: Messages.UPDATE_QAE,
+          }));
         }
       } else {
         const response = await postAddQA(formData);
         if (response) {
-          setDescription(
-            "Thêm mới thông tin tham gia hỏi vấn đáp thi xếp lớp Anh văn đầu vào thành công!"
-          );
+          setFormNotification((prev) => ({
+            ...prev,
+            description: Messages.ADD_QAE,
+          }));
         }
       }
-      setNotificationOpen(true);
-      setStatus("success");
-      setMessage("Thông báo");
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "success",
+        message: "Thông báo",
+      }));
       await getListQAs(selectedKey.id);
       setIsOpen(false);
       setSelectedItem(undefined);
       setMode("add");
     } catch (error) {
-      setNotificationOpen(true);
-      setStatus("error");
-      setMessage("Thông báo");
-      setDescription(Messages.ERROR);
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Thông báo",
+        description: Messages.ERROR,
+      }));
     }
-    setNotificationOpen(false);
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   };
 
   const handleSubmitUpload = async (
@@ -431,10 +475,13 @@ const BM04 = () => {
 
       const response = await ImportQAs(formData);
       if (response) {
-        setNotificationOpen(true);
-        setStatus("success");
-        setMessage("Thông báo");
-        setDescription(`Tải lên thành công ${response.totalCount} hoạt động!`);
+        setFormNotification((prev) => ({
+          ...prev,
+          isOpen: true,
+          status: "error",
+          message: "Thông báo",
+          description: `Tải lên thành công ${response.totalCount} dòng dữ liệu!`,
+        }));
       }
       await getListQAs(selectedKey.id);
       setIsOpen(false);
@@ -442,13 +489,20 @@ const BM04 = () => {
       setMode("add");
       setIsUpload(false);
     } catch (error) {
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Thông báo",
+        description: Messages.ERROR,
+      }));
       setIsOpen(false);
-      setNotificationOpen(true);
-      setStatus("error");
-      setMessage("Thông báo");
-      setDescription(Messages.ERROR);
       setIsUpload(false);
     }
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   };
 
   const handleExportExcel = async () => {
@@ -737,32 +791,44 @@ const BM04 = () => {
       if (selectedRowKeys.length > 0 || selectedItem) {
         const response = await putUpdateApprovedQA(formData);
         if (response) {
-          setDescription(
-            isRejected
+          setFormNotification((prev) => ({
+            ...prev,
+            description: isRejected
               ? `${Messages.REJECTED_QAE} (${
                   selectedRowKeys.length > 0 ? selectedRowKeys.length : 1
                 } dòng)`
               : `${Messages.APPROVED_QAE} (${
                   selectedRowKeys.length > 0 ? selectedRowKeys.length : 1
-                } dòng)`
-          );
+                } dòng)`,
+          }));
         }
       }
       setSelectedRowKeys([]);
-      setNotificationOpen(true);
-      setStatus("success");
-      setMessage("Thông báo");
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Thông báo",
+      }));
       await getListQAs(selectedKey.id);
       setIsOpen(false);
       setSelectedItem(undefined);
       setMode("add");
     } catch (error) {
-      setNotificationOpen(true);
-      setStatus("error");
-      setMessage("Thông báo");
-      setDescription(Messages.ERROR);
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Thông báo",
+        description: Messages.ERROR,
+      }));
     }
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   };
+
   const handleChangeYear = (value: any) => {
     setLoading(true);
     const temp = defaultYears.filter((x: any) => x.id === value)[0] as any;
@@ -845,7 +911,11 @@ const BM04 = () => {
                   <span className="text-[14px] text-neutral-500">
                     Tìm kiếm:
                   </span>
-                  <Search placeholder=" " onSearch={onSearch} enterButton />
+                  <Search
+                    placeholder=" "
+                    onChange={(e) => onSearch(e.target.value)}
+                    enterButton
+                  />
                 </div>
                 <div
                   className="col-span-2"
@@ -1068,18 +1138,16 @@ const BM04 = () => {
           )}
         </div>
         <CustomNotification
-          message={message}
-          description={description}
-          status={status}
-          isOpen={isNotificationOpen} // Truyền trạng thái mở
+          isOpen={formNotification.isOpen}
+          status={formNotification.status}
+          message={formNotification.message}
+          description={formNotification.description}
         />
         <CustomModal
           isOpen={isOpen}
           width={isShowPdf ? "85vw" : "800px"}
           title={
-            mode === "edit"
-              ? "Cập nhật thông tin tham gia hỏi vấn đáp Tiếng Anh đầu vào"
-              : "Thêm mới thông tin tham gia hỏi vấn đáp Tiếng Anh đầu vào"
+            mode === "edit" ? Messages.TITLE_UPDATE_QAE : Messages.TITLE_ADD_QAE
           }
           role={role || undefined}
           isBlock={isBlock}
@@ -1092,7 +1160,10 @@ const BM04 = () => {
             );
           }}
           onCancel={() => {
-            setNotificationOpen(false);
+            setFormNotification((prev) => ({
+              ...prev,
+              isOpen: false,
+            }));
             setIsOpen(false);
             setSelectedItem(undefined);
             setMode("add");
@@ -1112,6 +1183,7 @@ const BM04 = () => {
             ) : (
               <>
                 <FormBM04
+                  key="form-qae-bm04"
                   onSubmit={handleSubmit}
                   handleShowPDF={setIsShowPdf}
                   initialData={selectedItem as Partial<QAItem>}

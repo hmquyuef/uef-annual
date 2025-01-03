@@ -70,23 +70,29 @@ const BM09 = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isUpload, setIsUpload] = useState(false);
   const [mode, setMode] = useState<"add" | "edit">("add");
-  const [isNotificationOpen, setNotificationOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Partial<any> | undefined>(
     undefined
   );
   const [defaultYears, setDefaultYears] = useState<any>();
   const [selectedKey, setSelectedKey] = useState<any>();
-  const [message, setMessage] = useState("");
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState<
-    "success" | "error" | "info" | "warning"
-  >("success");
   const [startDate, setStartDate] = useState<number | 0>(0);
   const [minStartDate, setMinStartDate] = useState<number | 0>(0);
   const [endDate, setEndDate] = useState<number | 0>(0);
   const [maxEndDate, setMaxEndDate] = useState<number | 0>(0);
   const [role, setRole] = useState<RoleItem>();
   const [isShowPdf, setIsShowPdf] = useState(false);
+
+  const [formNotification, setFormNotification] = useState<{
+    message: string;
+    description: string;
+    status: "success" | "error" | "info" | "warning";
+    isOpen: boolean;
+  }>({
+    message: "",
+    description: "",
+    status: "success",
+    isOpen: false,
+  });
 
   const getDefaultYears = async () => {
     const { items } = await getAllSchoolYears();
@@ -109,7 +115,6 @@ const BM09 = () => {
     const response = await getAllYouthUnions(yearId);
     setYouthUnions(response.items);
     setData(response.items);
-    setNotificationOpen(false);
   };
 
   const columns: TableColumnsType<YouthUnionItem> = [
@@ -325,12 +330,13 @@ const BM09 = () => {
       const selectedKeysArray = Array.from(selectedRowKeys) as string[];
       if (selectedKeysArray.length > 0) {
         await deleteYouthUnions(selectedKeysArray);
-        setDescription(
-          `Đã xóa thành công ${selectedKeysArray.length} thông tin chủ nhiệm lớp!`
-        );
-        setNotificationOpen(true);
-        setStatus("success");
-        setMessage("Thông báo");
+        setFormNotification((prev) => ({
+          ...prev,
+          isOpen: true,
+          status: "success",
+          message: "Thông báo",
+          description: `Đã xóa thành công ${selectedKeysArray.length} dòng thông tin!`,
+        }));
         await getListYouthUnions(selectedKey.id);
         setSelectedRowKeys([]);
       }
@@ -353,27 +359,43 @@ const BM09 = () => {
       if (mode === "edit" && selectedItem) {
         const response = await putYouthUnion(formData.id as string, formData);
         if (response) {
-          setDescription(Messages.UPDATE_CLASSLEADERS);
+          setFormNotification((prev) => ({
+            ...prev,
+            description: Messages.UPDATE_LABORS_UNION,
+          }));
         }
       } else {
         const response = await postYouthUnion(formData);
         if (response) {
-          setDescription(Messages.ADD_CLASSLEADERS);
+          setFormNotification((prev) => ({
+            ...prev,
+            description: Messages.ADD_LABORS_UNION,
+          }));
         }
       }
-      setNotificationOpen(true);
-      setStatus("success");
-      setMessage("Thông báo");
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "success",
+        message: "Thông báo",
+      }));
       await getListYouthUnions(selectedKey.id);
       setIsOpen(false);
       setSelectedItem(undefined);
       setMode("add");
     } catch (error) {
-      setNotificationOpen(true);
-      setStatus("error");
-      setMessage("Thông báo");
-      setDescription(Messages.ERROR);
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Thông báo",
+        description: Messages.ERROR,
+      }));
     }
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   };
 
   const handleSubmitUpload = async (
@@ -390,12 +412,13 @@ const BM09 = () => {
 
       const response = await ImportYouthUnions(formData);
       if (response) {
-        setNotificationOpen(true);
-        setStatus("success");
-        setMessage("Thông báo");
-        setDescription(
-          `Tải lên thành công ${response.totalCount} thông tin chủ nhiệm lớp!`
-        );
+        setFormNotification((prev) => ({
+          ...prev,
+          isOpen: true,
+          status: "error",
+          message: "Thông báo",
+          description: `Tải lên thành công ${response.totalCount} dòng dữ liệu!`,
+        }));
       }
       await getListYouthUnions(selectedKey.id);
       setIsOpen(false);
@@ -403,13 +426,20 @@ const BM09 = () => {
       setMode("add");
       setIsUpload(false);
     } catch (error) {
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Thông báo",
+        description: Messages.ERROR,
+      }));
       setIsOpen(false);
-      setNotificationOpen(true);
-      setStatus("error");
-      setMessage("Thông báo");
-      setDescription(Messages.ERROR);
       setIsUpload(false);
     }
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   };
 
   const handleExportExcel = async () => {
@@ -869,10 +899,10 @@ const BM09 = () => {
         </div>
       </div>
       <CustomNotification
-        message={message}
-        description={description}
-        status={status}
-        isOpen={isNotificationOpen}
+        isOpen={formNotification.isOpen}
+        status={formNotification.status}
+        message={formNotification.message}
+        description={formNotification.description}
       />
       <CustomModal
         isOpen={isOpen}
@@ -890,7 +920,10 @@ const BM09 = () => {
         }}
         role={role || undefined}
         onCancel={() => {
-          setNotificationOpen(false);
+          setFormNotification((prev) => ({
+            ...prev,
+            isOpen: false,
+          }));
           setIsOpen(false);
           setSelectedItem(undefined);
           setMode("add");

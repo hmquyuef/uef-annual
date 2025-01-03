@@ -72,9 +72,9 @@ import * as XLSX from "sheetjs-style";
 dayjs.locale("vi");
 
 type SearchProps = GetProps<typeof Input.Search>;
-const { Search } = Input;
 
 const BM01 = () => {
+  const { Search } = Input;
   const [loading, setLoading] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [classLeaders, setClassLeaders] = useState<ClassLeaderItem[]>([]);
@@ -133,13 +133,8 @@ const BM01 = () => {
 
   const getListClassLeaders = async (yearId: string) => {
     const response = await getAllClassLeaders(yearId);
-    console.log("response :>> ", response);
     setClassLeaders(response.items);
     setData(response.items);
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   };
 
   const getListUnits = async () => {
@@ -414,7 +409,7 @@ const BM01 = () => {
           isOpen: true,
           status: "success",
           message: "Thông báo",
-          description: `Đã xóa thành công ${selectedKeysArray.length} thông tin chủ nhiệm lớp!`,
+          description: `Đã xóa thành công ${selectedKeysArray.length} dòng thông tin!`,
         }));
         await getListClassLeaders(selectedKey.id);
         setSelectedRowKeys([]);
@@ -422,6 +417,10 @@ const BM01 = () => {
     } catch (error) {
       console.error("Error deleting selected items:", error);
     }
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   }, [selectedRowKeys]);
 
   const handleEdit = (classLeader: ClassLeaderItem) => {
@@ -474,6 +473,10 @@ const BM01 = () => {
         description: Messages.ERROR,
       }));
     }
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   };
 
   const handleSubmitUpload = async (
@@ -514,6 +517,10 @@ const BM01 = () => {
       setIsOpen(false);
       setIsUpload(false);
     }
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   };
 
   const handleExportExcel = async () => {
@@ -924,7 +931,11 @@ const BM01 = () => {
                   <span className="text-[14px] text-neutral-500">
                     Tìm kiếm:
                   </span>
-                  <Search placeholder=" " onSearch={onSearch} enterButton />
+                  <Search
+                    placeholder=" "
+                    onChange={(e) => onSearch(e.target.value)}
+                    enterButton
+                  />
                 </div>
                 <div
                   className="col-span-2"

@@ -70,7 +70,6 @@ const BM07 = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isUpload, setIsUpload] = useState(false);
   const [mode, setMode] = useState<"add" | "edit">("add");
-  const [isNotificationOpen, setNotificationOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Partial<any> | undefined>(
     undefined
   );
@@ -78,11 +77,6 @@ const BM07 = () => {
   const [defaultYears, setDefaultYears] = useState<any>();
   const [selectedKey, setSelectedKey] = useState<any>();
   const [selectedKeyUnit, setSelectedKeyUnit] = useState<Key | null>(null);
-  const [message, setMessage] = useState("");
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState<
-    "success" | "error" | "info" | "warning"
-  >("success");
   const [startDate, setStartDate] = useState<number | 0>(0);
   const [minStartDate, setMinStartDate] = useState<number | 0>(0);
   const [endDate, setEndDate] = useState<number | 0>(0);
@@ -90,6 +84,18 @@ const BM07 = () => {
   const [advanced, setAdvanced] = useState(false);
   const [role, setRole] = useState<RoleItem>();
   const [isShowPdf, setIsShowPdf] = useState(false);
+
+  const [formNotification, setFormNotification] = useState<{
+    message: string;
+    description: string;
+    status: "success" | "error" | "info" | "warning";
+    isOpen: boolean;
+  }>({
+    message: "",
+    description: "",
+    status: "success",
+    isOpen: false,
+  });
 
   const getDefaultYears = async () => {
     const { items } = await getAllSchoolYears();
@@ -112,7 +118,6 @@ const BM07 = () => {
     const response = await getAllTrainingLevels(yearId);
     setTraining(response.items);
     setData(response.items);
-    setNotificationOpen(false);
   };
 
   const getListUnits = async () => {
@@ -259,12 +264,13 @@ const BM07 = () => {
       const selectedKeysArray = Array.from(selectedRowKeys) as string[];
       if (selectedKeysArray.length > 0) {
         await deleteTrainingLevels(selectedKeysArray);
-        setDescription(
-          `Đã xóa thành công ${selectedKeysArray.length} thông tin chủ nhiệm lớp!`
-        );
-        setNotificationOpen(true);
-        setStatus("success");
-        setMessage("Thông báo");
+        setFormNotification((prev) => ({
+          ...prev,
+          isOpen: true,
+          status: "success",
+          message: "Thông báo",
+          description: `Đã xóa thành công ${selectedKeysArray.length} dòng thông tin!`,
+        }));
         await getListTrainingLevels(selectedKey.id);
         setSelectedRowKeys([]);
       }
@@ -290,27 +296,43 @@ const BM07 = () => {
           formData
         );
         if (response) {
-          setDescription(Messages.UPDATE_CLASSLEADERS);
+          setFormNotification((prev) => ({
+            ...prev,
+            description: Messages.UPDATE_TRAINING_LEVELS,
+          }));
         }
       } else {
         const response = await postTrainingLevel(formData);
         if (response) {
-          setDescription(Messages.ADD_CLASSLEADERS);
+          setFormNotification((prev) => ({
+            ...prev,
+            description: Messages.ADD_TRAINING_LEVELS,
+          }));
         }
       }
-      setNotificationOpen(true);
-      setStatus("success");
-      setMessage("Thông báo");
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "success",
+        message: "Thông báo",
+      }));
       await getListTrainingLevels(selectedKey.id);
       setIsOpen(false);
       setSelectedItem(undefined);
       setMode("add");
     } catch (error) {
-      setNotificationOpen(true);
-      setStatus("error");
-      setMessage("Thông báo");
-      setDescription(Messages.ERROR);
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Thông báo",
+        description: Messages.ERROR,
+      }));
     }
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   };
 
   const handleSubmitUpload = async (
@@ -327,12 +349,13 @@ const BM07 = () => {
 
       const response = await ImportTrainingLevels(formData);
       if (response) {
-        setNotificationOpen(true);
-        setStatus("success");
-        setMessage("Thông báo");
-        setDescription(
-          `Tải lên thành công ${response.totalCount} thông tin chủ nhiệm lớp!`
-        );
+        setFormNotification((prev) => ({
+          ...prev,
+          isOpen: true,
+          status: "error",
+          message: "Thông báo",
+          description: `Tải lên thành công ${response.totalCount} dòng dữ liệu!`,
+        }));
       }
       await getListTrainingLevels(selectedKey.id);
       setIsOpen(false);
@@ -340,13 +363,20 @@ const BM07 = () => {
       setMode("add");
       setIsUpload(false);
     } catch (error) {
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Thông báo",
+        description: Messages.ERROR,
+      }));
       setIsOpen(false);
-      setNotificationOpen(true);
-      setStatus("error");
-      setMessage("Thông báo");
-      setDescription(Messages.ERROR);
       setIsUpload(false);
     }
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   };
 
   const handleExportExcel = async () => {
@@ -907,18 +937,18 @@ const BM07 = () => {
         </div>
       </div>
       <CustomNotification
-        message={message}
-        description={description}
-        status={status}
-        isOpen={isNotificationOpen}
+        isOpen={formNotification.isOpen}
+        status={formNotification.status}
+        message={formNotification.message}
+        description={formNotification.description}
       />
       <CustomModal
         isOpen={isOpen}
         width={isShowPdf ? "85vw" : "800px"}
         title={
           mode === "edit"
-            ? Messages.TITLE_UPDATE_CLASSLEADER
-            : Messages.TITLE_ADD_CLASSLEADER
+            ? Messages.TITLE_UPDATE_TRAINING_LEVELS
+            : Messages.TITLE_ADD_TRAINING_LEVELS
         }
         onOk={() => {
           const formElement = document.querySelector("form");
@@ -928,7 +958,10 @@ const BM07 = () => {
         }}
         role={role || undefined}
         onCancel={() => {
-          setNotificationOpen(false);
+          setFormNotification((prev) => ({
+            ...prev,
+            isOpen: false,
+          }));
           setIsOpen(false);
           setSelectedItem(undefined);
           setMode("add");
@@ -950,6 +983,7 @@ const BM07 = () => {
               <FormBM07
                 key="form-training-levels-bm07"
                 onSubmit={handleSubmit}
+                handleShowPDF={setIsShowPdf}
                 initialData={selectedItem as Partial<any>}
                 mode={mode}
                 displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}

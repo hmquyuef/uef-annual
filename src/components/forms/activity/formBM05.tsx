@@ -4,6 +4,8 @@ import {
   ActivityInput,
   AddUpdateActivityItem,
 } from "@/services/forms/formsServices";
+import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
+import { DisplayRoleItem } from "@/services/roles/rolesServices";
 import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
 import {
   deleteFiles,
@@ -25,29 +27,22 @@ import {
   DatePicker,
   Input,
   InputNumber,
+  Progress,
   Select,
   Table,
   TableColumnsType,
   Tooltip,
 } from "antd";
-import moment from "moment";
-import {
-  FC,
-  FormEvent,
-  Key,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import { useDropzone } from "react-dropzone";
-import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
-import { DisplayRoleItem } from "@/services/roles/rolesServices";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
+import moment from "moment";
+import { FC, FormEvent, Key, useCallback, useEffect, useState } from "react";
+import { useDropzone } from "react-dropzone";
 import InfoApproved from "./infoApproved";
 import InfoPDF from "./infoPDF";
+import CustomNotification from "@/components/CustomNotification";
+import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
 dayjs.locale("vi");
 interface FormBM05Props {
   onSubmit: (formData: Partial<AddUpdateActivityItem>) => void;
@@ -71,6 +66,8 @@ const FormBM05: FC<FormBM05Props> = ({
   displayRole,
 }) => {
   const { TextArea } = Input;
+  const timestamp = dayjs().tz("Asia/Ho_Chi_Minh").unix();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [documentNumber, setDocumentNumber] = useState<string>("");
   const [name, setName] = useState("");
   const [deterNumber, setDeterNumber] = useState("");
@@ -88,9 +85,20 @@ const FormBM05: FC<FormBM05Props> = ({
   const [listPicture, setListPicture] = useState<FileItem | undefined>(
     undefined
   );
-  const [isUploaded, setIsUploaded] = useState<boolean>(false);
-  const [pathPDF, setPathPDF] = useState<string>("");
   const [showPDF, setShowPDF] = useState<boolean>(false);
+  const [isLoadingPDF, setIsLoadingPDF] = useState<boolean>(false);
+  const [percent, setPercent] = useState<number>(0);
+  const [formNotification, setFormNotification] = useState<{
+    message: string;
+    description: string;
+    status: "success" | "error" | "info" | "warning";
+    isOpen: boolean;
+  }>({
+    message: "",
+    description: "",
+    status: "success",
+    isOpen: false,
+  });
 
   const getListUnits = async () => {
     const response = await getAllUnits("true");
@@ -106,7 +114,6 @@ const FormBM05: FC<FormBM05Props> = ({
     const itemUser =
       filteredUsersFromHRM?.items?.find((user) => user.id === key) ?? null;
     if (itemUser) {
-      // itemUser.standardNumber = standard;
       setTableUsers((prevTableUsers) => {
         const updatedUsers = prevTableUsers.map((user) => {
           if (user.id === itemUser.id) {
@@ -234,43 +241,79 @@ const FormBM05: FC<FormBM05Props> = ({
     },
   ];
   const handleDeletePicture = async () => {
+    setIsLoadingPDF(true);
     if (listPicture && listPicture.path !== "") {
       await deleteFiles(
         listPicture.path.replace("https://api-annual.uef.edu.vn/", "")
-        // listPicture[0].path.replace("http://192.168.98.60:8081/", "")
       );
-      // Cập nhật lại trạng thái sau khi xóa
-      setIsUploaded(false);
-      setListPicture({ type: "", path: "", name: "", size: 0 });
-      setPathPDF("");
+      let intervalId = setInterval(() => {
+        setPercent((prevPercent) => {
+          let newPercent = prevPercent === 0 ? 100 : prevPercent - 1;
+          if (newPercent === 0) {
+            clearInterval(intervalId);
+            setListPicture({ type: "", path: "", name: "", size: 0 });
+            setFormNotification({
+              isOpen: true,
+              status: "success",
+              message: "Thông báo",
+              description: `Đã xóa tệp tin: ${listPicture.name} thành công!`,
+            });
+            setIsLoadingPDF(false);
+            return 0;
+          }
+          return newPercent;
+        });
+      }, 10);
     } else {
       console.log("Không có file nào để xóa.");
     }
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   };
 
-  const onDrop = useMemo(
-    () => async (acceptedFiles: File[]) => {
-      const formData = new FormData();
-      formData.append("FunctionName", "activity");
-      formData.append("file", acceptedFiles[0]);
-      if (listPicture && listPicture.path !== "") {
-        await deleteFiles(
-          listPicture.path.replace("https://api-annual.uef.edu.vn/", "")
-        );
-        setPathPDF("");
-      }
-      const results = await postFiles(formData);
-      if (results && results !== undefined) {
-        setIsUploaded(true);
-        setListPicture(results);
-        setPathPDF(results.path);
-      }
-    },
-    [listPicture]
-  );
+  const handleUploadPDF = async (acceptedFiles: File[]) => {
+    setIsLoadingPDF(true);
+    const formData = new FormData();
+    formData.append("FunctionName", "activity");
+    formData.append("file", acceptedFiles[0]);
+    if (listPicture && listPicture.path !== "") {
+      await deleteFiles(
+        listPicture.path.replace("https://api-annual.uef.edu.vn/", "")
+      );
+    }
+    const results = await postFiles(formData);
+    if (results && results !== undefined) {
+      setListPicture(results);
+      let intervalId = setInterval(() => {
+        setPercent((prevPercent) => {
+          const newPercent = prevPercent + 1;
+          if (newPercent >= 100) {
+            clearInterval(intervalId);
+            setTimeout(() => {
+              setFormNotification({
+                isOpen: true,
+                status: "success",
+                message: "Thông báo",
+                description: `Tải lên tệp tin: ${results.name} thành công!`,
+              });
+              setIsLoadingPDF(false);
+            }, 500);
+            return 100;
+          }
+          return newPercent;
+        });
+      }, 10);
+    }
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
+  };
 
   const { getRootProps, getInputProps } = useDropzone({
-    onDrop,
+    onDrop: handleUploadPDF,
     disabled: isBlock || displayRole.isUpload === false,
   });
 
@@ -307,8 +350,6 @@ const FormBM05: FC<FormBM05Props> = ({
 
   useEffect(() => {
     const resetForm = () => {
-      const formattedDate = moment(new Date()).format("DD/MM/YYYY");
-      const timestamp = moment(formattedDate, "DD/MM/YYYY").valueOf();
       setDeterEntryDate(timestamp);
       setName("");
       setDeterNumber("");
@@ -316,12 +357,11 @@ const FormBM05: FC<FormBM05Props> = ({
       setDeterEventDate(0);
       setTableUsers([]);
       setListPicture(undefined);
-      setIsUploaded(false);
       setDescription("");
-      setPathPDF("");
       setDocumentNumber("");
     };
     const loadUsers = async () => {
+      setIsLoading(true);
       if (mode === "edit" && initialData !== undefined) {
         setName(initialData.name || "");
         setDeterNumber(initialData.determinations?.number || "");
@@ -349,10 +389,7 @@ const FormBM05: FC<FormBM05Props> = ({
               ? initialData.determinations.file
               : undefined
           );
-          setIsUploaded(true);
         }
-        if (initialData.determinations?.file.type === "") setIsUploaded(false);
-        setPathPDF(initialData.determinations?.file.path || "");
         setDocumentNumber(initialData.documentNumber || "");
       } else {
         resetForm();
@@ -364,261 +401,307 @@ const FormBM05: FC<FormBM05Props> = ({
     setSelectedKeyUnit(null);
     setShowPDF(false);
     handleShowPDF(false);
+    const timeoutId = setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
+    return () => clearTimeout(timeoutId);
   }, [initialData, mode, numberActivity, handleShowPDF]);
 
   return (
     <div
       className={`grid ${showPDF ? "grid-cols-2 gap-4" : "grid-cols-1"} mb-2`}
     >
-      <form onSubmit={handleSubmit}>
-        <hr className="mt-1 mb-2" />
-        <div className={`grid grid-cols-5 mb-2 ${showPDF ? "gap-3" : "gap-6"}`}>
-          <div className="flex flex-col gap-[2px]">
-            <span className="font-medium text-neutral-600">
-              Số văn bản <span className="text-red-500">(*)</span>
-            </span>
-            <Input
-              value={deterNumber}
-              onChange={(e) => setDeterNumber(e.target.value)}
-            />
-          </div>
+      {isLoading ? (
+        <>
+          <LoadingSkeleton />
+        </>
+      ) : (
+        <>
+          <form onSubmit={handleSubmit}>
+            <hr className="mt-1 mb-2" />
+            <div
+              className={`grid grid-cols-5 mb-2 ${showPDF ? "gap-3" : "gap-6"}`}
+            >
+              <div className="flex flex-col gap-[2px]">
+                <span className="font-medium text-neutral-600">
+                  Số văn bản <span className="text-red-500">(*)</span>
+                </span>
+                <Input
+                  value={deterNumber}
+                  onChange={(e) => setDeterNumber(e.target.value)}
+                />
+              </div>
 
-          <div className="flex flex-col gap-[2px]">
-            <span className="font-medium text-neutral-600">
-              Ngày lập <span className="text-red-500">(*)</span>
-            </span>
-            <ConfigProvider locale={locale}>
-              <DatePicker
-                allowClear={false}
-                placeholder="dd/mm/yyyy"
-                format={"DD/MM/YYYY"}
-                value={deterFromDate ? moment(deterFromDate) : null}
-                onChange={(date) => {
-                  if (date) {
-                    const timestamp = date.valueOf();
-                    setDeterFromDate(timestamp);
-                  } else {
-                    setDeterFromDate(0);
-                  }
-                }}
-              />
-            </ConfigProvider>
-          </div>
-          <div className="flex flex-col gap-[2px]">
-            <span className="font-medium text-neutral-600">Ngày hoạt động</span>
-            <ConfigProvider locale={locale}>
-              <DatePicker
-                allowClear={false}
-                placeholder="dd/mm/yyyy"
-                format={"DD/MM/YYYY"}
-                value={deterEventDate ? moment(deterEventDate) : null}
-                onChange={(date) => {
-                  if (date) {
-                    const timestamp = date.valueOf();
-                    setDeterEventDate(timestamp);
-                  } else {
-                    setDeterEventDate(0);
-                  }
-                }}
-              />
-            </ConfigProvider>
-          </div>
-          <div className="flex flex-col gap-[2px]">
-            <span className="font-medium text-neutral-600">Số lưu văn bản</span>
-            <Input
-              value={documentNumber}
-              onChange={(e) => setDocumentNumber(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-col gap-[2px]">
-            <span className="font-medium text-neutral-600">Ngày nhập</span>
-            <ConfigProvider locale={locale}>
-              <DatePicker
-                disabled
-                placeholder="dd/mm/yyyy"
-                format={"DD/MM/YYYY"}
-                value={deterEntryDate ? moment(deterEntryDate) : null}
-              />
-            </ConfigProvider>
-          </div>
-        </div>
-        <div className="flex flex-col gap-[2px] mb-2">
-          <span className="font-medium text-neutral-600">
-            Tên hoạt động <span className="text-red-500">(*)</span>
-          </span>
-          <TextArea
-            autoSize
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </div>
-        <div className="grid grid-cols-6 gap-6 mb-2">
-          <div className="col-span-3 flex flex-col gap-[2px]">
-            <span className="font-medium text-neutral-600">Đơn vị</span>
-            <Select
-              showSearch
-              disabled={
-                isBlock ||
-                displayRole.isCreate === false ||
-                displayRole.isUpdate === false
-              }
-              optionFilterProp="label"
-              filterSort={(optionA, optionB) =>
-                (optionA?.label ?? "")
-                  .toLowerCase()
-                  .localeCompare((optionB?.label ?? "").toLowerCase())
-              }
-              options={filteredUnitsHRM.map((unit: UnitItem, index) => ({
-                value: unit.idHrm,
-                label: unit.name,
-                key: `${unit.idHrm}-${index}`,
-              }))}
-              value={selectedKeyUnit}
-              onChange={(value) => {
-                setSelectedKeyUnit(value);
-                getAllUsersFromHRM(value);
-              }}
-            />
-          </div>
-          <div className="col-span-3 flex flex-col gap-[2px]">
-            <span className="font-medium text-neutral-600">
-              Tìm mã CB-GV-NV
-            </span>
-            <Select
-              showSearch
-              disabled={
-                isBlock ||
-                displayRole.isCreate === false ||
-                displayRole.isUpdate === false
-              }
-              optionFilterProp="label"
-              defaultValue={""}
-              filterSort={(optionA, optionB) =>
-                (optionA?.label ?? "")
-                  .toLowerCase()
-                  .localeCompare((optionB?.label ?? "").toLowerCase())
-              }
-              options={filteredUsersFromHRM?.items?.map((user) => ({
-                value: user.id,
-                label: `${user.fullName} - ${user.userName}`,
-              }))}
-              value={selectedKey}
-              onChange={(value) => {
-                setSelectedKey(value);
-                onAddUsers(value, standardValues);
-              }}
-            />
-          </div>
-        </div>
-        {tableUsers && tableUsers.length > 0 && (
-          <>
+              <div className="flex flex-col gap-[2px]">
+                <span className="font-medium text-neutral-600">
+                  Ngày lập <span className="text-red-500">(*)</span>
+                </span>
+                <ConfigProvider locale={locale}>
+                  <DatePicker
+                    allowClear={false}
+                    placeholder="dd/mm/yyyy"
+                    format={"DD/MM/YYYY"}
+                    value={deterFromDate ? moment(deterFromDate) : null}
+                    onChange={(date) => {
+                      if (date) {
+                        const timestamp = date.valueOf();
+                        setDeterFromDate(timestamp);
+                      } else {
+                        setDeterFromDate(0);
+                      }
+                    }}
+                  />
+                </ConfigProvider>
+              </div>
+              <div className="flex flex-col gap-[2px]">
+                <span className="font-medium text-neutral-600">
+                  Ngày hoạt động
+                </span>
+                <ConfigProvider locale={locale}>
+                  <DatePicker
+                    allowClear={false}
+                    placeholder="dd/mm/yyyy"
+                    format={"DD/MM/YYYY"}
+                    value={deterEventDate ? moment(deterEventDate) : null}
+                    onChange={(date) => {
+                      if (date) {
+                        const timestamp = date.valueOf();
+                        setDeterEventDate(timestamp);
+                      } else {
+                        setDeterEventDate(0);
+                      }
+                    }}
+                  />
+                </ConfigProvider>
+              </div>
+              <div className="flex flex-col gap-[2px]">
+                <span className="font-medium text-neutral-600">
+                  Số lưu văn bản
+                </span>
+                <Input
+                  value={documentNumber}
+                  onChange={(e) => setDocumentNumber(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-[2px]">
+                <span className="font-medium text-neutral-600">Ngày nhập</span>
+                <ConfigProvider locale={locale}>
+                  <DatePicker
+                    disabled
+                    placeholder="dd/mm/yyyy"
+                    format={"DD/MM/YYYY"}
+                    value={deterEntryDate ? moment(deterEntryDate) : null}
+                  />
+                </ConfigProvider>
+              </div>
+            </div>
             <div className="flex flex-col gap-[2px] mb-2">
               <span className="font-medium text-neutral-600">
-                Danh sách nhân sự tham gia
+                Tên hoạt động <span className="text-red-500">(*)</span>
               </span>
-              <Table<ActivityInput>
-                bordered
-                rowKey={(item) => item.id}
-                rowHoverable
-                rowClassName={() => "editable-row"}
-                pagination={false}
-                size="small"
-                columns={columns}
-                dataSource={tableUsers}
-                className="custom-table-header shadow-md rounded-md"
+              <TextArea
+                autoSize
+                value={name}
+                onChange={(e) => setName(e.target.value)}
               />
             </div>
-          </>
-        )}
-        <div className="flex flex-col gap-[2px] mb-2">
-          <span className="font-medium text-neutral-600">
-            Tài liệu đính kèm
-          </span>
-          <div
-            {...getRootProps()}
-            className="w-full min-h-20 h-fit border-2 border-dashed border-neutral-300 cursor-pointer flex justify-center items-center gap-3 rounded-xl"
-          >
-            <input {...getInputProps()} />
-            {!isUploaded ? (
-              <>
-                <img src="/upload.svg" width={50} loading="lazy" alt="upload" />
-                <span className="text-sm">
-                  Kéo và thả một tập tin vào đây hoặc nhấp để chọn một tập tin
+            <div className="grid grid-cols-6 gap-6 mb-2">
+              <div className="col-span-3 flex flex-col gap-[2px]">
+                <span className="font-medium text-neutral-600">Đơn vị</span>
+                <Select
+                  showSearch
+                  disabled={
+                    isBlock ||
+                    displayRole.isCreate === false ||
+                    displayRole.isUpdate === false
+                  }
+                  optionFilterProp="label"
+                  filterSort={(optionA, optionB) =>
+                    (optionA?.label ?? "")
+                      .toLowerCase()
+                      .localeCompare((optionB?.label ?? "").toLowerCase())
+                  }
+                  options={filteredUnitsHRM.map((unit: UnitItem, index) => ({
+                    value: unit.idHrm,
+                    label: unit.name,
+                    key: `${unit.idHrm}-${index}`,
+                  }))}
+                  value={selectedKeyUnit}
+                  onChange={(value) => {
+                    setSelectedKeyUnit(value);
+                    getAllUsersFromHRM(value);
+                  }}
+                />
+              </div>
+              <div className="col-span-3 flex flex-col gap-[2px]">
+                <span className="font-medium text-neutral-600">
+                  Tìm mã CB-GV-NV
                 </span>
-              </>
-            ) : (
+                <Select
+                  showSearch
+                  disabled={
+                    isBlock ||
+                    displayRole.isCreate === false ||
+                    displayRole.isUpdate === false
+                  }
+                  optionFilterProp="label"
+                  defaultValue={""}
+                  filterSort={(optionA, optionB) =>
+                    (optionA?.label ?? "")
+                      .toLowerCase()
+                      .localeCompare((optionB?.label ?? "").toLowerCase())
+                  }
+                  options={filteredUsersFromHRM?.items?.map((user) => ({
+                    value: user.id,
+                    label: `${user.fullName} - ${user.userName}`,
+                  }))}
+                  value={selectedKey}
+                  onChange={(value) => {
+                    setSelectedKey(value);
+                    onAddUsers(value, standardValues);
+                  }}
+                />
+              </div>
+            </div>
+            {tableUsers && tableUsers.length > 0 && (
               <>
-                {listPicture && (
-                  <>
-                    <div className="flex flex-col items-center gap-1 py-2">
-                      <div className="grid grid-cols-3 gap-2">
-                        <img
-                          src={
-                            listPicture.type === "image/jpeg" ||
-                            listPicture.type === "image/png"
-                              ? "https://api-annual.uef.edu.vn/" +
-                                listPicture.path
-                              : "/file-pdf.svg"
-                          }
-                          width={50}
-                          loading="lazy"
-                          alt="file-preview"
-                        />
-                        <div className="col-span-2 text-center content-center">
-                          <span className="text-sm">{listPicture.name}</span>
-                          <span className="text-sm flex">
-                            ({(listPicture.size / (1024 * 1024)).toFixed(2)} MB
-                            -
-                            <span
-                              className="text-sm ms-1 cursor-pointer text-blue-500 hover:text-blue-600"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setShowPDF(true);
-                                handleShowPDF(true);
-                              }}
-                            >
-                              xem chi tiết
-                            </span>
-                            )
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex gap-3 items-center mt-2">
-                        <Button
-                          danger
-                          disabled={isBlock || displayRole.isUpload === false}
-                          color="danger"
-                          onClick={handleDeletePicture}
-                          size="small"
-                          icon={<MinusCircleOutlined />}
-                        >
-                          Hủy tệp
-                        </Button>
-                        <Button
-                          type="primary"
-                          size="small"
-                          disabled={isBlock || displayRole.isUpload === false}
-                          icon={<CloudUploadOutlined />}
-                        >
-                          Chọn tệp thay thế
-                        </Button>
-                      </div>
-                    </div>
-                  </>
-                )}
+                <div className="flex flex-col gap-[2px] mb-2">
+                  <span className="font-medium text-neutral-600">
+                    Danh sách nhân sự tham gia
+                  </span>
+                  <Table<ActivityInput>
+                    bordered
+                    rowKey={(item) => item.id}
+                    rowHoverable
+                    rowClassName={() => "editable-row"}
+                    pagination={false}
+                    size="small"
+                    columns={columns}
+                    dataSource={tableUsers}
+                    className="custom-table-header shadow-md rounded-md"
+                  />
+                </div>
               </>
             )}
-          </div>
-        </div>
-        <InfoApproved mode={mode} isPayment={isPayment} />
-      </form>
+            <div className="flex flex-col gap-[2px] mb-2">
+              <span className="font-medium text-neutral-600">
+                Tài liệu đính kèm
+              </span>
+              <div
+                {...getRootProps()}
+                className="w-full h-24 border-2 border-dashed border-blue-200 hover:border-blue-400 cursor-pointer flex justify-center items-center gap-3 rounded-xl"
+              >
+                <input {...getInputProps()} />
+                {!listPicture || listPicture.path === "" ? (
+                  <>
+                    <span className="text-blue-500 text-4xl">
+                      <CloudUploadOutlined />
+                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-base text-center font-medium text-blue-500">
+                        Tải lên tệp tài liệu đính kèm
+                      </span>
+                      <span className="text-blue-300 text-[13px]">
+                        Kéo thả hoặc nhấn vào đây để chọn tệp!
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {isLoadingPDF ? (
+                      <>
+                        <div>
+                          <Progress
+                            key="progress-upload-pdf"
+                            status="active"
+                            percent={percent}
+                            size={[600, 15]}
+                            type="line"
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex flex-col items-center gap-1 py-2">
+                          <div className="grid grid-cols-3 gap-2">
+                            <img
+                              src="/file-pdf.svg"
+                              width={42}
+                              loading="lazy"
+                              alt="file-preview"
+                            />
+                            <div className="col-span-2 text-center content-center">
+                              <span className="text-sm">
+                                {listPicture.name}
+                              </span>
+                              <span className="text-sm flex">
+                                ({(listPicture.size / (1024 * 1024)).toFixed(2)}{" "}
+                                MB -
+                                <span
+                                  className="text-sm ms-1 cursor-pointer text-blue-500 hover:text-blue-600"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowPDF(true);
+                                    handleShowPDF(true);
+                                  }}
+                                >
+                                  xem chi tiết
+                                </span>
+                                )
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex gap-3 items-center mt-2">
+                            <Button
+                              danger
+                              disabled={
+                                isBlock || displayRole.isUpload === false
+                              }
+                              color="danger"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeletePicture();
+                              }}
+                              size="small"
+                              icon={<MinusCircleOutlined />}
+                            >
+                              Hủy tệp
+                            </Button>
+                            <Button
+                              type="primary"
+                              size="small"
+                              disabled={
+                                isBlock || displayRole.isUpload === false
+                              }
+                              icon={<CloudUploadOutlined />}
+                            >
+                              Chọn tệp thay thế
+                            </Button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+            <InfoApproved mode={mode} isPayment={isPayment} />
+          </form>
+        </>
+      )}
       <InfoPDF
-        path={pathPDF}
+        path={listPicture?.path ?? ""}
         isShowPDF={showPDF}
         onSetShowPDF={(value) => {
           setShowPDF(value);
           handleShowPDF(value);
         }}
+      />
+      <CustomNotification
+        message={formNotification.message}
+        description={formNotification.description}
+        status={formNotification.status}
+        isOpen={formNotification.isOpen}
       />
     </div>
   );

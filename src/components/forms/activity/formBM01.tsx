@@ -30,7 +30,7 @@ import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
-import { FC, FormEvent, forwardRef, Key, useEffect, useState } from "react";
+import { FC, FormEvent, Key, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import InfoApproved from "./infoApproved";
 import InfoPDF from "./infoPDF";
@@ -122,10 +122,10 @@ const FormBM01: FC<FormBM01Props> = (props) => {
             clearInterval(intervalId);
             setListPicture({ type: "", path: "", name: "", size: 0 });
             setFormNotification({
+              isOpen: true,
+              status: "success",
               message: "Thông báo",
               description: `Đã xóa tệp tin: ${listPicture.name} thành công!`,
-              status: "success",
-              isOpen: true,
             });
             setIsLoadingPDF(false);
             return 0;
@@ -134,6 +134,10 @@ const FormBM01: FC<FormBM01Props> = (props) => {
         });
       }, 10);
     }
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   };
 
   const handleUploadPDF = async (acceptedFiles: File[]) => {
@@ -169,6 +173,10 @@ const FormBM01: FC<FormBM01Props> = (props) => {
         });
       }, 10);
     }
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   };
 
   const { getRootProps, getInputProps } = useDropzone({

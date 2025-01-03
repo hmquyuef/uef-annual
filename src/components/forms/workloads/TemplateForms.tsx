@@ -94,7 +94,7 @@ const TemplateForms: FC<TemplateFormsProps> = ({
         const fromDate = record.entryDate || record.determinations?.entryDate;
         return fromDate ? convertTimestampToDate(fromDate) : "";
       },
-      className: "customInfoColors text-center w-[70px]",
+      className: "customInfoColors text-center w-[110px]",
       fixed: "right",
     },
     {
@@ -160,7 +160,7 @@ const TemplateForms: FC<TemplateFormsProps> = ({
           </>
         );
       },
-      className: "customApprovedColors w-[90px]",
+      className: "customApprovedColors text-center w-[110px]",
     },
   ];
 

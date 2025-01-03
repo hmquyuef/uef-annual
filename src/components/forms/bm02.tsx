@@ -14,7 +14,7 @@ import PageTitles from "@/utility/Constraints";
 import {
   convertTimestampToDate,
   defaultFooterInfo,
-  setCellStyle
+  setCellStyle,
 } from "@/utility/Utilities";
 import {
   ArrowsAltOutlined,
@@ -39,17 +39,8 @@ import {
   Modal,
   Select,
   TableColumnsType,
-  Tooltip
+  Tooltip,
 } from "antd";
-import saveAs from "file-saver";
-import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
-import { Key, useCallback, useEffect, useState } from "react";
-import * as XLSX from "sheetjs-style";
-import CustomModal from "../CustomModal";
-import CustomNotification from "../CustomNotification";
-import FormBM02 from "./activity/formBM02";
-import FromUpload from "./activity/formUpload";
 
 import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 import {
@@ -59,20 +50,30 @@ import {
 } from "@/services/roles/rolesServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import { FileItem } from "@/services/uploads/uploadsServices";
+import Colors from "@/utility/Colors";
 import Messages from "@/utility/Messages";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
+import { Key, useCallback, useEffect, useState } from "react";
+import * as XLSX from "sheetjs-style";
+import CustomModal from "../CustomModal";
+import CustomNotification from "../CustomNotification";
+import FormBM02 from "./activity/formBM02";
+import FromUpload from "./activity/formUpload";
+import TemplateForms from "./workloads/TemplateForms";
 
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
-import TemplateForms from "./workloads/TemplateForms";
+import saveAs from "file-saver";
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 dayjs.locale("vi");
 
 type SearchProps = GetProps<typeof Input.Search>;
-const { Search } = Input;
 
 const BM02 = () => {
+  const { Search } = Input;
   const [loading, setLoading] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [classAssistants, setclassAssistants] = useState<ClassAssistantItem[]>(
@@ -82,17 +83,11 @@ const BM02 = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isUpload, setIsUpload] = useState(false);
   const [mode, setMode] = useState<"add" | "edit">("add");
-  const [isNotificationOpen, setNotificationOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<
     Partial<ClassAssistantItem> | undefined
   >(undefined);
   const [units, setUnits] = useState<UnitItem[]>([]);
   const [selectedKeyUnit, setSelectedKeyUnit] = useState<Key | null>(null);
-  const [message, setMessage] = useState("");
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState<
-    "success" | "error" | "info" | "warning"
-  >("success");
   const [defaultYears, setDefaultYears] = useState<any>();
   const [selectedKey, setSelectedKey] = useState<any>();
   const [startDate, setStartDate] = useState<number | 0>(0);
@@ -108,6 +103,18 @@ const BM02 = () => {
   const [isPayments, setIsPayments] = useState<PaymentApprovedItem>();
   const [isShowPdf, setIsShowPdf] = useState(false);
 
+  const [formNotification, setFormNotification] = useState<{
+    message: string;
+    description: string;
+    status: "success" | "error" | "info" | "warning";
+    isOpen: boolean;
+  }>({
+    message: "",
+    description: "",
+    status: "success",
+    isOpen: false,
+  });
+
   const getDefaultYears = async () => {
     const { items } = await getAllSchoolYears();
     if (items) {
@@ -116,7 +123,7 @@ const BM02 = () => {
       if (defaultYear) {
         const { id, startDate, endDate } = defaultYear;
         setSelectedKey(defaultYear);
-        getListClassAssistants(id);
+        await getListClassAssistants(id);
         setStartDate(startDate);
         setMinStartDate(startDate);
         setEndDate(endDate);
@@ -129,7 +136,6 @@ const BM02 = () => {
     const response = await getAllClassAssistants(yearId);
     setclassAssistants(response.items);
     setData(response.items);
-    setNotificationOpen(false);
   };
 
   const getListUnits = async () => {
@@ -194,7 +200,7 @@ const BM02 = () => {
       className: "text-center w-[50px]",
     },
     {
-      title: "SỐ TIẾT CHUẨN",
+      title: "TIẾT CHUẨN",
       dataIndex: "standardNumber",
       key: "standardNumber",
       className: "text-center w-[60px]",
@@ -222,28 +228,50 @@ const BM02 = () => {
       className: "text-center w-[100px]",
     },
     {
-      title: (
-        <>
-          THỜI GIAN <br /> HOẠT ĐỘNG
-        </>
-      ),
-      dataIndex: "fromDate",
-      key: "fromDate",
-      render: (_, record: ClassAssistantItem) => {
-        return (
-          <>
-            {record.fromDate && record.toDate ? (
-              <div className="flex flex-col">
-                <span>{convertTimestampToDate(record.fromDate)}</span>
-                <span>{convertTimestampToDate(record.toDate)}</span>
-              </div>
-            ) : (
-              ""
-            )}
-          </>
-        );
-      },
+      title: <div className="py-1">THỜI GIAN HOẠT ĐỘNG</div>,
+      dataIndex: "eventTime",
+      key: "eventTime",
       className: "text-center w-[80px]",
+      children: [
+        {
+          title: <div className="py-1">TỪ NGÀY</div>,
+          dataIndex: "fromDate",
+          key: "fromDate",
+          render: (_, record: ClassAssistantItem) => {
+            return (
+              <>
+                {record.fromDate ? (
+                  <div className="flex flex-col">
+                    <span>{convertTimestampToDate(record.fromDate)}</span>
+                  </div>
+                ) : (
+                  ""
+                )}
+              </>
+            );
+          },
+          className: "text-center w-[80px]",
+        },
+        {
+          title: <div className="py-1">ĐẾN NGÀY</div>,
+          dataIndex: "toDate",
+          key: "toDate",
+          render: (_, record: ClassAssistantItem) => {
+            return (
+              <>
+                {record.toDate ? (
+                  <div className="flex flex-col">
+                    <span>{convertTimestampToDate(record.toDate)}</span>
+                  </div>
+                ) : (
+                  ""
+                )}
+              </>
+            );
+          },
+          className: "text-center w-[80px]",
+        },
+      ],
     },
     {
       title: (
@@ -262,16 +290,16 @@ const BM02 = () => {
               href={"https://api-annual.uef.edu.vn/" + path}
               target="__blank"
             >
-              <p className="text-green-500">
+              <span className="text-green-500">
                 <CheckOutlined />
-              </p>
+              </span>
             </Link>
           </>
         ) : (
           <>
-            <p className="text-red-400">
+            <span className="text-red-400">
               <CloseOutlined />
-            </p>
+            </span>
           </>
         );
       },
@@ -293,7 +321,7 @@ const BM02 = () => {
         </p>
       ),
       icon: <PlusOutlined />,
-      style: { color: "#1890ff" },
+      style: { color: Colors.BLUE },
     },
     {
       type: "divider",
@@ -313,7 +341,7 @@ const BM02 = () => {
         </p>
       ),
       icon: <FileExcelOutlined />,
-      style: { color: "#52c41a" },
+      style: { color: Colors.GREEN },
     },
   ];
 
@@ -326,7 +354,7 @@ const BM02 = () => {
         </p>
       ),
       icon: <SafetyOutlined />,
-      style: { color: "#52c41a" },
+      style: { color: Colors.GREEN },
     },
     {
       type: "divider",
@@ -339,7 +367,7 @@ const BM02 = () => {
         </p>
       ),
       icon: <CloseCircleOutlined />,
-      style: { color: "rgb(220 38 38)" },
+      style: { color: Colors.RED },
     },
   ];
 
@@ -371,20 +399,25 @@ const BM02 = () => {
       const selectedKeysArray = Array.from(selectedRowKeys) as string[];
       if (selectedKeysArray.length > 0) {
         await deleteClassAssistants(selectedKeysArray);
-        setNotificationOpen(true);
-        setStatus("success");
-        setMessage("Thông báo");
-        setDescription(
-          `Đã xóa thành công ${selectedKeysArray.length} thông tin!`
-        );
+        setFormNotification((prev) => ({
+          ...prev,
+          isOpen: true,
+          status: "success",
+          message: "Thông báo",
+          description: `Đã xóa thành công ${selectedKeysArray.length} dòng thông tin!`,
+        }));
         await getListClassAssistants(selectedKey.id);
         setSelectedRowKeys([]);
       }
     } catch (error) {
       console.error("Error deleting selected items:", error);
     }
-    setNotificationOpen(false);
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   }, [selectedRowKeys]);
+
   const handleEdit = (classLeader: ClassAssistantItem) => {
     const updatedActivity: Partial<ClassAssistantItem> = {
       ...classLeader,
@@ -401,27 +434,43 @@ const BM02 = () => {
           formData
         );
         if (response) {
-          setDescription(Messages.UPDATE_ASSISTANT);
+          setFormNotification((prev) => ({
+            ...prev,
+            description: Messages.UPDATE_ASSISTANT,
+          }));
         }
       } else {
         const response = await postAddClassAssistant(formData);
         if (response) {
-          setDescription(Messages.ADD_ASSISTANT);
+          setFormNotification((prev) => ({
+            ...prev,
+            description: Messages.ADD_ASSISTANT,
+          }));
         }
       }
-      setNotificationOpen(true);
-      setStatus("success");
-      setMessage("Thông báo");
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "success",
+        message: "Thông báo",
+      }));
       await getListClassAssistants(selectedKey.id);
       setIsOpen(false);
       setSelectedItem(undefined);
       setMode("add");
     } catch (error) {
-      setNotificationOpen(true);
-      setStatus("error");
-      setMessage("Thông báo");
-      setDescription(Messages.ERROR);
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Thông báo",
+        description: Messages.ERROR,
+      }));
     }
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   };
 
   const getDisplayRole = async (name: string) => {
@@ -443,26 +492,34 @@ const BM02 = () => {
 
       const response = await ImportClassAssistants(formData);
       if (response) {
-        setDescription(
-          `Tải lên thành công ${response.totalCount} thông tin Cố vấn học tập, trợ giảng, phụ đạo!`
-        );
+        setFormNotification((prev) => ({
+          ...prev,
+          isOpen: true,
+          status: "error",
+          message: "Thông báo",
+          description: `Tải lên thành công ${response.totalCount} thông tin Cố vấn học tập, trợ giảng, phụ đạo!`,
+        }));
       }
-      setNotificationOpen(true);
-      setStatus("success");
-      setMessage("Thông báo");
       await getListClassAssistants(selectedKey.id);
       setIsOpen(false);
       setSelectedItem(undefined);
       setMode("add");
       setIsUpload(false);
     } catch (error) {
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Thông báo",
+        description: Messages.ERROR,
+      }));
       setIsOpen(false);
-      setNotificationOpen(true);
-      setStatus("error");
-      setMessage("Thông báo");
-      setDescription(Messages.ERROR);
       setIsUpload(false);
     }
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   };
 
   const handleExportExcel = async () => {
@@ -746,30 +803,37 @@ const BM02 = () => {
       if (selectedRowKeys.length > 0 || selectedItem) {
         const response = await putUpdateApprovedClassAssistant(formData);
         if (response) {
-          setDescription(
-            isRejected
+          setFormNotification((prev) => ({
+            ...prev,
+            description: isRejected
               ? `${Messages.REJECTED_ASSISTANT} (${
                   selectedRowKeys.length > 0 ? selectedRowKeys.length : 1
                 } dòng)`
               : `${Messages.APPROVED_ASSISTANT} (${
                   selectedRowKeys.length > 0 ? selectedRowKeys.length : 1
-                } dòng)`
-          );
+                } dòng)`,
+          }));
         }
       }
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Thông báo",
+      }));
       setSelectedRowKeys([]);
-      setNotificationOpen(true);
-      setStatus("success");
-      setMessage("Thông báo");
       await getListClassAssistants(selectedKey.id);
       setIsOpen(false);
       setSelectedItem(undefined);
       setMode("add");
     } catch (error) {
-      setNotificationOpen(true);
-      setStatus("error");
-      setMessage("Thông báo");
-      setDescription(Messages.ERROR);
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Thông báo",
+        description: Messages.ERROR,
+      }));
     }
   };
 
@@ -850,7 +914,11 @@ const BM02 = () => {
                   <span className="text-[14px] text-neutral-500">
                     Tìm kiếm:
                   </span>
-                  <Search placeholder=" " onSearch={onSearch} enterButton />
+                  <Search
+                    placeholder=" "
+                    onChange={(e) => onSearch(e.target.value)}
+                    enterButton
+                  />
                 </div>
                 <div
                   className="col-span-2"
@@ -919,7 +987,6 @@ const BM02 = () => {
                           value: year.id,
                           label: year.title,
                         }))}
-                        //
                         value={selectedKey && selectedKey.title}
                         onChange={(value) => handleChangeYear(value)}
                         className="w-full"
@@ -1026,9 +1093,9 @@ const BM02 = () => {
                   onClick={handleExportExcel}
                   iconPosition="start"
                   style={{
-                    backgroundColor: "#52c41a",
-                    borderColor: "#52c41a",
-                    color: "#fff",
+                    backgroundColor: Colors.GREEN,
+                    borderColor: Colors.GREEN,
+                    color: Colors.WHITE,
                   }}
                 >
                   Xuất Excel
@@ -1073,10 +1140,10 @@ const BM02 = () => {
           )}
         </div>
         <CustomNotification
-          message={message}
-          description={description}
-          status={status}
-          isOpen={isNotificationOpen} // Truyền trạng thái mở
+          isOpen={formNotification.isOpen}
+          status={formNotification.status}
+          message={formNotification.message}
+          description={formNotification.description}
         />
         <CustomModal
           isOpen={isOpen}
@@ -1097,7 +1164,10 @@ const BM02 = () => {
             );
           }}
           onCancel={() => {
-            setNotificationOpen(false);
+            setFormNotification((prev) => ({
+              ...prev,
+              isOpen: false,
+            }));
             setIsOpen(false);
             setSelectedItem(undefined);
             setMode("add");

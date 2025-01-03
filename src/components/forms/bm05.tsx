@@ -80,15 +80,9 @@ const BM05 = () => {
   const [data, setData] = useState<ActivityItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [mode, setMode] = useState<"add" | "edit">("add");
-  const [isNotificationOpen, setNotificationOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<
     Partial<AddUpdateActivityItem> | undefined
   >(undefined);
-  const [message, setMessage] = useState("");
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState<
-    "success" | "error" | "info" | "warning"
-  >("success");
   const [defaultYears, setDefaultYears] = useState<any>();
   const [selectedKey, setSelectedKey] = useState<any>();
   const [startDate, setStartDate] = useState<number | 0>(0);
@@ -103,6 +97,18 @@ const BM05 = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [reason, setReason] = useState("");
   const [isPayments, setIsPayments] = useState<PaymentApprovedItem>();
+
+  const [formNotification, setFormNotification] = useState<{
+    message: string;
+    description: string;
+    status: "success" | "error" | "info" | "warning";
+    isOpen: boolean;
+  }>({
+    message: "",
+    description: "",
+    status: "success",
+    isOpen: false,
+  });
 
   const getDefaultYears = async () => {
     const { items } = await getAllSchoolYears();
@@ -126,7 +132,10 @@ const BM05 = () => {
     console.log("response :>> ", response);
     setActivities(response.items);
     setData(response.items);
-    setNotificationOpen(false);
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   };
 
   const getListUnits = async () => {
@@ -352,12 +361,13 @@ const BM05 = () => {
       const selectedKeysArray = Array.from(selectedRowKeys) as string[];
       if (selectedKeysArray.length > 0) {
         await deleteActivities(selectedKeysArray);
-        setNotificationOpen(true);
-        setStatus("success");
-        setMessage("Thông báo");
-        setDescription(
-          `Đã xóa thành công ${selectedKeysArray.length} hoạt động!`
-        );
+        setFormNotification((prev) => ({
+          ...prev,
+          isOpen: true,
+          status: "success",
+          message: "Thông báo",
+          description: `Đã xóa thành công ${selectedKeysArray.length} dòng thông tin!`,
+        }));
         await getListActivities(selectedKey.id);
         setSelectedRowKeys([]);
       }
@@ -393,7 +403,10 @@ const BM05 = () => {
           updatedFormData
         );
         if (response) {
-          setDescription("Cập nhật hoạt động thành công!");
+          setFormNotification((prev) => ({
+            ...prev,
+            description: "Cập nhật hoạt động thành công!",
+          }));
         }
       } else {
         const newFormData: Partial<AddUpdateActivityItem> = {
@@ -402,21 +415,30 @@ const BM05 = () => {
         };
         const response = await postAddActivity(newFormData);
         if (response) {
-          setDescription("Thêm mới hoạt động thành công!");
+          setFormNotification((prev) => ({
+            ...prev,
+            description: "Thêm mới hoạt động thành công!",
+          }));
         }
       }
-      setNotificationOpen(true);
-      setStatus("success");
-      setMessage("Thông báo");
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Thông báo",
+      }));
       await getListActivities(selectedKey.id);
       setIsOpen(false);
       setSelectedItem(undefined);
       setMode("add");
     } catch (error) {
-      setNotificationOpen(true);
-      setStatus("error");
-      setMessage("Thông báo");
-      setDescription(Messages.ERROR);
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Thông báo",
+        description: Messages.ERROR,
+      }));
     }
   };
 
@@ -719,30 +741,37 @@ const BM05 = () => {
       if (selectedRowKeys.length > 0 || selectedItem) {
         const response = await putUpdateApprovedActivity(formData);
         if (response) {
-          setDescription(
-            isRejected
+          setFormNotification((prev) => ({
+            ...prev,
+            description: isRejected
               ? `${Messages.REJECTED_ACTIVITY} (${
                   selectedRowKeys.length > 0 ? selectedRowKeys.length : 1
                 } dòng)`
               : `${Messages.APPROVED_ACTIVITY} (${
                   selectedRowKeys.length > 0 ? selectedRowKeys.length : 1
-                } dòng)`
-          );
+                } dòng)`,
+          }));
         }
       }
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Thông báo",
+      }));
       setSelectedRowKeys([]);
-      setNotificationOpen(true);
-      setStatus("success");
-      setMessage("Thông báo");
       await getListActivities(selectedKey.id);
       setIsOpen(false);
       setSelectedItem(undefined);
       setMode("add");
     } catch (error) {
-      setNotificationOpen(true);
-      setStatus("error");
-      setMessage("Thông báo");
-      setDescription(Messages.ERROR);
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Thông báo",
+        description: Messages.ERROR,
+      }));
     }
   };
 
@@ -829,7 +858,11 @@ const BM05 = () => {
                   <span className="text-[14px] text-neutral-500">
                     Tìm kiếm:
                   </span>
-                  <Search placeholder=" " onSearch={onSearch} enterButton />
+                  <Search
+                    placeholder=" "
+                    onChange={(e) => onSearch(e.target.value)}
+                    enterButton
+                  />
                 </div>
                 <div
                   className="col-span-2"
@@ -1057,10 +1090,10 @@ const BM05 = () => {
         </div>
       </div>
       <CustomNotification
-        message={message}
-        description={description}
-        status={status}
-        isOpen={isNotificationOpen}
+        message={formNotification.message}
+        description={formNotification.description}
+        status={formNotification.status}
+        isOpen={formNotification.isOpen}
       />
       <CustomModal
         isOpen={isOpen}
@@ -1077,7 +1110,10 @@ const BM05 = () => {
           );
         }}
         onCancel={() => {
-          setNotificationOpen(false);
+          setFormNotification((prev) => ({
+            ...prev,
+            isOpen: false,
+          }));
           setIsOpen(false);
           setSelectedItem(undefined);
           setMode("add");

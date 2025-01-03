@@ -1,5 +1,6 @@
 "use client";
 
+import CustomNotification from "@/components/CustomNotification";
 import { ClassAssistantItem } from "@/services/forms/assistantsServices";
 import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 import { DisplayRoleItem } from "@/services/roles/rolesServices";
@@ -21,17 +22,18 @@ import {
   DatePicker,
   Input,
   InputNumber,
+  Progress,
   Select,
 } from "antd";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
-import moment from "moment";
-import { FC, FormEvent, Key, useEffect, useMemo, useState } from "react";
+import { FC, FormEvent, Key, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import InfoApproved from "./infoApproved";
 import InfoPDF from "./infoPDF";
+import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -45,16 +47,19 @@ interface FormBM02Props {
   displayRole: DisplayRoleItem;
 }
 
-const FormBM02: FC<FormBM02Props> = ({
-  onSubmit,
-  handleShowPDF,
-  initialData,
-  mode,
-  isBlock,
-  isPayment,
-  displayRole,
-}) => {
+const FormBM02: FC<FormBM02Props> = (props) => {
+  const {
+    onSubmit,
+    handleShowPDF,
+    initialData,
+    mode,
+    isBlock,
+    isPayment,
+    displayRole,
+  } = props;
   const { TextArea } = Input;
+  const timestamp = dayjs().tz("Asia/Ho_Chi_Minh").unix();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [units, setUnits] = useState<UnitItem[]>([]);
   const [defaultUnits, setDefaultUnits] = useState<UnitItem[]>([]);
   const [users, setUsers] = useState<UsersFromHRMResponse | undefined>(
@@ -62,22 +67,43 @@ const FormBM02: FC<FormBM02Props> = ({
   );
   const [defaultUsers, setDefaultUsers] = useState<UsersFromHRM[]>([]);
   const [selectedKey, setSelectedKey] = useState<Key | null>(null);
-  const [semester, setSemester] = useState<string>("");
-  const [standardValues, setStandardValues] = useState<number>(0);
-  const [activityName, setActivityName] = useState<string>("");
-  const [classCode, setClassCode] = useState<string>("");
-  const [fromDate, setFromDate] = useState<number>(0);
-  const [toDate, setToDate] = useState<number>(0);
-  const [entryDate, setEntryDate] = useState<number>(0);
-  const [documentDate, setDocumentDate] = useState<number>(0);
-  const [proof, setProof] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
   const [listPicture, setListPicture] = useState<FileItem | undefined>(
     undefined
   );
-  const [isUploaded, setIsUploaded] = useState<boolean>(false);
-  const [pathPDF, setPathPDF] = useState<string>("");
+  const [isLoadingPDF, setIsLoadingPDF] = useState<boolean>(false);
+  const [percent, setPercent] = useState<number>(0);
   const [showPDF, setShowPDF] = useState<boolean>(false);
+
+  const [formNotification, setFormNotification] = useState<{
+    message: string;
+    description: string;
+    status: "success" | "error" | "info" | "warning";
+    isOpen: boolean;
+  }>({
+    message: "",
+    description: "",
+    status: "success",
+    isOpen: false,
+  });
+
+  const [formValues, setFormValues] = useState({
+    semester: "",
+    standardValues: 0,
+    activityName: "",
+    classCode: "",
+    fromDate: 0,
+    toDate: 0,
+    entryDate: timestamp,
+    documentDate: 0,
+    attackment: {
+      type: "",
+      path: "",
+      name: "",
+      size: 0,
+    },
+    proof: "",
+    note: "",
+  });
 
   const getListUnits = async () => {
     const response = await getAllUnits("true");
@@ -90,41 +116,77 @@ const FormBM02: FC<FormBM02Props> = ({
   };
 
   const handleDeletePicture = async () => {
+    setIsLoadingPDF(true);
     if (listPicture && listPicture.path !== "") {
       await deleteFiles(
         listPicture.path.replace("https://api-annual.uef.edu.vn/", "")
-        // listPicture[0].path.replace("http://192.168.98.60:8081/", "")
       );
-      // Cập nhật lại trạng thái sau khi xóa
-      setIsUploaded(false);
-      setListPicture({ type: "", path: "", name: "", size: 0 });
-      setPathPDF("");
+      let intervalId = setInterval(() => {
+        setPercent((prevPercent) => {
+          let newPercent = prevPercent === 0 ? 100 : prevPercent - 1;
+          if (newPercent === 0) {
+            clearInterval(intervalId);
+            setListPicture({ type: "", path: "", name: "", size: 0 });
+            setFormNotification({
+              isOpen: true,
+              status: "success",
+              message: "Thông báo",
+              description: `Đã xóa tệp tin: ${listPicture.name} thành công!`,
+            });
+            setIsLoadingPDF(false);
+            return 0;
+          }
+          return newPercent;
+        });
+      }, 10);
     }
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   };
 
-  const onDrop = useMemo(
-    () => async (acceptedFiles: File[]) => {
-      const formData = new FormData();
-      formData.append("FunctionName", "assistant");
-      formData.append("file", acceptedFiles[0]);
-      if (listPicture && listPicture.path !== "") {
-        await deleteFiles(
-          listPicture.path.replace("https://api-annual.uef.edu.vn/", "")
-        );
-        setPathPDF("");
-      }
-      const results = await postFiles(formData);
-      if (results && results !== undefined) {
-        setIsUploaded(true);
-        setListPicture(results);
-        setPathPDF(results.path);
-      }
-    },
-    [listPicture]
-  );
+  const handleUploadPDF = async (acceptedFiles: File[]) => {
+    setIsLoadingPDF(true);
+    const formData = new FormData();
+    formData.append("FunctionName", "assistant");
+    formData.append("file", acceptedFiles[0]);
+    if (listPicture && listPicture.path !== "") {
+      await deleteFiles(
+        listPicture.path.replace("https://api-annual.uef.edu.vn/", "")
+      );
+    }
+    const results = await postFiles(formData);
+    if (results && results !== undefined) {
+      setListPicture(results);
+      let intervalId = setInterval(() => {
+        setPercent((prevPercent) => {
+          const newPercent = prevPercent + 1;
+          if (newPercent >= 100) {
+            clearInterval(intervalId);
+            setTimeout(() => {
+              setFormNotification({
+                isOpen: true,
+                status: "success",
+                message: "Thông báo",
+                description: `Tải lên tệp tin: ${results.name} thành công!`,
+              });
+              setIsLoadingPDF(false);
+            }, 500);
+            return 100;
+          }
+          return newPercent;
+        });
+      }, 10);
+    }
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
+  };
 
   const { getRootProps, getInputProps } = useDropzone({
-    onDrop,
+    onDrop: handleUploadPDF,
     disabled: isBlock || displayRole.isUpload === false,
   });
 
@@ -136,46 +198,52 @@ const FormBM02: FC<FormBM02Props> = ({
       userName: mode !== "edit" ? tempUser?.userName : defaultUsers[0].userName,
       fullName: mode !== "edit" ? tempUser?.fullName : defaultUsers[0].fullName,
       unitName: mode !== "edit" ? tempUser?.unitName : defaultUsers[0].unitName,
-      activityName: activityName,
-      semester: semester,
-      fromDate: fromDate,
-      toDate: toDate,
-      entryDate: entryDate / 1000,
-      documentDate: documentDate,
-      classCode: classCode,
-      standardNumber: standardValues,
+      activityName: formValues.activityName,
+      semester: formValues.semester,
+      fromDate: formValues.fromDate,
+      toDate: formValues.toDate,
+      entryDate: formValues.entryDate,
+      documentDate: formValues.documentDate,
+      classCode: formValues.classCode,
+      standardNumber: formValues.standardValues,
       attackment: {
         type: listPicture?.type ?? "",
         path: listPicture?.path ?? "",
         name: listPicture?.name ?? "",
         size: listPicture?.size ?? 0,
       },
-      proof: proof,
-      note: description,
+      proof: formValues.proof,
+      note: formValues.note,
     };
     onSubmit(formData);
   };
 
+  const resetForm = () => {
+    setFormValues({
+      semester: "",
+      standardValues: 0,
+      activityName: "",
+      classCode: "",
+      fromDate: 0,
+      toDate: 0,
+      entryDate: timestamp,
+      documentDate: 0,
+      attackment: {
+        type: "",
+        path: "",
+        name: "",
+        size: 0,
+      },
+      proof: "",
+      note: "",
+    });
+    setDefaultUnits([]);
+    setDefaultUsers([]);
+    setListPicture(undefined);
+  };
+
   useEffect(() => {
-    const resetForm = () => {
-      const formattedDate = moment(new Date()).format("DD/MM/YYYY");
-      const timestamp = moment(formattedDate, "DD/MM/YYYY").valueOf();
-      setEntryDate(timestamp);
-      setDefaultUnits([]);
-      setDefaultUsers([]);
-      setSemester("");
-      setClassCode("");
-      setActivityName("");
-      setStandardValues(0);
-      setFromDate(0);
-      setToDate(0);
-      setDocumentDate(0);
-      setListPicture(undefined);
-      setIsUploaded(false);
-      setPathPDF("");
-      setProof("");
-      setDescription("");
-    };
+    setIsLoading(true);
     const loadUsers = async () => {
       if (mode === "edit" && initialData !== undefined) {
         const units = await getAllUnits("true");
@@ -192,29 +260,24 @@ const FormBM02: FC<FormBM02Props> = ({
           );
           setDefaultUsers([userTemp] as UsersFromHRM[]);
         }
-        setSemester(initialData.semester || "");
-        setClassCode(initialData.classCode || "");
-        setActivityName(initialData.activityName || "");
-        setStandardValues(initialData.standardNumber || 0);
-        setFromDate(initialData.fromDate || 0);
-        setToDate(initialData.toDate || 0);
-        setEntryDate((initialData.entryDate ?? 0) * 1000);
-        setDocumentDate(initialData.documentDate || 0);
-        if (
-          initialData.attackment &&
-          initialData.attackment !== undefined &&
-          initialData.attackment.path !== ""
-        ) {
-          setListPicture(initialData.attackment);
-          setIsUploaded(true);
-          setPathPDF(initialData.attackment.path || "");
-        } else {
-          setListPicture(undefined);
-          setIsUploaded(false);
-          setPathPDF("");
-        }
-        setProof(initialData.proof || "");
-        setDescription(initialData.note || "");
+        setFormValues({
+          semester: initialData.semester || "",
+          standardValues: initialData.standardNumber || 0,
+          activityName: initialData.activityName || "",
+          classCode: initialData.classCode || "",
+          fromDate: initialData.fromDate || 0,
+          toDate: initialData.toDate || 0,
+          entryDate: initialData?.entryDate ? initialData.entryDate : timestamp,
+          documentDate: initialData.documentDate || 0,
+          attackment: {
+            type: initialData.attackment?.type || "",
+            path: initialData.attackment?.path || "",
+            name: initialData.attackment?.name || "",
+            size: initialData.attackment?.size || 0,
+          },
+          proof: initialData.proof || "",
+          note: initialData.note || "",
+        });
       } else {
         resetForm();
       }
@@ -223,293 +286,374 @@ const FormBM02: FC<FormBM02Props> = ({
     loadUsers();
     setShowPDF(false);
     handleShowPDF(false);
+    const timeoutId = setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
+    return () => clearTimeout(timeoutId);
   }, [initialData, mode, handleShowPDF]);
   return (
     <div
       className={`grid ${showPDF ? "grid-cols-2 gap-4" : "grid-cols-1"} mb-2`}
     >
-      <form onSubmit={handleSubmit}>
-        <hr className="mt-1 mb-3" />
-        <div className="grid grid-cols-5 gap-6 mb-4">
-          <div className="flex flex-col gap-1">
-            <p className="font-medium text-neutral-600">
-              Số văn bản <span className="text-red-500">(*)</span>
-            </p>
-            <TextArea
-              autoSize
-              value={proof}
-              onChange={(e) => setProof(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <p className="font-medium text-neutral-600">
-              Ngày lập <span className="text-red-500">(*)</span>
-            </p>
-            <ConfigProvider locale={locale}>
-              <DatePicker
-                allowClear={false}
-                placeholder="dd/mm/yyyy"
-                format="DD/MM/YYYY"
-                value={
-                  documentDate
-                    ? dayjs.unix(documentDate).tz("Asia/Ho_Chi_Minh")
-                    : null
-                }
-                onChange={(date) => {
-                  if (date) {
-                    const timestamp = dayjs(date).tz("Asia/Ho_Chi_Minh").unix();
-                    setDocumentDate(timestamp);
-                  } else {
-                    setDocumentDate(0);
+      {isLoading ? (
+        <>
+          <LoadingSkeleton />
+        </>
+      ) : (
+        <>
+          <form onSubmit={handleSubmit}>
+            <hr className="mt-1 mb-3" />
+            <div className="grid grid-cols-5 gap-6 mb-4">
+              <div className="flex flex-col gap-1">
+                <span className="font-medium text-neutral-600">Số văn bản</span>
+                <TextArea
+                  autoSize
+                  value={formValues.proof}
+                  onChange={(e) =>
+                    setFormValues((prev) => ({
+                      ...prev,
+                      proof: e.target.value,
+                    }))
                   }
-                }}
-              />
-            </ConfigProvider>
-          </div>
-          <div className="flex flex-col gap-1">
-            <p className="font-medium text-neutral-600">Từ ngày</p>
-            <ConfigProvider locale={locale}>
-              <DatePicker
-                allowClear={false}
-                placeholder="dd/mm/yyyy"
-                format="DD/MM/YYYY"
-                value={
-                  fromDate ? dayjs.unix(fromDate).tz("Asia/Ho_Chi_Minh") : null
-                }
-                onChange={(date) => {
-                  if (date) {
-                    const timestamp = dayjs(date).tz("Asia/Ho_Chi_Minh").unix();
-                    setFromDate(timestamp);
-                  } else {
-                    setFromDate(0);
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="font-medium text-neutral-600">Ngày lập</span>
+                <ConfigProvider locale={locale}>
+                  <DatePicker
+                    allowClear={false}
+                    placeholder="dd/mm/yyyy"
+                    format="DD/MM/YYYY"
+                    value={
+                      formValues.documentDate
+                        ? dayjs
+                            .unix(formValues.documentDate)
+                            .tz("Asia/Ho_Chi_Minh")
+                        : null
+                    }
+                    onChange={(date) => {
+                      setFormValues((prev) => ({
+                        ...prev,
+                        documentDate: date
+                          ? dayjs(date).tz("Asia/Ho_Chi_Minh").unix()
+                          : 0,
+                      }));
+                    }}
+                  />
+                </ConfigProvider>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="font-medium text-neutral-600">Từ ngày</span>
+                <ConfigProvider locale={locale}>
+                  <DatePicker
+                    allowClear={false}
+                    placeholder="dd/mm/yyyy"
+                    format="DD/MM/YYYY"
+                    value={
+                      formValues.fromDate
+                        ? dayjs.unix(formValues.fromDate).tz("Asia/Ho_Chi_Minh")
+                        : null
+                    }
+                    onChange={(date) => {
+                      setFormValues((prev) => ({
+                        ...prev,
+                        fromDate: date
+                          ? dayjs(date).tz("Asia/Ho_Chi_Minh").unix()
+                          : 0,
+                      }));
+                    }}
+                  />
+                </ConfigProvider>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="font-medium text-neutral-600">Đến ngày</span>
+                <ConfigProvider locale={locale}>
+                  <DatePicker
+                    allowClear={false}
+                    placeholder="dd/mm/yyyy"
+                    format="DD/MM/YYYY"
+                    value={
+                      formValues.toDate
+                        ? dayjs.unix(formValues.toDate).tz("Asia/Ho_Chi_Minh")
+                        : 0
+                    }
+                    onChange={(date) => {
+                      setFormValues((prev) => ({
+                        ...prev,
+                        toDate: date
+                          ? dayjs(date).tz("Asia/Ho_Chi_Minh").unix()
+                          : 0,
+                      }));
+                    }}
+                  />
+                </ConfigProvider>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="font-medium text-neutral-600">Ngày nhập</span>
+                <ConfigProvider locale={locale}>
+                  <DatePicker
+                    disabled
+                    placeholder="dd/mm/yyyy"
+                    format={"DD/MM/YYYY"}
+                    value={
+                      formValues.entryDate
+                        ? dayjs
+                            .unix(formValues.entryDate)
+                            .tz("Asia/Ho_Chi_Minh")
+                        : 0
+                    }
+                  />
+                </ConfigProvider>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-6 mb-4">
+              <div className="flex flex-col gap-1">
+                <span className="font-medium text-neutral-600">Đơn vị</span>
+                <Select
+                  showSearch
+                  disabled={
+                    isBlock ||
+                    displayRole.isCreate === false ||
+                    displayRole.isUpdate === false
                   }
-                }}
-              />
-            </ConfigProvider>
-          </div>
-          <div className="flex flex-col gap-1">
-            <p className="font-medium text-neutral-600">Đến ngày</p>
-            <ConfigProvider locale={locale}>
-              <DatePicker
-                allowClear={false}
-                placeholder="dd/mm/yyyy"
-                format="DD/MM/YYYY"
-                value={
-                  toDate ? dayjs.unix(toDate).tz("Asia/Ho_Chi_Minh") : null
-                }
-                onChange={(date) => {
-                  if (date) {
-                    const timestamp = dayjs(date).tz("Asia/Ho_Chi_Minh").unix();
-                    setToDate(timestamp);
-                  } else {
-                    setToDate(0);
+                  optionFilterProp="label"
+                  filterSort={(optionA, optionB) =>
+                    (optionA?.label ?? "")
+                      .toLowerCase()
+                      .localeCompare((optionB?.label ?? "").toLowerCase())
                   }
-                }}
-              />
-            </ConfigProvider>
-          </div>
-          <div className="flex flex-col gap-1">
-            <p className="font-medium text-neutral-600">Ngày nhập</p>
-            <ConfigProvider locale={locale}>
-              <DatePicker
-                disabled
-                placeholder="dd/mm/yyyy"
-                format={"DD/MM/YYYY"}
-                value={entryDate ? moment(entryDate) : null}
-              />
-            </ConfigProvider>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-6 mb-4">
-          <div className="flex flex-col gap-1">
-            <p className="font-medium text-neutral-600">Đơn vị</p>
-            <Select
-              showSearch
-              disabled={
-                isBlock ||
-                displayRole.isCreate === false ||
-                displayRole.isUpdate === false
-              }
-              optionFilterProp="label"
-              filterSort={(optionA, optionB) =>
-                (optionA?.label ?? "")
-                  .toLowerCase()
-                  .localeCompare((optionB?.label ?? "").toLowerCase())
-              }
-              options={units.map((unit: UnitItem, index) => ({
-                value: unit.idHrm,
-                label: unit.name,
-                key: `${unit.idHrm}-${index}`,
-              }))}
-              value={defaultUnits.length > 0 ? defaultUnits[0].name : undefined}
-              onChange={(value) => {
-                getUsersFromHRMByUnitId(value);
-              }}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <p className="font-medium text-neutral-600">Tìm mã CB-GV-NV</p>
-            <Select
-              showSearch
-              disabled={
-                isBlock ||
-                displayRole.isCreate === false ||
-                displayRole.isUpdate === false
-              }
-              optionFilterProp="label"
-              filterSort={(optionA, optionB) =>
-                (optionA?.label ?? "")
-                  .toLowerCase()
-                  .localeCompare((optionB?.label ?? "").toLowerCase())
-              }
-              options={users?.items?.map((user) => ({
-                value: user.id,
-                label: `${user.fullName} - ${user.userName}`,
-              }))}
-              value={
-                defaultUsers.length > 0
-                  ? `${defaultUsers[0].fullName} - ${defaultUsers[0].userName}`
-                  : undefined
-              }
-              onChange={(value) => {
-                setSelectedKey(value);
-              }}
-            />
-          </div>
-        </div>
-        <div className="flex flex-col gap-1 mb-4">
-          <p className="font-medium text-neutral-600">
-            Công tác sư phạm <span className="text-red-500">(*)</span>
-          </p>
-          <TextArea
-            autoSize
-            value={activityName}
-            onChange={(e) => setActivityName(e.target.value)}
-          />
-        </div>
-        <div className="grid grid-cols-4 gap-6 mb-4">
-          <div className="flex flex-col gap-1">
-            <p className="font-medium text-neutral-600">Học kỳ</p>
-            <Input
-              value={semester}
-              onChange={(e) => setSemester(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <p className="font-medium text-neutral-600">Số tiết chuẩn</p>
-            <InputNumber
-              min={0}
-              defaultValue={1}
-              value={standardValues}
-              onChange={(value) => setStandardValues(value ?? 0)}
-              style={{ width: "100%" }}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <p className="font-medium text-neutral-600">Mã lớp</p>
-            <Input
-              value={classCode}
-              onChange={(e) => setClassCode(e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="flex flex-col gap-[2px] mb-2">
-          <span className="font-medium text-neutral-600">
-            Tài liệu đính kèm
-          </span>
-          <div
-            {...getRootProps()}
-            className="w-full min-h-20 h-fit border-2 border-dashed border-neutral-300 cursor-pointer flex justify-center items-center gap-3 rounded-xl"
-          >
-            <input {...getInputProps()} />
-            {!isUploaded ? (
-              <>
-                <img src="/upload.svg" width={50} loading="lazy" alt="upload" />
-                <span className="text-sm">
-                  Kéo và thả một tập tin vào đây hoặc nhấp để chọn một tập tin
+                  options={units.map((unit: UnitItem, index) => ({
+                    value: unit.idHrm,
+                    label: unit.name,
+                    key: `${unit.idHrm}-${index}`,
+                  }))}
+                  value={
+                    defaultUnits.length > 0 ? defaultUnits[0].name : undefined
+                  }
+                  onChange={(value) => {
+                    getUsersFromHRMByUnitId(value);
+                  }}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="font-medium text-neutral-600">
+                  Tìm mã CB-GV-NV
                 </span>
-              </>
-            ) : (
-              <>
-                {listPicture && (
+                <Select
+                  showSearch
+                  disabled={
+                    isBlock ||
+                    displayRole.isCreate === false ||
+                    displayRole.isUpdate === false
+                  }
+                  optionFilterProp="label"
+                  filterSort={(optionA, optionB) =>
+                    (optionA?.label ?? "")
+                      .toLowerCase()
+                      .localeCompare((optionB?.label ?? "").toLowerCase())
+                  }
+                  options={users?.items?.map((user) => ({
+                    value: user.id,
+                    label: `${user.fullName} - ${user.userName}`,
+                  }))}
+                  value={
+                    defaultUsers.length > 0
+                      ? `${defaultUsers[0].fullName} - ${defaultUsers[0].userName}`
+                      : undefined
+                  }
+                  onChange={(value) => {
+                    setSelectedKey(value);
+                  }}
+                />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1 mb-4">
+              <span className="font-medium text-neutral-600">
+                Công tác sư phạm <span className="text-red-500">(*)</span>
+              </span>
+              <TextArea
+                autoSize
+                value={formValues.activityName}
+                onChange={(e) =>
+                  setFormValues((prev) => ({
+                    ...prev,
+                    activityName: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            <div className="grid grid-cols-4 gap-6 mb-4">
+              <div className="flex flex-col gap-1">
+                <span className="font-medium text-neutral-600">Học kỳ</span>
+                <Input
+                  value={formValues.semester}
+                  onChange={(e) =>
+                    setFormValues((prev) => ({
+                      ...prev,
+                      semester: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="font-medium text-neutral-600">
+                  Số tiết chuẩn
+                </span>
+                <InputNumber
+                  min={0}
+                  defaultValue={0}
+                  value={formValues.standardValues}
+                  onChange={(value) =>
+                    setFormValues((prev) => ({
+                      ...prev,
+                      standardValues: value ?? 0,
+                    }))
+                  }
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="font-medium text-neutral-600">Mã lớp</span>
+                <Input
+                  value={formValues.classCode}
+                  onChange={(e) =>
+                    setFormValues((prev) => ({
+                      ...prev,
+                      classCode: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+            </div>
+            <div className="flex flex-col gap-[2px] mb-2">
+              <span className="font-medium text-neutral-600">
+                Tài liệu đính kèm
+              </span>
+              <div
+                {...getRootProps()}
+                className="w-full h-24 border-2 border-dashed border-blue-200 hover:border-blue-400 cursor-pointer flex justify-center items-center gap-3 rounded-xl"
+              >
+                <input {...getInputProps()} />
+                {!listPicture || listPicture.path === "" ? (
                   <>
-                    <div className="flex flex-col items-center gap-1 py-2">
-                      <div className="grid grid-cols-3 gap-2">
-                        <img
-                          src={
-                            listPicture.type === "image/jpeg" ||
-                            listPicture.type === "image/png"
-                              ? "https://api-annual.uef.edu.vn/" +
-                                listPicture.path
-                              : "/file-pdf.svg"
-                          }
-                          width={50}
-                          loading="lazy"
-                          alt="file-preview"
-                        />
-                        <div className="col-span-2 text-center content-center">
-                          <span className="text-sm">{listPicture.name}</span>
-                          <span className="text-sm flex">
-                            ({(listPicture.size / (1024 * 1024)).toFixed(2)} MB
-                            -
-                            <span
-                              className="text-sm ms-1 cursor-pointer text-blue-500 hover:text-blue-600"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setShowPDF(true);
-                                handleShowPDF(true);
-                              }}
-                            >
-                              xem chi tiết
-                            </span>
-                            )
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex gap-3 items-center mt-2">
-                        <Button
-                          danger
-                          disabled={isBlock || displayRole.isUpload === false}
-                          color="danger"
-                          onClick={handleDeletePicture}
-                          size="small"
-                          icon={<MinusCircleOutlined />}
-                        >
-                          Hủy tệp
-                        </Button>
-                        <Button
-                          type="primary"
-                          size="small"
-                          disabled={isBlock || displayRole.isUpload === false}
-                          icon={<CloudUploadOutlined />}
-                        >
-                          Chọn tệp thay thế
-                        </Button>
-                      </div>
+                    <span className="text-blue-500 text-4xl">
+                      <CloudUploadOutlined />
+                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-base text-center font-medium text-blue-500">
+                        Tải lên tệp tài liệu đính kèm
+                      </span>
+                      <span className="text-blue-300 text-[13px]">
+                        Kéo thả hoặc nhấn vào đây để chọn tệp!
+                      </span>
                     </div>
                   </>
+                ) : (
+                  <>
+                    {isLoadingPDF ? (
+                      <>
+                        <div>
+                          <Progress
+                            key="progress-upload-pdf"
+                            status="active"
+                            percent={percent}
+                            size={[600, 15]}
+                            type="line"
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex flex-col items-center gap-1 py-2">
+                          <div className="grid grid-cols-3 gap-2">
+                            <img
+                              src="/file-pdf.svg"
+                              width={42}
+                              loading="lazy"
+                              alt="file-preview"
+                            />
+                            <div className="col-span-2 text-center content-center">
+                              <span className="text-sm">
+                                {listPicture.name}
+                              </span>
+                              <span className="text-sm flex">
+                                ({(listPicture.size / (1024 * 1024)).toFixed(2)}{" "}
+                                MB -
+                                <span
+                                  className="text-sm ms-1 cursor-pointer text-blue-500 hover:text-blue-600"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowPDF(true);
+                                    handleShowPDF(true);
+                                  }}
+                                >
+                                  xem chi tiết
+                                </span>
+                                )
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex gap-3 items-center mt-2">
+                            <Button
+                              danger
+                              disabled={
+                                isBlock || displayRole.isUpload === false
+                              }
+                              color="danger"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeletePicture();
+                              }}
+                              size="small"
+                              icon={<MinusCircleOutlined />}
+                            >
+                              Hủy tệp
+                            </Button>
+                            <Button
+                              type="primary"
+                              size="small"
+                              disabled={
+                                isBlock || displayRole.isUpload === false
+                              }
+                              icon={<CloudUploadOutlined />}
+                            >
+                              Chọn tệp thay thế
+                            </Button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </>
                 )}
-              </>
-            )}
-          </div>
-        </div>
-        <div className="flex flex-col gap-1 mb-2">
-          <p className="font-medium text-neutral-600">Ghi chú</p>
-          <TextArea
-            autoSize
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </div>
-        <InfoApproved mode={mode} isPayment={isPayment} />
-      </form>
+              </div>
+            </div>
+            <div className="flex flex-col gap-1 mb-2">
+              <p className="font-medium text-neutral-600">Ghi chú</p>
+              <TextArea
+                autoSize
+                value={formValues.note}
+                onChange={(e) =>
+                  setFormValues((prev) => ({ ...prev, note: e.target.value }))
+                }
+              />
+            </div>
+            <InfoApproved mode={mode} isPayment={isPayment} />
+          </form>
+        </>
+      )}
       <InfoPDF
-        path={pathPDF}
+        path={listPicture?.path ?? ""}
         isShowPDF={showPDF}
         onSetShowPDF={(value) => {
           setShowPDF(value);
           handleShowPDF(value);
         }}
+      />
+      <CustomNotification
+        message={formNotification.message}
+        description={formNotification.description}
+        status={formNotification.status}
+        isOpen={formNotification.isOpen}
       />
     </div>
   );
