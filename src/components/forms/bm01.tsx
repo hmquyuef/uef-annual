@@ -52,22 +52,23 @@ import {
   Tooltip,
 } from "antd";
 
-import saveAs from "file-saver";
-import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { Key, useCallback, useEffect, useState } from "react";
-import * as XLSX from "sheetjs-style";
 import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
 import FormBM01 from "./activity/formBM01";
 import FromUpload from "./activity/formUpload";
 import TemplateForms from "./workloads/TemplateForms";
 
+import Colors from "@/utility/Colors";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
+import saveAs from "file-saver";
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
+import * as XLSX from "sheetjs-style";
 dayjs.locale("vi");
 
 type SearchProps = GetProps<typeof Input.Search>;
@@ -81,7 +82,6 @@ const BM01 = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isUpload, setIsUpload] = useState(false);
   const [mode, setMode] = useState<"add" | "edit">("add");
-  const [isNotificationOpen, setNotificationOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<
     Partial<AddUpdateActivityItem> | undefined
   >(undefined);
@@ -89,11 +89,7 @@ const BM01 = () => {
   const [defaultYears, setDefaultYears] = useState<any>();
   const [selectedKey, setSelectedKey] = useState<any>();
   const [selectedKeyUnit, setSelectedKeyUnit] = useState<Key | null>(null);
-  const [message, setMessage] = useState("");
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState<
-    "success" | "error" | "info" | "warning"
-  >("success");
+
   const [startDate, setStartDate] = useState<number | 0>(0);
   const [minStartDate, setMinStartDate] = useState<number | 0>(0);
   const [endDate, setEndDate] = useState<number | 0>(0);
@@ -106,6 +102,17 @@ const BM01 = () => {
   const [reason, setReason] = useState("");
   const [isPayments, setIsPayments] = useState<PaymentApprovedItem>();
   const [isShowPdf, setIsShowPdf] = useState(false);
+  const [formNotification, setFormNotification] = useState<{
+    message: string;
+    description: string;
+    status: "success" | "error" | "info" | "warning";
+    isOpen: boolean;
+  }>({
+    message: "",
+    description: "",
+    status: "success",
+    isOpen: false,
+  });
 
   const getDefaultYears = async () => {
     const { items } = await getAllSchoolYears();
@@ -126,9 +133,13 @@ const BM01 = () => {
 
   const getListClassLeaders = async (yearId: string) => {
     const response = await getAllClassLeaders(yearId);
+    console.log("response :>> ", response);
     setClassLeaders(response.items);
     setData(response.items);
-    setNotificationOpen(false);
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   };
 
   const getListUnits = async () => {
@@ -161,7 +172,7 @@ const BM01 = () => {
       title: "HỌ VÀ TÊN",
       dataIndex: "fullName",
       key: "fullName",
-      render: (fullName: string) => <span>{fullName}</span>,
+      render: (fullName: string) => <>{fullName}</>,
       className: "w-[10rem]",
     },
     {
@@ -169,41 +180,41 @@ const BM01 = () => {
       dataIndex: "unitName",
       key: "unitName",
       className: "text-center w-[80px]",
-      render: (unitName: string) => <p>{unitName}</p>,
+      render: (unitName: string) => <>{unitName}</>,
     },
     {
       title: "HỌC KỲ",
       dataIndex: "semester",
       key: "semester",
       className: "text-center w-[50px]",
-      render: (semester: string) => <p>{semester}</p>,
+      render: (semester: string) => <>{semester}</>,
     },
     {
-      title: "SỐ TIẾT CHUẨN",
+      title: "TIẾT CHUẨN",
       dataIndex: "standardNumber",
       key: "standardNumber",
-      className: "text-center w-[90px]",
-      render: (standardNumber: string) => <p>{standardNumber}</p>,
+      className: "text-center w-[70px]",
+      render: (standardNumber: string) => <>{standardNumber}</>,
     },
     {
       title: "NGÀNH",
       dataIndex: "subject",
       key: "subject",
-      render: (subject: string) => <p>{subject}</p>,
+      render: (subject: string) => <>{subject}</>,
       className: "text-center w-[5rem]",
     },
     {
       title: "KHÓA",
       dataIndex: "course",
       key: "course",
-      render: (course: string) => <p>{course}</p>,
+      render: (course: string) => <>{course}</>,
       className: "text-center w-[50px]",
     },
     {
       title: "MÃ LỚP",
       dataIndex: "classCode",
       key: "classCode",
-      render: (classCode: string) => <p>{classCode}</p>,
+      render: (classCode: string) => <>{classCode}</>,
       className: "text-center w-[70px]",
     },
     {
@@ -228,28 +239,50 @@ const BM01 = () => {
       className: "w-[5rem]",
     },
     {
-      title: (
-        <>
-          THỜI GIAN <br /> HOẠT ĐỘNG
-        </>
-      ),
-      dataIndex: "fromDate",
-      key: "fromDate",
-      render: (_, record: ClassLeaderItem) => {
-        return (
-          <>
-            {record.fromDate && record.toDate ? (
-              <div className="flex flex-col">
-                <span>{convertTimestampToDate(record.fromDate)}</span>
-                <span>{convertTimestampToDate(record.toDate)}</span>
-              </div>
-            ) : (
-              ""
-            )}
-          </>
-        );
-      },
-      className: "text-center w-[70px]",
+      title: <div className="py-1">THỜI GIA HOẠT ĐỘNG</div>,
+      dataIndex: "eventTime",
+      key: "eventTime",
+      className: "text-center w-[140px]",
+      children: [
+        {
+          title: <div className="py-1">TỪ NGÀY</div>,
+          dataIndex: "fromDate",
+          key: "fromDate",
+          render: (_, record: ClassLeaderItem) => {
+            return (
+              <>
+                {record.fromDate ? (
+                  <div className="flex flex-col">
+                    <span>{convertTimestampToDate(record.fromDate)}</span>
+                  </div>
+                ) : (
+                  ""
+                )}
+              </>
+            );
+          },
+          className: "text-center w-[70px]",
+        },
+        {
+          title: <div className="py-1">ĐẾN NGÀY</div>,
+          dataIndex: "fromDate",
+          key: "fromDate",
+          render: (_, record: ClassLeaderItem) => {
+            return (
+              <>
+                {record.toDate ? (
+                  <div className="flex flex-col">
+                    <span>{convertTimestampToDate(record.toDate)}</span>
+                  </div>
+                ) : (
+                  ""
+                )}
+              </>
+            );
+          },
+          className: "text-center w-[70px]",
+        },
+      ],
     },
     {
       title: (
@@ -268,16 +301,16 @@ const BM01 = () => {
               href={"https://api-annual.uef.edu.vn/" + path}
               target="__blank"
             >
-              <p className="text-green-500">
+              <span className="text-green-500">
                 <CheckOutlined />
-              </p>
+              </span>
             </Link>
           </>
         ) : (
           <>
-            <p className="text-red-400">
+            <span className="text-red-400">
               <CloseOutlined />
-            </p>
+            </span>
           </>
         );
       },
@@ -299,7 +332,7 @@ const BM01 = () => {
         </p>
       ),
       icon: <PlusOutlined />,
-      style: { color: "#1890ff" },
+      style: { color: Colors.BLUE },
     },
     {
       type: "divider",
@@ -319,7 +352,7 @@ const BM01 = () => {
         </p>
       ),
       icon: <FileExcelOutlined />,
-      style: { color: "#52c41a" },
+      style: { color: Colors.GREEN },
     },
   ];
 
@@ -332,7 +365,7 @@ const BM01 = () => {
         </p>
       ),
       icon: <SafetyOutlined />,
-      style: { color: "#52c41a" },
+      style: { color: Colors.GREEN },
     },
     {
       type: "divider",
@@ -345,7 +378,7 @@ const BM01 = () => {
         </p>
       ),
       icon: <CloseCircleOutlined />,
-      style: { color: "rgb(220 38 38)" },
+      style: { color: Colors.RED },
     },
   ];
 
@@ -376,12 +409,13 @@ const BM01 = () => {
       const selectedKeysArray = Array.from(selectedRowKeys) as string[];
       if (selectedKeysArray.length > 0) {
         await deleteClassLeaders(selectedKeysArray);
-        setDescription(
-          `Đã xóa thành công ${selectedKeysArray.length} thông tin chủ nhiệm lớp!`
-        );
-        setNotificationOpen(true);
-        setStatus("success");
-        setMessage("Thông báo");
+        setFormNotification((prev) => ({
+          ...prev,
+          isOpen: true,
+          status: "success",
+          message: "Thông báo",
+          description: `Đã xóa thành công ${selectedKeysArray.length} thông tin chủ nhiệm lớp!`,
+        }));
         await getListClassLeaders(selectedKey.id);
         setSelectedRowKeys([]);
       }
@@ -407,26 +441,38 @@ const BM01 = () => {
           formData
         );
         if (response) {
-          setDescription(Messages.UPDATE_CLASSLEADERS);
+          setFormNotification((prev) => ({
+            ...prev,
+            description: Messages.UPDATE_CLASSLEADERS,
+          }));
         }
       } else {
         const response = await postAddClassLeader(formData);
         if (response) {
-          setDescription(Messages.ADD_CLASSLEADERS);
+          setFormNotification((prev) => ({
+            ...prev,
+            description: Messages.ADD_CLASSLEADERS,
+          }));
         }
       }
-      setNotificationOpen(true);
-      setStatus("success");
-      setMessage("Thông báo");
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "success",
+        message: "Thông báo",
+      }));
       await getListClassLeaders(selectedKey.id);
       setIsOpen(false);
       setSelectedItem(undefined);
       setMode("add");
     } catch (error) {
-      setNotificationOpen(true);
-      setStatus("error");
-      setMessage("Thông báo");
-      setDescription(Messages.ERROR);
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Thông báo",
+        description: Messages.ERROR,
+      }));
     }
   };
 
@@ -444,12 +490,13 @@ const BM01 = () => {
 
       const response = await ImportClassLeaders(formData);
       if (response) {
-        setNotificationOpen(true);
-        setStatus("success");
-        setMessage("Thông báo");
-        setDescription(
-          `Tải lên thành công ${response.totalCount} thông tin chủ nhiệm lớp!`
-        );
+        setFormNotification((prev) => ({
+          ...prev,
+          isOpen: true,
+          status: "error",
+          message: "Thông báo",
+          description: `Tải lên thành công ${response.totalCount} thông tin chủ nhiệm lớp!`,
+        }));
       }
       await getListClassLeaders(selectedKey.id);
       setIsOpen(false);
@@ -457,11 +504,14 @@ const BM01 = () => {
       setMode("add");
       setIsUpload(false);
     } catch (error) {
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Thông báo",
+        description: Messages.ERROR,
+      }));
       setIsOpen(false);
-      setNotificationOpen(true);
-      setStatus("error");
-      setMessage("Thông báo");
-      setDescription(Messages.ERROR);
       setIsUpload(false);
     }
   };
@@ -757,38 +807,45 @@ const BM01 = () => {
       if (selectedRowKeys.length > 0 || selectedItem) {
         const response = await putUpdateApprovedClassLeader(formData);
         if (response) {
-          setDescription(
-            isRejected
+          setFormNotification((prev) => ({
+            ...prev,
+            description: isRejected
               ? `${Messages.REJECTED_CLASSLEADERS} (${
                   selectedRowKeys.length > 0 ? selectedRowKeys.length : 1
                 } dòng)`
               : `${Messages.APPROVED_CLASSLEADERS} (${
                   selectedRowKeys.length > 0 ? selectedRowKeys.length : 1
-                } dòng)`
-          );
+                } dòng)`,
+          }));
         }
       }
       setSelectedRowKeys([]);
-      setNotificationOpen(true);
-      setStatus("success");
-      setMessage("Thông báo");
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Thông báo",
+      }));
       await getListClassLeaders(selectedKey.id);
       setIsOpen(false);
       setSelectedItem(undefined);
       setMode("add");
     } catch (error) {
-      setNotificationOpen(true);
-      setStatus("error");
-      setMessage("Thông báo");
-      setDescription(Messages.ERROR);
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Thông báo",
+        description: Messages.ERROR,
+      }));
     }
   };
 
-  const handleChangeYear = (value: any) => {
+  const handleChangeYear = async (value: any) => {
     setLoading(true);
     const temp = defaultYears.filter((x: any) => x.id === value)[0] as any;
     setSelectedKey(temp);
-    getListClassLeaders(temp.id);
+    await getListClassLeaders(temp.id);
     setStartDate(temp.startDate);
     setEndDate(temp.endDate);
     const timeoutId = setTimeout(() => {
@@ -1043,9 +1100,9 @@ const BM01 = () => {
                   onClick={handleExportExcel}
                   iconPosition="start"
                   style={{
-                    backgroundColor: "#52c41a",
-                    borderColor: "#52c41a",
-                    color: "#fff",
+                    backgroundColor: Colors.GREEN,
+                    borderColor: Colors.GREEN,
+                    color: Colors.WHITE,
                   }}
                 >
                   Xuất Excel
@@ -1087,10 +1144,10 @@ const BM01 = () => {
         </div>
       </div>
       <CustomNotification
-        message={message}
-        description={description}
-        status={status}
-        isOpen={isNotificationOpen}
+        isOpen={formNotification.isOpen}
+        status={formNotification.status}
+        message={formNotification.message}
+        description={formNotification.description}
       />
       <CustomModal
         isOpen={isOpen}
@@ -1111,7 +1168,10 @@ const BM01 = () => {
         onApprove={() => handleApproved(false)}
         onReject={() => setIsModalVisible(true)}
         onCancel={() => {
-          setNotificationOpen(false);
+          setFormNotification((prev) => ({
+            ...prev,
+            isOpen: false,
+          }));
           setIsOpen(false);
           setSelectedItem(undefined);
           setMode("add");

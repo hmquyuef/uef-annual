@@ -14,7 +14,8 @@ export interface SchoolLevelItem {
   eventVenue: string;
   sponsor: string
   members: MembersInfomations[];
-  attackment: AttackmentItem;
+  attackmentFile: AttackmentItem;
+  attackmentExcel: AttackmentItem;
   note: string;
 }
 
@@ -43,6 +44,17 @@ export async function putSchoolLevel(
   data: Partial<any>
 ): Promise<any> {
   const response = await apiClient.put<any>(`api/general/schools/${id}`, data);
+  return response.data;
+}
+
+export async function putListMembersSchoolLevel(
+  id: string,
+  data: Partial<any>
+): Promise<any> {
+  const response = await apiClient.put<any>(
+    `api/general/schools/members/${id}`,
+    data
+  );
   return response.data;
 }
 

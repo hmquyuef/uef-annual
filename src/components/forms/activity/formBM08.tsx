@@ -17,10 +17,7 @@ import { DisplayRoleItem } from "@/services/roles/rolesServices";
 import CustomNotification from "@/components/CustomNotification";
 import DrawerInfomation from "@/components/drawerInfo/DrawerInfomation";
 import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
-import {
-  ImportLaborUnions,
-  putListMembersLaborUnion,
-} from "@/services/generalWorks/laborUnionServices";
+import { ImportLaborUnions } from "@/services/generalWorks/laborUnionServices";
 import {
   deleteFiles,
   FileItem,
@@ -38,6 +35,7 @@ import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 dayjs.locale("vi");
+
 interface FormBM08Props {
   onSubmit: (formData: Partial<any>) => void;
   initialData?: Partial<any>;
@@ -70,9 +68,7 @@ const FormBM08: FC<FormBM08Props> = ({
   const [sponsor, setSponsor] = useState<string>("");
   const [members, setMembers] = useState<MembersInfomations[]>([]);
   const [note, setNote] = useState<string>("");
-  // const [users, setUsers] = useState<UsersFromHRMResponse | undefined>(
-  //   undefined
-  // );
+
   const [message, setMessage] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<
@@ -84,11 +80,6 @@ const FormBM08: FC<FormBM08Props> = ({
     undefined
   );
   const [openDrawer, setOpenDrawer] = useState(false);
-
-  // const getUsersHRM = async () => {
-  //   const response = await getUsersFromHRM();
-  //   setUsers(response);
-  // };
 
   const handleDeleteExcel = async () => {
     setIsLoadingExcel(true);
@@ -198,7 +189,7 @@ const FormBM08: FC<FormBM08Props> = ({
         () => async (acceptedFiles: File[]) => {
           setIsLoadingPDF(true);
           const formData = new FormData();
-          formData.append("FunctionName", "unions/labors");
+          formData.append("FunctionName", "general/unions/labors");
           formData.append("file", acceptedFiles[0]);
           if (pdf && pdf.path !== "") {
             await deleteFiles(
@@ -240,7 +231,7 @@ const FormBM08: FC<FormBM08Props> = ({
       id: initialData?.id || "",
       contents: contents,
       documentNumber: documentNumber,
-      internalNumber: "",
+      internalNumber: internalNumber,
       documentDate: documentDate,
       fromDate: fromDate,
       toDate: toDate,
@@ -276,6 +267,7 @@ const FormBM08: FC<FormBM08Props> = ({
     setContents("");
     setDocumentNumber("");
     setDocumentDate(0);
+    setInternalNumber("");
     setFromDate(0);
     setToDate(0);
     setEventVenue("");
@@ -286,18 +278,14 @@ const FormBM08: FC<FormBM08Props> = ({
     setParticipants(undefined);
   };
 
-  // useEffect(() => {
-  //   getUsersHRM();
-  // }, []);
-
   useEffect(() => {
-    console.log("initialData :>> ", initialData);
     const loadUsers = async () => {
       setIsLoading(true);
       if (mode === "edit" && initialData !== undefined) {
         setContents(initialData.contents);
         setDocumentNumber(initialData.documentNumber);
         setDocumentDate(initialData.documentDate);
+        setInternalNumber(initialData.internalNumber);
         setFromDate(initialData.fromDate);
         setToDate(initialData.toDate);
         setEntryDate(initialData.entryDate ? initialData.entryDate * 1000 : 0);
@@ -457,6 +445,7 @@ const FormBM08: FC<FormBM08Props> = ({
             onChange={(e) => setSponsor(e.target.value)}
           />
         </div>
+
         <div className="grid grid-cols-2 gap-6 mb-2">
           <div className="flex flex-col gap-1">
             <p className="font-medium text-neutral-600">
@@ -583,12 +572,9 @@ const FormBM08: FC<FormBM08Props> = ({
               <input {...getPDFInputProps()} />
               {!pdf || pdf.path === "" ? (
                 <>
-                  <img
-                    src="/upload.svg"
-                    width={42}
-                    loading="lazy"
-                    alt="upload"
-                  />
+                  <span className="text-blue-500 text-4xl">
+                    <CloudUploadOutlined />
+                  </span>
                   <div className="flex flex-col">
                     <span className="text-[16px] text-center font-medium text-blue-500">
                       Tải lên tệp tài liệu đính kèm
@@ -687,6 +673,7 @@ const FormBM08: FC<FormBM08Props> = ({
       >
         <DrawerInfomation
           formId={initialData?.id || ""}
+          formName="labor"
           members={members}
           path={pdf?.path ?? ""}
           onMembersChange={(newMembers) => {

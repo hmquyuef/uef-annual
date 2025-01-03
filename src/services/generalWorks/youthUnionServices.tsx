@@ -12,9 +12,10 @@ export interface YouthUnionItem {
   toDate: number;
   entryDate: number;
   eventVenue: string;
-  sponsor: string
+  sponsor: string;
   members: MembersInfomations[];
-  attackment: AttackmentItem;
+  attackmentFile: AttackmentItem;
+  attackmentExcel: AttackmentItem;
   note: string;
 }
 
@@ -44,6 +45,17 @@ export async function putYouthUnion(
 ): Promise<any> {
   const response = await apiClient.put<any>(
     `api/general/union/youth/${id}`,
+    data
+  );
+  return response.data;
+}
+
+export async function putListMembersYouthUnion(
+  id: string,
+  data: Partial<any>
+): Promise<any> {
+  const response = await apiClient.put<any>(
+    `api/general/union/youth/members/${id}`,
     data
   );
   return response.data;

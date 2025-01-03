@@ -94,7 +94,7 @@ const TemplateForms: FC<TemplateFormsProps> = ({
         const fromDate = record.entryDate || record.determinations?.entryDate;
         return fromDate ? convertTimestampToDate(fromDate) : "";
       },
-      className: "customInfoColors text-center w-[100px]",
+      className: "customInfoColors text-center w-[70px]",
       fixed: "right",
     },
     {
@@ -160,7 +160,7 @@ const TemplateForms: FC<TemplateFormsProps> = ({
           </>
         );
       },
-      className: "customApprovedColors w-[110px]",
+      className: "customApprovedColors w-[90px]",
     },
   ];
 
@@ -242,7 +242,12 @@ const TemplateForms: FC<TemplateFormsProps> = ({
             columns={columns}
             dataSource={data}
             locale={{
-              emptyText: <Empty description={Messages.NO_DATA}></Empty>,
+              emptyText: (
+                <Empty
+                  description={Messages.NO_DATA}
+                  className="h-56 flex flex-col justify-center"
+                ></Empty>
+              ),
             }}
             onChange={handleTableChange}
             className="custom-table-header shadow-md rounded-md"

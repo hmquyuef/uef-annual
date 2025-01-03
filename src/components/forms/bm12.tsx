@@ -2,7 +2,6 @@
 
 import {
   deleteUnitLevels,
-  getAllUnitLevels,
   ImportUnitLevels,
   postUnitLevel,
   putUnitLevel,
@@ -14,7 +13,6 @@ import {
   RoleItem,
 } from "@/services/roles/rolesServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
-import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
 import { FileItem } from "@/services/uploads/uploadsServices";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
@@ -24,11 +22,11 @@ import {
   setCellStyle,
 } from "@/utility/Utilities";
 import {
-  ArrowsAltOutlined,
+  CheckOutlined,
+  CloseOutlined,
   DeleteOutlined,
   FileExcelOutlined,
   PlusOutlined,
-  ShrinkOutlined,
 } from "@ant-design/icons";
 import {
   Button,
@@ -42,22 +40,22 @@ import {
   TableColumnsType,
   Tooltip,
 } from "antd";
-import { AnimatePresence, motion } from "motion/react";
 import { Key, useCallback, useEffect, useState } from "react";
-import CustomNotification from "../CustomNotification";
 import CustomModal from "../CustomModal";
-import FromUpload from "./activity/formUpload";
+import CustomNotification from "../CustomNotification";
 import FormBM12 from "./activity/formBM12";
+import FromUpload from "./activity/formUpload";
 import TemplateForms from "./workloads/TemplateForms";
-import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 
-import saveAs from "file-saver";
-import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
-import * as XLSX from "sheetjs-style";
+import { getAllSchoolLevels } from "@/services/generalWorks/schoolLevelServices";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
+import saveAs from "file-saver";
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
+import Link from "next/link";
+import * as XLSX from "sheetjs-style";
 dayjs.locale("vi");
 
 const BM12 = () => {
@@ -74,10 +72,8 @@ const BM12 = () => {
   const [selectedItem, setSelectedItem] = useState<Partial<any> | undefined>(
     undefined
   );
-  const [units, setUnits] = useState<UnitItem[]>([]);
   const [defaultYears, setDefaultYears] = useState<any>();
   const [selectedKey, setSelectedKey] = useState<any>();
-  const [selectedKeyUnit, setSelectedKeyUnit] = useState<Key | null>(null);
   const [message, setMessage] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<
@@ -87,11 +83,7 @@ const BM12 = () => {
   const [minStartDate, setMinStartDate] = useState<number | 0>(0);
   const [endDate, setEndDate] = useState<number | 0>(0);
   const [maxEndDate, setMaxEndDate] = useState<number | 0>(0);
-  const [advanced, setAdvanced] = useState(false);
-  const [userName, setUserName] = useState<string | null>(null);
   const [role, setRole] = useState<RoleItem>();
-  const [isBlock, setIsBlock] = useState(false);
-  const [isPayments, setIsPayments] = useState<PaymentApprovedItem>();
   const [isShowPdf, setIsShowPdf] = useState(false);
 
   const getDefaultYears = async () => {
@@ -112,25 +104,20 @@ const BM12 = () => {
   };
 
   const getListUnitLevels = async (yearId: string) => {
-    const response = await getAllUnitLevels(yearId);
+    const response = await getAllSchoolLevels(yearId);
     setUnitLevels(response.items);
     setData(response.items);
     setNotificationOpen(false);
   };
 
-  const getListUnits = async () => {
-    const response = await getAllUnits("true");
-    setUnits(response.items);
-  };
-
   const columns: TableColumnsType<UnitLevelItem> = [
     {
-      title: "MÃ SỐ CB-GV-NV",
-      dataIndex: "userName",
-      key: "userName",
+      title: "HOẠT ĐỘNG",
+      dataIndex: "contents",
+      key: "contents",
       className: "max-w-8",
       fixed: "left",
-      render: (userName: string, record: UnitLevelItem) => {
+      render: (contents: string, record: UnitLevelItem) => {
         return (
           <span
             className="text-blue-500 font-semibold cursor-pointer"
@@ -138,61 +125,141 @@ const BM12 = () => {
               handleEdit(record);
             }}
           >
-            {userName}
+            {contents}
           </span>
         );
       },
     },
     {
-      title: "HỌ VÀ TÊN",
-      dataIndex: "fullName",
-      key: "fullName",
-      render: (fullName: string) => <>{fullName}</>,
-      className: "max-w-10",
-      fixed: "left",
-    },
-    {
-      title: "ĐƠN VỊ",
-      dataIndex: "unitName",
-      key: "unitName",
-      className: "text-center w-[80px]",
-      render: (unitName: string) => <>{unitName}</>,
-      fixed: "left",
-    },
-    {
-      title: "NỘI DUNG ĐÀO TẠO",
-      dataIndex: "contents",
-      key: "contents",
-      render: (contents: string) => <>{contents}</>,
-      className: "max-w-24",
-    },
-    {
-      title: "NƠI ĐẠO TẠO",
-      dataIndex: "issuancePlace",
-      key: "issuancePlace",
-      render: (issuancePlace: string) => <>{issuancePlace}</>,
-      className: "max-w-12",
-    },
-    {
-      title: "LOẠI CC/GCN",
-      dataIndex: "type",
-      key: "type",
-      render: (type: string) => <>{type}</>,
-      className: "text-center w-[120px]",
+      title: (
+        <>
+          SỐ VĂN BẢN <br /> NGÀY LẬP
+        </>
+      ),
+      dataIndex: "documentNumber",
+      key: "documentNumber",
+      render: (documentNumber: string, record: UnitLevelItem) => {
+        const ngayLap = record.documentDate;
+        return (
+          <div className="flex flex-col">
+            <span className="text-center font-medium">{documentNumber}</span>
+            <span className="text-center text-[13px]">
+              {convertTimestampToDate(ngayLap)}
+            </span>
+          </div>
+        );
+      },
+      className: "w-[150px]",
     },
     {
       title: (
-        <div>
-          THỜI GIAN CẤP <br />
-          CC/GCN
+        <>
+          <span className="py-2">THỜI GIAN HOẠT ĐỘNG</span>
+        </>
+      ),
+      dataIndex: "time",
+      key: "time",
+      children: [
+        {
+          title: (
+            <>
+              <span className="py-2">TỪ NGÀY</span>
+            </>
+          ),
+          dataIndex: "fromDate",
+          key: "fromDate",
+          render: (_, record: UnitLevelItem) => {
+            return (
+              <>
+                {record.fromDate ? (
+                  <div className="flex flex-col">
+                    <span>{convertTimestampToDate(record.fromDate)}</span>
+                  </div>
+                ) : (
+                  ""
+                )}
+              </>
+            );
+          },
+          className: "text-center w-[100px]",
+        },
+        {
+          title: (
+            <>
+              <span className="py-2">ĐẾN NGÀY</span>
+            </>
+          ),
+          dataIndex: "toDate",
+          key: "toDate",
+          render: (_, record: UnitLevelItem) => {
+            return (
+              <>
+                {record.toDate ? (
+                  <div className="flex flex-col">
+                    <span>{convertTimestampToDate(record.toDate)}</span>
+                  </div>
+                ) : (
+                  ""
+                )}
+              </>
+            );
+          },
+          className: "text-center w-[100px]",
+        },
+      ],
+    },
+    {
+      title: (
+        <div className="p-1">
+          DANH SÁCH <br /> THAM GIA
         </div>
       ),
-      dataIndex: "issuanceDate",
-      key: "issuanceDate",
-      render: (issuanceDate: number) => (
-        <>{convertTimestampToDate(issuanceDate)}</>
+      dataIndex: "members",
+      key: "members",
+      className: "text-center w-[110px]",
+      render: (_, record: UnitLevelItem) => {
+        return (
+          <>
+            {record.members && record.members.length > 0 ? (
+              <>{record.members.length}</>
+            ) : (
+              <span>0</span>
+            )}
+          </>
+        );
+      },
+    },
+    {
+      title: (
+        <div className="p-1">
+          TÀI LIỆU <br /> ĐÍNH KÈM
+        </div>
       ),
-      className: "text-center w-[120px]",
+      dataIndex: ["attackmentFile", "path"],
+      key: "path",
+      className: "text-center w-[110px]",
+      sorter: (a, b) =>
+        a.attackmentFile?.path.localeCompare(b.attackmentFile?.path),
+      render: (path: string) => {
+        return path !== "" && path !== undefined ? (
+          <>
+            <Link
+              href={"https://api-annual.uef.edu.vn/" + path}
+              target="__blank"
+            >
+              <span className="text-green-500">
+                <CheckOutlined />
+              </span>
+            </Link>
+          </>
+        ) : (
+          <>
+            <span className="text-red-400">
+              <CloseOutlined />
+            </span>
+          </>
+        );
+      },
     },
   ];
 
@@ -236,23 +303,17 @@ const BM12 = () => {
   ];
 
   const onSearch: SearchProps["onSearch"] = (value) => {
-    if ((value === "" && !selectedKeyUnit) || selectedKeyUnit === "all")
-      setData(unitLevels || []);
-    const selectedUnit = units.find(
-      (unit: UnitItem) => unit.idHrm === selectedKeyUnit
-    );
-    const filteredData = unitLevels.filter((unitLevel) => {
-      const matchesName = unitLevel.contents
+    if (value === "") setData(unitLevels || []);
+
+    const filteredData = unitLevels.filter((item) => {
+      const matchesName = item.contents
         .toLowerCase()
         .includes(value.toLowerCase());
-      const matchesUnit = selectedUnit
-        ? unitLevel.eventsOrganizer.includes(selectedUnit.name)
-        : true;
       const matchesDate =
         startDate && endDate
-          ? unitLevel.entryDate >= startDate && unitLevel.entryDate <= endDate
+          ? item.entryDate >= startDate && item.entryDate <= endDate
           : true;
-      return matchesName && matchesUnit && matchesDate;
+      return matchesName && matchesDate;
     });
     setData(filteredData || []);
   };
@@ -645,9 +706,9 @@ const BM12 = () => {
 
   useEffect(() => {
     setLoading(true);
-    document.title = PageTitles.BM15;
+    document.title = PageTitles.BM12;
 
-    Promise.all([getDefaultYears(), getListUnits()]);
+    getDefaultYears();
     const token = Cookies.get("s_t");
     if (token) {
       const decodedRole = jwtDecode<{
@@ -658,205 +719,100 @@ const BM12 = () => {
           "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
         ];
       getDisplayRole(role as string);
-      const decodedUserName = jwtDecode(token);
-      if (decodedUserName.sub) {
-        setUserName(decodedUserName.sub);
-      }
-      if (role === "secretary") {
-        const decodedUnitId = jwtDecode<{
-          family_name: string;
-        }>(token);
-        const unitId = decodedUnitId.family_name;
-        if (unitId && unitId !== selectedKeyUnit) {
-          setSelectedKeyUnit(unitId.toLowerCase());
-        }
-      }
     }
     setLoading(false);
     onSearch("");
   }, []);
 
   useEffect(() => {
-    if (
-      unitLevels.length > 0 &&
-      units.length > 0 &&
-      (selectedKeyUnit || startDate || endDate)
-    ) {
+    if (unitLevels.length > 0 && (startDate || endDate)) {
       onSearch("");
     }
-  }, [unitLevels, units, selectedKeyUnit, startDate, endDate]);
+  }, [unitLevels, startDate, endDate]);
   return (
     <div>
       <div className="grid grid-cols-3 mb-3">
         <div className="col-span-2">
-          <AnimatePresence>
-            <motion.div
-              initial={{ height: "h-fit", opacity: 1 }}
-              animate={
-                advanced
-                  ? { height: "auto", opacity: 1 }
-                  : { height: 57, opacity: 1 }
-              }
-              transition={{ duration: 0.2, ease: "easeInOut" }}
-              className={`grid ${
-                advanced ? "grid-rows-2" : "grid-cols-1"
-              } gap-2`}
-            >
-              <div className="grid grid-cols-6 gap-3">
-                <div className="col-span-2 flex flex-col justify-center gap-1">
-                  <span className="text-[14px] text-neutral-500">
-                    Tìm kiếm:
-                  </span>
-                  <Search
-                    placeholder=" "
-                    onChange={(e) => onSearch(e.target.value)}
-                    enterButton
-                  />
-                </div>
-                <div
-                  className="col-span-2"
-                  hidden={role && role.name === "secretary"}
-                >
-                  <div className="flex flex-col justify-center gap-1">
-                    <span className="text-[14px] text-neutral-500">
-                      Đơn vị:
-                    </span>
-                    <Select
-                      showSearch
-                      allowClear
-                      placeholder="Tất cả đơn vị"
-                      optionFilterProp="label"
-                      filterSort={(optionA, optionB) =>
-                        (optionA?.label ?? "")
-                          .toLowerCase()
-                          .localeCompare((optionB?.label ?? "").toLowerCase())
-                      }
-                      options={units.map((unit: UnitItem, index) => ({
-                        value: unit.idHrm,
-                        label: unit.name,
-                        key: `${unit.idHrm}-${index}`,
-                      }))}
-                      value={selectedKeyUnit}
-                      onChange={(value) => {
-                        setSelectedKeyUnit(value);
-                      }}
-                      className="w-full"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-end">
-                  <Button
-                    color="primary"
-                    variant="filled"
-                    icon={advanced ? <ShrinkOutlined /> : <ArrowsAltOutlined />}
-                    onClick={() => setAdvanced(!advanced)}
-                  >
-                    {advanced ? "Thu nhỏ" : "Mở rộng"}
-                  </Button>
-                </div>
-              </div>
-              <AnimatePresence>
-                {advanced && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="grid grid-cols-6 gap-3"
-                  >
-                    <div className="flex flex-col justify-center gap-1">
-                      <span className="text-[14px] text-neutral-500">
-                        Năm học:
-                      </span>
-                      <Select
-                        showSearch
-                        optionFilterProp="label"
-                        filterSort={(optionA, optionB) =>
-                          (optionA?.title ?? "").localeCompare(
-                            optionB?.title ?? ""
-                          )
-                        }
-                        options={defaultYears?.map((year: any) => ({
-                          value: year.id,
-                          label: year.title,
-                        }))}
-                        //
-                        value={selectedKey && selectedKey.title}
-                        onChange={(value) => handleChangeYear(value)}
-                        className="w-full"
-                      />
-                    </div>
-                    <div className="flex flex-col justify-center gap-1">
-                      <span className="text-[14px] text-neutral-500">
-                        Từ ngày:
-                      </span>
-                      <ConfigProvider locale={locale}>
-                        <DatePicker
-                          allowClear={false}
-                          placeholder="dd/mm/yyyy"
-                          format="DD/MM/YYYY"
-                          minDate={dayjs
-                            .unix(minStartDate)
-                            .tz("Asia/Ho_Chi_Minh")}
-                          maxDate={dayjs
-                            .unix(maxEndDate)
-                            .tz("Asia/Ho_Chi_Minh")}
-                          value={
-                            startDate
-                              ? dayjs.unix(startDate).tz("Asia/Ho_Chi_Minh")
-                              : null
-                          }
-                          onChange={(date) => {
-                            if (date) {
-                              const timestamp = dayjs(date)
-                                .tz("Asia/Ho_Chi_Minh")
-                                .unix();
-                              setStartDate(timestamp);
-                            } else {
-                              setStartDate(0);
-                            }
-                          }}
-                        />
-                      </ConfigProvider>
-                    </div>
-                    <div className="flex flex-col justify-center gap-1">
-                      <span className="text-[14px] text-neutral-500">
-                        Đến ngày:
-                      </span>
-                      <ConfigProvider locale={locale}>
-                        <DatePicker
-                          allowClear={false}
-                          placeholder="dd/mm/yyyy"
-                          format="DD/MM/YYYY"
-                          minDate={dayjs
-                            .unix(minStartDate)
-                            .tz("Asia/Ho_Chi_Minh")}
-                          maxDate={dayjs
-                            .unix(maxEndDate)
-                            .tz("Asia/Ho_Chi_Minh")}
-                          value={
-                            endDate
-                              ? dayjs.unix(endDate).tz("Asia/Ho_Chi_Minh")
-                              : null
-                          }
-                          onChange={(date) => {
-                            if (date) {
-                              const timestamp = dayjs(date)
-                                .tz("Asia/Ho_Chi_Minh")
-                                .unix();
-                              setEndDate(timestamp);
-                            } else {
-                              setEndDate(0);
-                            }
-                          }}
-                        />
-                      </ConfigProvider>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          </AnimatePresence>
+          <div className="grid grid-cols-6 gap-3">
+            <div className="col-span-2 flex flex-col justify-center gap-1">
+              <span className="text-[14px] text-neutral-500">Tìm kiếm:</span>
+              <Search
+                placeholder=" "
+                onChange={(e) => onSearch(e.target.value)}
+                enterButton
+              />
+            </div>
+            <div className="flex flex-col justify-center gap-1">
+              <span className="text-[14px] text-neutral-500">Năm học:</span>
+              <Select
+                showSearch
+                optionFilterProp="label"
+                filterSort={(optionA, optionB) =>
+                  (optionA?.title ?? "").localeCompare(optionB?.title ?? "")
+                }
+                options={defaultYears?.map((year: any) => ({
+                  value: year.id,
+                  label: year.title,
+                }))}
+                //
+                value={selectedKey && selectedKey.title}
+                onChange={(value) => handleChangeYear(value)}
+                className="w-full"
+              />
+            </div>
+            <div className="flex flex-col justify-center gap-1">
+              <span className="text-[14px] text-neutral-500">Từ ngày:</span>
+              <ConfigProvider locale={locale}>
+                <DatePicker
+                  allowClear={false}
+                  placeholder="dd/mm/yyyy"
+                  format="DD/MM/YYYY"
+                  minDate={dayjs.unix(minStartDate).tz("Asia/Ho_Chi_Minh")}
+                  maxDate={dayjs.unix(maxEndDate).tz("Asia/Ho_Chi_Minh")}
+                  value={
+                    startDate
+                      ? dayjs.unix(startDate).tz("Asia/Ho_Chi_Minh")
+                      : null
+                  }
+                  onChange={(date) => {
+                    if (date) {
+                      const timestamp = dayjs(date)
+                        .tz("Asia/Ho_Chi_Minh")
+                        .unix();
+                      setStartDate(timestamp);
+                    } else {
+                      setStartDate(0);
+                    }
+                  }}
+                />
+              </ConfigProvider>
+            </div>
+            <div className="flex flex-col justify-center gap-1">
+              <span className="text-[14px] text-neutral-500">Đến ngày:</span>
+              <ConfigProvider locale={locale}>
+                <DatePicker
+                  allowClear={false}
+                  placeholder="dd/mm/yyyy"
+                  format="DD/MM/YYYY"
+                  minDate={dayjs.unix(minStartDate).tz("Asia/Ho_Chi_Minh")}
+                  maxDate={dayjs.unix(maxEndDate).tz("Asia/Ho_Chi_Minh")}
+                  value={
+                    endDate ? dayjs.unix(endDate).tz("Asia/Ho_Chi_Minh") : null
+                  }
+                  onChange={(date) => {
+                    if (date) {
+                      const timestamp = dayjs(date)
+                        .tz("Asia/Ho_Chi_Minh")
+                        .unix();
+                      setEndDate(timestamp);
+                    } else {
+                      setEndDate(0);
+                    }
+                  }}
+                />
+              </ConfigProvider>
+            </div>
+          </div>
         </div>
         <div className="flex justify-end mt-6 gap-3">
           {role?.displayRole.isExport && (
@@ -918,11 +874,11 @@ const BM12 = () => {
       />
       <CustomModal
         isOpen={isOpen}
-        width={isShowPdf ? "85vw" : "800px"}
+        width={isShowPdf ? "85vw" : "900px"}
         title={
           mode === "edit"
-            ? Messages.TITLE_UPDATE_CLASSLEADER
-            : Messages.TITLE_ADD_CLASSLEADER
+            ? Messages.TITLE_UPDATE_UNITS_LEVEL
+            : Messages.TITLE_ADD_UNITS_LEVEL
         }
         onOk={() => {
           const formElement = document.querySelector("form");
@@ -931,7 +887,6 @@ const BM12 = () => {
           );
         }}
         role={role || undefined}
-        isBlock={isBlock}
         onCancel={() => {
           setNotificationOpen(false);
           setIsOpen(false);
@@ -944,7 +899,7 @@ const BM12 = () => {
           isUpload ? (
             <>
               <FromUpload
-                formName="labor"
+                formName="youth-union"
                 onSubmit={handleSubmitUpload}
                 handleShowPDF={setIsShowPdf}
                 displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
@@ -953,10 +908,11 @@ const BM12 = () => {
           ) : (
             <>
               <FormBM12
-                key="form-training-levels-bm07"
+                key="form-unit-levels-bm12"
                 onSubmit={handleSubmit}
                 initialData={selectedItem as Partial<any>}
                 mode={mode}
+                formName="unit-levels"
                 displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
               />
             </>
@@ -969,8 +925,6 @@ const BM12 = () => {
         data={data}
         title={columns}
         onEdit={handleEdit}
-        onSetBlock={setIsBlock}
-        onSetPayments={setIsPayments}
         onSelectionChange={(selectedRowKeys) =>
           setSelectedRowKeys(selectedRowKeys)
         }

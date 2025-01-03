@@ -4,7 +4,6 @@ import { MembersInfomations } from "./membersInfomation";
 
 export interface UnitLevelItem {
   id: string;
-  eventsOrganizer: string[];
   contents: string;
   documentNumber: string;
   internalNumber: string;
@@ -13,9 +12,10 @@ export interface UnitLevelItem {
   toDate: number;
   entryDate: number;
   eventVenue: string;
-  sponsor: string
+  sponsor: string;
   members: MembersInfomations[];
-  attackment: AttackmentItem;
+  attackmentFile: AttackmentItem;
+  attackmentExcel: AttackmentItem;
   note: string;
 }
 
@@ -42,6 +42,17 @@ export async function putUnitLevel(
   data: Partial<any>
 ): Promise<any> {
   const response = await apiClient.put<any>(`api/general/units/${id}`, data);
+  return response.data;
+}
+
+export async function putListMembersUnitLevel(
+  id: string,
+  data: Partial<any>
+): Promise<any> {
+  const response = await apiClient.put<any>(
+    `api/general/units/members/${id}`,
+    data
+  );
   return response.data;
 }
 

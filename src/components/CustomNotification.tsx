@@ -1,4 +1,5 @@
 "use client";
+import Colors from "@/utility/Colors";
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -6,7 +7,7 @@ import {
   SmileOutlined,
 } from "@ant-design/icons";
 import { notification } from "antd";
-import { useEffect } from "react";
+import { FC, useEffect } from "react";
 
 interface NotificationProps {
   message: string;
@@ -15,7 +16,7 @@ interface NotificationProps {
   status?: "success" | "error" | "info" | "warning";
 }
 
-const CustomNotification: React.FC<NotificationProps> = ({
+const CustomNotification: FC<NotificationProps> = ({
   message,
   description,
   isOpen,
@@ -47,24 +48,24 @@ const CustomNotification: React.FC<NotificationProps> = ({
       description,
       icon:
         status === "success" ? (
-          <CheckCircleOutlined style={{ color: "#10de2a" }} />
+          <CheckCircleOutlined style={{ color: Colors.GREEN }} />
         ) : status === "error" ? (
-          <CloseCircleOutlined style={{ color: "#e51b1b" }} />
+          <CloseCircleOutlined style={{ color: Colors.RED }} />
         ) : status === "info" ? (
           <InfoCircleOutlined style={{ color: "#00e5ff" }} />
         ) : (
-          <SmileOutlined style={{ color: "#FBA41B" }} />
+          <SmileOutlined style={{ color: Colors.ORANGE }} />
         ),
       style: {
         backgroundColor,
         borderLeft: `4px solid ${
           status === "success"
-            ? "#10de2a"
+            ? Colors.GREEN
             : status === "error"
-            ? "#e51b1b"
+            ? Colors.RED
             : status === "info"
             ? "#00e5ff"
-            : "#FBA41B"
+            : Colors.ORANGE
         }`,
         borderRadius: "8px",
         boxShadow: `0 4px 8px ${

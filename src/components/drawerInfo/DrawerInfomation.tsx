@@ -17,12 +17,17 @@ import {
 import { FC, Key, useEffect, useState } from "react";
 import CustomNotification from "../CustomNotification";
 import PDFViewer from "../files/PDFViewer";
+import { putListMembersYouthUnion } from "@/services/generalWorks/youthUnionServices";
+import { putListMembersCharitable } from "@/services/generalWorks/charitableServices";
+import { putListMembersSchoolLevel } from "@/services/generalWorks/schoolLevelServices";
+import { putListMembersUnitLevel } from "@/services/generalWorks/unitLevelServices";
 
 type TransferItem = GetProp<TransferProps, "dataSource">[number];
 type TableRowSelection<T extends object> = TableProps<T>["rowSelection"];
 
 interface FormBM08DrawerProps {
   formId: string;
+  formName: string;
   members: MembersInfomations[];
   path: string;
   onMembersChange?: (members: MembersInfomations[]) => void;
@@ -103,6 +108,7 @@ const filterOption = (input: string, item: DataType<UsersFromHRM>) =>
 
 const DrawerInfomation: FC<FormBM08DrawerProps> = ({
   formId,
+  formName,
   members,
   path,
   onMembersChange,
@@ -163,7 +169,6 @@ const DrawerInfomation: FC<FormBM08DrawerProps> = ({
 
   const onChange: TableTransferProps["onChange"] = (nextTargetKeys) => {
     setTargetKeys(nextTargetKeys);
-    console.log("nextTargetKeys :>> ", nextTargetKeys);
     const tempMembers: MembersInfomations[] = [];
     nextTargetKeys.forEach((key) => {
       const user = users.find((user) => user.userName === key);
@@ -186,7 +191,22 @@ const DrawerInfomation: FC<FormBM08DrawerProps> = ({
     const formData: Partial<any> = {
       members: newMembers,
     };
-    const response = await putListMembersLaborUnion(formId, formData);
+    const updateFunctions: Record<
+      string,
+      (id: string, data: Partial<any>) => Promise<any>
+    > = {
+      labor: putListMembersLaborUnion,
+      youth: putListMembersYouthUnion,
+      charitable: putListMembersCharitable,
+      schoolLevel: putListMembersSchoolLevel,
+      unitLevel: putListMembersUnitLevel,
+    };
+
+    const updateFunction = updateFunctions[formName];
+    if (!updateFunction) return;
+
+    const response = await updateFunction(formId, formData);
+
     if (response) {
       setDescription("Cập nhật thông tin thành công");
       setNotificationOpen(true);

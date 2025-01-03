@@ -2,7 +2,7 @@ import apiClient from "../apiClient";
 import { AttackmentItem } from "../forms/Attackment";
 import { MembersInfomations } from "./membersInfomation";
 
-export interface LecturerRegulationItem {
+export interface CharitableItem {
   id: string;
   eventsOrganizer: string[];
   contents: string;
@@ -13,33 +13,34 @@ export interface LecturerRegulationItem {
   toDate: number;
   entryDate: number;
   eventVenue: string;
-  sponsor: string
+  sponsor: string;
   members: MembersInfomations[];
-  attackment: AttackmentItem;
+  attackmentFile: AttackmentItem;
+  attackmentExcel: AttackmentItem;
   note: string;
 }
 
-export interface LecturerRegulationsResponse {
-  items: LecturerRegulationItem[];
+export interface CharitablesResponse {
+  items: CharitableItem[];
   totalCount: number;
 }
 
-export async function getAllLecturerRegulations(
+export async function getAllCharitables(
   yearId: string
-): Promise<LecturerRegulationsResponse> {
+): Promise<CharitablesResponse> {
   let url = yearId
     ? `api/general/charity?Years=${yearId}`
     : "api/general/charity";
-  const response = await apiClient.get<LecturerRegulationsResponse>(url);
+  const response = await apiClient.get<CharitablesResponse>(url);
   return response.data;
 }
 
-export async function postLecturerRegulation(data: Partial<any>): Promise<any> {
+export async function postCharitable(data: Partial<any>): Promise<any> {
   const response = await apiClient.post<any>("api/general/charity", data);
   return response.data;
 }
 
-export async function putLecturerRegulation(
+export async function putCharitable(
   id: string,
   data: Partial<any>
 ): Promise<any> {
@@ -47,13 +48,24 @@ export async function putLecturerRegulation(
   return response.data;
 }
 
-export async function deleteLecturerRegulations(ids: string[]): Promise<void> {
+export async function putListMembersCharitable(
+  id: string,
+  data: Partial<any>
+): Promise<any> {
+  const response = await apiClient.put<any>(
+    `api/general/charity/members/${id}`,
+    data
+  );
+  return response.data;
+}
+
+export async function deleteCharitables(ids: string[]): Promise<void> {
   await apiClient.delete("api/general/charity", {
     data: ids,
   });
 }
 
-export async function ImportLecturerRegulations(data: FormData): Promise<any> {
+export async function ImportCharitables(data: FormData): Promise<any> {
   const response = await apiClient.post<any>(
     "api/general/charity/import",
     data,
