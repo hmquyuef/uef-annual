@@ -343,6 +343,10 @@ const BM09 = () => {
     } catch (error) {
       console.error("Error deleting selected items:", error);
     }
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   }, [selectedRowKeys]);
 
   const handleEdit = (labor: any) => {

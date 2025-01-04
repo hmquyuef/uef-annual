@@ -324,15 +324,15 @@ const FormBM09: FC<FormBM09Props> = (props) => {
     const loadUsers = async () => {
       if (mode === "edit" && initialData !== undefined) {
         setFormValues({
-          contents: initialData.contents,
-          documentNumber: initialData.documentNumber,
-          internalNumber: initialData.internalNumber,
-          documentDate: initialData.documentDate,
-          fromDate: initialData.fromDate,
-          toDate: initialData.toDate,
-          entryDate: initialData.entryDate,
-          eventVenue: initialData.eventVenue,
-          sponsor: initialData.sponsor,
+          contents: initialData.contents || "",
+          documentNumber: initialData.documentNumber || "",
+          internalNumber: initialData.internalNumber || "",
+          documentDate: initialData.documentDate || 0,
+          fromDate: initialData.fromDate || 0,
+          toDate: initialData.toDate || 0,
+          entryDate: initialData?.entryDate ? initialData.entryDate : timestamp,
+          eventVenue: initialData.eventVenue || "",
+          sponsor: initialData.sponsor || "",
           attackmentFile: {
             type: initialData.attackmentFile.type,
             path: initialData.attackmentFile.path,
@@ -345,7 +345,7 @@ const FormBM09: FC<FormBM09Props> = (props) => {
             name: initialData.attackmentExcel.name,
             size: initialData.attackmentExcel.size,
           },
-          note: initialData.note,
+          note: initialData.note || "",
         });
         if (initialData.attackmentFile) {
           setPdf(initialData.attackmentFile);

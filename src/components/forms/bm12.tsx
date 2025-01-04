@@ -68,23 +68,29 @@ const BM12 = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isUpload, setIsUpload] = useState(false);
   const [mode, setMode] = useState<"add" | "edit">("add");
-  const [isNotificationOpen, setNotificationOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Partial<any> | undefined>(
     undefined
   );
   const [defaultYears, setDefaultYears] = useState<any>();
   const [selectedKey, setSelectedKey] = useState<any>();
-  const [message, setMessage] = useState("");
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState<
-    "success" | "error" | "info" | "warning"
-  >("success");
   const [startDate, setStartDate] = useState<number | 0>(0);
   const [minStartDate, setMinStartDate] = useState<number | 0>(0);
   const [endDate, setEndDate] = useState<number | 0>(0);
   const [maxEndDate, setMaxEndDate] = useState<number | 0>(0);
   const [role, setRole] = useState<RoleItem>();
   const [isShowPdf, setIsShowPdf] = useState(false);
+
+  const [formNotification, setFormNotification] = useState<{
+    message: string;
+    description: string;
+    status: "success" | "error" | "info" | "warning";
+    isOpen: boolean;
+  }>({
+    message: "",
+    description: "",
+    status: "success",
+    isOpen: false,
+  });
 
   const getDefaultYears = async () => {
     const { items } = await getAllSchoolYears();
@@ -107,7 +113,6 @@ const BM12 = () => {
     const response = await getAllSchoolLevels(yearId);
     setUnitLevels(response.items);
     setData(response.items);
-    setNotificationOpen(false);
   };
 
   const columns: TableColumnsType<UnitLevelItem> = [
@@ -323,18 +328,23 @@ const BM12 = () => {
       const selectedKeysArray = Array.from(selectedRowKeys) as string[];
       if (selectedKeysArray.length > 0) {
         await deleteUnitLevels(selectedKeysArray);
-        setDescription(
-          `Đã xóa thành công ${selectedKeysArray.length} thông tin chủ nhiệm lớp!`
-        );
-        setNotificationOpen(true);
-        setStatus("success");
-        setMessage("Thông báo");
+        setFormNotification((prev) => ({
+          ...prev,
+          isOpen: true,
+          status: "success",
+          message: "Thông báo",
+          description: `Đã xóa thành công ${selectedKeysArray.length} dòng thông tin!`,
+        }));
         await getListUnitLevels(selectedKey.id);
         setSelectedRowKeys([]);
       }
     } catch (error) {
       console.error("Error deleting selected items:", error);
     }
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   }, [selectedRowKeys]);
 
   const handleEdit = (labor: any) => {
@@ -351,27 +361,43 @@ const BM12 = () => {
       if (mode === "edit" && selectedItem) {
         const response = await putUnitLevel(formData.id as string, formData);
         if (response) {
-          setDescription(Messages.UPDATE_CLASSLEADERS);
+          setFormNotification((prev) => ({
+            ...prev,
+            description: Messages.UPDATE_UNITS_LEVEL,
+          }));
         }
       } else {
         const response = await postUnitLevel(formData);
         if (response) {
-          setDescription(Messages.ADD_CLASSLEADERS);
+          setFormNotification((prev) => ({
+            ...prev,
+            description: Messages.ADD_UNITS_LEVEL,
+          }));
         }
       }
-      setNotificationOpen(true);
-      setStatus("success");
-      setMessage("Thông báo");
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "success",
+        message: "Thông báo",
+      }));
       await getListUnitLevels(selectedKey.id);
       setIsOpen(false);
       setSelectedItem(undefined);
       setMode("add");
     } catch (error) {
-      setNotificationOpen(true);
-      setStatus("error");
-      setMessage("Thông báo");
-      setDescription(Messages.ERROR);
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Thông báo",
+        description: Messages.ERROR,
+      }));
     }
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   };
 
   const handleSubmitUpload = async (
@@ -388,12 +414,13 @@ const BM12 = () => {
 
       const response = await ImportUnitLevels(formData);
       if (response) {
-        setNotificationOpen(true);
-        setStatus("success");
-        setMessage("Thông báo");
-        setDescription(
-          `Tải lên thành công ${response.totalCount} thông tin chủ nhiệm lớp!`
-        );
+        setFormNotification((prev) => ({
+          ...prev,
+          isOpen: true,
+          status: "error",
+          message: "Thông báo",
+          description: `Tải lên thành công ${response.totalCount} dòng dữ liệu!`,
+        }));
       }
       await getListUnitLevels(selectedKey.id);
       setIsOpen(false);
@@ -401,13 +428,20 @@ const BM12 = () => {
       setMode("add");
       setIsUpload(false);
     } catch (error) {
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Thông báo",
+        description: Messages.ERROR,
+      }));
       setIsOpen(false);
-      setNotificationOpen(true);
-      setStatus("error");
-      setMessage("Thông báo");
-      setDescription(Messages.ERROR);
       setIsUpload(false);
     }
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: false,
+    }));
   };
 
   const handleExportExcel = async () => {
@@ -867,10 +901,10 @@ const BM12 = () => {
         </div>
       </div>
       <CustomNotification
-        message={message}
-        description={description}
-        status={status}
-        isOpen={isNotificationOpen}
+        isOpen={formNotification.isOpen}
+        status={formNotification.status}
+        message={formNotification.message}
+        description={formNotification.description}
       />
       <CustomModal
         isOpen={isOpen}
@@ -888,7 +922,10 @@ const BM12 = () => {
         }}
         role={role || undefined}
         onCancel={() => {
-          setNotificationOpen(false);
+          setFormNotification((prev) => ({
+            ...prev,
+            isOpen: false,
+          }));
           setIsOpen(false);
           setSelectedItem(undefined);
           setMode("add");
