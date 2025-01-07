@@ -325,8 +325,8 @@ const FormBM05: FC<FormBM05Props> = ({
       determinations: {
         number: deterNumber,
         fromDate: deterFromDate / 1000,
-        entryDate: deterEntryDate / 1000,
         eventDate: deterEventDate / 1000,
+        entryDate: deterEntryDate ,
         file: {
           type: listPicture?.type ?? "",
           path: listPicture?.path ?? "",
@@ -370,6 +370,7 @@ const FormBM05: FC<FormBM05Props> = ({
             ? new Date(initialData.determinations.entryDate * 1000).getTime()
             : 0
         );
+        setDeterEntryDate(initialData.determinations?.entryDate ? initialData.determinations?.entryDate : timestamp)
         setDeterEventDate(
           initialData.determinations?.eventDate
             ? new Date(initialData.determinations.eventDate * 1000).getTime()
@@ -490,7 +491,11 @@ const FormBM05: FC<FormBM05Props> = ({
                     disabled
                     placeholder="dd/mm/yyyy"
                     format={"DD/MM/YYYY"}
-                    value={deterEntryDate ? moment(deterEntryDate) : null}
+                    value={
+                      deterEntryDate
+                        ? dayjs.unix(deterEntryDate).tz("Asia/Ho_Chi_Minh")
+                        : 0
+                    }
                   />
                 </ConfigProvider>
               </div>

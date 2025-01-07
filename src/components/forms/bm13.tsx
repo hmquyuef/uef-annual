@@ -896,9 +896,9 @@ const BM13 = () => {
                   onClick={handleExportExcel}
                   iconPosition="start"
                   style={{
-                    backgroundColor: "#52c41a",
-                    borderColor: "#52c41a",
-                    color: "#fff",
+                    backgroundColor: Colors.GREEN,
+                    borderColor: Colors.GREEN,
+                    color: Colors.WHITE,
                   }}
                 >
                   Xuất Excel

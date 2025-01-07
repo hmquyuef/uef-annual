@@ -424,7 +424,7 @@ const BM05 = () => {
       setFormNotification((prev) => ({
         ...prev,
         isOpen: true,
-        status: "error",
+        status: "success",
         message: "Thông báo",
       }));
       await getListActivities(selectedKey.id);

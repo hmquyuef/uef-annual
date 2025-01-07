@@ -50,6 +50,7 @@ import Messages from "@/utility/Messages";
 import dayjs from "dayjs";
 import locale from "antd/locale/vi_VN";
 import "dayjs/locale/vi";
+import Colors from "@/utility/Colors";
 dayjs.locale("vi");
 
 const SearchMembers = () => {
@@ -147,7 +148,7 @@ const SearchMembers = () => {
         <p onClick={() => detailUser && handleExportAll(detailUser)}>Tất cả</p>
       ),
       icon: <FileProtectOutlined />,
-      style: { color: "#1890ff" },
+      style: { color: Colors.BLUE },
     },
     {
       type: "divider",
@@ -632,7 +633,7 @@ const SearchMembers = () => {
                 <Divider
                   orientation="left"
                   className="uppercase"
-                  style={{ borderColor: "#1677FF", color: "#1677FF" }}
+                  style={{ borderColor: Colors.BLUE, color: Colors.BLUE }}
                 >
                   Thông tin nhân sự
                 </Divider>
@@ -657,7 +658,7 @@ const SearchMembers = () => {
                 <Divider
                   orientation="left"
                   className="uppercase"
-                  style={{ borderColor: "#1677FF", color: "#1677FF" }}
+                  style={{ borderColor: Colors.BLUE, color: Colors.BLUE }}
                 >
                   Danh sách các hoạt động
                 </Divider>
