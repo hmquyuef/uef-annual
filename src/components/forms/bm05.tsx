@@ -150,7 +150,7 @@ const BM05 = () => {
       key: "name",
       className: "max-w-24",
       render: (name: string, record: ActivityItem) => {
-        const path = record.determinations?.file?.path;
+        const path = record.determinations?.files[0]?.path;
         return (
           <span
             className={`${
@@ -173,14 +173,14 @@ const BM05 = () => {
           SỐ VĂN BẢN <br /> NGÀY LẬP
         </>
       ),
-      dataIndex: ["determinations", "number"],
-      key: "number",
+      dataIndex: ["determinations", "documentNumber"],
+      key: "documentNumber",
       className: "w-[9rem]",
-      render: (number: string, record: ActivityItem) => {
+      render: (documentNumber: string, record: ActivityItem) => {
         const ngayLap = record.determinations?.fromDate;
         return (
           <div className="flex flex-col">
-            <span className="text-center font-medium">{number}</span>
+            <span className="text-center font-medium">{documentNumber}</span>
             <span className="text-center text-[13px]">
               {convertTimestampToDate(ngayLap)}
             </span>
@@ -213,10 +213,10 @@ const BM05 = () => {
           THỜI GIAN <br /> HOẠT ĐỘNG
         </>
       ),
-      dataIndex: ["determinations", "eventDate"],
-      key: "eventDate",
-      render: (eventDate: number) =>
-        eventDate ? convertTimestampToDate(eventDate) : " ",
+      dataIndex: ["determinations", "documentDate"],
+      key: "documentDate",
+      render: (documentDate: number) =>
+        documentDate ? convertTimestampToDate(documentDate) : " ",
       className: "text-center w-[100px]",
     },
     {
@@ -225,18 +225,19 @@ const BM05 = () => {
           TÀI LIỆU <br /> ĐÍNH KÈM
         </div>
       ),
-      dataIndex: ["determinations", "file", "path"],
+      dataIndex: "path",
       key: "path",
       className: "customInfoColors text-center w-[95px]",
       sorter: (a, b) =>
-        a.determinations?.file?.path.localeCompare(
-          b.determinations?.file?.path
+        a.determinations?.files[0]?.path.localeCompare(
+          b.determinations?.files[0]?.path
         ),
-      render: (path: string) => {
-        return path !== "" && path !== undefined ? (
+      render: (path: string, record: ActivityItem) => {
+        const tempPath = record.determinations?.files[0]?.path;
+        return tempPath !== "" && tempPath !== undefined ? (
           <>
             <Link
-              href={"https://api-annual.uef.edu.vn/" + path}
+              href={"https://api-annual.uef.edu.vn/" + tempPath}
               target="__blank"
             >
               <p className="text-green-500">
@@ -259,14 +260,14 @@ const BM05 = () => {
           SỐ LƯU <br /> VĂN BẢN
         </div>
       ),
-      dataIndex: "documentNumber",
-      key: "documentNumber",
+      dataIndex: ["determinations", "internalNumber"],
+      key: "internalNumber",
       className: "customInfoColors w-[5rem]",
-      render: (number: string, item: ActivityItem) => {
-        const path = item.determinations?.file?.path;
+      render: (internalNumber: string, item: ActivityItem) => {
+        const path = item.determinations?.files[0]?.path;
         return (
           <>
-            {number && (
+            {internalNumber && (
               <>
                 <p className="ml-2">
                   <Tag
@@ -274,7 +275,7 @@ const BM05 = () => {
                       path !== "" && path !== undefined ? "blue" : "error"
                     }`}
                   >
-                    {number}
+                    {internalNumber}
                   </Tag>
                 </p>
               </>
@@ -327,10 +328,12 @@ const BM05 = () => {
     const filteredData = activities.filter((item) => {
       const matchesNameOrDocument =
         item.name.toLowerCase().includes(value.toLowerCase()) ||
-        item.documentNumber.toLowerCase().includes(value.toLowerCase()) ||
-        item.determinations.number
-          .toLocaleLowerCase()
-          .includes(value.toLocaleLowerCase());
+        item.determinations.documentNumber
+          .toLowerCase()
+          .includes(value.toLowerCase()) ||
+        item.determinations.internalNumber
+          .toLowerCase()
+          .includes(value.toLowerCase());
 
       const matchesUnit = selectedUnit
         ? item.participants.some((participant) =>
@@ -347,8 +350,8 @@ const BM05 = () => {
 
       const matchesDate =
         startDate && endDate
-          ? item.determinations.eventDate >= startDate &&
-            item.determinations.eventDate <= endDate
+          ? item.determinations.documentDate >= startDate &&
+            item.determinations.documentDate <= endDate
           : true;
 
       return matchesNameOrDocument && matchesUnit && matchesDate;
@@ -1038,9 +1041,9 @@ const BM05 = () => {
                   onClick={handleExportExcel}
                   iconPosition="start"
                   style={{
-                    backgroundColor: "#52c41a",
-                    borderColor: "#52c41a",
-                    color: "#fff",
+                    backgroundColor: Colors.GREEN,
+                    borderColor: Colors.GREEN,
+                    color: Colors.WHITE,
                   }}
                 >
                   Xuất Excel

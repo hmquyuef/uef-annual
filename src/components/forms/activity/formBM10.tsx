@@ -27,11 +27,11 @@ import { MembersInfomations } from "@/services/generalWorks/membersInfomation";
 import { DisplayRoleItem } from "@/services/roles/rolesServices";
 import Colors from "@/utility/Colors";
 
+import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
 import { ImportCharitables } from "@/services/generalWorks/charitableServices";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
-import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
 dayjs.locale("vi");
 interface FormBM10Props {
   onSubmit: (formData: Partial<any>) => void;
@@ -293,27 +293,31 @@ const FormBM10: FC<FormBM10Props> = (props) => {
     const formData: Partial<any> = {
       id: initialData?.id || "",
       contents: formValues.contents,
-      documentNumber: formValues.documentNumber,
-      internalNumber: formValues.internalNumber,
-      documentDate: formValues.documentDate,
-      fromDate: formValues.fromDate,
-      toDate: formValues.toDate,
-      entryDate: formValues.entryDate,
       eventVenue: formValues.eventVenue,
-      eventsOrganizer: [formValues.eventsOrganizer],
+      eventsOrganizer: formValues.eventsOrganizer,
       sponsor: formValues.sponsor,
       members: members,
-      attackmentFile: {
-        type: pdf?.type ?? "",
-        path: pdf?.path ?? "",
-        name: pdf?.name ?? "",
-        size: pdf?.size ?? 0,
-      },
-      attackmentExcel: {
-        type: participants?.type ?? "",
-        path: participants?.path ?? "",
-        name: participants?.name ?? "",
-        size: participants?.size ?? 0,
+      determinations: {
+        documentNumber: formValues.documentNumber,
+        internalNumber: formValues.internalNumber,
+        documentDate: formValues.documentDate,
+        fromDate: formValues.fromDate,
+        toDate: formValues.toDate,
+        entryDate: formValues.entryDate,
+        files: [
+          {
+            type: pdf?.type ?? "",
+            path: pdf?.path ?? "",
+            name: pdf?.name ?? "",
+            size: pdf?.size ?? 0,
+          },
+          {
+            type: participants?.type ?? "",
+            path: participants?.path ?? "",
+            name: participants?.name ?? "",
+            size: participants?.size ?? 0,
+          },
+        ],
       },
       note: formValues.note,
     };
@@ -324,29 +328,27 @@ const FormBM10: FC<FormBM10Props> = (props) => {
     setIsLoading(true);
     const loadUsers = async () => {
       if (mode === "edit" && initialData !== undefined) {
+        const file = initialData.determinations.files.find(
+          (x: { type: string }) => x.type === "application/pdf"
+        );
+        const excel = initialData.determinations.files.find(
+          (x: { type: string }) => x.type === "application/pdf"
+        );
         setFormValues({
           contents: initialData.contents ?? "",
-          documentNumber: initialData.documentNumber ?? "",
-          internalNumber: initialData.internalNumber ?? "",
-          documentDate: initialData.documentDate ?? 0,
-          fromDate: initialData.fromDate ?? 0,
-          toDate: initialData.toDate ?? 0,
-          entryDate: initialData?.entryDate ? initialData.entryDate : timestamp,
+          documentNumber: initialData.determinations.documentNumber ?? "",
+          internalNumber: initialData.determinations.internalNumber ?? "",
+          documentDate: initialData.determinations.documentDate ?? 0,
+          fromDate: initialData.determinations.fromDate ?? 0,
+          toDate: initialData.determinations.toDate ?? 0,
+          entryDate: initialData?.determinations.entryDate
+            ? initialData.determinations.entryDate
+            : timestamp,
           eventVenue: initialData.eventVenue ?? "",
           eventsOrganizer: initialData.eventsOrganizer ?? "",
           sponsor: initialData.sponsor ?? "",
-          attackmentFile: {
-            type: initialData.attackmentFile?.type ?? "",
-            path: initialData.attackmentFile?.path ?? "",
-            name: initialData.attackmentFile?.name ?? "",
-            size: initialData.attackmentFile?.size ?? 0,
-          },
-          attackmentExcel: {
-            type: initialData.attackmentExcel?.type ?? "",
-            path: initialData.attackmentExcel?.path ?? "",
-            name: initialData.attackmentExcel?.name ?? "",
-            size: initialData.attackmentExcel?.size ?? 0,
-          },
+          attackmentFile: file,
+          attackmentExcel: excel,
           note: initialData.not ?? "",
         });
         setMembers(initialData.members);

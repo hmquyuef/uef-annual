@@ -49,6 +49,7 @@ import {
   Modal,
   Select,
   TableColumnsType,
+  Tag,
   Tooltip,
 } from "antd";
 
@@ -221,7 +222,7 @@ const BM01 = () => {
       dataIndex: "proof",
       key: "proof",
       render: (proof: string, record: ClassLeaderItem) => {
-        const ngayLap = record.fromDate;
+        const ngayLap = record.determinations.fromDate;
         return (
           <div className="flex flex-col">
             <span className="text-center font-medium">{proof}</span>
@@ -246,9 +247,11 @@ const BM01 = () => {
           render: (_, record: ClassLeaderItem) => {
             return (
               <>
-                {record.fromDate ? (
+                {record.determinations.fromDate ? (
                   <div className="flex flex-col">
-                    <span>{convertTimestampToDate(record.fromDate)}</span>
+                    <span>
+                      {convertTimestampToDate(record.determinations.fromDate)}
+                    </span>
                   </div>
                 ) : (
                   ""
@@ -265,9 +268,11 @@ const BM01 = () => {
           render: (_, record: ClassLeaderItem) => {
             return (
               <>
-                {record.toDate ? (
+                {record.determinations.toDate ? (
                   <div className="flex flex-col">
-                    <span>{convertTimestampToDate(record.toDate)}</span>
+                    <span>
+                      {convertTimestampToDate(record.determinations.toDate)}
+                    </span>
                   </div>
                 ) : (
                   ""
@@ -285,11 +290,11 @@ const BM01 = () => {
           TÀI LIỆU <br /> ĐÍNH KÈM
         </div>
       ),
-      dataIndex: ["attackment", "path"],
-      key: "path",
-      className: "text-center w-[80px]",
-      sorter: (a, b) => a.attackment?.path.localeCompare(b.attackment?.path),
-      render: (path: string) => {
+      dataIndex: "attackment",
+      key: "attackment",
+      className: "customInfoColors text-center w-[80px]",
+      render: (attackment: string, item: ClassLeaderItem) => {
+        const path = item.determinations.files[0]?.path;
         return path !== "" && path !== undefined ? (
           <>
             <Link
@@ -306,6 +311,36 @@ const BM01 = () => {
             <span className="text-red-400">
               <CloseOutlined />
             </span>
+          </>
+        );
+      },
+    },
+    {
+      title: (
+        <div className="p-1">
+          SỐ LƯU <br /> VĂN BẢN
+        </div>
+      ),
+      dataIndex: "internalNumber",
+      key: "internalNumber",
+      className: "customInfoColors text-center w-[70px]",
+      render: (internalNumber: string, item: ClassLeaderItem) => {
+        const path = item.determinations.files[0]?.path;
+        return (
+          <>
+            {item.determinations.internalNumber && (
+              <>
+                <span className="ml-2">
+                  <Tag
+                    color={`${
+                      path !== "" && path !== undefined ? "blue" : "error"
+                    }`}
+                  >
+                    {item.determinations.internalNumber}
+                  </Tag>
+                </span>
+              </>
+            )}
           </>
         );
       },
@@ -392,7 +427,8 @@ const BM01 = () => {
         : true;
       const matchesDate =
         startDate && endDate
-          ? item.fromDate >= startDate && item.toDate <= endDate
+          ? item.determinations.fromDate >= startDate &&
+            item.determinations.toDate <= endDate
           : true;
       return matchesName && matchesUnit && matchesDate;
     });
@@ -423,8 +459,8 @@ const BM01 = () => {
     }));
   }, [selectedRowKeys]);
 
-  const handleEdit = (classLeader: ClassLeaderItem) => {
-    const updatedActivity: Partial<ClassLeaderItem> = {
+  const handleEdit = (classLeader: any) => {
+    const updatedActivity: Partial<any> = {
       ...classLeader,
     };
     setSelectedItem(updatedActivity);
@@ -432,7 +468,7 @@ const BM01 = () => {
     setIsOpen(true);
   };
 
-  const handleSubmit = async (formData: Partial<ClassLeaderItem>) => {
+  const handleSubmit = async (formData: Partial<any>) => {
     try {
       if (mode === "edit" && selectedItem) {
         const response = await putUpdateClassLeader(
@@ -578,11 +614,13 @@ const BM01 = () => {
           item.subject ?? "",
           item.course ?? "",
           item.classCode ?? "",
-          item.proof + ", " + convertTimestampToDate(item.fromDate),
-          item.fromDate && item.toDate
-            ? convertTimestampToDate(item.fromDate) +
+          item.determinations.documentNumber +
+            ", " +
+            convertTimestampToDate(item.determinations.fromDate),
+          item.determinations.fromDate && item.determinations.toDate
+            ? convertTimestampToDate(item.determinations.fromDate) +
               " - " +
-              convertTimestampToDate(item.toDate)
+              convertTimestampToDate(item.determinations.toDate)
             : "",
           item.note ?? "",
         ]),
@@ -1162,7 +1200,7 @@ const BM01 = () => {
       />
       <CustomModal
         isOpen={isOpen}
-        width={isShowPdf ? "85vw" : "800px"}
+        width={isShowPdf ? "85vw" : "1000px"}
         title={
           mode === "edit"
             ? Messages.TITLE_UPDATE_CLASSLEADER

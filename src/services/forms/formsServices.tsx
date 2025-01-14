@@ -1,4 +1,5 @@
 import apiClient from "@/services/apiClient";
+import { Determinations } from "./Determinations";
 import { PaymentApprovedItem } from "./PaymentApprovedItem";
 
 export interface ActivityItem {
@@ -7,28 +8,12 @@ export interface ActivityItem {
   name: string;
   workloadTypeId: string;
   workloadTypeName: string;
-  determinations: Determinations;
   participants: Participation[];
-  description: string;
-  documentNumber: string;
+  determinations: Determinations;
   payments: PaymentApprovedItem;
+  description: string;
   creationTime: number;
   isActived: boolean;
-}
-
-export interface Determinations {
-  number: string;
-  fromDate: number;
-  entryDate: number;
-  eventDate: number;
-  file: InfoFile;
-}
-
-export interface InfoFile {
-  type: string;
-  path: string;
-  name: string;
-  size: number;
 }
 
 export interface Participation {

@@ -48,6 +48,7 @@ import {
   postLecturerRegulation,
   putLecturerRegulation,
 } from "@/services/regulations/lecturersServices";
+import Colors from "@/utility/Colors";
 import {
   convertTimestampToDate,
   defaultFooterInfo,
@@ -57,7 +58,6 @@ import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import * as XLSX from "sheetjs-style";
-import Colors from "@/utility/Colors";
 dayjs.locale("vi");
 
 const BM13 = () => {

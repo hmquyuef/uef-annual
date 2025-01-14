@@ -2,6 +2,7 @@
 
 import {
   deleteUnitLevels,
+  getAllUnitLevels,
   ImportUnitLevels,
   postUnitLevel,
   putUnitLevel,
@@ -38,6 +39,7 @@ import {
   MenuProps,
   Select,
   TableColumnsType,
+  Tag,
   Tooltip,
 } from "antd";
 import { Key, useCallback, useEffect, useState } from "react";
@@ -47,7 +49,6 @@ import FormBM12 from "./activity/formBM12";
 import FromUpload from "./activity/formUpload";
 import TemplateForms from "./workloads/TemplateForms";
 
-import { getAllSchoolLevels } from "@/services/generalWorks/schoolLevelServices";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
@@ -110,7 +111,7 @@ const BM12 = () => {
   };
 
   const getListUnitLevels = async (yearId: string) => {
-    const response = await getAllSchoolLevels(yearId);
+    const response = await getAllUnitLevels(yearId);
     setUnitLevels(response.items);
     setData(response.items);
   };
@@ -144,7 +145,7 @@ const BM12 = () => {
       dataIndex: "documentNumber",
       key: "documentNumber",
       render: (documentNumber: string, record: UnitLevelItem) => {
-        const ngayLap = record.documentDate;
+        const ngayLap = record.determinations.documentDate;
         return (
           <div className="flex flex-col">
             <span className="text-center font-medium">{documentNumber}</span>
@@ -176,9 +177,11 @@ const BM12 = () => {
           render: (_, record: UnitLevelItem) => {
             return (
               <>
-                {record.fromDate ? (
+                {record.determinations.fromDate ? (
                   <div className="flex flex-col">
-                    <span>{convertTimestampToDate(record.fromDate)}</span>
+                    <span>
+                      {convertTimestampToDate(record.determinations.fromDate)}
+                    </span>
                   </div>
                 ) : (
                   ""
@@ -199,9 +202,11 @@ const BM12 = () => {
           render: (_, record: UnitLevelItem) => {
             return (
               <>
-                {record.toDate ? (
+                {record.determinations.toDate ? (
                   <div className="flex flex-col">
-                    <span>{convertTimestampToDate(record.toDate)}</span>
+                    <span>
+                      {convertTimestampToDate(record.determinations.toDate)}
+                    </span>
                   </div>
                 ) : (
                   ""
@@ -242,9 +247,7 @@ const BM12 = () => {
       ),
       dataIndex: ["attackmentFile", "path"],
       key: "path",
-      className: "text-center w-[110px]",
-      sorter: (a, b) =>
-        a.attackmentFile?.path.localeCompare(b.attackmentFile?.path),
+      className: "customInfoColors text-center w-[110px]",
       render: (path: string) => {
         return path !== "" && path !== undefined ? (
           <>
@@ -262,6 +265,36 @@ const BM12 = () => {
             <span className="text-red-400">
               <CloseOutlined />
             </span>
+          </>
+        );
+      },
+    },
+    {
+      title: (
+        <div className="p-1">
+          SỐ LƯU <br /> VĂN BẢN
+        </div>
+      ),
+      dataIndex: "internalNumber",
+      key: "internalNumber",
+      className: "customInfoColors text-center w-[70px]",
+      render: (internalNumber: string, item: UnitLevelItem) => {
+        const path = item.determinations.Files[0]?.path;
+        return (
+          <>
+            {internalNumber && (
+              <>
+                <span className="ml-2">
+                  <Tag
+                    color={`${
+                      path !== "" && path !== undefined ? "blue" : "error"
+                    }`}
+                  >
+                    {internalNumber}
+                  </Tag>
+                </span>
+              </>
+            )}
           </>
         );
       },

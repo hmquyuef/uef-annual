@@ -39,6 +39,7 @@ import {
   Modal,
   Select,
   TableColumnsType,
+  Tag,
   Tooltip,
 } from "antd";
 
@@ -215,7 +216,7 @@ const BM02 = () => {
       dataIndex: "proof",
       key: "proof",
       render: (proof: string, record: ClassAssistantItem) => {
-        const ngayLap = record.fromDate;
+        const ngayLap = record.determinations.fromDate;
         return (
           <div className="flex flex-col">
             <span className="text-center font-medium">{proof}</span>
@@ -240,9 +241,11 @@ const BM02 = () => {
           render: (_, record: ClassAssistantItem) => {
             return (
               <>
-                {record.fromDate ? (
+                {record.determinations.fromDate ? (
                   <div className="flex flex-col">
-                    <span>{convertTimestampToDate(record.fromDate)}</span>
+                    <span>
+                      {convertTimestampToDate(record.determinations.fromDate)}
+                    </span>
                   </div>
                 ) : (
                   ""
@@ -259,9 +262,11 @@ const BM02 = () => {
           render: (_, record: ClassAssistantItem) => {
             return (
               <>
-                {record.toDate ? (
+                {record.determinations.toDate ? (
                   <div className="flex flex-col">
-                    <span>{convertTimestampToDate(record.toDate)}</span>
+                    <span>
+                      {convertTimestampToDate(record.determinations.toDate)}
+                    </span>
                   </div>
                 ) : (
                   ""
@@ -279,11 +284,11 @@ const BM02 = () => {
           TÀI LIỆU <br /> ĐÍNH KÈM
         </div>
       ),
-      dataIndex: ["attackment", "path"],
-      key: "path",
-      className: "text-center w-[100px]",
-      sorter: (a, b) => a.attackment?.path.localeCompare(b.attackment?.path),
-      render: (path: string) => {
+      dataIndex: "file",
+      key: "file",
+      className: "customInfoColors text-center w-[100px]",
+      render: (file: string, item: ClassAssistantItem) => {
+        const path = item.determinations.files[0]?.path;
         return path !== "" && path !== undefined ? (
           <>
             <Link
@@ -300,6 +305,36 @@ const BM02 = () => {
             <span className="text-red-400">
               <CloseOutlined />
             </span>
+          </>
+        );
+      },
+    },
+    {
+      title: (
+        <div className="p-1">
+          SỐ LƯU <br /> VĂN BẢN
+        </div>
+      ),
+      dataIndex: "internalNumber",
+      key: "internalNumber",
+      className: "customInfoColors text-center w-[70px]",
+      render: (internalNumber: string, item: ClassAssistantItem) => {
+        const path = item.determinations.files[0]?.path;
+        return (
+          <>
+            {item.determinations.internalNumber && (
+              <>
+                <span className="ml-2">
+                  <Tag
+                    color={`${
+                      path !== "" && path !== undefined ? "blue" : "error"
+                    }`}
+                  >
+                    {item.determinations.internalNumber}
+                  </Tag>
+                </span>
+              </>
+            )}
           </>
         );
       },
@@ -387,7 +422,8 @@ const BM02 = () => {
         : true;
       const matchesDate =
         startDate && endDate
-          ? item.fromDate >= startDate && item.toDate <= endDate
+          ? item.determinations.fromDate >= startDate &&
+            item.determinations.toDate <= endDate
           : true;
       return matchesName && matchesUnit && matchesDate;
     });
@@ -573,11 +609,13 @@ const BM02 = () => {
           item.classCode ?? "",
           item.semester ?? "",
           item.standardNumber,
-          item.proof + ", " + convertTimestampToDate(item.fromDate),
-          item.fromDate && item.toDate
-            ? convertTimestampToDate(item.fromDate) +
+          item.determinations.documentNumber +
+            ", " +
+            convertTimestampToDate(item.determinations.fromDate),
+          item.determinations.fromDate && item.determinations.toDate
+            ? convertTimestampToDate(item.determinations.fromDate) +
               " - " +
-              convertTimestampToDate(item.toDate)
+              convertTimestampToDate(item.determinations.toDate)
             : "",
           item.note ?? "",
         ]),
@@ -1147,7 +1185,7 @@ const BM02 = () => {
         />
         <CustomModal
           isOpen={isOpen}
-          width={isShowPdf ? "85vw" : "800px"}
+          width={isShowPdf ? "85vw" : "1000px"}
           title={
             mode === "edit"
               ? Messages.TITLE_UPDATE_ASSISTANT

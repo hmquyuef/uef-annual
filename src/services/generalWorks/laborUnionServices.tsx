@@ -1,21 +1,14 @@
 import apiClient from "../apiClient";
-import { AttackmentItem } from "../forms/Attackment";
+import { Determinations } from "../forms/Determinations";
 import { MembersInfomations } from "./membersInfomation";
 
 export interface LaborUnionItem {
   id: string;
   contents: string;
-  documentNumber: string;
-  internalNumber: string;
-  documentDate: number;
-  fromDate: number;
-  toDate: number;
-  entryDate: number;
   eventVenue: string;
   sponsor: string;
+  determinations: Determinations;
   members: MembersInfomations[];
-  attackmentFile: AttackmentItem;
-  attackmentExcel: AttackmentItem;
   note: string;
 }
 

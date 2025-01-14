@@ -39,6 +39,7 @@ import {
   MenuProps,
   Select,
   TableColumnsType,
+  Tag,
   Tooltip,
 } from "antd";
 import Link from "next/link";
@@ -146,7 +147,7 @@ const BM09 = () => {
       dataIndex: "documentNumber",
       key: "documentNumber",
       render: (documentNumber: string, record: YouthUnionItem) => {
-        const ngayLap = record.documentDate;
+        const ngayLap = record.determinations.documentDate;
         return (
           <div className="flex flex-col">
             <span className="text-center font-medium">{documentNumber}</span>
@@ -178,9 +179,11 @@ const BM09 = () => {
           render: (_, record: YouthUnionItem) => {
             return (
               <>
-                {record.fromDate ? (
+                {record.determinations.fromDate ? (
                   <div className="flex flex-col">
-                    <span>{convertTimestampToDate(record.fromDate)}</span>
+                    <span>
+                      {convertTimestampToDate(record.determinations.fromDate)}
+                    </span>
                   </div>
                 ) : (
                   ""
@@ -201,9 +204,11 @@ const BM09 = () => {
           render: (_, record: YouthUnionItem) => {
             return (
               <>
-                {record.toDate ? (
+                {record.determinations.toDate ? (
                   <div className="flex flex-col">
-                    <span>{convertTimestampToDate(record.toDate)}</span>
+                    <span>
+                      {convertTimestampToDate(record.determinations.toDate)}
+                    </span>
                   </div>
                 ) : (
                   ""
@@ -244,9 +249,7 @@ const BM09 = () => {
       ),
       dataIndex: ["attackmentFile", "path"],
       key: "path",
-      className: "text-center w-[110px]",
-      sorter: (a, b) =>
-        a.attackmentFile?.path.localeCompare(b.attackmentFile?.path),
+      className: "customInfoColors text-center w-[110px]",
       render: (path: string) => {
         return path !== "" && path !== undefined ? (
           <>
@@ -264,6 +267,36 @@ const BM09 = () => {
             <span className="text-red-400">
               <CloseOutlined />
             </span>
+          </>
+        );
+      },
+    },
+    {
+      title: (
+        <div className="p-1">
+          SỐ LƯU <br /> VĂN BẢN
+        </div>
+      ),
+      dataIndex: "internalNumber",
+      key: "internalNumber",
+      className: "customInfoColors text-center w-[70px]",
+      render: (internalNumber: string, item: YouthUnionItem) => {
+        const path = item.determinations.Files[0]?.path;
+        return (
+          <>
+            {internalNumber && (
+              <>
+                <span className="ml-2">
+                  <Tag
+                    color={`${
+                      path !== "" && path !== undefined ? "blue" : "error"
+                    }`}
+                  >
+                    {internalNumber}
+                  </Tag>
+                </span>
+              </>
+            )}
           </>
         );
       },
@@ -318,7 +351,8 @@ const BM09 = () => {
         .includes(value.toLowerCase());
       const matchesDate =
         startDate && endDate
-          ? item.entryDate >= startDate && item.entryDate <= endDate
+          ? item.determinations.entryDate >= startDate &&
+            item.determinations.entryDate <= endDate
           : true;
       return matchesName && matchesDate;
     });

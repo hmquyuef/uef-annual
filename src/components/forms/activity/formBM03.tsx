@@ -92,17 +92,18 @@ const FormBM03: FC<FormBM03Props> = (props) => {
     location: "",
     position: "",
     numberOfTime: 0,
+    documentNumber: "",
+    internalNumber: "",
+    documentDate: 0,
     fromDate: 0,
     toDate: 0,
     entryDate: timestamp,
-    documentDate: 0,
-    attackment: {
+    attackmentFile: {
       type: "",
       path: "",
       name: "",
       size: 0,
     },
-    proof: "",
     note: "",
   });
 
@@ -203,17 +204,22 @@ const FormBM03: FC<FormBM03Props> = (props) => {
       position: formValues.position,
       numberOfTime: formValues.numberOfTime,
       standardNumber: formValues.standardValues,
-      fromDate: formValues.fromDate,
-      toDate: formValues.toDate,
-      entryDate: formValues.entryDate,
-      documentDate: formValues.documentDate,
-      attackment: {
-        type: listPicture?.type ?? "",
-        path: listPicture?.path ?? "",
-        name: listPicture?.name ?? "",
-        size: listPicture?.size ?? 0,
+      determinations: {
+        documentNumber: formValues.documentNumber,
+        internalNumber: formValues.internalNumber,
+        documentDate: formValues.documentDate,
+        fromDate: formValues.fromDate,
+        toDate: formValues.toDate,
+        entryDate: formValues.entryDate,
+        files: [
+          {
+            type: listPicture?.type ?? "",
+            path: listPicture?.path ?? "",
+            name: listPicture?.name ?? "",
+            size: listPicture?.size ?? 0,
+          },
+        ],
       },
-      proof: formValues.proof,
       note: formValues.note,
     };
     onSubmit(formData);
@@ -227,17 +233,18 @@ const FormBM03: FC<FormBM03Props> = (props) => {
         location: "",
         position: "",
         numberOfTime: 0,
+        documentNumber: "",
+        internalNumber: "",
+        documentDate: 0,
         fromDate: 0,
         toDate: 0,
         entryDate: timestamp,
-        documentDate: 0,
-        attackment: {
+        attackmentFile: {
           type: "",
           path: "",
           name: "",
           size: 0,
         },
-        proof: "",
         note: "",
       });
       setDefaultUnits([]);
@@ -265,19 +272,23 @@ const FormBM03: FC<FormBM03Props> = (props) => {
           location: initialData.location || "",
           position: initialData.position || "",
           numberOfTime: initialData.numberOfTime || 0,
-          fromDate: initialData.fromDate || 0,
-          toDate: initialData.toDate || 0,
-          entryDate: initialData?.entryDate ? initialData.entryDate : timestamp,
-          documentDate: initialData.documentDate || 0,
-          attackment: {
-            type: initialData.attackment?.type || "",
-            path: initialData.attackment?.path || "",
-            name: initialData.attackment?.name || "",
-            size: initialData.attackment?.size || 0,
+          documentNumber: initialData?.determinations.documentNumber || "",
+          internalNumber: initialData?.determinations.internalNumber || "",
+          documentDate: initialData?.determinations.documentDate || 0,
+          fromDate: initialData?.determinations.fromDate || 0,
+          toDate: initialData?.toDate || 0,
+          entryDate: initialData?.determinations.entryDate
+            ? initialData.determinations.entryDate
+            : timestamp,
+          attackmentFile: {
+            type: initialData?.determinations.files[0]?.type || "",
+            path: initialData?.determinations.files[0]?.path || "",
+            name: initialData?.determinations.files[0]?.name || "",
+            size: initialData?.determinations.files[0]?.size || 0,
           },
-          proof: initialData.proof || "",
           note: initialData.note || "",
         });
+        setListPicture(initialData?.determinations.files[0] || undefined);
       } else {
         resetForm();
       }
@@ -303,16 +314,16 @@ const FormBM03: FC<FormBM03Props> = (props) => {
         <>
           <form onSubmit={handleSubmit}>
             <hr className="mt-1 mb-3" />
-            <div className="grid grid-cols-5 gap-6 mb-4">
+            <div className="grid grid-cols-6 gap-6 mb-2">
               <div className="flex flex-col gap-1">
                 <span className="font-medium text-neutral-600">Số văn bản</span>
                 <TextArea
                   autoSize
-                  value={formValues.proof}
+                  value={formValues.documentNumber}
                   onChange={(e) =>
                     setFormValues((prev) => ({
                       ...prev,
-                      proof: e.target.value,
+                      documentNumber: e.target.value,
                     }))
                   }
                 />
@@ -389,7 +400,21 @@ const FormBM03: FC<FormBM03Props> = (props) => {
                 </ConfigProvider>
               </div>
               <div className="flex flex-col gap-1">
-                <p className="font-medium text-neutral-600">Ngày nhập</p>
+                <span className="font-medium text-neutral-600">
+                  Số lưu văn bản
+                </span>
+                <Input
+                  value={formValues.internalNumber}
+                  onChange={(e) => {
+                    setFormValues((prev) => ({
+                      ...prev,
+                      internalNumber: e.target.value,
+                    }));
+                  }}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="font-medium text-neutral-600">Ngày nhập</span>
                 <ConfigProvider locale={locale}>
                   <DatePicker
                     disabled
@@ -406,7 +431,7 @@ const FormBM03: FC<FormBM03Props> = (props) => {
                 </ConfigProvider>
               </div>
             </div>
-            <div className="flex flex-col gap-1 mb-3">
+            <div className="flex flex-col gap-1 mb-2">
               <span className="font-medium text-neutral-600">
                 Địa điểm <span className="text-red-500">(*)</span>
               </span>
@@ -421,7 +446,7 @@ const FormBM03: FC<FormBM03Props> = (props) => {
                 }
               />
             </div>
-            <div className="grid grid-cols-2 gap-6 mb-3">
+            <div className="grid grid-cols-2 gap-6 mb-2">
               <div className="flex flex-col gap-1">
                 <span className="font-medium text-neutral-600">Đơn vị</span>
                 <Select
@@ -482,7 +507,7 @@ const FormBM03: FC<FormBM03Props> = (props) => {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-4 gap-6 mb-3">
+            <div className="grid grid-cols-4 gap-6 mb-2">
               <div className="flex flex-col gap-1">
                 <span className="font-medium text-neutral-600">
                   Số tiết chuẩn
@@ -501,20 +526,6 @@ const FormBM03: FC<FormBM03Props> = (props) => {
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="font-medium text-neutral-600">
-                  Vị trí tham gia
-                </span>
-                <Input
-                  value={formValues.position}
-                  onChange={(e) =>
-                    setFormValues((prev) => ({
-                      ...prev,
-                      position: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div className="flex flex-col gap-1">
                 <span className="font-medium text-neutral-600">Số buổi</span>
                 <InputNumber
                   min={0}
@@ -529,8 +540,22 @@ const FormBM03: FC<FormBM03Props> = (props) => {
                   style={{ width: "100%" }}
                 />
               </div>
+              <div className="col-span-2 flex flex-col gap-1">
+                <span className="font-medium text-neutral-600">
+                  Vị trí tham gia
+                </span>
+                <Input
+                  value={formValues.position}
+                  onChange={(e) =>
+                    setFormValues((prev) => ({
+                      ...prev,
+                      position: e.target.value,
+                    }))
+                  }
+                />
+              </div>
             </div>
-            <div className="flex flex-col gap-[2px] mb-2">
+            <div className="flex flex-col gap-1 mb-2">
               <span className="font-medium text-neutral-600">
                 Tài liệu đính kèm
               </span>

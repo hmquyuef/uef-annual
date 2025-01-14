@@ -39,6 +39,7 @@ import {
   Modal,
   Select,
   TableColumnsType,
+  Tag,
   Tooltip,
 } from "antd";
 import saveAs from "file-saver";
@@ -63,11 +64,11 @@ import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
+import Colors from "@/utility/Colors";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import TemplateForms from "./workloads/TemplateForms";
-import Colors from "@/utility/Colors";
 dayjs.locale("vi");
 
 type SearchProps = GetProps<typeof Input.Search>;
@@ -206,7 +207,7 @@ const BM04 = () => {
       dataIndex: "proof",
       key: "proof",
       render: (proof: string, record: QAItem) => {
-        const ngayLap = record.fromDate;
+        const ngayLap = record.determinations.fromDate;
         return (
           <div className="flex flex-col">
             <span className="text-center font-medium">{proof}</span>
@@ -231,9 +232,11 @@ const BM04 = () => {
           render: (_, record: QAItem) => {
             return (
               <>
-                {record.fromDate ? (
+                {record.determinations.fromDate ? (
                   <div className="flex flex-col">
-                    <span>{convertTimestampToDate(record.fromDate)}</span>
+                    <span>
+                      {convertTimestampToDate(record.determinations.fromDate)}
+                    </span>
                   </div>
                 ) : (
                   ""
@@ -250,9 +253,11 @@ const BM04 = () => {
           render: (_, record: QAItem) => {
             return (
               <>
-                {record.toDate ? (
+                {record.determinations.toDate ? (
                   <div className="flex flex-col">
-                    <span>{convertTimestampToDate(record.toDate)}</span>
+                    <span>
+                      {convertTimestampToDate(record.determinations.toDate)}
+                    </span>
                   </div>
                 ) : (
                   ""
@@ -270,27 +275,57 @@ const BM04 = () => {
           TÀI LIỆU <br /> ĐÍNH KÈM
         </div>
       ),
-      dataIndex: ["attackment", "path"],
-      key: "path",
+      dataIndex: "file",
+      key: "file",
       className: "customInfoColors text-center w-[100px]",
-      sorter: (a, b) => a.attackment?.path.localeCompare(b.attackment?.path),
-      render: (path: string) => {
+      render: (_, item: QAItem) => {
+        const path = item.determinations.files[0]?.path;
         return path !== "" && path !== undefined ? (
           <>
             <Link
               href={"https://api-annual.uef.edu.vn/" + path}
               target="__blank"
             >
-              <p className="text-green-500">
+              <span className="text-green-500">
                 <CheckOutlined />
-              </p>
+              </span>
             </Link>
           </>
         ) : (
           <>
-            <p className="text-red-400">
+            <span className="text-red-400">
               <CloseOutlined />
-            </p>
+            </span>
+          </>
+        );
+      },
+    },
+    {
+      title: (
+        <div className="p-1">
+          SỐ LƯU <br /> VĂN BẢN
+        </div>
+      ),
+      dataIndex: "internalNumber",
+      key: "internalNumber",
+      className: "customInfoColors text-center w-[70px]",
+      render: (internalNumber: string, item: QAItem) => {
+        const path = item.determinations.files[0]?.path;
+        return (
+          <>
+            {item.determinations.internalNumber && (
+              <>
+                <span className="ml-2">
+                  <Tag
+                    color={`${
+                      path !== "" && path !== undefined ? "blue" : "error"
+                    }`}
+                  >
+                    {item.determinations.internalNumber}
+                  </Tag>
+                </span>
+              </>
+            )}
           </>
         );
       },
@@ -377,7 +412,8 @@ const BM04 = () => {
         : true;
       const matchesDate =
         startDate && endDate
-          ? item.fromDate >= startDate && item.toDate <= endDate
+          ? item.determinations.fromDate >= startDate &&
+            item.determinations.toDate <= endDate
           : true;
       return matchesName && matchesUnit && matchesDate;
     });
@@ -552,11 +588,13 @@ const BM04 = () => {
           item.contents ?? "",
           item.totalStudent,
           item.standardNumber,
-          item.proof + ", " + convertTimestampToDate(item.documentDate),
-          item.fromDate && item.toDate
-            ? convertTimestampToDate(item.fromDate) +
+          item.determinations.documentNumber +
+            ", " +
+            convertTimestampToDate(item.determinations.documentDate),
+          item.determinations.fromDate && item.determinations.toDate
+            ? convertTimestampToDate(item.determinations.fromDate) +
               " - " +
-              convertTimestampToDate(item.toDate)
+              convertTimestampToDate(item.determinations.toDate)
             : "",
           item.note ?? "",
         ]),
@@ -1091,9 +1129,9 @@ const BM04 = () => {
                   onClick={handleExportExcel}
                   iconPosition="start"
                   style={{
-                    backgroundColor: "#52c41a",
-                    borderColor: "#52c41a",
-                    color: "#fff",
+                    backgroundColor: Colors.GREEN,
+                    borderColor: Colors.GREEN,
+                    color: Colors.WHITE,
                   }}
                 >
                   Xuất Excel
@@ -1145,7 +1183,7 @@ const BM04 = () => {
         />
         <CustomModal
           isOpen={isOpen}
-          width={isShowPdf ? "85vw" : "800px"}
+          width={isShowPdf ? "85vw" : "1000px"}
           title={
             mode === "edit" ? Messages.TITLE_UPDATE_QAE : Messages.TITLE_ADD_QAE
           }

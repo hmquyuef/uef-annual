@@ -39,6 +39,7 @@ import {
   MenuProps,
   Select,
   TableColumnsType,
+  Tag,
   Tooltip,
 } from "antd";
 import { Key, useCallback, useEffect, useState } from "react";
@@ -54,10 +55,10 @@ import { jwtDecode } from "jwt-decode";
 import Link from "next/link";
 import * as XLSX from "sheetjs-style";
 
+import Colors from "@/utility/Colors";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
-import Colors from "@/utility/Colors";
 dayjs.locale("vi");
 
 const BM08 = () => {
@@ -146,7 +147,7 @@ const BM08 = () => {
       dataIndex: "documentNumber",
       key: "documentNumber",
       render: (documentNumber: string, record: LaborUnionItem) => {
-        const ngayLap = record.documentDate;
+        const ngayLap = record.determinations.documentDate;
         return (
           <div className="flex flex-col">
             <span className="text-center font-medium">{documentNumber}</span>
@@ -178,9 +179,11 @@ const BM08 = () => {
           render: (_, record: LaborUnionItem) => {
             return (
               <>
-                {record.fromDate ? (
+                {record.determinations.fromDate ? (
                   <div className="flex flex-col">
-                    <span>{convertTimestampToDate(record.fromDate)}</span>
+                    <span>
+                      {convertTimestampToDate(record.determinations.fromDate)}
+                    </span>
                   </div>
                 ) : (
                   ""
@@ -201,9 +204,11 @@ const BM08 = () => {
           render: (_, record: LaborUnionItem) => {
             return (
               <>
-                {record.toDate ? (
+                {record.determinations.toDate ? (
                   <div className="flex flex-col">
-                    <span>{convertTimestampToDate(record.toDate)}</span>
+                    <span>
+                      {convertTimestampToDate(record.determinations.toDate)}
+                    </span>
                   </div>
                 ) : (
                   ""
@@ -242,16 +247,17 @@ const BM08 = () => {
           TÀI LIỆU <br /> ĐÍNH KÈM
         </div>
       ),
-      dataIndex: ["attackmentFile", "path"],
-      key: "path",
-      className: "text-center w-[110px]",
-      sorter: (a, b) =>
-        a.attackmentFile?.path.localeCompare(b.attackmentFile?.path),
-      render: (path: string) => {
-        return path !== "" && path !== undefined ? (
+      dataIndex: "file",
+      key: "file",
+      className: "customInfoColors text-center w-[110px]",
+      render: (_, item: LaborUnionItem) => {
+        const file = item.determinations.files.find(
+          (x) => x.type === "application/pdf"
+        );
+        return file && file !== undefined ? (
           <>
             <Link
-              href={"https://api-annual.uef.edu.vn/" + path}
+              href={"https://api-annual.uef.edu.vn/" + file.path}
               target="__blank"
             >
               <span className="text-green-500">
@@ -264,6 +270,36 @@ const BM08 = () => {
             <span className="text-red-400">
               <CloseOutlined />
             </span>
+          </>
+        );
+      },
+    },
+    {
+      title: (
+        <div className="p-1">
+          SỐ LƯU <br /> VĂN BẢN
+        </div>
+      ),
+      dataIndex: "internalNumber",
+      key: "internalNumber",
+      className: "customInfoColors text-center w-[70px]",
+      render: (_, item: LaborUnionItem) => {
+        const path = item.determinations.files[0]?.path;
+        return (
+          <>
+            {item.determinations.internalNumber && (
+              <>
+                <span className="ml-2">
+                  <Tag
+                    color={`${
+                      path !== "" && path !== undefined ? "blue" : "error"
+                    }`}
+                  >
+                    {item.determinations.internalNumber}
+                  </Tag>
+                </span>
+              </>
+            )}
           </>
         );
       },
@@ -318,7 +354,8 @@ const BM08 = () => {
         .includes(value.toLowerCase());
       const matchesDate =
         startDate && endDate
-          ? item.entryDate >= startDate && item.entryDate <= endDate
+          ? item.determinations.entryDate >= startDate &&
+            item.determinations.entryDate <= endDate
           : true;
       return matchesName && matchesDate;
     });
@@ -913,8 +950,8 @@ const BM08 = () => {
         width={isShowPdf ? "85vw" : "900px"}
         title={
           mode === "edit"
-            ? Messages.TITLE_UPDATE_CLASSLEADER
-            : Messages.TITLE_ADD_CLASSLEADER
+            ? Messages.TITLE_UPDATE_LABORS_UNION
+            : Messages.TITLE_ADD_LABORS_UNION
         }
         onOk={() => {
           const formElement = document.querySelector("form");

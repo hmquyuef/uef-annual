@@ -7,7 +7,6 @@ import {
   UsersFromHRMResponse,
 } from "@/services/users/usersServices";
 import { ConfigProvider, DatePicker, Input, InputNumber, Select } from "antd";
-import moment from "moment";
 import { FC, FormEvent, Key, useEffect, useState } from "react";
 
 import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
@@ -28,7 +27,6 @@ const FormBM13: FC<FormBM13Props> = (props) => {
   const { TextArea } = Input;
   const timestamp = dayjs().tz("Asia/Ho_Chi_Minh").unix();
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [entryDate, setEntryDate] = useState<number>(0);
   const [units, setUnits] = useState<UnitItem[]>([]);
   const [defaultUnits, setDefaultUnits] = useState<UnitItem[]>([]);
   const [users, setUsers] = useState<UsersFromHRMResponse | undefined>(
@@ -73,9 +71,6 @@ const FormBM13: FC<FormBM13Props> = (props) => {
   };
 
   const ResetForms = () => {
-    const formattedDate = moment().format("DD/MM/YYYY");
-    const timestamp = moment(formattedDate, "DD/MM/YYYY").valueOf();
-    setEntryDate(timestamp);
     setDefaultUnits([]);
     setDefaultUsers([]);
     setSelectedKey(null);
@@ -119,9 +114,7 @@ const FormBM13: FC<FormBM13Props> = (props) => {
     };
     getListUnits();
     loadUsers();
-    const timeoutId = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
+    const timeoutId = setTimeout(() => {}, 500);
     return () => clearTimeout(timeoutId);
   }, [initialData, mode]);
 

@@ -14,23 +14,22 @@ import {
   Progress,
   Select,
 } from "antd";
-import moment from "moment";
 import { FC, FormEvent, Key, useEffect, useState } from "react";
 
+import CustomNotification from "@/components/CustomNotification";
+import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
 import { DisplayRoleItem } from "@/services/roles/rolesServices";
 import {
   deleteFiles,
   FileItem,
   postFiles,
 } from "@/services/uploads/uploadsServices";
+import { CloudUploadOutlined, MinusCircleOutlined } from "@ant-design/icons";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import { useDropzone } from "react-dropzone";
-import { CloudUploadOutlined, MinusCircleOutlined } from "@ant-design/icons";
-import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
 import InfoPDF from "./infoPDF";
-import CustomNotification from "@/components/CustomNotification";
 dayjs.locale("vi");
 interface FormBM07Props {
   onSubmit: (formData: Partial<any>) => void;

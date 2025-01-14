@@ -1,5 +1,5 @@
 import apiClient from "../apiClient";
-import { AttackmentItem } from "./Attackment";
+import { Determinations } from "./Determinations";
 import { ImportResponse } from "./formsServices";
 import { PaymentApprovedItem } from "./PaymentApprovedItem";
 
@@ -11,13 +11,8 @@ export interface QAItem {
   contents: string;
   totalStudent: number;
   standardNumber: number;
-  fromDate: number;
-  toDate: number;
-  entryDate: number;
-  documentDate: number;
-  attackment: AttackmentItem;
+  determinations: Determinations;
   payments: PaymentApprovedItem;
-  proof: string;
   note: string;
 }
 

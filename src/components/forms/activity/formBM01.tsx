@@ -2,7 +2,6 @@
 
 import CustomNotification from "@/components/CustomNotification";
 import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
-import { ClassLeaderItem } from "@/services/forms/classLeadersServices";
 import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 import { DisplayRoleItem } from "@/services/roles/rolesServices";
 import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
@@ -38,9 +37,9 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 interface FormBM01Props {
-  onSubmit: (formData: Partial<ClassLeaderItem>) => void;
+  onSubmit: (formData: Partial<any>) => void;
   handleShowPDF: (isVisible: boolean) => void;
-  initialData?: Partial<ClassLeaderItem>;
+  initialData?: Partial<any>;
   mode: "add" | "edit";
   isBlock: boolean;
   isPayment?: PaymentApprovedItem;
@@ -90,17 +89,18 @@ const FormBM01: FC<FormBM01Props> = (props) => {
     course: "",
     classCode: "",
     standardValues: 0,
+    documentNumber: "",
+    internalNumber: "",
+    documentDate: 0,
     fromDate: 0,
     toDate: 0,
     entryDate: timestamp,
-    documentDate: 0,
-    attackment: {
+    attackmentFile: {
       type: "",
       path: "",
       name: "",
       size: 0,
     },
-    proof: "",
     note: "",
   });
 
@@ -187,7 +187,7 @@ const FormBM01: FC<FormBM01Props> = (props) => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const tempUser = users?.items?.find((user) => user.id === selectedKey);
-    const formData: Partial<ClassLeaderItem> = {
+    const formData: Partial<any> = {
       id: initialData?.id || "",
       userName: mode !== "edit" ? tempUser?.userName : defaultUsers[0].userName,
       fullName: mode !== "edit" ? tempUser?.fullName : defaultUsers[0].fullName,
@@ -197,17 +197,22 @@ const FormBM01: FC<FormBM01Props> = (props) => {
       course: formValues.course,
       classCode: formValues.classCode,
       standardNumber: formValues.standardValues,
-      fromDate: formValues.fromDate,
-      toDate: formValues.toDate,
-      entryDate: formValues.entryDate,
-      documentDate: formValues.documentDate,
-      attackment: {
-        type: listPicture?.type ?? "",
-        path: listPicture?.path ?? "",
-        name: listPicture?.name ?? "",
-        size: listPicture?.size ?? 0,
+      determinations: {
+        documentNumber: formValues.documentNumber,
+        internalNumber: formValues.internalNumber,
+        documentDate: formValues.documentDate,
+        fromDate: formValues.fromDate,
+        toDate: formValues.toDate,
+        entryDate: formValues.entryDate,
+        files: [
+          {
+            type: listPicture?.type ?? "",
+            path: listPicture?.path ?? "",
+            name: listPicture?.name ?? "",
+            size: listPicture?.size ?? 0,
+          },
+        ],
       },
-      proof: formValues.proof,
       note: formValues.note,
     };
     onSubmit(formData);
@@ -221,17 +226,18 @@ const FormBM01: FC<FormBM01Props> = (props) => {
       course: "",
       classCode: "",
       standardValues: 0,
+      documentNumber: "",
+      internalNumber: "",
+      documentDate: 0,
       fromDate: 0,
       toDate: 0,
       entryDate: timestamp,
-      documentDate: 0,
-      attackment: {
+      attackmentFile: {
         type: "",
         path: "",
         name: "",
         size: 0,
       },
-      proof: "",
       note: "",
     });
     setDefaultUnits([]);
@@ -263,20 +269,21 @@ const FormBM01: FC<FormBM01Props> = (props) => {
           course: initialData?.course || "",
           classCode: initialData?.classCode || "",
           standardValues: initialData?.standardNumber || 0,
-          fromDate: initialData?.fromDate || 0,
-          toDate: initialData?.toDate || 0,
-          entryDate: initialData?.entryDate ? initialData.entryDate : timestamp,
-          documentDate: initialData?.documentDate || 0,
-          attackment: {
-            type: initialData?.attackment?.type || "",
-            path: initialData?.attackment?.path || "",
-            name: initialData?.attackment?.name || "",
-            size: initialData?.attackment?.size || 0,
+          documentNumber: initialData?.determinations.documentNumber || "",
+          internalNumber: initialData?.determinations.internalNumber || "",
+          documentDate: initialData?.determinations.documentDate || 0,
+          fromDate: initialData?.determinations.fromDate || 0,
+          toDate: initialData?.determinations.toDate || 0,
+          entryDate: initialData?.determinations.entryDate ? initialData.determinations.entryDate : timestamp,
+          attackmentFile: {
+            type: initialData?.determinations.files[0]?.type || "",
+            path: initialData?.determinations.files[0]?.path || "",
+            name: initialData?.determinations.files[0]?.name || "",
+            size: initialData?.determinations.files[0]?.size || 0,
           },
-          proof: initialData?.proof || "",
           note: initialData?.note || "",
         });
-        setListPicture(initialData?.attackment || undefined);
+        setListPicture(initialData?.determinations.files[0] || undefined);
       } else {
         resetForm();
         setUnits(units.items);
@@ -303,16 +310,15 @@ const FormBM01: FC<FormBM01Props> = (props) => {
         <>
           <form onSubmit={handleSubmit}>
             <hr className="mt-1 mb-3" />
-            <div className="grid grid-cols-5 gap-6 mb-2">
+            <div className="grid grid-cols-6 gap-6 mb-2">
               <div className="flex flex-col gap-1">
                 <span className="font-medium text-neutral-600">Số văn bản</span>
-                <TextArea
-                  autoSize
-                  value={formValues.proof}
+                <Input
+                  value={formValues.documentNumber}
                   onChange={(e) => {
                     setFormValues((prev) => ({
                       ...prev,
-                      proof: e.target.value,
+                      documentNumber: e.target.value,
                     }));
                   }}
                 />
@@ -389,6 +395,20 @@ const FormBM01: FC<FormBM01Props> = (props) => {
                 </ConfigProvider>
               </div>
               <div className="flex flex-col gap-1">
+                <span className="font-medium text-neutral-600">
+                  Số lưu văn bản
+                </span>
+                <Input
+                  value={formValues.internalNumber}
+                  onChange={(e) => {
+                    setFormValues((prev) => ({
+                      ...prev,
+                      internalNumber: e.target.value,
+                    }));
+                  }}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
                 <span className="font-medium text-neutral-600">Ngày nhập</span>
                 <ConfigProvider locale={locale}>
                   <DatePicker
@@ -406,7 +426,7 @@ const FormBM01: FC<FormBM01Props> = (props) => {
                 </ConfigProvider>
               </div>
             </div>
-            <div className="grid grid-cols-5 gap-6 mb-2">
+            <div className="grid grid-cols-6 gap-6 mb-2">
               <div className="flex flex-col gap-1">
                 <span className="font-medium text-neutral-600">
                   Số tiết chuẩn
@@ -449,18 +469,6 @@ const FormBM01: FC<FormBM01Props> = (props) => {
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="font-medium text-neutral-600">Ngành</span>
-                <Input
-                  value={formValues.subject}
-                  onChange={(e) => {
-                    setFormValues((prev) => ({
-                      ...prev,
-                      subject: e.target.value,
-                    }));
-                  }}
-                />
-              </div>
-              <div className="flex flex-col gap-1">
                 <span className="font-medium text-neutral-600">Mã lớp</span>
                 <Input
                   value={formValues.classCode}
@@ -468,6 +476,18 @@ const FormBM01: FC<FormBM01Props> = (props) => {
                     setFormValues((prev) => ({
                       ...prev,
                       classCode: e.target.value,
+                    }));
+                  }}
+                />
+              </div>
+              <div className="col-span-2 flex flex-col gap-1">
+                <span className="font-medium text-neutral-600">Ngành</span>
+                <Input
+                  value={formValues.subject}
+                  onChange={(e) => {
+                    setFormValues((prev) => ({
+                      ...prev,
+                      subject: e.target.value,
                     }));
                   }}
                 />

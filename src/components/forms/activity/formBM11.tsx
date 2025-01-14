@@ -290,26 +290,30 @@ const FormBM11: FC<FormBM11Props> = (props) => {
     const formData: Partial<any> = {
       id: initialData?.id || "",
       contents: formValues.contents,
-      documentNumber: formValues.documentNumber,
-      internalNumber: formValues.internalNumber,
-      documentDate: formValues.documentDate,
-      fromDate: formValues.fromDate,
-      toDate: formValues.toDate,
-      entryDate: formValues.entryDate,
       eventVenue: formValues.eventVenue,
       sponsor: formValues.sponsor,
       members: members,
-      attackmentFile: {
-        type: pdf?.type ?? "",
-        path: pdf?.path ?? "",
-        name: pdf?.name ?? "",
-        size: pdf?.size ?? 0,
-      },
-      attackmentExcel: {
-        type: participants?.type ?? "",
-        path: participants?.path ?? "",
-        name: participants?.name ?? "",
-        size: participants?.size ?? 0,
+      determinations: {
+        documentNumber: formValues.documentNumber,
+        internalNumber: formValues.internalNumber,
+        documentDate: formValues.documentDate,
+        fromDate: formValues.fromDate,
+        toDate: formValues.toDate,
+        entryDate: formValues.entryDate,
+        files: [
+          {
+            type: pdf?.type ?? "",
+            path: pdf?.path ?? "",
+            name: pdf?.name ?? "",
+            size: pdf?.size ?? 0,
+          },
+          {
+            type: participants?.type ?? "",
+            path: participants?.path ?? "",
+            name: participants?.name ?? "",
+            size: participants?.size ?? 0,
+          },
+        ],
       },
       note: formValues.note,
     };
@@ -320,28 +324,26 @@ const FormBM11: FC<FormBM11Props> = (props) => {
     setIsLoading(true);
     const loadUsers = async () => {
       if (mode === "edit" && initialData !== undefined) {
+        const file = initialData.determinations.files.find(
+          (x: { type: string }) => x.type === "application/pdf"
+        );
+        const excel = initialData.determinations.files.find(
+          (x: { type: string }) => x.type === "application/pdf"
+        );
         setFormValues({
           contents: initialData.contents || "",
-          documentNumber: initialData.documentNumber || "",
-          internalNumber: initialData.internalNumber || "",
-          documentDate: initialData.documentDate || 0,
-          fromDate: initialData.fromDate || 0,
-          toDate: initialData.toDate || 0,
-          entryDate: initialData?.entryDate ? initialData.entryDate : timestamp,
+          documentNumber: initialData.determinations.documentNumber || "",
+          internalNumber: initialData.determinations.internalNumber || "",
+          documentDate: initialData.determinations.documentDate || 0,
+          fromDate: initialData.determinations.fromDate || 0,
+          toDate: initialData.determinations.toDate || 0,
+          entryDate: initialData?.determinations.entryDate
+            ? initialData.determinations.entryDate
+            : timestamp,
           eventVenue: initialData.eventVenue || "",
           sponsor: initialData.sponsor || "",
-          attackmentFile: {
-            type: initialData.attackmentFile?.type || "",
-            path: initialData.attackmentFile?.path || "",
-            name: initialData.attackmentFile?.name || "",
-            size: initialData.attackmentFile?.size || 0,
-          },
-          attackmentExcel: {
-            type: initialData.attackmentExcel?.type || "",
-            path: initialData.attackmentExcel?.path || "",
-            name: initialData.attackmentExcel?.name || "",
-            size: initialData.attackmentExcel?.size || 0,
-          },
+          attackmentFile: file,
+          attackmentExcel: excel,
           note: initialData.note || "",
         });
         setMembers(initialData.members);
@@ -498,29 +500,31 @@ const FormBM11: FC<FormBM11Props> = (props) => {
                 }
               />
             </div>
-            <div className="flex flex-col gap-1 mb-2">
-              <span className="font-medium text-neutral-600">
-                Địa điểm tổ chức
-              </span>
-              <TextArea
-                autoSize
-                value={formValues.eventVenue}
-                onChange={(e) =>
-                  setFormValues({ ...formValues, eventVenue: e.target.value })
-                }
-              />
-            </div>
-            <div className="flex flex-col gap-1 mb-2">
-              <span className="font-medium text-neutral-600">
-                Đơn vị tài trợ
-              </span>
-              <TextArea
-                autoSize
-                value={formValues.sponsor}
-                onChange={(e) =>
-                  setFormValues({ ...formValues, sponsor: e.target.value })
-                }
-              />
+            <div className="grid grid-cols-2 gap-6 mb-2">
+              <div className="flex flex-col gap-1">
+                <span className="font-medium text-neutral-600">
+                  Địa điểm tổ chức
+                </span>
+                <TextArea
+                  autoSize
+                  value={formValues.eventVenue}
+                  onChange={(e) =>
+                    setFormValues({ ...formValues, eventVenue: e.target.value })
+                  }
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="font-medium text-neutral-600">
+                  Đơn vị tài trợ
+                </span>
+                <TextArea
+                  autoSize
+                  value={formValues.sponsor}
+                  onChange={(e) =>
+                    setFormValues({ ...formValues, sponsor: e.target.value })
+                  }
+                />
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-6 mb-2">
               <div className="flex flex-col gap-1">

@@ -39,6 +39,7 @@ import {
   MenuProps,
   Select,
   TableColumnsType,
+  Tag,
   Tooltip,
 } from "antd";
 import Link from "next/link";
@@ -54,10 +55,10 @@ import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import * as XLSX from "sheetjs-style";
 
+import Colors from "@/utility/Colors";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
-import Colors from "@/utility/Colors";
 dayjs.locale("vi");
 
 const BM11 = () => {
@@ -146,7 +147,7 @@ const BM11 = () => {
       dataIndex: "documentNumber",
       key: "documentNumber",
       render: (documentNumber: string, record: SchoolLevelItem) => {
-        const ngayLap = record.documentDate;
+        const ngayLap = record.determinations.documentDate;
         return (
           <div className="flex flex-col">
             <span className="text-center font-medium">{documentNumber}</span>
@@ -178,9 +179,11 @@ const BM11 = () => {
           render: (_, record: SchoolLevelItem) => {
             return (
               <>
-                {record.fromDate ? (
+                {record.determinations.fromDate ? (
                   <div className="flex flex-col">
-                    <span>{convertTimestampToDate(record.fromDate)}</span>
+                    <span>
+                      {convertTimestampToDate(record.determinations.fromDate)}
+                    </span>
                   </div>
                 ) : (
                   ""
@@ -201,9 +204,11 @@ const BM11 = () => {
           render: (_, record: SchoolLevelItem) => {
             return (
               <>
-                {record.toDate ? (
+                {record.determinations.toDate ? (
                   <div className="flex flex-col">
-                    <span>{convertTimestampToDate(record.toDate)}</span>
+                    <span>
+                      {convertTimestampToDate(record.determinations.toDate)}
+                    </span>
                   </div>
                 ) : (
                   ""
@@ -244,9 +249,7 @@ const BM11 = () => {
       ),
       dataIndex: ["attackmentFile", "path"],
       key: "path",
-      className: "text-center w-[110px]",
-      sorter: (a, b) =>
-        a.attackmentFile?.path.localeCompare(b.attackmentFile?.path),
+      className: "customInfoColors text-center w-[110px]",
       render: (path: string) => {
         return path !== "" && path !== undefined ? (
           <>
@@ -264,6 +267,36 @@ const BM11 = () => {
             <span className="text-red-400">
               <CloseOutlined />
             </span>
+          </>
+        );
+      },
+    },
+    {
+      title: (
+        <div className="p-1">
+          SỐ LƯU <br /> VĂN BẢN
+        </div>
+      ),
+      dataIndex: "internalNumber",
+      key: "internalNumber",
+      className: "customInfoColors text-center w-[70px]",
+      render: (internalNumber: string, item: SchoolLevelItem) => {
+        const path = item.determinations.Files[0]?.path;
+        return (
+          <>
+            {internalNumber && (
+              <>
+                <span className="ml-2">
+                  <Tag
+                    color={`${
+                      path !== "" && path !== undefined ? "blue" : "error"
+                    }`}
+                  >
+                    {internalNumber}
+                  </Tag>
+                </span>
+              </>
+            )}
           </>
         );
       },
@@ -318,7 +351,7 @@ const BM11 = () => {
         .includes(value.toLowerCase());
       const matchesDate =
         startDate && endDate
-          ? item.entryDate >= startDate && item.entryDate <= endDate
+          ? item.determinations.fromDate >= startDate && item.determinations.toDate <= endDate
           : true;
       return matchesName && matchesDate;
     });

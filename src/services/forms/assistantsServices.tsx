@@ -1,5 +1,5 @@
 import apiClient from "../apiClient";
-import { AttackmentItem } from "./Attackment";
+import { Determinations } from "./Determinations";
 import { ImportResponse } from "./formsServices";
 import { PaymentApprovedItem } from "./PaymentApprovedItem";
 
@@ -12,13 +12,8 @@ export interface ClassAssistantItem {
   activityName: string;
   classCode: string;
   standardNumber: number;
-  fromDate: number;
-  toDate: number;
-  entryDate: number;
-  documentDate: number;
-  attackment: AttackmentItem;
+  determinations: Determinations;
   payments: PaymentApprovedItem;
-  proof: string;
   note: string;
 }
 

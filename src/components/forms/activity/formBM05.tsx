@@ -1,5 +1,7 @@
 "use client";
 
+import CustomNotification from "@/components/CustomNotification";
+import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
 import {
   ActivityInput,
   AddUpdateActivityItem,
@@ -41,8 +43,6 @@ import { FC, FormEvent, Key, useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import InfoApproved from "./infoApproved";
 import InfoPDF from "./infoPDF";
-import CustomNotification from "@/components/CustomNotification";
-import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
 dayjs.locale("vi");
 interface FormBM05Props {
   onSubmit: (formData: Partial<AddUpdateActivityItem>) => void;
@@ -323,16 +323,20 @@ const FormBM05: FC<FormBM05Props> = ({
       id: initialData?.id || "",
       name: name,
       determinations: {
-        number: deterNumber,
+        documentNumber: deterNumber,
+        internalNumber: documentNumber,
+        documentDate: deterEventDate / 1000,
         fromDate: deterFromDate / 1000,
-        eventDate: deterEventDate / 1000,
-        entryDate: deterEntryDate ,
-        file: {
-          type: listPicture?.type ?? "",
-          path: listPicture?.path ?? "",
-          name: listPicture?.name ?? "",
-          size: listPicture?.size ?? 0,
-        },
+        toDate: deterFromDate / 1000,
+        entryDate: deterEntryDate,
+        files: [
+          {
+            type: listPicture?.type ?? "",
+            path: listPicture?.path ?? "",
+            name: listPicture?.name ?? "",
+            size: listPicture?.size ?? 0,
+          },
+        ],
       },
       participants: tableUsers.map((user) => ({
         id: user.id,
@@ -343,7 +347,6 @@ const FormBM05: FC<FormBM05Props> = ({
         standardNumber: user.standardNumber,
         description: user.description,
       })),
-      documentNumber: documentNumber,
     };
     onSubmit(formData);
   };
@@ -364,16 +367,20 @@ const FormBM05: FC<FormBM05Props> = ({
       setIsLoading(true);
       if (mode === "edit" && initialData !== undefined) {
         setName(initialData.name || "");
-        setDeterNumber(initialData.determinations?.number || "");
+        setDeterNumber(initialData.determinations?.documentNumber || "");
         setDeterEntryDate(
           initialData.determinations?.entryDate
             ? new Date(initialData.determinations.entryDate * 1000).getTime()
             : 0
         );
-        setDeterEntryDate(initialData.determinations?.entryDate ? initialData.determinations?.entryDate : timestamp)
+        setDeterEntryDate(
+          initialData.determinations?.entryDate
+            ? initialData.determinations?.entryDate
+            : timestamp
+        );
         setDeterEventDate(
-          initialData.determinations?.eventDate
-            ? new Date(initialData.determinations.eventDate * 1000).getTime()
+          initialData.determinations?.documentDate
+            ? new Date(initialData.determinations.documentDate * 1000).getTime()
             : 0
         );
         setDeterFromDate(
@@ -384,10 +391,10 @@ const FormBM05: FC<FormBM05Props> = ({
         if (initialData.participants && initialData.participants.length > 0) {
           setTableUsers(initialData.participants);
         }
-        if (initialData.determinations?.file !== null) {
+        if (initialData.determinations?.files[0] !== null) {
           setListPicture(
-            initialData.determinations?.file
-              ? initialData.determinations.file
+            initialData.determinations?.files[0]
+              ? initialData.determinations.files[0]
               : undefined
           );
         }
