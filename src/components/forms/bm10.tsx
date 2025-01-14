@@ -281,7 +281,7 @@ const BM10 = () => {
       key: "internalNumber",
       className: "customInfoColors text-center w-[70px]",
       render: (internalNumber: string, item: CharitableItem) => {
-        const path = item.determinations.Files[0]?.path;
+        const path = item.determinations.files[0]?.path;
         return (
           <>
             {internalNumber && (
