@@ -853,7 +853,7 @@ const BM04 = () => {
       setFormNotification((prev) => ({
         ...prev,
         isOpen: true,
-        status: "error",
+        status: "success",
         message: "Thông báo",
       }));
       await getListQAs(selectedKey.id);

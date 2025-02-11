@@ -209,7 +209,7 @@ const FromUpload: FC<FromUploadProps> = ({
                       link.click();
                     }}
                   >
-                    Tải xuống mẫu template-import-{formName}.xlsx
+                    Tải xuống mẫu template-{formName}.xlsx
                   </Button>
                 </div>
               </>

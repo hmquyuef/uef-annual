@@ -130,7 +130,6 @@ const BM05 = () => {
 
   const getListActivities = async (yearId: string) => {
     const response = await getAllActivities(yearId);
-    console.log("response :>> ", response);
     setActivities(response.items);
     setData(response.items);
     setFormNotification((prev) => ({
@@ -744,7 +743,7 @@ const BM05 = () => {
       setFormNotification((prev) => ({
         ...prev,
         isOpen: true,
-        status: "error",
+        status: "success",
         message: "Thông báo",
       }));
       setSelectedRowKeys([]);

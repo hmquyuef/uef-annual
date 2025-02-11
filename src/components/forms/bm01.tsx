@@ -533,7 +533,7 @@ const BM01 = () => {
         setFormNotification((prev) => ({
           ...prev,
           isOpen: true,
-          status: "error",
+          status: "success",
           message: "Thông báo",
           description: `Tải lên thành công ${response.totalCount} thông tin chủ nhiệm lớp!`,
         }));
@@ -877,7 +877,7 @@ const BM01 = () => {
       setFormNotification((prev) => ({
         ...prev,
         isOpen: true,
-        status: "error",
+        status: "success",
         message: "Thông báo",
       }));
       await getListClassLeaders(selectedKey.id);

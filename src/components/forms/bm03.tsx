@@ -850,7 +850,7 @@ const BM03 = () => {
       setFormNotification((prev) => ({
         ...prev,
         isOpen: true,
-        status: "error",
+        status: "success",
         message: "Thông báo",
       }));
       setSelectedRowKeys([]);
