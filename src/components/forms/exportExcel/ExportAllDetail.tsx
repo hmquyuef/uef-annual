@@ -1,12 +1,5 @@
 import {
-  DetailUserItem,
-  ExportDetailForUser,
-  getDataExportByUserName,
-  ResultItemForBM01,
-  ResultItemForBM02,
-  ResultItemForBM03,
-  ResultItemForBM04,
-  ResultItemForBM05,
+  getDataExportByUserName
 } from "@/services/exports/exportDetailForUser";
 import {
   convertTimestampToDate,
@@ -818,13 +811,7 @@ export const handleExportForBMAll = async (formData: Partial<any>) => {
     2,
     "0"
   )}-${String(now.getMinutes()).padStart(2, "0")}`;
-  saveAs(
-    blob,
-    "Export-" + response.userName +
-      "-" +
-      formattedDate +
-      ".xlsx"
-  );
+  saveAs(blob, "Export-" + response.userName + "-" + formattedDate + ".xlsx");
 };
 export const handleExportForBMGeneral = async (formData: Partial<any>) => {
   const response = await getDataExportByUserName(formData);

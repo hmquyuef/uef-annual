@@ -17,7 +17,6 @@ import {
   Breadcrumb,
   Button,
   Collapse,
-  Descriptions,
   Divider,
   Empty,
   Select,
@@ -28,28 +27,23 @@ import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { useEffect, useState } from "react";
 
-import {
-  handleExportAll,
-  handleExportForBM,
-} from "@/components/forms/exportExcel/ExportAllDetail";
 import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
 import {
   DetailUserItem,
   getDataExportByUserName,
-  Item,
 } from "@/services/exports/exportDetailForUser";
-import { convertTimestampToDate } from "@/utility/Utilities";
-import dayjs from "dayjs";
-import "dayjs/locale/vi";
-import Colors from "@/utility/Colors";
-import { OtherItems } from "@/services/exports/OtherItems";
 import { GeneralItems } from "@/services/exports/GeneralItems";
+import { OtherItems } from "@/services/exports/OtherItems";
 import {
   Employees,
   Lecture,
   RegulationItems,
 } from "@/services/exports/RegulationItems";
 import { TrainingItems } from "@/services/exports/TrainingItems";
+import Colors from "@/utility/Colors";
+import { convertTimestampToDate } from "@/utility/Utilities";
+import dayjs from "dayjs";
+import "dayjs/locale/vi";
 dayjs.locale("vi");
 
 const WorkloadDetails = () => {
@@ -151,6 +145,10 @@ const WorkloadDetails = () => {
       key: "actions",
       className: "text-center w-[100px]",
       render: () => {
+        function handleExportAll(detailUser: DetailUserItem) {
+          throw new Error("Function not implemented.");
+        }
+
         return (
           <>
             <Button
@@ -788,6 +786,12 @@ const WorkloadDetails = () => {
                           <>
                             {groupGenerals &&
                               groupGenerals.map((group, index) => {
+                                function handleExportForBM(arg0: {
+                                  formName: string;
+                                }) {
+                                  throw new Error("Function not implemented.");
+                                }
+
                                 return (
                                   <>
                                     <Table<any>
@@ -869,6 +873,12 @@ const WorkloadDetails = () => {
                           <>
                             {groupOthers &&
                               groupOthers.map((group, index) => {
+                                function handleExportForBM(arg0: {
+                                  formName: string;
+                                }) {
+                                  throw new Error("Function not implemented.");
+                                }
+
                                 return (
                                   <>
                                     <Table<any>
