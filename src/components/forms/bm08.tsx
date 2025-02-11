@@ -3,6 +3,7 @@
 import {
   deleteLaborUnions,
   getAllLaborUnions,
+  getExportLaborUnion,
   ImportLaborUnions,
   LaborUnionItem,
   postLaborUnion,
@@ -146,11 +147,13 @@ const BM08 = () => {
       ),
       dataIndex: "documentNumber",
       key: "documentNumber",
-      render: (documentNumber: string, record: LaborUnionItem) => {
+      render: (_, record: LaborUnionItem) => {
         const ngayLap = record.determinations.documentDate;
         return (
           <div className="flex flex-col">
-            <span className="text-center font-medium">{documentNumber}</span>
+            <span className="text-center font-medium">
+              {record.determinations.documentNumber}
+            </span>
             <span className="text-center text-[13px]">
               {convertTimestampToDate(ngayLap)}
             </span>
@@ -484,11 +487,10 @@ const BM08 = () => {
   };
 
   const handleExportExcel = async () => {
-    if (data) {
-      const currentYear = new Date().getFullYear();
-      const nextYear = currentYear + 1;
+    const results = await getExportLaborUnion(selectedKey.id, null);
+    if (results) {
       const defaultInfo = [
-        ["", "", "", "", "", "", "", "", "", "", "", "BM-01"],
+        ["", "", "", "", "", "", "", "", "", "", "", "BM-08"],
         [
           "TRƯỜNG ĐẠI HỌC KINH TẾ - TÀI CHÍNH",
           "",
@@ -509,7 +511,9 @@ const BM08 = () => {
         ],
         ["(ĐƠN VỊ)", "", "", ""],
         ["TỔNG HỢP DANH SÁCH"],
-        [`Chủ nhiệm lớp trong năm học ${currentYear}-${nextYear}`],
+        [
+          "Tham gia các hoạt động do Công Đoàn tổ chức hoặc các hoạt động liên quan đến hoạt động Công Đoàn (Cấp trường, Đơn vị bạn)",
+        ],
         [""],
       ];
 
@@ -519,47 +523,35 @@ const BM08 = () => {
           "Mã số CB-GV-NV",
           "Họ và tên",
           "Đơn vị",
-          "Học kỳ",
-          "Số tiết chuẩn",
-          "Ngành",
-          "Khóa",
-          "Mã lớp",
+          "Nội dung hoạt động",
+          "",
+          "Địa điểm tổ chức",
+          "",
+          "Nhà tài trợ",
           "Số văn bản, ngày lập",
           "Thời gian hoạt động",
           "Ghi chú",
         ],
-        ...data.map((item, index) => [
+        ...results.data.map((item: any, index: number) => [
           index + 1,
           item.userName,
           item.fullName,
           item.unitName ?? "",
-          item.semester ?? "",
-          item.standardNumber,
-          item.subject ?? "",
-          item.course ?? "",
-          item.classCode ?? "",
-          item.proof + ", " + convertTimestampToDate(item.fromDate),
-          item.fromDate && item.toDate
-            ? convertTimestampToDate(item.fromDate) +
+          item.contents ?? "",
+          "",
+          item.eventVenue ?? "",
+          "",
+          item.sponsor ?? "",
+          item.determinations.documentNumber +
+            ", " +
+            convertTimestampToDate(item.determinations.documentDate),
+          item.determinations.fromDate !== 0 && item.determinations.toDate !== 0
+            ? convertTimestampToDate(item.determinations.fromDate) +
               " - " +
-              convertTimestampToDate(item.toDate)
+              convertTimestampToDate(item.determinations.toDate)
             : "",
           item.note ?? "",
         ]),
-        [
-          "TỔNG SỐ TIẾT CHUẨN",
-          "",
-          "",
-          "",
-          "",
-          `${data.reduce((acc, x) => acc + x.standardNumber, 0)}`,
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-        ],
       ];
 
       const combinedData = [...defaultInfo, ...dataArray];
@@ -624,10 +616,9 @@ const BM08 = () => {
       worksheet["!merges"] = [];
       const tempMerge = [];
       const range = XLSX.utils.decode_range(worksheet["!ref"]!);
-      for (let row = 7; row <= range.e.r; row++) {
-        if (row === combinedData.length - 1) {
-          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 4 } });
-        }
+      for (let row = 7; row <= combinedData.length - 1; row++) {
+        tempMerge.push({ s: { r: row, c: 4 }, e: { r: row, c: 5 } });
+        tempMerge.push({ s: { r: row, c: 6 }, e: { r: row, c: 7 } });
         for (let col = range.s.c; col <= range.e.c; col++) {
           const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
           if (row === 7) {
@@ -666,28 +657,12 @@ const BM08 = () => {
               true
             );
           }
-          if (row === combinedData.length - 1) {
-            setCellStyle(
-              worksheet,
-              cellRef,
-              11,
-              true,
-              "center",
-              "center",
-              true,
-              true
-            );
-          }
         }
       }
 
-      for (
-        let row = range.e.r - defaultFooterInfo.length + 1;
-        row <= range.e.r;
-        row++
-      ) {
+      for (let row = combinedData.length + 1; row <= range.e.r; row++) {
         if (row < range.e.r)
-          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 11 } });
+          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 9 } });
         else {
           tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 3 } });
           tempMerge.push({ s: { r: row, c: 8 }, e: { r: row, c: 9 } });
@@ -755,7 +730,8 @@ const BM08 = () => {
       ).padStart(2, "0")}-${now.getFullYear()}-${String(
         now.getHours()
       ).padStart(2, "0")}-${String(now.getMinutes()).padStart(2, "0")}`;
-      saveAs(blob, "BM01-" + formattedDate + ".xlsx");
+      let filename = "BM08-" + formattedDate + ".xlsx";
+      saveAs(blob, filename);
     }
   };
 

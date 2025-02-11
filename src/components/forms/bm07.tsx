@@ -25,6 +25,8 @@ import {
 } from "@/utility/Utilities";
 import {
   ArrowsAltOutlined,
+  CheckOutlined,
+  CloseOutlined,
   DeleteOutlined,
   FileExcelOutlined,
   PlusOutlined,
@@ -40,6 +42,7 @@ import {
   MenuProps,
   Select,
   TableColumnsType,
+  Tag,
   Tooltip,
 } from "antd";
 import { AnimatePresence, motion } from "motion/react";
@@ -58,6 +61,7 @@ import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import * as XLSX from "sheetjs-style";
+import Link from "next/link";
 dayjs.locale("vi");
 
 const BM07 = () => {
@@ -196,6 +200,67 @@ const BM07 = () => {
       ),
       className: "text-center w-[120px]",
     },
+    {
+      title: (
+        <div className="p-1">
+          SỐ <br /> VÀO SỔ
+        </div>
+      ),
+      dataIndex: "internalNumber",
+      key: "internalNumber",
+      className: "customInfoColors text-center w-[70px]",
+      render: (_, item: TrainingLevelItem) => {
+        const path = item.determinations.files[0]?.path;
+        return (
+          <>
+            {item.determinations.documentNumber && (
+              <>
+                <span className="ml-2">
+                  <Tag
+                    color={`${
+                      path !== "" && path !== undefined ? "blue" : "error"
+                    }`}
+                  >
+                    {item.determinations.documentNumber}
+                  </Tag>
+                </span>
+              </>
+            )}
+          </>
+        );
+      },
+    },
+    {
+      title: (
+        <div className="p-1">
+          TÀI LIỆU <br /> ĐÍNH KÈM
+        </div>
+      ),
+      dataIndex: "file",
+      key: "file",
+      className: "customInfoColors text-center w-[80px]",
+      render: (_, item: TrainingLevelItem) => {
+        const path = item.determinations.files[0]?.path;
+        return path !== "" && path !== undefined ? (
+          <>
+            <Link
+              href={"https://api-annual.uef.edu.vn/" + path}
+              target="__blank"
+            >
+              <span className="text-green-500">
+                <CheckOutlined />
+              </span>
+            </Link>
+          </>
+        ) : (
+          <>
+            <span className="text-red-400">
+              <CloseOutlined />
+            </span>
+          </>
+        );
+      },
+    },
   ];
 
   const items: MenuProps["items"] = [
@@ -252,7 +317,8 @@ const BM07 = () => {
         : true;
       const matchesDate =
         startDate && endDate
-          ? item.entryDate >= startDate && item.entryDate <= endDate
+          ? item.determinations.entryDate >= startDate &&
+            item.determinations.entryDate <= endDate
           : true;
       return matchesName && matchesUnit && matchesDate;
     });
@@ -675,7 +741,7 @@ const BM07 = () => {
 
   useEffect(() => {
     setLoading(true);
-    document.title = PageTitles.BM15;
+    document.title = PageTitles.BM07;
 
     Promise.all([getDefaultYears(), getListUnits()]);
     const token = Cookies.get("s_t");

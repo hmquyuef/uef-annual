@@ -149,11 +149,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
-  const getTokenWithRefreshToken = async (refresh: string) => {
+  const getTokenWithRefreshToken = async (refresh: string, email: string) => {
     const response = await putTokenByRefresh(refresh);
-    if (response && response !== undefined) {
+    if (response) {
       const expires = new Date(response.expiresAt * 1000);
       Cookies.set("s_t", response.accessToken, { expires: expires });
+    } else {
+      Cookies.remove("s_t");
+      Cookies.remove("s_r");
+      await getToken(email);
     }
   };
 
@@ -172,7 +176,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           await getToken(email);
         }
         if (!token && refreshToken) {
-          await getTokenWithRefreshToken(refreshToken);
+          await getTokenWithRefreshToken(refreshToken, email);
         }
         await getMenuByUserName(email);
       }

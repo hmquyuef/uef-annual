@@ -64,8 +64,14 @@ export async function getAllActivities(
   return response.data;
 }
 
-export async function getActivityById(id: string): Promise<ActivityItem> {
-  const response = await apiClient.get<ActivityItem>(`api/activities/${id}`);
+export async function getExportActivity(
+  unitCode: string,
+  yearId: string
+): Promise<any> {
+  let url = unitCode
+    ? `api/activities/export?unitCode=${unitCode}&SchoolYearId=${yearId}&FromDate=0&ToDate=0`
+    : `api/activities/export?SchoolYearId=${yearId}&FromDate=0&ToDate=0`;
+  const response = await apiClient.get<any>(url);
   return response.data;
 }
 

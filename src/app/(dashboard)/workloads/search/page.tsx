@@ -1,119 +1,93 @@
 "use client";
 
 import {
-  handleExportAll,
-  handleExportForBM,
+  handleExportForBMAll,
+  handleExportForBMGeneral,
+  handleExportForBMOther,
 } from "@/components/forms/exportExcel/ExportAllDetail";
+import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
 import {
   DetailUserItem,
   getDataExportByUserName,
-  Item,
 } from "@/services/exports/exportDetailForUser";
+import { GeneralItems } from "@/services/exports/GeneralItems";
+import { OtherItems } from "@/services/exports/OtherItems";
+import { Employees, Lecture } from "@/services/exports/RegulationItems";
+import { TrainingItems } from "@/services/exports/TrainingItems";
+import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
+import PageTitles from "@/utility/Constraints";
+import Messages from "@/utility/Messages";
+import { convertTimestampToDate } from "@/utility/Utilities";
+import {
+  CaretRightOutlined,
+  CheckOutlined,
+  CloseOutlined,
+  CloudDownloadOutlined,
+  HomeOutlined,
+  ProfileOutlined,
+  SearchOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
+import {
+  Avatar,
+  Breadcrumb,
+  Button,
+  Collapse,
+  Empty,
+  Modal,
+  Select,
+  Table,
+  TableColumnsType,
+} from "antd";
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
+import { Key, useEffect, useState } from "react";
+
 import {
   getUsersFromHRM,
   UsersFromHRMResponse,
 } from "@/services/users/usersServices";
-import PageTitles from "@/utility/Constraints";
-import { convertTimestampToDate } from "@/utility/Utilities";
-import {
-  CheckOutlined,
-  CloseOutlined,
-  DownloadOutlined,
-  FileProtectOutlined,
-  FilterOutlined,
-  HomeOutlined,
-  ProfileOutlined,
-  SearchOutlined,
-} from "@ant-design/icons";
-import {
-  Breadcrumb,
-  Button,
-  Card,
-  Collapse,
-  ConfigProvider,
-  DatePicker,
-  Divider,
-  Dropdown,
-  Empty,
-  MenuProps,
-  Select,
-  Skeleton,
-  Table,
-  TableColumnsType,
-  Tooltip,
-} from "antd";
-import Link from "next/link";
-import { Key, useEffect, useState } from "react";
-import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
-import Messages from "@/utility/Messages";
-
 import dayjs from "dayjs";
-import locale from "antd/locale/vi_VN";
 import "dayjs/locale/vi";
-import Colors from "@/utility/Colors";
+import Link from "next/link";
 dayjs.locale("vi");
 
 const SearchMembers = () => {
   const [loading, setLoading] = useState(false);
+  const [detailUser, setDetailUser] = useState<DetailUserItem | undefined>(
+    undefined
+  );
   const [selectedKey, setSelectedKey] = useState<Key | null>(null);
   const [usersHRM, setUsersHRM] = useState<UsersFromHRMResponse | undefined>(
     undefined
   );
   const [selectedUserName, setSelectedUserName] = useState("");
-  const [detailUser, setDetailUser] = useState<DetailUserItem | undefined>(
-    undefined
+  const [groupOthers, setGroupOther] = useState<OtherItems[]>([]);
+  const [groupGenerals, setGroupGenerals] = useState<GeneralItems[]>([]);
+  const [groupTraining, setGroupTraining] = useState<TrainingItems | null>(
+    null
   );
-  const [dataClassLeaders, setDataClassLeaders] = useState<Item[]>([]);
-  const [dataAssistants, setDataAssistants] = useState<Item[]>([]);
-  const [dataQAEs, setDataQAEs] = useState<Item[]>([]);
-  const [dataAdmissionCounseling, setDataAdmissionCounseling] = useState<
-    Item[]
-  >([]);
-  const [dataActivities, setDataActivities] = useState<Item[]>([]);
+  const [employees, setEmployees] = useState<Employees | null>(null);
+  const [lecture, setLecture] = useState<Lecture | null>(null);
+  const [userName, setUserName] = useState("");
   const [defaultYears, setDefaultYears] = useState<any>();
   const [selectedKeyYear, setSelectedKeyYear] = useState<any>();
-  const [startDate, setStartDate] = useState<number | 0>(0);
-  const [minStartDate, setMinStartDate] = useState<number | 0>(0);
-  const [endDate, setEndDate] = useState<number | 0>(0);
-  const [maxEndDate, setMaxEndDate] = useState<number | 0>(0);
-
-  const getDefaultYears = async () => {
-    const { items } = await getAllSchoolYears();
-    if (items) {
-      setDefaultYears(items);
-      const defaultYear = items.find((x: any) => x.isDefault);
-      if (defaultYear) {
-        const { startDate, endDate } = defaultYear;
-        setSelectedKeyYear(defaultYear);
-        setStartDate(startDate);
-        setMinStartDate(startDate);
-        setEndDate(endDate);
-        setMaxEndDate(endDate);
-      }
-    }
-  };
+  const [showModal, setShowModal] = useState(false);
 
   const getUsersHRM = async () => {
     const response = await getUsersFromHRM();
     setUsersHRM(response);
   };
 
-  const handleSearch = async () => {
+  const getDefaultYears = async () => {
     setLoading(true);
-    const formData: Partial<any> = {
-      userName: selectedUserName,
-      years: selectedKeyYear.id,
-      startDate: startDate,
-      endDate: endDate,
-    };
-    const response = await getDataExportByUserName(formData);
-    if (response) {
-      setDetailUser(response);
-      setDataClassLeaders(response.classLeaders.items);
-      setDataAssistants(response.assistants.items);
-      setDataQAEs(response.qAs.items);
-      setDataAdmissionCounseling(response.admissionCounseling.items);
-      setDataActivities(response.activities.items);
+    const { items } = await getAllSchoolYears();
+    if (items) {
+      setDefaultYears(items);
+      const defaultYear = items.find((x: any) => x.isDefault);
+      if (defaultYear) {
+        setSelectedKeyYear(defaultYear);
+      }
     }
     const timeoutId = setTimeout(() => {
       setLoading(false);
@@ -121,380 +95,333 @@ const SearchMembers = () => {
     return () => clearTimeout(timeoutId);
   };
 
-  const formConfigs = [
-    { key: "2-1", label: "BM01 - Chủ nhiệm lớp", formName: "BM01" },
-    {
-      key: "2-2",
-      label: "BM02 - Cố vấn học tập, trợ giảng, phụ đạo",
-      formName: "BM02",
-    },
-    { key: "2-3", label: "BM03 - Tư vấn tuyển sinh", formName: "BM03" },
-    {
-      key: "2-4",
-      label: "BM04 - Tham gia hỏi vấn đáp Tiếng Anh",
-      formName: "BM04",
-    },
-    {
-      key: "2-5",
-      label: "BM05 - Các hoạt động khác được BGH phê duyệt",
-      formName: "BM05",
-    },
-  ];
-
-  const items: MenuProps["items"] = [
-    {
-      key: "1",
-      label: (
-        <p onClick={() => detailUser && handleExportAll(detailUser)}>Tất cả</p>
-      ),
-      icon: <FileProtectOutlined />,
-      style: { color: Colors.BLUE },
-    },
-    {
-      type: "divider",
-    },
-    {
-      key: "2",
-      label: "Biểu mẫu",
-      icon: <FilterOutlined />,
-      children: formConfigs.map(({ key, label, formName }) => ({
-        key,
-        label: (
-          <p
-            onClick={() => {
-              const formData: Partial<any> = {
-                userName: selectedUserName,
-                years: selectedKeyYear.id,
-                startDate: startDate,
-                endDate: endDate,
-              };
-              handleExportForBM({ ...formData, ...{ formName } });
-            }}
-          >
-            {label}
-          </p>
-        ),
-      })),
-    },
-  ];
-
-  //render table InfoUser
-  const columnsInfoUser: TableColumnsType<DetailUserItem> = [
-    {
-      title: <div className="p-2">STT</div>,
-      dataIndex: "stt",
-      key: "stt",
-      render: (_, __, index) => <p>{index + 1}</p>,
-      className: "text-center w-[50px]",
-    },
-    {
-      title: "Mã SỐ CB-GV-NV",
-      dataIndex: "userName",
-      key: "userName",
-      render: (userName: string) => <p>{userName}</p>,
-      className: "text-center w-[200px]",
-    },
-    {
-      title: "HỌ VÀ TÊN",
-      dataIndex: "fullName",
-      key: "fullName",
-      render: (fullName: string) => <p>{fullName}</p>,
-      className: "text-center w-[200px]",
-    },
-    {
-      title: "EMAIL",
-      dataIndex: "email",
-      key: "email",
-      render: (email: string) => <p>{email}</p>,
-      className: "text-center w-[200px]",
-    },
-    {
-      title: "ĐƠN VỊ",
-      dataIndex: "unitName",
-      key: "unitName",
-      render: (unitName: string) => <p>{unitName}</p>,
-      className: "text-center w-[100px]",
-    },
-    {
-      title: "TỔNG SỐ SỰ KIỆN",
-      dataIndex: "totalEvents",
-      key: "totalEvents",
-      className: "text-center w-[8rem]",
-      render: (totalEvents: string, record: DetailUserItem) => {
-        const total =
-          record.classLeaders.totalItems +
-          record.assistants.totalItems +
-          record.qAs.totalItems +
-          record.admissionCounseling.totalItems +
-          record.activities.totalItems;
-        return <strong>{total}</strong>;
-      },
-    },
-    {
-      title: "TỔNG SỐ TIẾT CHUẨN",
-      dataIndex: "totalStandarNumber",
-      key: "totalStandarNumber",
-      className: "text-center w-[8rem]",
-      render: (totalStandarNumber: string) => (
-        <strong>{totalStandarNumber}</strong>
-      ),
-    },
-    {
-      title: "",
-      dataIndex: "actions",
-      key: "actions",
-      className: "text-center w-[30px]",
-      render: () => {
-        return (
-          <>
-            <Tooltip
-              placement="topRight"
-              title={"Tải xuống dữ liệu"}
-              arrow={true}
-            >
-              <Dropdown menu={{ items }} trigger={["click"]}>
-                <a onClick={(e) => e.preventDefault()}>
-                  <Button
-                    type="primary"
-                    shape="circle"
-                    icon={<DownloadOutlined />}
-                    size={"small"}
-                  />
-                </a>
-              </Dropdown>
-            </Tooltip>
-          </>
-        );
-      },
-    },
-  ];
-
-  //render table for BM01, BM02, BM03, BM04
-  const columns: TableColumnsType<Item> = [
-    {
-      title: <div className="px-2 py-3">STT</div>,
-      dataIndex: "stt",
-      key: "stt",
-      render: (_, __, index) => <>{index + 1}</>,
-      className: "text-center w-[50px]",
-    },
-    {
-      title: "TÊN HOẠT ĐỘNG",
-      dataIndex: "activityName",
-      key: "activityName",
-      render: (activityName: string) => (
-        <span className="text-blue-500 font-semibold">{activityName}</span>
-      ),
-      className: "w-[4/5]",
-    },
-    {
-      title: "SỐ TIẾT CHUẨN",
-      dataIndex: "standarNumber",
-      key: "standarNumber",
-      className: "text-center w-[70px]",
-      render: (standarNumber: string) => <>{standarNumber}</>,
-    },
-    {
-      title: (
-        <div>
-          SỐ VĂN BẢN <br /> NGÀY LẬP
-        </div>
-      ),
-      dataIndex: "proof",
-      key: "proof",
-      render: (proof: string, record: Item) => {
-        const documentDate = record.documentDate
-          ? convertTimestampToDate(record.documentDate)
-          : "";
-        return (
-          <div className="flex flex-col">
-            <span className="font-medium">{proof}</span>
-            <span className="text-[13px]">{documentDate}</span>
-          </div>
-        );
-      },
-      className: "text-center w-[150px]",
-    },
-    {
-      title: "THỜI GIAN HOẠT ĐỘNG",
-      dataIndex: "fromDate",
-      key: "fromDate",
-      render: (fromDate: number, record: Item) => {
-        const toDate = record.toDate
-          ? convertTimestampToDate(record.toDate)
-          : "";
-        return (
-          <>
-            {fromDate ? (
-              <div className="flex flex-col">
-                <span>{convertTimestampToDate(fromDate)}</span>
-                <span>{toDate}</span>
-              </div>
-            ) : (
-              ""
-            )}
-          </>
-        );
-      },
-      className: "text-center w-[90px]",
-    },
-    {
-      title: (
-        <div className="p-1">
-          TÀI LIỆU <br /> ĐÍNH KÈM
-        </div>
-      ),
-      dataIndex: ["file", "path"],
-      key: "path",
-      className: "text-center w-[80px]",
-      render: (path: string) => {
-        return path !== "" && path !== undefined ? (
-          <>
-            <Tooltip
-              placement="bottom"
-              title={"Thông tin minh chứng"}
-              arrow={true}
-            >
-              <Link
-                href={"https://api-annual.uef.edu.vn/" + path}
-                target="__blank"
-              >
-                <p className="text-green-500">
-                  <CheckOutlined />
-                </p>
-              </Link>
-            </Tooltip>
-          </>
-        ) : (
-          <>
-            <p className="text-red-400">
-              <CloseOutlined />
-            </p>
-          </>
-        );
-      },
-    },
-    {
-      title: "GHI CHÚ",
-      dataIndex: "note",
-      key: "note",
-      render: (note: string) => <>{note}</>,
-      className: "w-[200px]",
-    },
-  ];
-
-  //render table for BM05
-  const columnsBM05: TableColumnsType<Item> = [
-    {
-      title: <div className="px-2 py-3">STT</div>,
-      dataIndex: "stt",
-      key: "stt",
-      render: (_, __, index) => <>{index + 1}</>,
-      className: "text-center w-[50px]",
-    },
-    {
-      title: "TÊN HOẠT ĐỘNG",
-      dataIndex: "activityName",
-      key: "activityName",
-      render: (activityName: string) => (
-        <span className="text-blue-500 font-semibold">{activityName}</span>
-      ),
-      className: "w-[4/5]",
-    },
-    {
-      title: "SỐ TIẾT CHUẨN",
-      dataIndex: "standarNumber",
-      key: "standarNumber",
-      className: "text-center w-[70px]",
-      render: (standarNumber: string) => <>{standarNumber}</>,
-    },
-    {
-      title: (
-        <div>
-          SỐ VĂN BẢN <br /> NGÀY LẬP
-        </div>
-      ),
-      dataIndex: "proof",
-      key: "proof",
-      render: (proof: string, record: Item) => {
-        const documentDate = record.documentDate
-          ? convertTimestampToDate(record.documentDate)
-          : "";
-        return (
-          <div className="flex flex-col">
-            <span className="font-medium">{proof}</span>
-            <span className="text-[13px]">{documentDate}</span>
-          </div>
-        );
-      },
-      className: "text-center w-[150px]",
-    },
-    {
-      title: "THỜI GIAN HOẠT ĐỘNG",
-      dataIndex: "fromDate",
-      key: "fromDate",
-      render: (fromDate: number) =>
-        fromDate ? convertTimestampToDate(fromDate) : "",
-      className: "text-center w-[80px]",
-    },
-    {
-      title: (
-        <div className="p-1">
-          TÀI LIỆU <br /> ĐÍNH KÈM
-        </div>
-      ),
-      dataIndex: ["file", "path"],
-      key: "path",
-      className: "text-center w-[80px]",
-      render: (path: string) => {
-        return path !== "" && path !== undefined ? (
-          <>
-            <Tooltip
-              placement="bottom"
-              title={"Thông tin minh chứng"}
-              arrow={true}
-            >
-              <Link
-                href={"https://api-annual.uef.edu.vn/" + path}
-                target="__blank"
-              >
-                <p className="text-green-500">
-                  <CheckOutlined />
-                </p>
-              </Link>
-            </Tooltip>
-          </>
-        ) : (
-          <>
-            <p className="text-red-400">
-              <CloseOutlined />
-            </p>
-          </>
-        );
-      },
-    },
-    {
-      title: "GHI CHÚ",
-      dataIndex: "note",
-      key: "note",
-      render: (note: string) => <>{note}</>,
-      className: "w-[200px]",
-    },
-  ];
+  const handleSearch = async () => {
+    setLoading(true);
+    if (!selectedUserName) {
+      return;
+    }
+    const formData: Partial<any> = {
+      userName: selectedUserName,
+      years: selectedKeyYear.id,
+    };
+    const response = await getDataExportByUserName(formData);
+    if (response) {
+      setDetailUser(response);
+      setGroupOther(response.items.other);
+      setGroupGenerals(response.items.general);
+      setEmployees(response.items.regulation.employees);
+      setLecture(response.items.regulation.lecture);
+      setGroupTraining(response.items.training);
+    }
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  };
 
   const handleChangeYear = (value: any) => {
     const temp = defaultYears.filter((x: any) => x.id === value)[0] as any;
     setSelectedKeyYear(temp);
-    setStartDate(temp.startDate);
-    setMinStartDate(temp.startDate);
-    setEndDate(temp.endDate);
-    setMaxEndDate(temp.endDate);
   };
 
+  const columnsEmployees: TableColumnsType<Employees> = [
+    {
+      title: <div className="py-1">CHẤM CÔNG</div>,
+      dataIndex: "attendance",
+      key: "attendance",
+      className: "text-center w-[70px]",
+      children: [
+        {
+          title: <div className="py-1">THEO NGÀY</div>,
+          dataIndex: "days",
+          key: "days",
+          render: (_, item: Employees) => {
+            return <>{item.detail.attendanceDays}</>;
+          },
+          className: "text-center w-[70px]",
+        },
+        {
+          title: <div className="py-1">THEO GIỜ</div>,
+          dataIndex: "hours",
+          key: "hours",
+          render: (_, item: Employees) => <>{item.detail.attendanceHours}</>,
+          className: "text-center w-[70px]",
+        },
+      ],
+    },
+    {
+      title: <div className="py-1">SỐ BUỔI</div>,
+      dataIndex: "late",
+      key: "late",
+      className: "text-center w-[70px]",
+      children: [
+        {
+          title: <div className="py-1">ĐI TRỄ</div>,
+          dataIndex: "lateArrivals",
+          key: "lateArrivals",
+          render: (_, item: Employees) => {
+            return <>{item.detail.lateArrivals}</>;
+          },
+          className: "text-center w-[70px]",
+        },
+        {
+          title: <div className="py-1">VỀ SỚM</div>,
+          dataIndex: "earlyDepartures",
+          key: "earlyDepartures",
+          render: (_, item: Employees) => <>{item.detail.earlyDepartures}</>,
+          className: "text-center w-[70px]",
+        },
+      ],
+    },
+    {
+      title: <div className="py-1">SỐ NGÀY NGHỈ</div>,
+      dataIndex: "leaved",
+      key: "leaved",
+      className: "text-center w-[70px]",
+      children: [
+        {
+          title: <div className="py-1">KHÔNG PHÉP</div>,
+          dataIndex: "unexcusedAbsences",
+          key: "unexcusedAbsences",
+          render: (_, item: Employees) => <>{item.detail.unexcusedAbsences}</>,
+          className: "text-center w-[70px]",
+        },
+        {
+          title: <div className="py-1">CÓ PHÉP</div>,
+          dataIndex: "leaveDays",
+          key: "leaveDays",
+          render: (_, item: Employees) => <>{item.detail.leaveDays}</>,
+          className: "text-center w-[70px]",
+        },
+        {
+          title: <div className="py-1">HẬU SẢN</div>,
+          dataIndex: "maternityLeaveDays",
+          key: "maternityLeaveDays",
+          render: (_, item: Employees) => <>{item.detail.maternityLeaveDays}</>,
+          className: "text-center w-[70px]",
+        },
+        {
+          title: <div className="py-1">KHÔNG LƯƠNG</div>,
+          dataIndex: "unpaidLeaveDays",
+          key: "unpaidLeaveDays",
+          render: (_, item: Employees) => <>{item.detail.unpaidLeaveDays}</>,
+          className: "text-center w-[80px]",
+        },
+      ],
+    },
+    {
+      title: "CÔNG TÁC",
+      dataIndex: "businessTripDays",
+      key: "businessTripDays",
+      render: (_, item: Employees) => <>{item.detail.businessTripDays}</>,
+      className: "text-center w-[70px]",
+    },
+    {
+      title: (
+        <div>
+          KHÔNG BẤM <br /> VÂN TAY
+        </div>
+      ),
+      dataIndex: "missedFingerprint",
+      key: "missedFingerprint",
+      render: (_, item: Employees) => <>{item.detail.missedFingerprint}</>,
+      className: "text-center w-[70px]",
+    },
+  ];
+
+  const columnsLecture: TableColumnsType<Lecture> = [
+    {
+      title: <div className="py-1">SỐ LẦN NGHỈ CÓ BÁO</div>,
+      dataIndex: "notifiedAbsences",
+      key: "notifiedAbsences",
+      render: (_, item: Lecture) => <>{item.detail.notifiedAbsences ?? 0}</>,
+      className: "text-center w-[80px]",
+    },
+    {
+      title: <div className="py-1">SỐ LẦN NGHỈ KHÔNG BÁO</div>,
+      dataIndex: "unnotifiedAbsences",
+      key: "unnotifiedAbsences",
+      render: (_, item: Lecture) => <>{item.detail.unnotifiedAbsences ?? 0}</>,
+      className: "text-center w-[80px]",
+    },
+    {
+      title: <div className="py-1">SỐ LẦN ĐI TRỄ/VỀ SỚM</div>,
+      dataIndex: "lateEarly",
+      key: "lateEarly",
+      render: (_, item: Lecture) => <>{item.detail.lateEarly ?? 0}</>,
+      className: "text-center w-[80px]",
+    },
+  ];
+
+  const columns = (isGeneral: boolean): TableColumnsType<any> => [
+    {
+      title: <div className="px-2 py-3">STT</div>,
+      dataIndex: "stt",
+      key: "stt",
+      render: (_, __, index) => <>{index + 1}</>,
+      className: "text-center w-[50px]",
+    },
+    {
+      title: "TÊN HOẠT ĐỘNG",
+      dataIndex: "name",
+      key: "name",
+      render: (_, item: any) => {
+        const name = item.name ?? item.contents;
+        return (
+          <>
+            <span className="text-blue-500 font-semibold">{name}</span>
+          </>
+        );
+      },
+      className: "w-[4/5]",
+    },
+    ...(isGeneral
+      ? []
+      : [
+          {
+            title: (
+              <div>
+                SỐ <br /> TIẾT CHUẨN
+              </div>
+            ),
+            dataIndex: "standarNumber",
+            key: "standarNumber",
+            className: "text-center w-[100px]",
+            render: (standarNumber: string) => <span>{standarNumber}</span>,
+          },
+        ]),
+    {
+      title: (
+        <div>
+          SỐ VĂN BẢN <br /> NGÀY LẬP
+        </div>
+      ),
+      dataIndex: "proof",
+      key: "proof",
+      render: (_, record: any) => {
+        return (
+          <div className="flex flex-col">
+            <span className="font-medium">
+              {record.determinations.documentNumber}
+            </span>
+            <span className="text-[13px]">
+              {convertTimestampToDate(record.determinations.documentDate)}
+            </span>
+          </div>
+        );
+      },
+      className: "text-center w-[150px]",
+    },
+    {
+      title: <div className="py-1">THỜI GIA HOẠT ĐỘNG</div>,
+      dataIndex: "eventTime",
+      key: "eventTime",
+      className: "text-center w-[140px]",
+      children: [
+        {
+          title: <div className="py-1">TỪ NGÀY</div>,
+          dataIndex: "fromDate",
+          key: "fromDate",
+          render: (_, record: any) => {
+            return (
+              <>
+                {record.determinations.fromDate ? (
+                  <div className="flex flex-col">
+                    <span>
+                      {convertTimestampToDate(record.determinations.fromDate)}
+                    </span>
+                  </div>
+                ) : (
+                  ""
+                )}
+              </>
+            );
+          },
+          className: "text-center w-[100px]",
+        },
+        {
+          title: <div className="py-1">ĐẾN NGÀY</div>,
+          dataIndex: "fromDate",
+          key: "fromDate",
+          render: (_, record: any) => {
+            return (
+              <>
+                {record.determinations.toDate !==
+                record.determinations.fromDate ? (
+                  <div className="flex flex-col">
+                    <span>
+                      {convertTimestampToDate(record.determinations.toDate)}
+                    </span>
+                  </div>
+                ) : (
+                  ""
+                )}
+              </>
+            );
+          },
+          className: "text-center w-[100px]",
+        },
+      ],
+    },
+    {
+      title: (
+        <div className="p-1">
+          TÀI LIỆU <br /> ĐÍNH KÈM
+        </div>
+      ),
+      dataIndex: "attackment",
+      key: "attackment",
+      className: "text-center w-[80px]",
+      render: (_, item: any) => {
+        const path = item.determinations.files[0]?.path;
+        return path !== "" && path !== undefined ? (
+          <>
+            <Link
+              href={"https://api-annual.uef.edu.vn/" + path}
+              target="__blank"
+            >
+              <span className="text-green-500">
+                <CheckOutlined />
+              </span>
+            </Link>
+          </>
+        ) : (
+          <>
+            <span className="text-red-400">
+              <CloseOutlined />
+            </span>
+          </>
+        );
+      },
+    },
+    {
+      title: "GHI CHÚ",
+      dataIndex: "note",
+      key: "note",
+      render: (note: string) => <>{note}</>,
+      className: "w-[150px]",
+    },
+  ];
+
   useEffect(() => {
+    setLoading(true);
     document.title = PageTitles.SEARCH;
+    const token = Cookies.get("s_t");
+    if (token) {
+      const decodedToken = jwtDecode(token);
+      if (decodedToken.sub) {
+        setUserName(decodedToken.sub);
+      }
+    }
     Promise.all([getDefaultYears(), getUsersHRM()]);
+    setTimeout(() => {
+      setLoading(false);
+    }, 500);
   }, []);
+
+  useEffect(() => {
+    if (selectedKeyYear) handleSearch();
+  }, [selectedKeyYear]);
 
   return (
     <section>
@@ -536,6 +463,7 @@ const SearchMembers = () => {
             options={usersHRM?.items?.map((user) => ({
               value: user.id,
               label: `${user.fullName} - ${user.userName}`,
+              key: user.id,
             }))}
             value={selectedKey}
             onChange={(value) => {
@@ -563,48 +491,6 @@ const SearchMembers = () => {
             className="w-full"
           />
         </div>
-        <div className="flex flex-col justify-center gap-1">
-          <span className="text-[14px] text-neutral-500">Từ ngày:</span>
-          <ConfigProvider locale={locale}>
-            <DatePicker
-              allowClear={false}
-              placeholder="dd/mm/yyyy"
-              format="DD/MM/YYYY"
-              minDate={dayjs.unix(minStartDate)}
-              maxDate={dayjs.unix(maxEndDate)}
-              value={startDate ? dayjs.unix(startDate) : null}
-              onChange={(date) => {
-                if (date) {
-                  const timestamp = dayjs(date).unix();
-                  setStartDate(timestamp);
-                } else {
-                  setStartDate(0);
-                }
-              }}
-            />
-          </ConfigProvider>
-        </div>
-        <div className="flex flex-col justify-center gap-1">
-          <span className="text-[14px] text-neutral-500">Đến ngày:</span>
-          <ConfigProvider locale={locale}>
-            <DatePicker
-              allowClear={false}
-              placeholder="dd/mm/yyyy"
-              format="DD/MM/YYYY"
-              minDate={dayjs.unix(minStartDate)}
-              maxDate={dayjs.unix(maxEndDate)}
-              value={endDate ? dayjs.unix(endDate) : null}
-              onChange={(date) => {
-                if (date) {
-                  const timestamp = dayjs(date).unix();
-                  setEndDate(timestamp);
-                } else {
-                  setEndDate(0);
-                }
-              }}
-            />
-          </ConfigProvider>
-        </div>
         <div className="grid grid-cols-3 gap-6">
           <div className="flex items-end">
             <Button
@@ -621,414 +507,311 @@ const SearchMembers = () => {
       <hr className="mb-3" />
       {loading ? (
         <>
-          <Card>
-            <Skeleton active />
-          </Card>
+          <LoadingSkeleton />
         </>
       ) : (
         <>
           {detailUser ? (
             <>
-              <div className="mt-6">
-                <Divider
-                  orientation="left"
-                  className="uppercase"
-                  style={{ borderColor: Colors.BLUE, color: Colors.BLUE }}
+              <div className="grid grid-cols-4 gap-6">
+                <div
+                  className="rounded-lg shadow-lg"
+                  style={{
+                    backgroundImage: 'url("/wave-bottom.svg")',
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "bottom",
+                  }}
                 >
-                  Thông tin nhân sự
-                </Divider>
+                  <div
+                    className="py-2 rounded-t-lg text-center font-semibold"
+                    style={{ backgroundColor: "#3b82f6" }}
+                  >
+                    <span className="uppercase text-[14px] text-white tracking-wide">
+                      Thông Tin Nhân Sự
+                    </span>
+                  </div>
+                  <div className="flex flex-col py-1">
+                    <span className=" text-center text-xl text-neutral-600 font-medium">
+                      {detailUser.fullName}
+                    </span>
+                    <span className="text-center text-sm text-neutral-400">
+                      {detailUser.userName}
+                    </span>
+                  </div>
+                  <hr className="mb-2 mx-4 bg-blue-500 h-[2px]" />
+                  <div className="flex px-4 pb-5 gap-5">
+                    <div className="flex justify-center items-center mb-7">
+                      <div className="w-fit h-fit">
+                        <Avatar size={60} icon={<UserOutlined />} />
+                      </div>
+                    </div>
+                    <div className="flex-1 flex-col">
+                      <div className="flex items-center gap-2 mb-1">
+                        <img src="/email.svg" width={18} alt="email" />
+                        <span className="text-center text-sm text-neutral-500 font-medium">
+                          {detailUser.email}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <img src="/map.svg" width={18} alt="localtion" />
+                        <span className="text-center text-sm text-neutral-500 font-medium">
+                          {detailUser.unitName}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <img src="/flame.svg" width={18} alt="total events" />
+                        <span className="text-center text-sm text-neutral-500 font-medium">
+                          {detailUser.totalEvents} (sự kiện tham gia)
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <img
+                          src="/diploma.svg"
+                          width={18}
+                          alt="total standar"
+                        />
+                        <span className="text-center text-sm text-neutral-500 font-medium">
+                          {detailUser.items.other.reduce(
+                            (acc: number, x: any) => acc + x.totalStandarNumber,
+                            0
+                          )}
+                          (số tiết chuẩn)
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <Button
+                          color="primary"
+                          variant="filled"
+                          icon={<CloudDownloadOutlined />}
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const formData: Partial<any> = {
+                              userName: userName,
+                              years: selectedKeyYear.id,
+                            };
+                            // handleExportForBMAll(formData);
+                            setShowModal(true);
+                          }}
+                        >
+                          Tải các biểu mẫu
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="my-6">
-                <Table<DetailUserItem>
-                  key={"table-detail-info-user"}
+              <div className="flex flex-col gap-6 mt-6">
+                <Table<Employees>
+                  key={"table-detail-employees-regulations"}
                   className="custom-table-header shadow-md rounded-md"
                   bordered
-                  rowKey={(item) => item.id}
+                  rowKey={() => "employees"}
                   rowHoverable
+                  title={() => (
+                    <strong className="uppercase">
+                      Nội quy lao động - dành cho cán bộ, nhân viên
+                    </strong>
+                  )}
                   size="small"
                   pagination={false}
-                  columns={columnsInfoUser}
-                  dataSource={[detailUser]}
+                  columns={columnsEmployees}
+                  dataSource={employees ? [employees] : []}
+                  locale={{
+                    emptyText: <Empty description={Messages.NO_DATA}></Empty>,
+                  }}
+                />
+                <Table<Lecture>
+                  key={"table-detail-lecture-regulations"}
+                  className="custom-table-header shadow-md rounded-md"
+                  bordered
+                  rowKey={() => "lecture"}
+                  rowHoverable
+                  title={() => (
+                    <strong className="uppercase">
+                      Nội quy giảng dạy - dành cho Giảng viên
+                    </strong>
+                  )}
+                  size="small"
+                  pagination={false}
+                  columns={columnsLecture}
+                  dataSource={lecture ? [lecture] : []}
                   locale={{
                     emptyText: <Empty description={Messages.NO_DATA}></Empty>,
                   }}
                 />
               </div>
-              <div className="mt-6">
-                <Divider
-                  orientation="left"
-                  className="uppercase"
-                  style={{ borderColor: Colors.BLUE, color: Colors.BLUE }}
-                >
-                  Danh sách các hoạt động
-                </Divider>
+              <div className="mt-6 flex flex-col gap-6">
+                <Collapse
+                  key="collapse-group-generals"
+                  expandIcon={({ isActive }) => (
+                    <CaretRightOutlined rotate={isActive ? 90 : 0} />
+                  )}
+                  collapsible="header"
+                  className="mb-4"
+                  defaultActiveKey={["1"]}
+                  expandIconPosition="start"
+                  items={[
+                    {
+                      key: "1",
+                      label: (
+                        <strong className="uppercase">
+                          Nhóm biểu mẫu công tác chung
+                        </strong>
+                      ),
+                      children: (
+                        <>
+                          {groupGenerals &&
+                            groupGenerals.map((group, index) => {
+                              return (
+                                <Table<any>
+                                  key={`table-group-generals-${index}`}
+                                  className="custom-table-header shadow-md rounded-md mb-4"
+                                  bordered
+                                  rowKey={() => "generals" + index}
+                                  rowHoverable
+                                  size="small"
+                                  title={() => (
+                                    <div className="flex justify-between items-center">
+                                      <strong>
+                                        {group.shortName} - {group.name}
+                                      </strong>
+                                      <Button
+                                        color="primary"
+                                        variant="outlined"
+                                        shape="round"
+                                        icon={<CloudDownloadOutlined />}
+                                        size="small"
+                                        onClick={async (e) => {
+                                          e.stopPropagation();
+                                          const formData: Partial<any> = {
+                                            userName: userName,
+                                            years: selectedKeyYear.id,
+                                            formName: group.shortName,
+                                          };
+                                          const result =
+                                            await handleExportForBMGeneral(
+                                              formData
+                                            );
+                                          console.log(result);
+                                        }}
+                                      >
+                                        Tải về {group.shortName}
+                                      </Button>
+                                    </div>
+                                  )}
+                                  // footer={() => "Footer"}
+                                  pagination={false}
+                                  columns={columns(true)}
+                                  dataSource={group.items}
+                                  locale={{
+                                    emptyText: (
+                                      <Empty
+                                        description={Messages.NO_DATA}
+                                      ></Empty>
+                                    ),
+                                  }}
+                                />
+                              );
+                            })}
+                        </>
+                      ),
+                    },
+                  ]}
+                />
+                <Collapse
+                  key="collapse-group-others"
+                  expandIcon={({ isActive }) => (
+                    <CaretRightOutlined rotate={isActive ? 90 : 0} />
+                  )}
+                  collapsible="header"
+                  className="mb-4"
+                  defaultActiveKey={["1"]}
+                  expandIconPosition="start"
+                  items={[
+                    {
+                      key: "1",
+                      label: (
+                        <strong className="uppercase">
+                          Nhóm biểu mẫu công tác khác
+                        </strong>
+                      ),
+                      children: (
+                        <>
+                          {groupOthers &&
+                            groupOthers.map((group, index) => {
+                              return (
+                                <Table<any>
+                                  key={`table-group-others-${index}`}
+                                  className="custom-table-header shadow-md rounded-md mb-4"
+                                  bordered
+                                  rowKey={(item) => item.name + index}
+                                  rowHoverable
+                                  size="small"
+                                  title={() => (
+                                    <div className="flex justify-between items-center">
+                                      <strong>
+                                        {group.shortName} - {group.name}
+                                      </strong>
+                                      <Button
+                                        color="primary"
+                                        variant="outlined"
+                                        shape="round"
+                                        icon={<CloudDownloadOutlined />}
+                                        size="small"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const formData: Partial<any> = {
+                                            userName: userName,
+                                            years: selectedKeyYear.id,
+                                            formName: group.shortName,
+                                          };
+                                          // handleExportForBMOther(formData);
+                                        }}
+                                      >
+                                        Tải về {group.shortName}
+                                      </Button>
+                                    </div>
+                                  )}
+                                  // footer={() => "Footer"}
+                                  pagination={false}
+                                  summary={() => {
+                                    return (
+                                      <Table.Summary.Row>
+                                        <Table.Summary.Cell
+                                          colSpan={2}
+                                          index={0}
+                                          className="text-end font-semibold"
+                                        >
+                                          Tổng tiết chuẩn
+                                        </Table.Summary.Cell>
+                                        <Table.Summary.Cell
+                                          index={2}
+                                          className="text-center font-semibold"
+                                        >
+                                          {group.totalStandarNumber}
+                                        </Table.Summary.Cell>
+                                      </Table.Summary.Row>
+                                    );
+                                  }}
+                                  columns={columns(false)}
+                                  dataSource={group.items}
+                                  locale={{
+                                    emptyText: (
+                                      <Empty
+                                        description={Messages.NO_DATA}
+                                      ></Empty>
+                                    ),
+                                  }}
+                                />
+                              );
+                            })}
+                        </>
+                      ),
+                    },
+                  ]}
+                />
               </div>
-              {detailUser.classLeaders && (
-                <>
-                  <div className="mb-4">
-                    <Collapse
-                      key={Math.random().toString(36).substr(2, 9)}
-                      collapsible="header"
-                      className="mb-4"
-                      expandIconPosition="end"
-                      items={[
-                        {
-                          key: "1",
-                          label: (
-                            <strong>
-                              {String(
-                                detailUser.classLeaders.shortName
-                              ).toUpperCase()}{" "}
-                              -{" "}
-                              {String(
-                                detailUser.classLeaders.name
-                              ).toUpperCase()}{" "}
-                              ({detailUser.classLeaders.totalItems} SỰ KIỆN)
-                            </strong>
-                          ),
-                          children: (
-                            <>
-                              <Table<Item>
-                                key={"table-for-classLeaders"}
-                                className="custom-table-header shadow-md rounded-md"
-                                bordered
-                                rowKey={Math.random().toString(36).substr(2, 9)}
-                                rowHoverable
-                                size="small"
-                                pagination={false}
-                                summary={(items) => {
-                                  let total = 0;
-                                  items.forEach((item) => {
-                                    total += Number(item.standarNumber);
-                                  });
-                                  return (
-                                    <Table.Summary.Row>
-                                      <Table.Summary.Cell
-                                        colSpan={2}
-                                        index={0}
-                                        className="text-end font-semibold"
-                                      >
-                                        TỔNG SỐ TIẾT CHUẨN
-                                      </Table.Summary.Cell>
-                                      <Table.Summary.Cell
-                                        index={2}
-                                        className="text-center font-semibold"
-                                      >
-                                        {total}
-                                      </Table.Summary.Cell>
-                                    </Table.Summary.Row>
-                                  );
-                                }}
-                                columns={columns}
-                                dataSource={dataClassLeaders}
-                                locale={{
-                                  emptyText: (
-                                    <Empty
-                                      description={Messages.NO_DATA}
-                                    ></Empty>
-                                  ),
-                                }}
-                              />
-                            </>
-                          ),
-                        },
-                      ]}
-                    />
-                  </div>
-                </>
-              )}
-              {detailUser.assistants && (
-                <>
-                  <div className="mb-4">
-                    <Collapse
-                      key={Math.random().toString(36).substr(2, 9)}
-                      collapsible="header"
-                      defaultActiveKey={["1"]}
-                      className="mb-4"
-                      expandIconPosition="end"
-                      items={[
-                        {
-                          key: "2",
-                          label: (
-                            <strong>
-                              {String(
-                                detailUser.assistants.shortName
-                              ).toUpperCase()}{" "}
-                              -{" "}
-                              {String(detailUser.assistants.name).toUpperCase()}{" "}
-                              ({detailUser.assistants.totalItems} SỰ KIỆN)
-                            </strong>
-                          ),
-                          children: (
-                            <>
-                              <Table<Item>
-                                key={"table-for-assistants"}
-                                className="custom-table-header shadow-md rounded-md mb-4"
-                                bordered
-                                rowKey={Math.random().toString(36).substr(2, 9)}
-                                rowHoverable
-                                size="small"
-                                pagination={false}
-                                summary={(items) => {
-                                  let total = 0;
-                                  items.forEach((item) => {
-                                    total += Number(item.standarNumber);
-                                  });
-                                  return (
-                                    <Table.Summary.Row>
-                                      <Table.Summary.Cell
-                                        colSpan={2}
-                                        index={0}
-                                        className="text-end font-semibold"
-                                      >
-                                        TỔNG SỐ TIẾT CHUẨN
-                                      </Table.Summary.Cell>
-                                      <Table.Summary.Cell
-                                        index={2}
-                                        className="text-center font-semibold"
-                                      >
-                                        {total}
-                                      </Table.Summary.Cell>
-                                    </Table.Summary.Row>
-                                  );
-                                }}
-                                columns={columns}
-                                dataSource={dataAssistants}
-                                locale={{
-                                  emptyText: (
-                                    <Empty
-                                      description={Messages.NO_DATA}
-                                    ></Empty>
-                                  ),
-                                }}
-                              />
-                            </>
-                          ),
-                        },
-                      ]}
-                    />
-                  </div>
-                </>
-              )}
-              {detailUser.admissionCounseling && (
-                <>
-                  <div className="mb-4">
-                    <Collapse
-                      key={Math.random().toString(36).substr(2, 9)}
-                      collapsible="header"
-                      defaultActiveKey={["1"]}
-                      className="mb-4"
-                      expandIconPosition="end"
-                      items={[
-                        {
-                          key: "2",
-                          label: (
-                            <strong>
-                              {String(
-                                detailUser.admissionCounseling.shortName
-                              ).toUpperCase()}{" "}
-                              -{" "}
-                              {String(
-                                detailUser.admissionCounseling.name
-                              ).toUpperCase()}{" "}
-                              ({detailUser.admissionCounseling.totalItems} SỰ
-                              KIỆN)
-                            </strong>
-                          ),
-                          children: (
-                            <>
-                              <Table<Item>
-                                key={"table-for-assistants"}
-                                className="custom-table-header shadow-md rounded-md mb-4"
-                                bordered
-                                rowKey={Math.random().toString(36).substr(2, 9)}
-                                rowHoverable
-                                size="small"
-                                pagination={false}
-                                summary={(items) => {
-                                  let total = 0;
-                                  items.forEach((item) => {
-                                    total += Number(item.standarNumber);
-                                  });
-                                  return (
-                                    <Table.Summary.Row>
-                                      <Table.Summary.Cell
-                                        colSpan={2}
-                                        index={0}
-                                        className="text-end font-semibold"
-                                      >
-                                        TỔNG SỐ TIẾT CHUẨN
-                                      </Table.Summary.Cell>
-                                      <Table.Summary.Cell
-                                        index={2}
-                                        className="text-center font-semibold"
-                                      >
-                                        {total}
-                                      </Table.Summary.Cell>
-                                    </Table.Summary.Row>
-                                  );
-                                }}
-                                columns={columns}
-                                dataSource={dataAdmissionCounseling}
-                                locale={{
-                                  emptyText: (
-                                    <Empty
-                                      description={Messages.NO_DATA}
-                                    ></Empty>
-                                  ),
-                                }}
-                              />
-                            </>
-                          ),
-                        },
-                      ]}
-                    />
-                  </div>
-                </>
-              )}
-              {detailUser.qAs && (
-                <>
-                  <div className="mb-4">
-                    <Collapse
-                      key={Math.random().toString(36).substr(2, 9)}
-                      collapsible="header"
-                      defaultActiveKey={["1"]}
-                      className="mb-4"
-                      expandIconPosition="end"
-                      items={[
-                        {
-                          key: "3",
-                          label: (
-                            <strong>
-                              {String(detailUser.qAs.shortName).toUpperCase()} -{" "}
-                              {String(detailUser.qAs.name).toUpperCase()} (
-                              {detailUser.qAs.totalItems} SỰ KIỆN)
-                            </strong>
-                          ),
-                          children: (
-                            <>
-                              <Table<Item>
-                                key={"table-for-QAES"}
-                                className="custom-table-header shadow-md rounded-md mb-4"
-                                bordered
-                                rowKey={Math.random().toString(36).substr(2, 9)}
-                                rowHoverable
-                                size="small"
-                                pagination={false}
-                                summary={(items) => {
-                                  let total = 0;
-                                  items.forEach((item) => {
-                                    total += Number(item.standarNumber);
-                                  });
-                                  return (
-                                    <Table.Summary.Row>
-                                      <Table.Summary.Cell
-                                        colSpan={2}
-                                        index={0}
-                                        className="text-end font-semibold"
-                                      >
-                                        TỔNG SỐ TIẾT CHUẨN
-                                      </Table.Summary.Cell>
-                                      <Table.Summary.Cell
-                                        index={2}
-                                        className="text-center font-semibold"
-                                      >
-                                        {total}
-                                      </Table.Summary.Cell>
-                                    </Table.Summary.Row>
-                                  );
-                                }}
-                                columns={columns}
-                                dataSource={dataQAEs}
-                                locale={{
-                                  emptyText: (
-                                    <Empty
-                                      description={Messages.NO_DATA}
-                                    ></Empty>
-                                  ),
-                                }}
-                              />
-                            </>
-                          ),
-                        },
-                      ]}
-                    />
-                  </div>
-                </>
-              )}
-              {detailUser.activities && (
-                <>
-                  <div className="mb-4">
-                    <Collapse
-                      key={Math.random().toString(36).substr(2, 9)}
-                      collapsible="header"
-                      defaultActiveKey={["1"]}
-                      className="mb-4"
-                      expandIconPosition="end"
-                      items={[
-                        {
-                          key: "5",
-                          label: (
-                            <strong>
-                              {String(
-                                detailUser.activities.shortName
-                              ).toUpperCase()}{" "}
-                              -{" "}
-                              {String(detailUser.activities.name).toUpperCase()}{" "}
-                              ({detailUser.activities.totalItems} SỰ KIỆN)
-                            </strong>
-                          ),
-                          children: (
-                            <>
-                              <Table<Item>
-                                key={"table-for-activities"}
-                                className="custom-table-header shadow-md rounded-md mb-4"
-                                bordered
-                                rowKey={Math.random().toString(36).substr(2, 9)}
-                                rowHoverable
-                                size="small"
-                                pagination={false}
-                                summary={(items) => {
-                                  let total = 0;
-                                  items.forEach((item) => {
-                                    total += Number(item.standarNumber);
-                                  });
-                                  return (
-                                    <Table.Summary.Row>
-                                      <Table.Summary.Cell
-                                        colSpan={2}
-                                        index={0}
-                                        className="text-end font-semibold"
-                                      >
-                                        TỔNG SỐ TIẾT CHUẨN
-                                      </Table.Summary.Cell>
-                                      <Table.Summary.Cell
-                                        index={2}
-                                        className="text-center font-semibold"
-                                      >
-                                        {total}
-                                      </Table.Summary.Cell>
-                                    </Table.Summary.Row>
-                                  );
-                                }}
-                                columns={columnsBM05}
-                                dataSource={dataActivities}
-                                locale={{
-                                  emptyText: (
-                                    <Empty
-                                      description={Messages.NO_DATA}
-                                    ></Empty>
-                                  ),
-                                }}
-                              />
-                            </>
-                          ),
-                        },
-                      ]}
-                    />
-                  </div>
-                </>
-              )}
             </>
           ) : (
             <>
@@ -1037,6 +820,22 @@ const SearchMembers = () => {
               </div>
             </>
           )}
+        </>
+      )}
+      {showModal && (
+        <>
+          <Modal
+            open={showModal}
+            closable={false}
+            onOk={() => {
+              setShowModal(false);
+            }}
+            title="Tính năng đang cập nhật"
+            width={500}
+            cancelButtonProps={{ style: { display: "none" } }}
+          >
+            <span>Đang cập nhật...</span>
+          </Modal>
         </>
       )}
     </section>

@@ -1,18 +1,29 @@
 import apiClient from "../apiClient";
 import { AttackmentItem } from "../forms/Attackment";
+import { GeneralItems } from "./GeneralItems";
+import { OtherItems } from "./OtherItems";
+import { RegulationItems } from "./RegulationItems";
+import { TrainingItems } from "./TrainingItems";
 
 export interface DetailUserItem {
-  id: string;
   userName: string;
   email: string;
   fullName: string;
   unitName: string;
-  activities: DetailsItem;
-  classLeaders: DetailsItem;
-  assistants: DetailsItem;
-  qAs: DetailsItem;
-  admissionCounseling: DetailsItem;
-  totalStandarNumber: number;
+  items: {
+    other: OtherItems[];
+    general: GeneralItems[];
+    regulation: RegulationItems;
+    training: TrainingItems;
+  };
+  totalEvents: number;
+  note: string;
+}
+
+export interface DefaultItem {
+  name: string;
+  shortName: string;
+  totalItems: number;
 }
 
 export interface DetailsItem {

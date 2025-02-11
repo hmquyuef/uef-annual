@@ -20,10 +20,19 @@ export interface SchoolLevelsResponse {
 export async function getAllSchoolLevels(
   yearId: string
 ): Promise<SchoolLevelsResponse> {
-  let url = yearId
-    ? `api/general/schools?Years=${yearId}`
-    : "api/general/schools";
+  let url = `api/general/schools?Years=${yearId}`;
   const response = await apiClient.get<SchoolLevelsResponse>(url);
+  return response.data;
+}
+
+export async function getExportSchoolLevel(
+  yearId: string,
+  unitCode: string | null
+): Promise<any> {
+  let url = unitCode
+    ? `api/general/schools/export?unitCode=${unitCode}&SchoolYearId=${yearId}&FromDate=0&ToDate=0`
+    : `api/general/schools/export?SchoolYearId=${yearId}&FromDate=0&ToDate=0`;
+  const response = await apiClient.get<any>(url);
   return response.data;
 }
 

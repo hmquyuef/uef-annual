@@ -31,10 +31,14 @@ export async function getExpiresInTokenByRefresh(
   return response.data;
 }
 
-export async function putTokenByRefresh(
-  refresh: string,
-): Promise<any> {
+export async function putTokenByRefresh(refresh: string): Promise<any> {
   let url = `api/auth/refresh/${refresh}`;
-  const response = await apiClient.put<any>(url);
-  return response.data;
+  try {
+    const response = await apiClient.put<any>(url);
+    if (response.status === 200) {
+      return response.data;
+    }
+  } catch (error) {
+    return null;
+  }
 }

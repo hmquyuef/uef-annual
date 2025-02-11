@@ -24,10 +24,19 @@ export interface AdmissionCounselingResponse {
 export async function getAllAdmissionCounseling(
   yearId: string
 ): Promise<AdmissionCounselingResponse> {
-  let url = yearId
-    ? `api/admissions-counseling?Years=${yearId}`
-    : "api/leaders";
+  let url = `api/admissions-counseling?Years=${yearId}`;
   const response = await apiClient.get<AdmissionCounselingResponse>(url);
+  return response.data;
+}
+
+export async function getExportAdmissionCounseling(
+  unitCode: string,
+  yearId: string
+): Promise<any> {
+  let url = unitCode
+    ? `api/admissions-counseling/export?unitCode=${unitCode}&SchoolYearId=${yearId}&FromDate=0&ToDate=0`
+    : `api/admissions-counseling/export?SchoolYearId=${yearId}&FromDate=0&ToDate=0`;
+  const response = await apiClient.get<any>(url);
   return response.data;
 }
 

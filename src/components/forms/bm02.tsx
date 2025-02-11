@@ -4,6 +4,7 @@ import {
   ClassAssistantItem,
   deleteClassAssistants,
   getAllClassAssistants,
+  getExportAssistant,
   ImportClassAssistants,
   postAddClassAssistant,
   putUpdateApprovedClassAssistant,
@@ -318,7 +319,7 @@ const BM02 = () => {
       dataIndex: "internalNumber",
       key: "internalNumber",
       className: "customInfoColors text-center w-[70px]",
-      render: (internalNumber: string, item: ClassAssistantItem) => {
+      render: (_, item: ClassAssistantItem) => {
         const path = item.determinations.files[0]?.path;
         return (
           <>
@@ -559,7 +560,11 @@ const BM02 = () => {
   };
 
   const handleExportExcel = async () => {
-    if (data) {
+    const unit = units.find(
+      (unit: any) => unit.idHrm === selectedKeyUnit
+    ) as any;
+    const results = await getExportAssistant(unit?.code, selectedKey.id);
+    if (results) {
       const defaultInfo = [
         ["", "", "", "", "", "", "", "", "", "", "BM-02"],
         [
@@ -600,7 +605,7 @@ const BM02 = () => {
           "Thời gian hoạt động",
           "Ghi chú",
         ],
-        ...data.map((item, index) => [
+        ...results.data.map((item: any, index: number) => [
           index + 1,
           item.userName,
           item.fullName,
@@ -612,7 +617,7 @@ const BM02 = () => {
           item.determinations.documentNumber +
             ", " +
             convertTimestampToDate(item.determinations.fromDate),
-          item.determinations.fromDate && item.determinations.toDate
+          item.determinations.fromDate !== 0 && item.determinations.toDate !== 0
             ? convertTimestampToDate(item.determinations.fromDate) +
               " - " +
               convertTimestampToDate(item.determinations.toDate)
@@ -822,7 +827,10 @@ const BM02 = () => {
       ).padStart(2, "0")}-${now.getFullYear()}-${String(
         now.getHours()
       ).padStart(2, "0")}-${String(now.getMinutes()).padStart(2, "0")}`;
-      saveAs(blob, "BM02-" + formattedDate + ".xlsx");
+      let filename = unit?.code
+        ? "BM02-" + unit?.code + "-" + formattedDate + ".xlsx"
+        : "BM02-" + formattedDate + ".xlsx";
+      saveAs(blob, filename);
     }
   };
 

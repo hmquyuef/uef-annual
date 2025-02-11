@@ -4,6 +4,7 @@ import {
   CharitableItem,
   deleteCharitables,
   getAllCharitables,
+  getExportCharitable,
   ImportCharitables,
   postCharitable,
   putCharitable,
@@ -247,10 +248,11 @@ const BM10 = () => {
           TÀI LIỆU <br /> ĐÍNH KÈM
         </div>
       ),
-      dataIndex: ["attackmentFile", "path"],
-      key: "path",
+      dataIndex: "file",
+      key: "file",
       className: "customInfoColors text-center w-[110px]",
-      render: (path: string) => {
+      render: (_, item: CharitableItem) => {
+        const path = item.determinations.files[0]?.path;
         return path !== "" && path !== undefined ? (
           <>
             <Link
@@ -280,11 +282,11 @@ const BM10 = () => {
       dataIndex: "internalNumber",
       key: "internalNumber",
       className: "customInfoColors text-center w-[70px]",
-      render: (internalNumber: string, item: CharitableItem) => {
+      render: (_, item: CharitableItem) => {
         const path = item.determinations.files[0]?.path;
         return (
           <>
-            {internalNumber && (
+            {item.determinations.internalNumber && (
               <>
                 <span className="ml-2">
                   <Tag
@@ -292,7 +294,7 @@ const BM10 = () => {
                       path !== "" && path !== undefined ? "blue" : "error"
                     }`}
                   >
-                    {internalNumber}
+                    {item.determinations.internalNumber}
                   </Tag>
                 </span>
               </>
@@ -481,11 +483,10 @@ const BM10 = () => {
   };
 
   const handleExportExcel = async () => {
-    if (data) {
-      const currentYear = new Date().getFullYear();
-      const nextYear = currentYear + 1;
+    const results = await getExportCharitable(selectedKey.id, null);
+    if (results) {
       const defaultInfo = [
-        ["", "", "", "", "", "", "", "", "", "", "", "BM-01"],
+        ["", "", "", "", "", "", "", "", "", "", "", "BM-10"],
         [
           "TRƯỜNG ĐẠI HỌC KINH TẾ - TÀI CHÍNH",
           "",
@@ -506,7 +507,7 @@ const BM10 = () => {
         ],
         ["(ĐƠN VỊ)", "", "", ""],
         ["TỔNG HỢP DANH SÁCH"],
-        [`Chủ nhiệm lớp trong năm học ${currentYear}-${nextYear}`],
+        ["Tham gia, ủng hộ hoạt động cộng đồng, từ thiện do Trường, đơn vị thuộc Trường tổ chức"],
         [""],
       ];
 
@@ -516,47 +517,35 @@ const BM10 = () => {
           "Mã số CB-GV-NV",
           "Họ và tên",
           "Đơn vị",
-          "Học kỳ",
-          "Số tiết chuẩn",
-          "Ngành",
-          "Khóa",
-          "Mã lớp",
+          "Nội dung hoạt động",
+          "",
+          "Địa điểm tổ chức",
+          "",
+          "Nhà tài trợ",
           "Số văn bản, ngày lập",
           "Thời gian hoạt động",
           "Ghi chú",
         ],
-        ...data.map((item, index) => [
+        ...results.data.map((item: any, index: number) => [
           index + 1,
           item.userName,
           item.fullName,
           item.unitName ?? "",
-          item.semester ?? "",
-          item.standardNumber,
-          item.subject ?? "",
-          item.course ?? "",
-          item.classCode ?? "",
-          item.proof + ", " + convertTimestampToDate(item.fromDate),
-          item.fromDate && item.toDate
-            ? convertTimestampToDate(item.fromDate) +
+          item.contents ?? "",
+          "",
+          item.eventVenue ?? "",
+          "",
+          item.sponsor ?? "",
+          item.determinations.documentNumber +
+            ", " +
+            convertTimestampToDate(item.determinations.documentDate),
+          item.determinations.fromDate !== 0 && item.determinations.toDate !== 0
+            ? convertTimestampToDate(item.determinations.fromDate) +
               " - " +
-              convertTimestampToDate(item.toDate)
+              convertTimestampToDate(item.determinations.toDate)
             : "",
           item.note ?? "",
         ]),
-        [
-          "TỔNG SỐ TIẾT CHUẨN",
-          "",
-          "",
-          "",
-          "",
-          `${data.reduce((acc, x) => acc + x.standardNumber, 0)}`,
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-        ],
       ];
 
       const combinedData = [...defaultInfo, ...dataArray];
@@ -621,10 +610,9 @@ const BM10 = () => {
       worksheet["!merges"] = [];
       const tempMerge = [];
       const range = XLSX.utils.decode_range(worksheet["!ref"]!);
-      for (let row = 7; row <= range.e.r; row++) {
-        if (row === combinedData.length - 1) {
-          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 4 } });
-        }
+      for (let row = 7; row <= combinedData.length - 1; row++) {
+        tempMerge.push({ s: { r: row, c: 4 }, e: { r: row, c: 5 } });
+        tempMerge.push({ s: { r: row, c: 6 }, e: { r: row, c: 7 } });
         for (let col = range.s.c; col <= range.e.c; col++) {
           const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
           if (row === 7) {
@@ -663,28 +651,12 @@ const BM10 = () => {
               true
             );
           }
-          if (row === combinedData.length - 1) {
-            setCellStyle(
-              worksheet,
-              cellRef,
-              11,
-              true,
-              "center",
-              "center",
-              true,
-              true
-            );
-          }
         }
       }
 
-      for (
-        let row = range.e.r - defaultFooterInfo.length + 1;
-        row <= range.e.r;
-        row++
-      ) {
+      for (let row = combinedData.length + 1; row <= range.e.r; row++) {
         if (row < range.e.r)
-          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 11 } });
+          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 9 } });
         else {
           tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 3 } });
           tempMerge.push({ s: { r: row, c: 8 }, e: { r: row, c: 9 } });
@@ -752,7 +724,8 @@ const BM10 = () => {
       ).padStart(2, "0")}-${now.getFullYear()}-${String(
         now.getHours()
       ).padStart(2, "0")}-${String(now.getMinutes()).padStart(2, "0")}`;
-      saveAs(blob, "BM01-" + formattedDate + ".xlsx");
+      let filename = "BM10-" + formattedDate + ".xlsx";
+      saveAs(blob, filename);
     }
   };
 

@@ -283,6 +283,8 @@ const FormBM11: FC<FormBM11Props> = (props) => {
     setMembers([]);
     setPdf(undefined);
     setParticipants(undefined);
+    setIsLoadingExcel(true);
+    setIsLoadingPDF(true);
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -328,7 +330,9 @@ const FormBM11: FC<FormBM11Props> = (props) => {
           (x: { type: string }) => x.type === "application/pdf"
         );
         const excel = initialData.determinations.files.find(
-          (x: { type: string }) => x.type === "application/pdf"
+          (x: { type: string }) =>
+            x.type ===
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         );
         setFormValues({
           contents: initialData.contents || "",
@@ -347,11 +351,13 @@ const FormBM11: FC<FormBM11Props> = (props) => {
           note: initialData.note || "",
         });
         setMembers(initialData.members);
-        if (initialData.attackmentFile) {
-          setPdf(initialData.attackmentFile);
+        if (file && file.path !== "") {
+          setPdf(file);
+          setIsLoadingPDF(false);
         }
-        if (initialData.attackmentExcel) {
-          setParticipants(initialData.attackmentExcel);
+        if (excel && excel.path !== "") {
+          setParticipants(excel);
+          setIsLoadingExcel(false);
         }
       } else {
         ResetForm();

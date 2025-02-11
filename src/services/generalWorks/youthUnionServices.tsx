@@ -20,10 +20,19 @@ export interface YouthUnionsResponse {
 export async function getAllYouthUnions(
   yearId: string
 ): Promise<YouthUnionsResponse> {
-  let url = yearId
-    ? `api/general/union/youth?Years=${yearId}`
-    : "api/general/union/youth";
+  let url = `api/general/union/youth?Years=${yearId}`;
   const response = await apiClient.get<YouthUnionsResponse>(url);
+  return response.data;
+}
+
+export async function getExportYouthUnion(
+  yearId: string,
+  unitCode: string | null
+): Promise<any> {
+  let url = unitCode
+    ? `api/general/union/youth/export?unitCode=${unitCode}&SchoolYearId=${yearId}&FromDate=0&ToDate=0`
+    : `api/general/union/youth/export?SchoolYearId=${yearId}&FromDate=0&ToDate=0`;
+  const response = await apiClient.get<any>(url);
   return response.data;
 }
 

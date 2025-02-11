@@ -30,6 +30,17 @@ export async function getAllClassLeaders(
   return response.data;
 }
 
+export async function getExportClassLeader(
+  unitCode: string,
+  yearId: string
+): Promise<any> {
+  let url = unitCode
+    ? `api/leaders/export?unitCode=${unitCode}&SchoolYearId=${yearId}&FromDate=0&ToDate=0`
+    : `api/leaders/export?SchoolYearId=${yearId}&FromDate=0&ToDate=0`;
+  const response = await apiClient.get<any>(url);
+  return response.data;
+}
+
 export async function postAddClassLeader(
   data: Partial<ClassLeaderItem>
 ): Promise<ClassLeaderItem> {

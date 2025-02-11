@@ -398,7 +398,7 @@ const FormBM05: FC<FormBM05Props> = ({
               : undefined
           );
         }
-        setDocumentNumber(initialData.documentNumber || "");
+        setDocumentNumber(initialData.determinations?.internalNumber || "");
       } else {
         resetForm();
       }

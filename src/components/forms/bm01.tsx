@@ -4,6 +4,7 @@ import {
   ClassLeaderItem,
   deleteClassLeaders,
   getAllClassLeaders,
+  getExportClassLeader,
   ImportClassLeaders,
   postAddClassLeader,
   putUpdateApprovedClassLeader,
@@ -293,7 +294,7 @@ const BM01 = () => {
       dataIndex: "attackment",
       key: "attackment",
       className: "customInfoColors text-center w-[80px]",
-      render: (attackment: string, item: ClassLeaderItem) => {
+      render: (_, item: ClassLeaderItem) => {
         const path = item.determinations.files[0]?.path;
         return path !== "" && path !== undefined ? (
           <>
@@ -560,7 +561,11 @@ const BM01 = () => {
   };
 
   const handleExportExcel = async () => {
-    if (data) {
+    const unit = units.find(
+      (unit: any) => unit.idHrm === selectedKeyUnit
+    ) as any;
+    const results = await getExportClassLeader(unit?.code, selectedKey.id);
+    if (results) {
       const currentYear = new Date().getFullYear();
       const nextYear = currentYear + 1;
       const defaultInfo = [
@@ -604,11 +609,11 @@ const BM01 = () => {
           "Thời gian hoạt động",
           "Ghi chú",
         ],
-        ...data.map((item, index) => [
+        ...results.data.map((item: any, index: number) => [
           index + 1,
           item.userName,
           item.fullName,
-          item.unitName ?? "",
+          item.unitCode ?? "",
           item.semester ?? "",
           item.standardNumber,
           item.subject ?? "",
@@ -833,7 +838,11 @@ const BM01 = () => {
       ).padStart(2, "0")}-${now.getFullYear()}-${String(
         now.getHours()
       ).padStart(2, "0")}-${String(now.getMinutes()).padStart(2, "0")}`;
-      saveAs(blob, "BM01-" + formattedDate + ".xlsx");
+
+      let filename = unit?.code
+        ? "BM01-" + unit?.code + "-" + formattedDate + ".xlsx"
+        : "BM01-" + formattedDate + ".xlsx";
+      saveAs(blob, filename);
     }
   };
 

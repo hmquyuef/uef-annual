@@ -20,10 +20,19 @@ export interface LaborUnionsResponse {
 export async function getAllLaborUnions(
   yearId: string
 ): Promise<LaborUnionsResponse> {
-  let url = yearId
-    ? `api/general/union/labor?Years=${yearId}`
-    : "api/general/union/labor";
+  let url = `api/general/union/labor?Years=${yearId}`;
   const response = await apiClient.get<LaborUnionsResponse>(url);
+  return response.data;
+}
+
+export async function getExportLaborUnion(
+  yearId: string,
+  unitCode: string | null
+): Promise<any> {
+  let url = unitCode
+    ? `api/general/union/labor/export?unitCode=${unitCode}&SchoolYearId=${yearId}&FromDate=0&ToDate=0`
+    : `api/general/union/labor/export?SchoolYearId=${yearId}&FromDate=0&ToDate=0`;
+  const response = await apiClient.get<any>(url);
   return response.data;
 }
 

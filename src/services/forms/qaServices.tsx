@@ -27,6 +27,17 @@ export async function getAllQAs(yearId: string): Promise<QAResponse> {
   return response.data;
 }
 
+export async function getExportQAs(
+  unitCode: string,
+  yearId: string
+): Promise<any> {
+  let url = unitCode
+    ? `api/qae/export?unitCode=${unitCode}&SchoolYearId=${yearId}&FromDate=0&ToDate=0`
+    : `api/qae/export?SchoolYearId=${yearId}&FromDate=0&ToDate=0`;
+  const response = await apiClient.get<any>(url);
+  return response.data;
+}
+
 export async function postAddQA(data: Partial<QAItem>): Promise<QAItem> {
   const response = await apiClient.post<QAItem>("api/qae", data);
   return response.data;

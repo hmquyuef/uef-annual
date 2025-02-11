@@ -30,6 +30,17 @@ export async function getAllClassAssistants(
   return response.data;
 }
 
+export async function getExportAssistant(
+  unitCode: string,
+  yearId: string
+): Promise<any> {
+  let url = unitCode
+    ? `api/assistants/export?unitCode=${unitCode}&SchoolYearId=${yearId}&FromDate=0&ToDate=0`
+    : `api/assistants/export?SchoolYearId=${yearId}&FromDate=0&ToDate=0`;
+  const response = await apiClient.get<any>(url);
+  return response.data;
+}
+
 export async function postAddClassAssistant(
   data: Partial<ClassAssistantItem>
 ): Promise<ClassAssistantItem> {

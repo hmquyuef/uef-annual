@@ -1,4 +1,5 @@
 import apiClient from "../apiClient";
+import { Determinations } from "../forms/Determinations";
 import { PaymentApprovedItem } from "../forms/PaymentApprovedItem";
 
 export interface TrainingLevelItem {
@@ -10,7 +11,7 @@ export interface TrainingLevelItem {
   issuanceDate: number;
   issuancePlace: string;
   type: string;
-  entryDate: number;
+  determinations: Determinations;
   payments: PaymentApprovedItem;
   note: string;
 }

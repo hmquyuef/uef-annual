@@ -4,6 +4,7 @@ import {
   AdmissionCounselingItem,
   deleteAdmissionCounseling,
   getAllAdmissionCounseling,
+  getExportAdmissionCounseling,
   ImportAdmissionCounseling,
   postAddAdmissionCounseling,
   putUpdateAdmissionCounseling,
@@ -201,11 +202,13 @@ const BM03 = () => {
       ),
       dataIndex: "proof",
       key: "proof",
-      render: (proof: string, record: AdmissionCounselingItem) => {
+      render: (_, record: AdmissionCounselingItem) => {
         const ngayLap = record.determinations.fromDate;
         return (
           <div className="flex flex-col">
-            <span className="text-center font-medium">{proof}</span>
+            <span className="text-center font-medium">
+              {record.determinations.documentNumber}
+            </span>
             <span className="text-center text-[13px]">
               {convertTimestampToDate(ngayLap)}
             </span>
@@ -304,7 +307,7 @@ const BM03 = () => {
       dataIndex: "internalNumber",
       key: "internalNumber",
       className: "customInfoColors text-center w-[70px]",
-      render: (internalNumber: string, item: AdmissionCounselingItem) => {
+      render: (_, item: AdmissionCounselingItem) => {
         const path = item.determinations.files[0]?.path;
         return (
           <>
@@ -540,7 +543,14 @@ const BM03 = () => {
   };
 
   const handleExportExcel = async () => {
-    if (data) {
+    const unit = units.find(
+      (unit: any) => unit.idHrm === selectedKeyUnit
+    ) as any;
+    const results = await getExportAdmissionCounseling(
+      unit?.code,
+      selectedKey.id
+    );
+    if (results) {
       const defaultInfo = [
         ["", "", "", "", "", "", "", "", "", "", "BM-03"],
         [
@@ -579,7 +589,7 @@ const BM03 = () => {
           "Thời gian hoạt động",
           "Ghi chú",
         ],
-        ...data.map((item, index) => [
+        ...results.data.map((item: any, index: number) => [
           index + 1,
           item.userName,
           item.fullName,
@@ -591,7 +601,7 @@ const BM03 = () => {
           item.determinations.documentNumber +
             ", " +
             convertTimestampToDate(item.determinations.documentDate),
-          item.determinations.fromDate && item.determinations.toDate
+          item.determinations.fromDate !== 0 && item.determinations.toDate !== 0
             ? convertTimestampToDate(item.determinations.fromDate) +
               " - " +
               convertTimestampToDate(item.determinations.toDate)
@@ -803,7 +813,10 @@ const BM03 = () => {
       ).padStart(2, "0")}-${now.getFullYear()}-${String(
         now.getHours()
       ).padStart(2, "0")}-${String(now.getMinutes()).padStart(2, "0")}`;
-      saveAs(blob, "BM03-" + formattedDate + ".xlsx");
+      let filename = unit?.code
+        ? "BM03-" + unit?.code + "-" + formattedDate + ".xlsx"
+        : "BM03-" + formattedDate + ".xlsx";
+      saveAs(blob, filename);
     }
   };
 

@@ -28,6 +28,17 @@ export async function getAllCharitables(
   return response.data;
 }
 
+export async function getExportCharitable(
+  yearId: string,
+  unitCode?: string|null,
+): Promise<any> {
+  let url = unitCode
+    ? `api/general/charity/export?unitCode=${unitCode}&SchoolYearId=${yearId}&FromDate=0&ToDate=0`
+    : `api/general/charity/export?SchoolYearId=${yearId}&FromDate=0&ToDate=0`;
+  const response = await apiClient.get<any>(url);
+  return response.data;
+}
+
 export async function postCharitable(data: Partial<any>): Promise<any> {
   const response = await apiClient.post<any>("api/general/charity", data);
   return response.data;

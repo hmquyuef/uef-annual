@@ -7,20 +7,19 @@ import {
   CaretRightOutlined,
   CloudDownloadOutlined,
   DownloadOutlined,
-  FileProtectOutlined,
-  FilterOutlined,
   HomeOutlined,
+  MailOutlined,
   ProfileOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import {
+  Avatar,
   Breadcrumb,
   Button,
   Collapse,
-  ConfigProvider,
-  DatePicker,
+  Descriptions,
   Divider,
   Empty,
-  MenuProps,
   Select,
   Table,
   TableColumnsType,
@@ -40,9 +39,17 @@ import {
   Item,
 } from "@/services/exports/exportDetailForUser";
 import { convertTimestampToDate } from "@/utility/Utilities";
-import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
+import Colors from "@/utility/Colors";
+import { OtherItems } from "@/services/exports/OtherItems";
+import { GeneralItems } from "@/services/exports/GeneralItems";
+import {
+  Employees,
+  Lecture,
+  RegulationItems,
+} from "@/services/exports/RegulationItems";
+import { TrainingItems } from "@/services/exports/TrainingItems";
 dayjs.locale("vi");
 
 const WorkloadDetails = () => {
@@ -50,20 +57,18 @@ const WorkloadDetails = () => {
   const [detailUser, setDetailUser] = useState<DetailUserItem | undefined>(
     undefined
   );
-  const [dataClassLeaders, setDataClassLeaders] = useState<Item[]>([]);
-  const [dataAssistants, setDataAssistants] = useState<Item[]>([]);
-  const [dataQAEs, setDataQAEs] = useState<Item[]>([]);
-  const [dataAdmissionCounseling, setDataAdmissionCounseling] = useState<
-    Item[]
-  >([]);
-  const [dataActivities, setDataActivities] = useState<Item[]>([]);
+  const [groupOthers, setGroupOther] = useState<OtherItems[]>([]);
+  const [groupGenerals, setGroupGenerals] = useState<GeneralItems[]>([]);
+  const [groupRegulations, setGroupRegulations] =
+    useState<RegulationItems | null>(null);
+  const [groupTraining, setGroupTraining] = useState<TrainingItems | null>(
+    null
+  );
+  const [employees, setEmployees] = useState<Employees | null>(null);
+  const [lecture, setLecture] = useState<Lecture | null>(null);
   const [userName, setUserName] = useState("");
   const [defaultYears, setDefaultYears] = useState<any>();
   const [selectedKeyYear, setSelectedKeyYear] = useState<any>();
-  const [startDate, setStartDate] = useState<number | 0>(0);
-  const [minStartDate, setMinStartDate] = useState<number | 0>(0);
-  const [endDate, setEndDate] = useState<number | 0>(0);
-  const [maxEndDate, setMaxEndDate] = useState<number | 0>(0);
 
   const getDefaultYears = async () => {
     setLoading(true);
@@ -72,12 +77,7 @@ const WorkloadDetails = () => {
       setDefaultYears(items);
       const defaultYear = items.find((x: any) => x.isDefault);
       if (defaultYear) {
-        const { startDate, endDate } = defaultYear;
         setSelectedKeyYear(defaultYear);
-        setStartDate(startDate);
-        setMinStartDate(startDate);
-        setEndDate(endDate);
-        setMaxEndDate(endDate);
       }
     }
     const timeoutId = setTimeout(() => {
@@ -89,47 +89,36 @@ const WorkloadDetails = () => {
   const handleChangeYear = (value: any) => {
     const temp = defaultYears.filter((x: any) => x.id === value)[0] as any;
     setSelectedKeyYear(temp);
-    setStartDate(temp.startDate);
-    setMinStartDate(temp.startDate);
-    setEndDate(temp.endDate);
-    setMaxEndDate(temp.endDate);
   };
 
   //render table InfoUser
   const columnsInfoUser: TableColumnsType<DetailUserItem> = [
     {
-      title: <div className="p-2">STT</div>,
-      dataIndex: "stt",
-      key: "stt",
-      render: (_, __, index) => <p>{index + 1}</p>,
-      className: "text-center w-[50px]",
-    },
-    {
-      title: "Mã SỐ CB-GV-NV",
+      title: <div className="py-1">Mã SỐ CB-GV-NV</div>,
       dataIndex: "userName",
       key: "userName",
-      render: (userName: string) => <p>{userName}</p>,
+      render: (userName: string) => <strong>{userName}</strong>,
       className: "text-center w-[200px]",
     },
     {
       title: "HỌ VÀ TÊN",
       dataIndex: "fullName",
       key: "fullName",
-      render: (fullName: string) => <p>{fullName}</p>,
+      render: (fullName: string) => <strong>{fullName}</strong>,
       className: "text-center w-[200px]",
     },
     {
       title: "EMAIL",
       dataIndex: "email",
       key: "email",
-      render: (email: string) => <p>{email}</p>,
+      render: (email: string) => <strong>{email}</strong>,
       className: "text-center w-[200px]",
     },
     {
       title: "ĐƠN VỊ",
       dataIndex: "unitName",
       key: "unitName",
-      render: (unitName: string) => <p>{unitName}</p>,
+      render: (unitName: string) => <strong>{unitName}</strong>,
       className: "text-center w-[100px]",
     },
     {
@@ -137,24 +126,24 @@ const WorkloadDetails = () => {
       dataIndex: "totalEvents",
       key: "totalEvents",
       className: "text-center w-[8rem]",
-      render: (totalEvents: string, record: DetailUserItem) => {
-        const total =
-          record.classLeaders.totalItems +
-          record.assistants.totalItems +
-          record.qAs.totalItems +
-          record.admissionCounseling.totalItems +
-          record.activities.totalItems;
-        return <strong>{total}</strong>;
-      },
+      render: (totalEvents: number) => <strong>{totalEvents}</strong>,
     },
     {
       title: "TỔNG SỐ TIẾT CHUẨN",
       dataIndex: "totalStandarNumber",
       key: "totalStandarNumber",
       className: "text-center w-[8rem]",
-      render: (totalStandarNumber: string) => (
-        <strong>{totalStandarNumber}</strong>
-      ),
+      render: (_, item: any) => {
+        const totalStarndarNumber = item.items.other.reduce(
+          (acc: number, x: any) => acc + x.totalStandarNumber,
+          0
+        );
+        return (
+          <>
+            <strong>{totalStarndarNumber}</strong>
+          </>
+        );
+      },
     },
     {
       title: "",
@@ -182,8 +171,136 @@ const WorkloadDetails = () => {
     },
   ];
 
-  //render table for BM01, BM02, BM03, BM04
-  const columns: TableColumnsType<Item> = [
+  const columnsEmployees: TableColumnsType<Employees> = [
+    {
+      title: <div className="py-1">CHẤM CÔNG</div>,
+      dataIndex: "attendance",
+      key: "attendance",
+      className: "text-center w-[70px]",
+      children: [
+        {
+          title: <div className="py-1">THEO NGÀY</div>,
+          dataIndex: "days",
+          key: "days",
+          render: (_, item: Employees) => {
+            return <>{item.detail.attendanceDays}</>;
+          },
+          className: "text-center w-[70px]",
+        },
+        {
+          title: <div className="py-1">THEO GIỜ</div>,
+          dataIndex: "hours",
+          key: "hours",
+          render: (_, item: Employees) => <>{item.detail.attendanceHours}</>,
+          className: "text-center w-[70px]",
+        },
+      ],
+    },
+    {
+      title: <div className="py-1">SỐ BUỔI</div>,
+      dataIndex: "late",
+      key: "late",
+      className: "text-center w-[70px]",
+      children: [
+        {
+          title: <div className="py-1">ĐI TRỄ</div>,
+          dataIndex: "lateArrivals",
+          key: "lateArrivals",
+          render: (_, item: Employees) => {
+            return <>{item.detail.lateArrivals}</>;
+          },
+          className: "text-center w-[70px]",
+        },
+        {
+          title: <div className="py-1">VỀ SỚM</div>,
+          dataIndex: "earlyDepartures",
+          key: "earlyDepartures",
+          render: (_, item: Employees) => <>{item.detail.earlyDepartures}</>,
+          className: "text-center w-[70px]",
+        },
+      ],
+    },
+    {
+      title: <div className="py-1">SỐ NGÀY NGHỈ</div>,
+      dataIndex: "leaved",
+      key: "leaved",
+      className: "text-center w-[70px]",
+      children: [
+        {
+          title: <div className="py-1">KHÔNG PHÉP</div>,
+          dataIndex: "unexcusedAbsences",
+          key: "unexcusedAbsences",
+          render: (_, item: Employees) => <>{item.detail.unexcusedAbsences}</>,
+          className: "text-center w-[70px]",
+        },
+        {
+          title: <div className="py-1">CÓ PHÉP</div>,
+          dataIndex: "leaveDays",
+          key: "leaveDays",
+          render: (_, item: Employees) => <>{item.detail.leaveDays}</>,
+          className: "text-center w-[70px]",
+        },
+        {
+          title: <div className="py-1">HẬU SẢN</div>,
+          dataIndex: "maternityLeaveDays",
+          key: "maternityLeaveDays",
+          render: (_, item: Employees) => <>{item.detail.maternityLeaveDays}</>,
+          className: "text-center w-[70px]",
+        },
+        {
+          title: <div className="py-1">KHÔNG LƯƠNG</div>,
+          dataIndex: "unpaidLeaveDays",
+          key: "unpaidLeaveDays",
+          render: (_, item: Employees) => <>{item.detail.unpaidLeaveDays}</>,
+          className: "text-center w-[80px]",
+        },
+      ],
+    },
+    {
+      title: "CÔNG TÁC",
+      dataIndex: "businessTripDays",
+      key: "businessTripDays",
+      render: (_, item: Employees) => <>{item.detail.businessTripDays}</>,
+      className: "text-center w-[70px]",
+    },
+    {
+      title: (
+        <div>
+          KHÔNG BẤM <br /> VÂN TAY
+        </div>
+      ),
+      dataIndex: "missedFingerprint",
+      key: "missedFingerprint",
+      render: (_, item: Employees) => <>{item.detail.missedFingerprint}</>,
+      className: "text-center w-[70px]",
+    },
+  ];
+
+  const columnsLecture: TableColumnsType<Lecture> = [
+    {
+      title: <div className="py-1">SỐ LẦN NGHỈ CÓ BÁO</div>,
+      dataIndex: "notifiedAbsences",
+      key: "notifiedAbsences",
+      render: (_, item: Lecture) => <>{item.detail.notifiedAbsences ?? 0}</>,
+      className: "text-center w-[80px]",
+    },
+    {
+      title: <div className="py-1">SỐ LẦN NGHỈ KHÔNG BÁO</div>,
+      dataIndex: "unnotifiedAbsences",
+      key: "unnotifiedAbsences",
+      render: (_, item: Lecture) => <>{item.detail.unnotifiedAbsences ?? 0}</>,
+      className: "text-center w-[80px]",
+    },
+    {
+      title: <div className="py-1">SỐ LẦN ĐI TRỄ/VỀ SỚM</div>,
+      dataIndex: "lateEarly",
+      key: "lateEarly",
+      render: (_, item: Lecture) => <>{item.detail.lateEarly ?? 0}</>,
+      className: "text-center w-[80px]",
+    },
+  ];
+
+  const columns = (isGeneral: boolean): TableColumnsType<any> => [
     {
       title: <div className="px-2 py-3">STT</div>,
       dataIndex: "stt",
@@ -193,24 +310,33 @@ const WorkloadDetails = () => {
     },
     {
       title: "TÊN HOẠT ĐỘNG",
-      dataIndex: "activityName",
-      key: "activityName",
-      render: (activityName: string) => (
-        <span className="text-blue-500 font-semibold">{activityName}</span>
-      ),
+      dataIndex: "name",
+      key: "name",
+      render: (_, item: any) => {
+        const name = item.name ?? item.contents;
+        return (
+          <>
+            <span className="text-blue-500 font-semibold">{name}</span>
+          </>
+        );
+      },
       className: "w-[4/5]",
     },
-    {
-      title: (
-        <div>
-          SỐ <br /> TIẾT CHUẨN
-        </div>
-      ),
-      dataIndex: "standarNumber",
-      key: "standarNumber",
-      className: "text-center w-[100px]",
-      render: (standarNumber: string) => <>{standarNumber}</>,
-    },
+    ...(isGeneral
+      ? []
+      : [
+          {
+            title: (
+              <div>
+                SỐ <br /> TIẾT CHUẨN
+              </div>
+            ),
+            dataIndex: "standarNumber",
+            key: "standarNumber",
+            className: "text-center w-[100px]",
+            render: (standarNumber: string) => <span>{standarNumber}</span>,
+          },
+        ]),
     {
       title: (
         <div>
@@ -219,14 +345,15 @@ const WorkloadDetails = () => {
       ),
       dataIndex: "proof",
       key: "proof",
-      render: (proof: string, record: Item) => {
-        const documentDate = record.documentDate
-          ? convertTimestampToDate(record.documentDate)
-          : "";
+      render: (_, record: any) => {
         return (
           <div className="flex flex-col">
-            <span className="font-medium">{proof}</span>
-            <span className="text-[13px]">{documentDate}</span>
+            <span className="font-medium">
+              {record.determinations.documentNumber}
+            </span>
+            <span className="text-[13px]">
+              {convertTimestampToDate(record.determinations.documentDate)}
+            </span>
           </div>
         );
       },
@@ -240,16 +367,22 @@ const WorkloadDetails = () => {
       ),
       dataIndex: "fromDate",
       key: "fromDate",
-      render: (fromDate: number, record: Item) => {
-        const toDate = record.toDate
-          ? convertTimestampToDate(record.toDate)
-          : "";
+      render: (_, record: any) => {
         return (
           <>
-            {fromDate ? (
+            {record.determinations.fromDate ? (
               <div className="flex flex-col">
-                <span>{convertTimestampToDate(fromDate)}</span>
-                <span>{toDate}</span>
+                <span>
+                  {convertTimestampToDate(record.determinations.fromDate)}
+                </span>
+                {record.determinations.toDate !==
+                record.determinations.fromDate ? (
+                  <>
+                    <span>
+                      {convertTimestampToDate(record.determinations.toDate)}
+                    </span>
+                  </>
+                ) : null}
               </div>
             ) : (
               ""
@@ -268,122 +401,27 @@ const WorkloadDetails = () => {
     },
   ];
 
-  //render table for BM05
-  const columnsBM05: TableColumnsType<Item> = [
-    {
-      title: <div className="px-2 py-3">STT</div>,
-      dataIndex: "stt",
-      key: "stt",
-      render: (_, __, index) => <>{index + 1}</>,
-      className: "text-center w-[50px]",
-    },
-    {
-      title: "TÊN HOẠT ĐỘNG",
-      dataIndex: "activityName",
-      key: "activityName",
-      render: (activityName: string) => (
-        <span className="text-blue-500 font-semibold">{activityName}</span>
-      ),
-      className: "w-[4/5]",
-    },
-    {
-      title: (
-        <div>
-          SỐ <br /> TIẾT CHUẨN
-        </div>
-      ),
-      dataIndex: "standarNumber",
-      key: "standarNumber",
-      className: "text-center w-[100px]",
-      render: (standarNumber: string) => <>{standarNumber}</>,
-    },
-    {
-      title: (
-        <div>
-          SỐ VĂN BẢN <br /> NGÀY LẬP
-        </div>
-      ),
-      dataIndex: "proof",
-      key: "proof",
-      render: (proof: string, record: Item) => {
-        const documentDate = record.documentDate
-          ? convertTimestampToDate(record.documentDate)
-          : "";
-        return (
-          <div className="flex flex-col">
-            <span className="font-medium">{proof}</span>
-            <span className="text-[13px]">{documentDate}</span>
-          </div>
-        );
-      },
-      className: "text-center w-[150px]",
-    },
-    {
-      title: (
-        <div className="p-1">
-          THỜI GIAN <br /> HOẠT ĐỘNG
-        </div>
-      ),
-      dataIndex: "fromDate",
-      key: "fromDate",
-      render: (fromDate: number) =>
-        fromDate ? convertTimestampToDate(fromDate) : "",
-      className: "text-center w-[150px]",
-    },
-    {
-      title: "GHI CHÚ",
-      dataIndex: "note",
-      key: "note",
-      render: (note: string) => <>{note}</>,
-      className: "w-[200px]",
-    },
-  ];
-
   const fetchData = async (username: string) => {
     setLoading(true);
     const formData: Partial<any> = {
       userName: username,
       years: selectedKeyYear.id,
-      startDate: startDate,
-      endDate: endDate,
     };
     const response = await getDataExportByUserName(formData);
     if (response) {
       setDetailUser(response);
-
-      setDataClassLeaders(response.classLeaders.items);
-      setDataAssistants(response.assistants.items);
-      setDataQAEs(response.qAs.items);
-      setDataAdmissionCounseling(response.admissionCounseling.items);
-      setDataActivities(response.activities.items);
+      setGroupOther(response.items.other);
+      setGroupGenerals(response.items.general);
+      setGroupRegulations(response.items.regulation);
+      setEmployees(response.items.regulation.employees);
+      setLecture(response.items.regulation.lecture);
+      setGroupTraining(response.items.training);
     }
     const timeoutId = setTimeout(() => {
       setLoading(false);
     }, 500);
     return () => clearTimeout(timeoutId);
   };
-
-  const downloadReport = (formName: string) => (
-    <Button
-      color="primary"
-      variant="outlined"
-      shape="round"
-      icon={<CloudDownloadOutlined />}
-      size="small"
-      onClick={(e) => {
-        e.stopPropagation();
-        const formData: Partial<any> = {
-          userName: userName,
-          years: selectedKeyYear.id,
-          startDate: startDate,
-          endDate: endDate,
-        };
-        handleExportForBM({ ...formData, ...{ formName } });
-      }}
-    >
-      Tải về
-    </Button>
-  );
 
   useEffect(() => {
     setLoading(true);
@@ -402,9 +440,8 @@ const WorkloadDetails = () => {
   }, []);
 
   useEffect(() => {
-    setLoading(true);
-    if (selectedKeyYear && startDate && endDate) fetchData(userName);
-  }, [selectedKeyYear, startDate, endDate]);
+    if (selectedKeyYear) fetchData(userName);
+  }, [selectedKeyYear]);
 
   return (
     <section>
@@ -460,438 +497,467 @@ const WorkloadDetails = () => {
         <>
           {detailUser && (
             <>
-              <div className="mt-6">
+              {/* <div>
                 <Divider
                   orientation="left"
                   className="uppercase"
-                  style={{ borderColor: "#1677FF", color: "#1677FF" }}
+                  style={{ borderColor: Colors.BLUE, color: Colors.BLUE }}
                 >
                   Thông tin nhân sự
                 </Divider>
+                <div className="my-6">
+                  <Table<DetailUserItem>
+                    key={"table-detail-info-user"}
+                    className="custom-table-header shadow-md rounded-md"
+                    bordered
+                    rowKey={(item) => item.userName}
+                    rowHoverable
+                    size="small"
+                    pagination={false}
+                    columns={columnsInfoUser}
+                    dataSource={[detailUser]}
+                    locale={{
+                      emptyText: <Empty description={Messages.NO_DATA}></Empty>,
+                    }}
+                  />
+                </div>
               </div>
-              <div className="my-6">
-                <Table<DetailUserItem>
-                  key={"table-detail-info-user"}
+              <div>
+                <Divider
+                  orientation="left"
+                  className="uppercase"
+                  style={{ borderColor: Colors.BLUE, color: Colors.BLUE }}
+                >
+                  Nội quy lao động
+                </Divider>
+                <Table<Employees>
+                  key={"table-detail-employees-regulations"}
                   className="custom-table-header shadow-md rounded-md"
                   bordered
-                  rowKey={(item) => item.id}
+                  // rowKey={(item) => item.userName}
                   rowHoverable
                   size="small"
                   pagination={false}
-                  columns={columnsInfoUser}
-                  dataSource={[detailUser]}
+                  columns={columnsRegulation}
+                  dataSource={employees ? [employees] : []}
                   locale={{
                     emptyText: <Empty description={Messages.NO_DATA}></Empty>,
                   }}
                 />
+              </div> */}
+              <div>
+                {/* <Divider
+                  orientation="left"
+                  className="uppercase"
+                  style={{ borderColor: Colors.BLUE, color: Colors.BLUE }}
+                >
+                  Thông tin nhân sự
+                </Divider> */}
+
+                <div className="grid grid-cols-4 gap-6">
+                  <div
+                    className="rounded-lg shadow-lg"
+                    style={{
+                      backgroundImage: 'url("/wave.svg")',
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: "bottom",
+                    }}
+                  >
+                    <div
+                      className="py-2 rounded-t-lg text-center font-semibold"
+                      style={{ backgroundColor: "#0099ff" }}
+                    >
+                      <span className="uppercase text-white tracking-wide">
+                        Thông Tin Nhân Sự
+                      </span>
+                    </div>
+                    <div className="flex px-3 pt-4 pb-8 gap-4">
+                      <div className="flex justify-center items-center">
+                        <div className="w-fit h-fit">
+                          <Avatar size={80} icon={<UserOutlined />} />
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex flex-col">
+                          <span className=" text-center text-lg text-neutral-600 font-medium">
+                            {detailUser.fullName}
+                          </span>
+                          <span className="text-center text-sm text-neutral-400">
+                            {detailUser.userName}
+                          </span>
+                          <hr className="mt-3 mb-1" />
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-3">
+                              <span className="text-center text-sm text-neutral-400 font-medium">
+                                <MailOutlined />
+                              </span>
+                              <span className="text-center text-sm text-neutral-400 font-medium">
+                                {detailUser.email}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-center text-sm text-neutral-400 font-medium">
+                                <MailOutlined />
+                              </span>
+                              <span className="text-center text-sm text-neutral-400 font-medium">
+                                {detailUser.unitName}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-center text-sm text-neutral-400 font-medium">
+                                <MailOutlined />
+                              </span>
+                              <span className="text-center text-sm text-neutral-400 font-medium">
+                                {detailUser.totalEvents} (sự kiện tham gia)
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-center text-sm text-neutral-400 font-medium">
+                                <MailOutlined />
+                              </span>
+                              <span className="text-center text-sm text-neutral-400 font-medium">
+                                {detailUser.items.other.reduce(
+                                  (acc: number, x: any) =>
+                                    acc + x.totalStandarNumber,
+                                  0
+                                )}{" "}
+                                (số tiết chuẩn)
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {/* <div className="flex flex-col gap-1 pb-3">
+                      <div className="grid grid-cols-2 gap-3 px-3">
+                        <span className="text-neutral-400">
+                          Mã số CB-GV-NV:
+                        </span>
+                        <span className="text-end text-neutral-600 font-medium">
+                          {detailUser.userName}
+                        </span>
+                      </div>
+                      <hr />
+                      <div className="grid grid-cols-2 gap-3 px-3">
+                        <span className="text-neutral-400">Họ và Tên:</span>
+                        <span className="text-end text-neutral-600 font-medium">
+                          {detailUser.fullName}
+                        </span>
+                      </div>
+                      <hr />
+                      <div className="grid grid-cols-2 gap-3  px-3">
+                        <span className="text-neutral-400">Địa chỉ email:</span>
+                        <span className="text-end text-neutral-600 font-medium">
+                          {detailUser.email}
+                        </span>
+                      </div>
+                      <hr />
+                      <div className="grid grid-cols-2 gap-3 px-3">
+                        <span className="text-neutral-400">Đơn vị:</span>
+                        <span className="text-end text-neutral-600 font-medium">
+                          {detailUser.unitName}
+                        </span>
+                      </div>
+                      <hr />
+                      <div className="grid grid-cols-2  gap-3 px-3">
+                        <span className="text-neutral-400">
+                          Tổng số sự kiện:
+                        </span>
+                        <span className="text-end text-neutral-600 font-medium">
+                          {detailUser.totalEvents}
+                        </span>
+                      </div>
+                      <hr />
+                      <div className="grid grid-cols-2 gap-3 px-3">
+                        <span className="text-neutral-400">
+                          Tổng số tiết chuẩn:
+                        </span>
+                        <span className="text-end text-neutral-600 font-medium">
+                          {detailUser.items.other.reduce(
+                            (acc: number, x: any) => acc + x.totalStandarNumber,
+                            0
+                          )}
+                        </span>
+                      </div>
+                    </div> */}
+                  </div>
+                </div>
               </div>
-              <div className="mt-6">
+              <div>
                 <Divider
                   orientation="left"
                   className="uppercase"
-                  style={{ borderColor: "#1677FF", color: "#1677FF" }}
+                  style={{ borderColor: Colors.BLUE, color: Colors.BLUE }}
+                >
+                  Nội quy lao động
+                </Divider>
+                <Collapse
+                  key="collapse-group-others"
+                  expandIcon={({ isActive }) => (
+                    <CaretRightOutlined rotate={isActive ? 90 : 0} />
+                  )}
+                  collapsible="header"
+                  className="mb-4"
+                  defaultActiveKey={["1"]}
+                  expandIconPosition="start"
+                  items={[
+                    {
+                      key: "1",
+                      label: (
+                        <strong className="uppercase">
+                          thông tin nội quy lao động
+                        </strong>
+                      ),
+                      children: (
+                        <>
+                          <Table<Employees>
+                            key={"table-detail-employees-regulations"}
+                            className="custom-table-header shadow-md rounded-md mb-6"
+                            bordered
+                            // rowKey={(item) => item.userName}
+                            rowHoverable
+                            title={() => (
+                              <strong className="uppercase">
+                                Nội quy lao động - dành cho cán bộ, nhân viên
+                              </strong>
+                            )}
+                            size="small"
+                            pagination={false}
+                            columns={columnsEmployees}
+                            dataSource={employees ? [employees] : []}
+                            locale={{
+                              emptyText: (
+                                <Empty description={Messages.NO_DATA}></Empty>
+                              ),
+                            }}
+                          />
+                          <Table<Lecture>
+                            key={"table-detail-employees-regulations"}
+                            className="custom-table-header shadow-md rounded-md"
+                            bordered
+                            // rowKey={(item) => item.userName}
+                            rowHoverable
+                            title={() => (
+                              <strong className="uppercase">
+                                Nội quy giảng dạy - dành cho Giảng viên
+                              </strong>
+                            )}
+                            size="small"
+                            pagination={false}
+                            columns={columnsLecture}
+                            dataSource={lecture ? [lecture] : []}
+                            locale={{
+                              emptyText: (
+                                <Empty description={Messages.NO_DATA}></Empty>
+                              ),
+                            }}
+                          />
+                        </>
+                      ),
+                    },
+                  ]}
+                />
+              </div>
+              <div>
+                <Divider
+                  orientation="left"
+                  className="uppercase"
+                  style={{ borderColor: Colors.BLUE, color: Colors.BLUE }}
                 >
                   Tổng kết hoạt động
                 </Divider>
+                <div className="mb-4">
+                  <Collapse
+                    key="collapse-group-others"
+                    expandIcon={({ isActive }) => (
+                      <CaretRightOutlined rotate={isActive ? 90 : 0} />
+                    )}
+                    collapsible="header"
+                    className="mb-4"
+                    defaultActiveKey={["1"]}
+                    expandIconPosition="start"
+                    items={[
+                      {
+                        key: "1",
+                        label: (
+                          <strong className="uppercase">
+                            Nhóm biểu mẫu công tác chung
+                          </strong>
+                        ),
+                        children: (
+                          <>
+                            {groupGenerals &&
+                              groupGenerals.map((group, index) => {
+                                return (
+                                  <>
+                                    <Table<any>
+                                      key={`table-group-generals-${index}`}
+                                      className="custom-table-header shadow-md rounded-md mb-4"
+                                      bordered
+                                      rowKey={(item) => item.name}
+                                      rowHoverable
+                                      size="small"
+                                      title={() => (
+                                        <div className="flex justify-between items-center">
+                                          <strong>
+                                            {group.shortName} - {group.name}
+                                          </strong>
+                                          <Button
+                                            color="primary"
+                                            variant="outlined"
+                                            shape="round"
+                                            icon={<CloudDownloadOutlined />}
+                                            size="small"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              const formData: Partial<any> = {
+                                                userName: userName,
+                                                years: selectedKeyYear.id,
+                                              };
+                                              handleExportForBM({
+                                                ...formData,
+                                                ...{
+                                                  formName: group.shortName,
+                                                },
+                                              });
+                                            }}
+                                          >
+                                            Tải về
+                                          </Button>
+                                        </div>
+                                      )}
+                                      // footer={() => "Footer"}
+                                      pagination={false}
+                                      columns={columns(true)}
+                                      dataSource={group.items}
+                                      locale={{
+                                        emptyText: (
+                                          <Empty
+                                            description={Messages.NO_DATA}
+                                          ></Empty>
+                                        ),
+                                      }}
+                                    />
+                                  </>
+                                );
+                              })}
+                          </>
+                        ),
+                      },
+                    ]}
+                  />
+                </div>
+                <div className="mb-4">
+                  <Collapse
+                    key="collapse-group-others"
+                    expandIcon={({ isActive }) => (
+                      <CaretRightOutlined rotate={isActive ? 90 : 0} />
+                    )}
+                    collapsible="header"
+                    className="mb-4"
+                    defaultActiveKey={["1"]}
+                    expandIconPosition="start"
+                    items={[
+                      {
+                        key: "1",
+                        label: (
+                          <strong className="uppercase">
+                            Nhóm biểu mẫu công tác khác
+                          </strong>
+                        ),
+                        children: (
+                          <>
+                            {groupOthers &&
+                              groupOthers.map((group, index) => {
+                                return (
+                                  <>
+                                    <Table<any>
+                                      key={`table-group-others-${index}`}
+                                      className="custom-table-header shadow-md rounded-md mb-4"
+                                      bordered
+                                      rowKey={(item) => item.name}
+                                      rowHoverable
+                                      size="small"
+                                      title={() => (
+                                        <div className="flex justify-between items-center">
+                                          <strong>
+                                            {group.shortName} - {group.name}
+                                          </strong>
+                                          <Button
+                                            color="primary"
+                                            variant="outlined"
+                                            shape="round"
+                                            icon={<CloudDownloadOutlined />}
+                                            size="small"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              const formData: Partial<any> = {
+                                                userName: userName,
+                                                years: selectedKeyYear.id,
+                                              };
+                                              handleExportForBM({
+                                                ...formData,
+                                                ...{
+                                                  formName: group.shortName,
+                                                },
+                                              });
+                                            }}
+                                          >
+                                            Tải về
+                                          </Button>
+                                        </div>
+                                      )}
+                                      // footer={() => "Footer"}
+                                      pagination={false}
+                                      summary={() => {
+                                        return (
+                                          <Table.Summary.Row>
+                                            <Table.Summary.Cell
+                                              colSpan={2}
+                                              index={0}
+                                              className="text-end font-semibold"
+                                            >
+                                              Tổng tiết chuẩn
+                                            </Table.Summary.Cell>
+                                            <Table.Summary.Cell
+                                              index={2}
+                                              className="text-center font-semibold"
+                                            >
+                                              {group.totalStandarNumber}
+                                            </Table.Summary.Cell>
+                                          </Table.Summary.Row>
+                                        );
+                                      }}
+                                      columns={columns(false)}
+                                      dataSource={group.items}
+                                      locale={{
+                                        emptyText: (
+                                          <Empty
+                                            description={Messages.NO_DATA}
+                                          ></Empty>
+                                        ),
+                                      }}
+                                    />
+                                  </>
+                                );
+                              })}
+                          </>
+                        ),
+                      },
+                    ]}
+                  />
+                </div>
               </div>
-              {dataClassLeaders && dataClassLeaders.length > 0 && (
-                <>
-                  <div className="mb-4">
-                    <Collapse
-                      key="collapse-class-leaders"
-                      expandIcon={({ isActive }) => (
-                        <CaretRightOutlined rotate={isActive ? 90 : 0} />
-                      )}
-                      collapsible="header"
-                      className="mb-4"
-                      defaultActiveKey={["1"]}
-                      expandIconPosition="start"
-                      items={[
-                        {
-                          key: "1",
-                          label: (
-                            <strong>
-                              {String(
-                                detailUser.classLeaders.shortName
-                              ).toUpperCase()}{" "}
-                              -{" "}
-                              {String(
-                                detailUser.classLeaders.name
-                              ).toUpperCase()}{" "}
-                              ({detailUser.classLeaders.totalItems} SỰ KIỆN)
-                            </strong>
-                          ),
-                          children: (
-                            <>
-                              <Table<Item>
-                                key={"table-for-classLeaders"}
-                                className="custom-table-header shadow-md rounded-md"
-                                bordered
-                                rowKey={(item) => item.activityName}
-                                rowHoverable
-                                size="small"
-                                pagination={false}
-                                summary={(items) => {
-                                  let total = 0;
-                                  items.forEach((item) => {
-                                    total += Number(item.standarNumber);
-                                  });
-                                  return (
-                                    <Table.Summary.Row>
-                                      <Table.Summary.Cell
-                                        colSpan={2}
-                                        index={0}
-                                        className="text-end font-semibold"
-                                      >
-                                        Tổng tiết chuẩn
-                                      </Table.Summary.Cell>
-                                      <Table.Summary.Cell
-                                        index={2}
-                                        className="text-center font-semibold"
-                                      >
-                                        {total}
-                                      </Table.Summary.Cell>
-                                    </Table.Summary.Row>
-                                  );
-                                }}
-                                columns={columns}
-                                dataSource={dataClassLeaders}
-                                locale={{
-                                  emptyText: (
-                                    <Empty
-                                      description={Messages.NO_DATA}
-                                    ></Empty>
-                                  ),
-                                }}
-                              />
-                            </>
-                          ),
-                          extra: downloadReport("bm01"),
-                        },
-                      ]}
-                    />
-                  </div>
-                </>
-              )}
-              {dataAssistants && dataAssistants.length > 0 && (
-                <>
-                  <div className="mb-4">
-                    <Collapse
-                      key="collapse-class-assistants"
-                      expandIcon={({ isActive }) => (
-                        <CaretRightOutlined rotate={isActive ? 90 : 0} />
-                      )}
-                      collapsible="header"
-                      defaultActiveKey={["2"]}
-                      className="mb-4"
-                      expandIconPosition="start"
-                      items={[
-                        {
-                          key: "2",
-                          label: (
-                            <strong>
-                              {String(
-                                detailUser.assistants.shortName
-                              ).toUpperCase()}{" "}
-                              -{" "}
-                              {String(detailUser.assistants.name).toUpperCase()}{" "}
-                              ({detailUser.assistants.totalItems} SỰ KIỆN)
-                            </strong>
-                          ),
-                          children: (
-                            <>
-                              <Table<Item>
-                                key={"table-for-assistants"}
-                                className="custom-table-header shadow-md rounded-md mb-4"
-                                bordered
-                                rowKey={(item) => item.activityName}
-                                rowHoverable
-                                size="small"
-                                pagination={false}
-                                summary={(items) => {
-                                  let total = 0;
-                                  items.forEach((item) => {
-                                    total += Number(item.standarNumber);
-                                  });
-                                  return (
-                                    <Table.Summary.Row>
-                                      <Table.Summary.Cell
-                                        colSpan={2}
-                                        index={0}
-                                        className="text-end font-semibold"
-                                      >
-                                        Tổng tiết chuẩn
-                                      </Table.Summary.Cell>
-                                      <Table.Summary.Cell
-                                        index={2}
-                                        className="text-center font-semibold"
-                                      >
-                                        {total}
-                                      </Table.Summary.Cell>
-                                    </Table.Summary.Row>
-                                  );
-                                }}
-                                columns={columns}
-                                dataSource={dataAssistants}
-                                locale={{
-                                  emptyText: (
-                                    <Empty
-                                      description={Messages.NO_DATA}
-                                    ></Empty>
-                                  ),
-                                }}
-                              />
-                            </>
-                          ),
-                          extra: downloadReport("bm02"),
-                        },
-                      ]}
-                    />
-                  </div>
-                </>
-              )}
-              {dataAdmissionCounseling &&
-                dataAdmissionCounseling.length > 0 && (
-                  <>
-                    <div className="mb-4">
-                      <Collapse
-                        key="collapse-admission-counseling"
-                        expandIcon={({ isActive }) => (
-                          <CaretRightOutlined rotate={isActive ? 90 : 0} />
-                        )}
-                        collapsible="header"
-                        defaultActiveKey={["3"]}
-                        className="mb-4"
-                        expandIconPosition="start"
-                        items={[
-                          {
-                            key: "3",
-                            label: (
-                              <strong>
-                                {String(
-                                  detailUser.admissionCounseling.shortName
-                                ).toUpperCase()}{" "}
-                                -{" "}
-                                {String(
-                                  detailUser.admissionCounseling.name
-                                ).toUpperCase()}{" "}
-                                ({detailUser.admissionCounseling.totalItems} SỰ
-                                KIỆN)
-                              </strong>
-                            ),
-                            children: (
-                              <>
-                                <Table<Item>
-                                  key={"table-for-assistants"}
-                                  className="custom-table-header shadow-md rounded-md mb-4"
-                                  bordered
-                                  rowKey={(item) => item.activityName}
-                                  rowHoverable
-                                  size="small"
-                                  pagination={false}
-                                  summary={(items) => {
-                                    let total = 0;
-                                    items.forEach((item) => {
-                                      total += Number(item.standarNumber);
-                                    });
-                                    return (
-                                      <Table.Summary.Row>
-                                        <Table.Summary.Cell
-                                          colSpan={2}
-                                          index={0}
-                                          className="text-end font-semibold"
-                                        >
-                                          Tổng tiết chuẩn
-                                        </Table.Summary.Cell>
-                                        <Table.Summary.Cell
-                                          index={2}
-                                          className="text-center font-semibold"
-                                        >
-                                          {total}
-                                        </Table.Summary.Cell>
-                                      </Table.Summary.Row>
-                                    );
-                                  }}
-                                  columns={columns}
-                                  dataSource={dataAdmissionCounseling}
-                                  locale={{
-                                    emptyText: (
-                                      <Empty
-                                        description={Messages.NO_DATA}
-                                      ></Empty>
-                                    ),
-                                  }}
-                                />
-                              </>
-                            ),
-                            extra: downloadReport("bm03"),
-                          },
-                        ]}
-                      />
-                    </div>
-                  </>
-                )}
-              {dataQAEs && dataQAEs.length > 0 && (
-                <>
-                  <div className="mb-4">
-                    <Collapse
-                      key="collapse-QAEs"
-                      expandIcon={({ isActive }) => (
-                        <CaretRightOutlined rotate={isActive ? 90 : 0} />
-                      )}
-                      collapsible="header"
-                      defaultActiveKey={["4"]}
-                      className="mb-4"
-                      expandIconPosition="start"
-                      items={[
-                        {
-                          key: "4",
-                          label: (
-                            <strong>
-                              {String(detailUser.qAs.shortName).toUpperCase()} -{" "}
-                              {String(detailUser.qAs.name).toUpperCase()} (
-                              {detailUser.qAs.totalItems} SỰ KIỆN)
-                            </strong>
-                          ),
-                          children: (
-                            <>
-                              <Table<Item>
-                                key={"table-for-QAES"}
-                                className="custom-table-header shadow-md rounded-md mb-4"
-                                bordered
-                                rowKey={(item) => item.activityName}
-                                rowHoverable
-                                size="small"
-                                pagination={false}
-                                summary={(items) => {
-                                  let total = 0;
-                                  items.forEach((item) => {
-                                    total += Number(item.standarNumber);
-                                  });
-                                  return (
-                                    <Table.Summary.Row>
-                                      <Table.Summary.Cell
-                                        colSpan={2}
-                                        index={0}
-                                        className="text-end font-semibold"
-                                      >
-                                        Tổng tiết chuẩn
-                                      </Table.Summary.Cell>
-                                      <Table.Summary.Cell
-                                        index={2}
-                                        className="text-center font-semibold"
-                                      >
-                                        {total}
-                                      </Table.Summary.Cell>
-                                    </Table.Summary.Row>
-                                  );
-                                }}
-                                columns={columns}
-                                dataSource={dataQAEs}
-                                locale={{
-                                  emptyText: (
-                                    <Empty
-                                      description={Messages.NO_DATA}
-                                    ></Empty>
-                                  ),
-                                }}
-                              />
-                            </>
-                          ),
-                          extra: downloadReport("bm04"),
-                        },
-                      ]}
-                    />
-                  </div>
-                </>
-              )}
-              {dataActivities && dataActivities.length > 0 && (
-                <>
-                  <div className="mb-4">
-                    <Collapse
-                      key="collapse-activities"
-                      expandIcon={({ isActive }) => (
-                        <CaretRightOutlined rotate={isActive ? 90 : 0} />
-                      )}
-                      collapsible="header"
-                      defaultActiveKey={["5"]}
-                      className="mb-4"
-                      expandIconPosition="start"
-                      items={[
-                        {
-                          key: "5",
-                          label: (
-                            <strong>
-                              {String(
-                                detailUser.activities.shortName
-                              ).toUpperCase()}{" "}
-                              -{" "}
-                              {String(detailUser.activities.name).toUpperCase()}{" "}
-                              ({detailUser.activities.totalItems} SỰ KIỆN)
-                            </strong>
-                          ),
-                          children: (
-                            <>
-                              <Table<Item>
-                                key={"table-for-activities"}
-                                className="custom-table-header shadow-md rounded-md mb-4"
-                                bordered
-                                rowKey={(item) => item.activityName}
-                                rowHoverable
-                                size="small"
-                                pagination={false}
-                                summary={(items) => {
-                                  let total = 0;
-                                  items.forEach((item) => {
-                                    total += Number(item.standarNumber);
-                                  });
-                                  return (
-                                    <Table.Summary.Row>
-                                      <Table.Summary.Cell
-                                        colSpan={2}
-                                        index={0}
-                                        className="text-end font-semibold"
-                                      >
-                                        Tổng tiết chuẩn
-                                      </Table.Summary.Cell>
-                                      <Table.Summary.Cell
-                                        index={2}
-                                        className="text-center font-semibold"
-                                      >
-                                        {total}
-                                      </Table.Summary.Cell>
-                                    </Table.Summary.Row>
-                                  );
-                                }}
-                                columns={columnsBM05}
-                                dataSource={dataActivities}
-                                locale={{
-                                  emptyText: (
-                                    <Empty
-                                      description={Messages.NO_DATA}
-                                    ></Empty>
-                                  ),
-                                }}
-                              />
-                            </>
-                          ),
-                          extra: downloadReport("bm05"),
-                        },
-                      ]}
-                    />
-                  </div>
-                </>
-              )}
             </>
           )}
-          {detailUser?.totalStandarNumber === 0 && (
+          {/* {detailUser?.totalStandarNumber === 0 && (
             <>
               <Empty
                 description={Messages.NO_DATA}
                 className="h-64 flex flex-col justify-center"
               ></Empty>
             </>
-          )}
+          )} */}
         </>
       )}
     </section>

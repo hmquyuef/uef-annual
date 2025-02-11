@@ -74,8 +74,9 @@ const FormBM07: FC<FormBM07Props> = (props) => {
     issuanceDate: 0,
     issuancePlace: "",
     entryDate: timestamp,
+    documentNumber: "",
     documentDate: 0,
-    attackment: {
+    attackmentFile: {
       type: "",
       path: "",
       name: "",
@@ -181,12 +182,21 @@ const FormBM07: FC<FormBM07Props> = (props) => {
       contents: formValues.contents,
       issuanceDate: formValues.issuanceDate,
       issuancePlace: formValues.issuancePlace,
-      entryDate: formValues.entryDate,
-      attackment: {
-        type: listPicture?.type ?? "",
-        path: listPicture?.path ?? "",
-        name: listPicture?.name ?? "",
-        size: listPicture?.size ?? 0,
+      determinations: {
+        documentNumber: formValues.documentNumber,
+        internalNumber: "",
+        documentDate: formValues.documentDate,
+        fromDate: formValues.documentDate,
+        toDate: formValues.documentDate,
+        entryDate: formValues.entryDate,
+        files: [
+          {
+            type: listPicture?.type ?? "",
+            path: listPicture?.path ?? "",
+            name: listPicture?.name ?? "",
+            size: listPicture?.size ?? 0,
+          },
+        ],
       },
       type: formValues.type,
       note: formValues.note,
@@ -201,8 +211,9 @@ const FormBM07: FC<FormBM07Props> = (props) => {
       issuanceDate: 0,
       issuancePlace: "",
       entryDate: timestamp,
+      documentNumber: "",
       documentDate: 0,
-      attackment: {
+      attackmentFile: {
         type: "",
         path: "",
         name: "",
@@ -240,13 +251,16 @@ const FormBM07: FC<FormBM07Props> = (props) => {
           contents: initialData.contents || "",
           issuanceDate: initialData.issuanceDate || 0,
           issuancePlace: initialData.issuancePlace || "",
-          entryDate: initialData?.entryDate ? initialData.entryDate : timestamp,
-          documentDate: initialData.documentDate || 0,
-          attackment: {
-            type: initialData.attackment.type || "",
-            path: initialData.attackment.path || "",
-            name: initialData.attackment.name || "",
-            size: initialData.attackment.size || 0,
+          entryDate: initialData?.determinations.entryDate
+            ? initialData.determinations.entryDate
+            : timestamp,
+          documentNumber: initialData?.determinations.documentNumber || "",
+          documentDate: initialData?.determinations.documentDate || 0,
+          attackmentFile: {
+            type: initialData?.determinations.files[0]?.type || "",
+            path: initialData?.determinations.files[0]?.path || "",
+            name: initialData?.determinations.files[0]?.name || "",
+            size: initialData?.determinations.files[0]?.size || 0,
           },
           type: initialData.type || "",
           note: initialData.note || "",
@@ -363,7 +377,7 @@ const FormBM07: FC<FormBM07Props> = (props) => {
                 }
               />
             </div>
-            <div className="grid grid-cols-3 mb-2 gap-6">
+            <div className="grid grid-cols-4 mb-2 gap-6">
               <div className="flex flex-col gap-1">
                 <span className="font-medium text-neutral-600">
                   Loại CC/GCN
@@ -383,6 +397,18 @@ const FormBM07: FC<FormBM07Props> = (props) => {
                   onChange={(value) => {
                     setFormValues({ ...formValues, type: value });
                   }}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="font-medium text-neutral-600">Số vào sổ</span>
+                <Input
+                  value={formValues.documentNumber}
+                  onChange={(e) =>
+                    setFormValues({
+                      ...formValues,
+                      documentNumber: e.target.value,
+                    })
+                  }
                 />
               </div>
               <div className="flex flex-col gap-1">

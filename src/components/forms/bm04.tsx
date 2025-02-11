@@ -3,6 +3,7 @@
 import {
   deleteQAs,
   getAllQAs,
+  getExportQAs,
   ImportQAs,
   postAddQA,
   putUpdateApprovedQA,
@@ -542,7 +543,11 @@ const BM04 = () => {
   };
 
   const handleExportExcel = async () => {
-    if (data) {
+    const unit = units.find(
+      (unit: any) => unit.idHrm === selectedKeyUnit
+    ) as any;
+    const results = await getExportQAs(unit?.code, selectedKey.id);
+    if (results) {
       const defaultInfo = [
         ["", "", "", "", "", "", "", "", "", "BM-04"],
         [
@@ -580,7 +585,7 @@ const BM04 = () => {
           "Thời gian hoạt động",
           "Ghi chú",
         ],
-        ...data.map((item, index) => [
+        ...results.data.map((item: any, index: number) => [
           index + 1,
           item.userName,
           item.fullName,
@@ -810,7 +815,10 @@ const BM04 = () => {
       ).padStart(2, "0")}-${now.getFullYear()}-${String(
         now.getHours()
       ).padStart(2, "0")}-${String(now.getMinutes()).padStart(2, "0")}`;
-      saveAs(blob, "BM04-" + formattedDate + ".xlsx");
+      let filename = unit?.code
+        ? "BM04-" + unit?.code + "-" + formattedDate + ".xlsx"
+        : "BM04-" + formattedDate + ".xlsx";
+      saveAs(blob, filename);
     }
   };
 

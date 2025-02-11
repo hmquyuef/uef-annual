@@ -7,6 +7,7 @@ import {
   AddUpdateActivityItem,
   deleteActivities,
   getAllActivities,
+  getExportActivity,
   postAddActivity,
   putUpdateActivity,
   putUpdateApprovedActivity,
@@ -449,13 +450,7 @@ const BM05 = () => {
     const unit = units.find(
       (unit: any) => unit.idHrm === selectedKeyUnit
     ) as any;
-    const formData: Partial<any> = {
-      unitCode: unit?.code,
-      years: selectedKey.id,
-      startDate,
-      endDate,
-    };
-    const results = await getDataExportByUnitCode(formData);
+    const results = await getExportActivity(unit?.code, selectedKey.id);
     if (results) {
       const defaultInfo = [
         ["", "", "", "", "", "", "", "", "BM-05"],
@@ -495,45 +490,35 @@ const BM05 = () => {
           "Thời gian hoạt động",
           "Ghi chú",
         ],
-        ...(unit?.code === undefined || unit?.code === null
-          ? results.data.map((item: any, index: number) => [
-              index + 1,
-              item.userName,
-              item.middleName + " " + item.firstName,
-              item.faculityName,
-              item.activityName,
-              item.standNumber,
-              item.determination + ", " + convertTimestampToDate(item.fromDate),
-              item.eventDate ? convertTimestampToDate(item.eventDate) : "",
-              item.note ?? "",
-            ])
-          : results.data
-              .sort((a: any, b: any) => {
-                if (a.eventDate === b.eventDate) {
-                  return a.userName.localeCompare(b.userName);
-                }
-                return a.eventDate - b.eventDate;
-              })
-              .map((item: any, index: number) => [
-                index + 1,
-                item.userName,
-                item.middleName + " " + item.firstName,
-                item.faculityName,
-                item.activityName,
-                item.standNumber,
-                item.determination +
-                  ", " +
-                  convertTimestampToDate(item.fromDate),
-                item.eventDate ? convertTimestampToDate(item.eventDate) : "",
-                item.note ?? "",
-              ])),
+        ...results.data
+          .sort((a: any, b: any) => {
+            return a.fullName.localeCompare(b.fullName);
+          })
+          .map((item: any, index: number) => [
+            index + 1,
+            item.userName,
+            item.fullName,
+            item.unitCode,
+            item.activityName,
+            item.standNumber,
+            item.determinations.documentNumber +
+              ", " +
+              convertTimestampToDate(item.determinations.documentDate),
+            item.determinations.fromDate
+              ? convertTimestampToDate(item.determinations.fromDate)
+              : "",
+            item.note ?? "",
+          ]),
         [
           "TỔNG SỐ TIẾT CHUẨN",
           "",
           "",
           "",
           "",
-          `${results.data.reduce((acc, x) => acc + x.standNumber, 0)}`,
+          `${results.data.reduce(
+            (acc: number, x: any) => acc + x.standNumber,
+            0
+          )}`,
           "",
           "",
           "",
