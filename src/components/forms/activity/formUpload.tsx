@@ -202,10 +202,10 @@ const FromUpload: FC<FromUploadProps> = ({
                     size="small"
                     onClick={(e) => {
                       e.stopPropagation();
-                      const fileUrl = `/template-import-${formName}.xlsx`; // Đường dẫn đến file
+                      const fileUrl = `/template-${formName}.xlsx`; // Đường dẫn đến file
                       const link = document.createElement("a");
                       link.href = fileUrl;
-                      link.download = `template-import-${formName}.xlsx`;
+                      link.download = `template-${formName}.xlsx`;
                       link.click();
                     }}
                   >

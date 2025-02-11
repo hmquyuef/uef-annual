@@ -951,7 +951,7 @@ const BM08 = () => {
           isUpload ? (
             <>
               <FromUpload
-                formName="labor"
+                formName="labors-union"
                 onSubmit={handleSubmitUpload}
                 handleShowPDF={setIsShowPdf}
                 displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
