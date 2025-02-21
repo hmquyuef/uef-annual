@@ -7,7 +7,7 @@ import {
 } from "@/services/roles/rolesServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
-import { FileItem } from "@/services/uploads/uploadsServices";
+import { postFiles } from "@/services/uploads/uploadsServices";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
 import {
@@ -18,8 +18,10 @@ import {
 import {
   ArrowsAltOutlined,
   DeleteOutlined,
+  FallOutlined,
   FileExcelOutlined,
   PlusOutlined,
+  RiseOutlined,
   ShrinkOutlined,
 } from "@ant-design/icons";
 import {
@@ -30,6 +32,7 @@ import {
   GetProps,
   Input,
   MenuProps,
+  Modal,
   Select,
   TableColumnsType,
   Tooltip,
@@ -56,15 +59,19 @@ import {
   putEmployeesRegulation,
 } from "@/services/regulations/employeesServices";
 
+import Colors from "@/utility/Colors";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
+import { LoadingSpin } from "../skeletons/LoadingSpin";
 dayjs.locale("vi");
 
 const BM15 = () => {
   type SearchProps = GetProps<typeof Input.Search>;
   const { Search } = Input;
   const [loading, setLoading] = useState(false);
+  const [loadingUpload, setLoadingUpload] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [employees, setEmployees] = useState<EmployeesRegulationItem[]>([]);
   const [data, setData] = useState<any[]>([]);
@@ -74,6 +81,7 @@ const BM15 = () => {
   const [selectedItem, setSelectedItem] = useState<Partial<any> | undefined>(
     undefined
   );
+  const [selectedFormdata, setSelectedFormdata] = useState<any>();
   const [units, setUnits] = useState<UnitItem[]>([]);
   const [defaultYears, setDefaultYears] = useState<any>();
   const [selectedKey, setSelectedKey] = useState<any>();
@@ -242,7 +250,11 @@ const BM15 = () => {
       ],
     },
     {
-      title: "CÔNG TÁC",
+      title: (
+        <>
+          SỐ NGÀY ĐI <br /> CÔNG TÁC
+        </>
+      ),
       dataIndex: "businessTripDays",
       key: "businessTripDays",
       render: (businessTripDays: number) => <>{businessTripDays}</>,
@@ -315,7 +327,8 @@ const BM15 = () => {
         : true;
       const matchesDate =
         startDate && endDate
-          ? item.entryDate >= startDate && item.entryDate <= endDate
+          ? item.determinations.entryDate >= startDate &&
+            item.determinations.entryDate <= endDate
           : true;
       return matchesName && matchesUnit && matchesDate;
     });
@@ -340,10 +353,6 @@ const BM15 = () => {
     } catch (error) {
       console.error("Error deleting selected items:", error);
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   }, [selectedRowKeys]);
 
   const handleEdit = (labor: any) => {
@@ -356,94 +365,97 @@ const BM15 = () => {
   };
 
   const handleSubmit = async (formData: Partial<any>) => {
-    try {
-      if (mode === "edit" && selectedItem) {
-        const response = await putEmployeesRegulation(
-          formData.id as string,
-          formData
-        );
-        if (response) {
-          setFormNotification((prev) => ({
-            ...prev,
-            description: Messages.UPDATE_REGULATION_LABOR,
-          }));
-        }
-      } else {
-        const response = await postEmployeesRegulation(formData);
-        if (response) {
-          setFormNotification((prev) => ({
-            ...prev,
-            description: Messages.ADD_REGULATION_LABOR,
-          }));
-        }
-      }
-      setFormNotification((prev) => ({
-        ...prev,
-        isOpen: true,
-        status: "success",
-        message: "Thông báo",
-      }));
-      await getListLaborRegulations(selectedKey.id);
-      setIsOpen(false);
-      setSelectedItem(undefined);
-      setMode("add");
-    } catch (error) {
-      setFormNotification((prev) => ({
-        ...prev,
-        isOpen: true,
-        status: "error",
-        message: "Thông báo",
-        description: Messages.ERROR,
-      }));
+    const { userName } = formData;
+    const checkExist = employees.find((x) => x.userName === userName);
+    if (checkExist && mode === "add") {
+      setSelectedFormdata(formData);
+      return setIsModalVisible(true);
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
-  };
+    setLoadingUpload(true);
+    const apiCall =
+      mode === "add"
+        ? postEmployeesRegulation(formData)
+        : putEmployeesRegulation(formData.id, formData);
 
-  const handleSubmitUpload = async (
-    fileParticipant: File,
-    fileAttackment: FileItem
-  ) => {
     try {
-      const formData = new FormData();
-      formData.append("File", fileParticipant);
-      formData.append("Type", fileAttackment.type);
-      formData.append("Path", fileAttackment.path);
-      formData.append("Name", fileAttackment.name);
-      formData.append("Size", fileAttackment.size.toString());
-
-      const response = await ImportEmployeesRegulations(formData);
+      const response = await apiCall;
       if (response) {
         setFormNotification((prev) => ({
           ...prev,
           isOpen: true,
-          status: "error",
+          status: "success",
           message: "Thông báo",
-          description: `Tải lên thành công ${response.totalCount} dòng dữ liệu!`,
+          description:
+            mode === "add"
+              ? Messages.ADD_REGULATION_LABOR
+              : Messages.UPDATE_REGULATION_LABOR,
         }));
+        await getListLaborRegulations(selectedKey.id);
       }
-      await getListLaborRegulations(selectedKey.id);
-      setIsOpen(false);
-      setSelectedItem(undefined);
-      setMode("add");
-      setIsUpload(false);
     } catch (error) {
       setFormNotification((prev) => ({
         ...prev,
         isOpen: true,
         status: "error",
-        message: "Thông báo",
-        description: Messages.ERROR,
+        message: "Không thể cập nhật thông tin!",
+        description: `${error}`,
       }));
-      setIsOpen(false);
-      setIsUpload(false);
+    } finally {
+      setTimeout(() => {
+        setLoadingUpload(false);
+        setIsOpen(false);
+        setSelectedItem(undefined);
+        setMode("add");
+      }, 300);
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
+  };
+
+  const handleSubmitUpload = async (
+    fileParticipant: File,
+    fileAttachment: File
+  ) => {
+    try {
+      setLoadingUpload(true);
+
+      const formDataAttachment = new FormData();
+      formDataAttachment.append("FunctionName", "regulations/employees");
+      formDataAttachment.append("file", fileAttachment);
+      const results = await postFiles(formDataAttachment);
+
+      const formDataExcel = new FormData();
+      formDataExcel.append("Excel", fileParticipant);
+      Object.entries(results).forEach(([key, value]) =>
+        formDataExcel.append(`PDF.${key}`, value.toString())
+      );
+
+      const response = await ImportEmployeesRegulations(formDataExcel);
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: response.totalError > 0 ? "error" : "success",
+        message: response.totalError > 0 ? "Đã có lỗi xảy ra!" : "Thông báo",
+        description:
+          response.totalError > 0
+            ? response.messageError
+            : `Tải lên thành công ${response.totalCount} dòng thông tin chủ nhiệm lớp!`,
+      }));
+
+      await getListLaborRegulations(selectedKey.id);
+    } catch (error) {
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Không thể xử lý thông tin!",
+        description: `${error}`,
+      }));
+    } finally {
+      setTimeout(() => {
+        setIsOpen(false);
+        setLoadingUpload(false);
+        setIsUpload(false);
+      }, 300);
+    }
   };
 
   const handleExportExcel = async () => {
@@ -722,48 +734,6 @@ const BM15 = () => {
     }
   };
 
-  // const handleApproved = async (isRejected: boolean) => {
-  //   const formData = {
-  //     ids: selectedRowKeys.length > 0 ? selectedRowKeys : [selectedItem?.id],
-  //     paymentInfo: {
-  //       approver: userName,
-  //       approvedTime: Math.floor(Date.now() / 1000),
-  //       isRejected: isRejected,
-  //       reason: reason,
-  //       isBlockData: true,
-  //     },
-  //   };
-  //   try {
-  //     if (selectedRowKeys.length > 0 || selectedItem) {
-  //       const response = await putApprovedgetLaborRegulation(formData);
-  //       if (response) {
-  //         setDescription(
-  //           isRejected
-  //             ? `${Messages.REJECTED_CLASSLEADERS} (${
-  //                 selectedRowKeys.length > 0 ? selectedRowKeys.length : 1
-  //               } dòng)`
-  //             : `${Messages.APPROVED_CLASSLEADERS} (${
-  //                 selectedRowKeys.length > 0 ? selectedRowKeys.length : 1
-  //               } dòng)`
-  //         );
-  //       }
-  //     }
-  //     setSelectedRowKeys([]);
-  //     setNotificationOpen(true);
-  //     setStatus("success");
-  //     setMessage("Thông báo");
-  //     await getListLaborRegulations(selectedKey.id);
-  //     setIsOpen(false);
-  //     setSelectedItem(undefined);
-  //     setMode("add");
-  //   } catch (error) {
-  //     setNotificationOpen(true);
-  //     setStatus("error");
-  //     setMessage("Thông báo");
-  //     setDescription(Messages.ERROR);
-  //   }
-  // };
-
   const handleChangeYear = (value: any) => {
     setLoading(true);
     const temp = defaultYears.filter((x: any) => x.id === value)[0] as any;
@@ -797,7 +767,6 @@ const BM15 = () => {
           "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
         ];
       getDisplayRole(role as string);
-      const decodedUserName = jwtDecode(token);
 
       if (role === "secretary") {
         const decodedUnitId = jwtDecode<{
@@ -822,6 +791,13 @@ const BM15 = () => {
       onSearch("");
     }
   }, [employees, units, selectedKeyUnit, startDate, endDate]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setFormNotification((prev) => ({ ...prev, isOpen: false }));
+    }, 100);
+  }, [formNotification.isOpen]);
+
   return (
     <div>
       <div className="grid grid-cols-3 mb-3">
@@ -1004,9 +980,9 @@ const BM15 = () => {
                   onClick={handleExportExcel}
                   iconPosition="start"
                   style={{
-                    backgroundColor: "#52c41a",
-                    borderColor: "#52c41a",
-                    color: "#fff",
+                    backgroundColor: Colors.GREEN,
+                    borderColor: Colors.GREEN,
+                    color: Colors.WHITE,
                   }}
                 >
                   Xuất Excel
@@ -1053,13 +1029,128 @@ const BM15 = () => {
         message={formNotification.message}
         description={formNotification.description}
       />
+      {isModalVisible &&
+        (() => {
+          const oldData = employees.find(
+            (x) => x.userName === selectedFormdata?.userName
+          );
+          const newData = selectedFormdata;
+          const fields: {
+            key: keyof EmployeesRegulationItem;
+            label: string;
+          }[] = [
+            { key: "attendanceDays", label: "Tổng số ngày chấm công" },
+            { key: "attendanceHours", label: "Tổng số giờ chấm công" },
+            { key: "lateArrivals", label: "Số buổi đi trễ" },
+            { key: "earlyDepartures", label: "Số buổi về sớm" },
+            { key: "unexcusedAbsences", label: "Số ngày nghỉ không phép" },
+            { key: "leaveDays", label: "Số ngày nghỉ phép" },
+            { key: "maternityLeaveDays", label: "Số ngày nghỉ hậu sản" },
+            { key: "unpaidLeaveDays", label: "Số ngày nghỉ không lương" },
+            { key: "businessTripDays", label: "Số ngày đi công tác" },
+            { key: "missedFingerprint", label: "Số lần thiếu vân tay" },
+          ];
+          return (
+            <Modal
+              open={isModalVisible}
+              onCancel={() => {
+                setIsModalVisible(false);
+                setIsOpen(false);
+                setSelectedItem(undefined);
+                setMode("add");
+              }}
+              onOk={async () => {
+                setLoadingUpload(true);
+                try {
+                  const response = await putEmployeesRegulation(
+                    oldData?.id as string,
+                    newData
+                  );
+                  if (response) {
+                    setFormNotification((prev) => ({
+                      ...prev,
+                      isOpen: true,
+                      status: "success",
+                      message: "Thông báo",
+                      description: Messages.UPDATE_REGULATION_LABOR,
+                    }));
+                    await getListLaborRegulations(selectedKey.id);
+                    const timeoutId = setTimeout(() => {
+                      setLoadingUpload(false);
+                      setIsModalVisible(false);
+                      setIsOpen(false);
+                      setSelectedItem(undefined);
+                      setMode("add");
+                    }, 300);
+                    return () => clearTimeout(timeoutId);
+                  }
+                } catch (error) {
+                  setFormNotification((prev) => ({
+                    ...prev,
+                    isOpen: true,
+                    status: "error",
+                    message: "Không thể cập nhật thông tin!",
+                    description: `${error}`,
+                  }));
+                }
+              }}
+              title={Messages.TITLE_UPDATE_REGULATION_LABOR}
+              width={500}
+            >
+              <hr className="mb-2" />
+              <div className="flex flex-col justify-center items-center">
+                <span>
+                  Xác nhận thông tin cập nhật nội quy lao động cho nhân sự
+                </span>
+                <span>{oldData?.fullName}</span>
+                <div>
+                  <span>{oldData?.userName}</span>-
+                  <span>{oldData?.unitName}</span>
+                </div>
+              </div>
+              {oldData && newData && (
+                <>
+                  <span className="font-semibold mt-4">Thông tin cập nhật</span>
+                  {fields.map(({ key, label }) => (
+                    <div key={key}>
+                      <hr />
+                      <div className="grid grid-cols-2 gap-1">
+                        <span className="text-neutral-500">{label}:</span>
+                        <div className="flex justify-center gap-5">
+                          <span className="font-medium">
+                            {oldData?.[key].toString()}
+                          </span>
+                          <span>
+                            {oldData[key] > newData[key] ? (
+                              <span className="text-red-500">
+                                <FallOutlined />
+                              </span>
+                            ) : oldData[key] < newData[key] ? (
+                              <span className="text-green-500">
+                                <RiseOutlined />
+                              </span>
+                            ) : (
+                              "="
+                            )}
+                          </span>
+                          <span className="font-medium">{newData[key]}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <hr />
+                </>
+              )}
+            </Modal>
+          );
+        })()}
       <CustomModal
         isOpen={isOpen}
         width={isShowPdf ? "85vw" : "1000px"}
         title={
           mode === "edit"
-            ? Messages.TITLE_UPDATE_CLASSLEADER
-            : Messages.TITLE_ADD_CLASSLEADER
+            ? Messages.TITLE_UPDATE_REGULATION_LABOR
+            : Messages.TITLE_ADD_REGULATION_LABOR
         }
         onOk={() => {
           const formElement = document.querySelector("form");
@@ -1069,10 +1160,6 @@ const BM15 = () => {
         }}
         role={role || undefined}
         onCancel={() => {
-          setFormNotification((prev) => ({
-            ...prev,
-            isOpen: false,
-          }));
           setIsOpen(false);
           setSelectedItem(undefined);
           setMode("add");
@@ -1083,7 +1170,7 @@ const BM15 = () => {
           isUpload ? (
             <>
               <FromUpload
-                formName="labor"
+                formName="bm15"
                 onSubmit={handleSubmitUpload}
                 handleShowPDF={setIsShowPdf}
                 displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
@@ -1102,6 +1189,11 @@ const BM15 = () => {
           )
         }
       />
+      {loadingUpload && (
+        <>
+          <LoadingSpin isLoadingSpin={loadingUpload} />
+        </>
+      )}
       <hr className="mb-3" />
       <TemplateForms
         loading={loading}

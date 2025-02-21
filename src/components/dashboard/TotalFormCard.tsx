@@ -1,5 +1,6 @@
 "use client";
 
+import Colors from "@/utility/Colors";
 import { FastBackwardOutlined } from "@ant-design/icons";
 import clsx from "clsx";
 import { FC, useEffect, useState } from "react";
@@ -27,10 +28,11 @@ const TotalFormCard: FC<TotalFormCardProps> = ({ data, color, src }) => {
       <div className="flex justify-center">
         <div
           className={clsx(
-            "w-2/3 bg-[#fcfaf6] shadow-sm rounded-lg h-5",
+            "w-2/3 shadow-sm rounded-lg h-5",
             `shadow-${color}-100`,
             `hover:shadow-${color}-200`
           )}
+          style={{ backgroundColor: Colors.BACKGROUND }}
         />
       </div>
       <div

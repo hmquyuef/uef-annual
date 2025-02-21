@@ -15,7 +15,7 @@ import {
   RoleItem,
 } from "@/services/roles/rolesServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
-import { FileItem } from "@/services/uploads/uploadsServices";
+import { postFiles } from "@/services/uploads/uploadsServices";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
 import {
@@ -58,12 +58,15 @@ import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import Link from "next/link";
 import * as XLSX from "sheetjs-style";
+import { LoadingSpin } from "../skeletons/LoadingSpin";
+import Colors from "@/utility/Colors";
 dayjs.locale("vi");
 
 const BM12 = () => {
   type SearchProps = GetProps<typeof Input.Search>;
   const { Search } = Input;
   const [loading, setLoading] = useState(false);
+  const [loadingUpload, setLoadingUpload] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [unitLevels, setUnitLevels] = useState<UnitLevelItem[]>([]);
   const [data, setData] = useState<any[]>([]);
@@ -161,6 +164,17 @@ const BM12 = () => {
     {
       title: (
         <>
+          ĐƠN VỊ <br /> TỔ CHỨC
+        </>
+      ),
+      dataIndex: "eventsOrganizer",
+      key: "eventsOrganizer",
+      render: (eventsOrganizer: string) => <>{eventsOrganizer}</>,
+      className: "w-[150px] text-center",
+    },
+    {
+      title: (
+        <>
           <span className="py-2">THỜI GIAN HOẠT ĐỘNG</span>
         </>
       ),
@@ -246,10 +260,11 @@ const BM12 = () => {
           TÀI LIỆU <br /> ĐÍNH KÈM
         </div>
       ),
-      dataIndex: ["attackmentFile", "path"],
-      key: "path",
+      dataIndex: "file",
+      key: "file",
       className: "customInfoColors text-center w-[110px]",
-      render: (path: string) => {
+      render: (_, item: UnitLevelItem) => {
+        const path = item.determinations.files[0]?.path;
         return path !== "" && path !== undefined ? (
           <>
             <Link
@@ -317,7 +332,7 @@ const BM12 = () => {
         </p>
       ),
       icon: <PlusOutlined />,
-      style: { color: "#1890ff" },
+      style: { color: Colors.BLUE },
     },
     {
       type: "divider",
@@ -337,7 +352,7 @@ const BM12 = () => {
         </p>
       ),
       icon: <FileExcelOutlined />,
-      style: { color: "#52c41a" },
+      style: { color: Colors.GREEN },
     },
   ];
 
@@ -350,7 +365,8 @@ const BM12 = () => {
         .includes(value.toLowerCase());
       const matchesDate =
         startDate && endDate
-          ? item.entryDate >= startDate && item.entryDate <= endDate
+          ? item.determinations.fromDate >= startDate &&
+            item.determinations.toDate <= endDate
           : true;
       return matchesName && matchesDate;
     });
@@ -375,10 +391,6 @@ const BM12 = () => {
     } catch (error) {
       console.error("Error deleting selected items:", error);
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   }, [selectedRowKeys]);
 
   const handleEdit = (labor: any) => {
@@ -428,54 +440,52 @@ const BM12 = () => {
         description: Messages.ERROR,
       }));
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   };
 
   const handleSubmitUpload = async (
     fileParticipant: File,
-    fileAttackment: FileItem
+    fileAttachment: File
   ) => {
-    try {
+    setLoadingUpload(true);
+    const formData = new FormData();
+    formData.append("FunctionName", "general/units");
+    formData.append("file", fileAttachment);
+    const results = await postFiles(formData);
+    if (results && results !== undefined) {
       const formData = new FormData();
-      formData.append("File", fileParticipant);
-      formData.append("Type", fileAttackment.type);
-      formData.append("Path", fileAttackment.path);
-      formData.append("Name", fileAttackment.name);
-      formData.append("Size", fileAttackment.size.toString());
-
+      formData.append("Excel", fileParticipant);
+      formData.append("PDF.Type", results.type);
+      formData.append("PDF.Path", results.path);
+      formData.append("PDF.Name", results.name);
+      formData.append("PDF.Size", results.size.toString());
       const response = await ImportUnitLevels(formData);
-      if (response) {
+      if (response.totalError !== 0) {
         setFormNotification((prev) => ({
           ...prev,
-          isOpen: true,
           status: "error",
+          message: "Đã có lỗi xảy ra!",
+          description: `${response.messageError}`,
+        }));
+      } else {
+        setFormNotification((prev) => ({
+          ...prev,
+          status: "success",
           message: "Thông báo",
-          description: `Tải lên thành công ${response.totalCount} dòng dữ liệu!`,
+          description: `Tải lên thành công ${response.totalCount} dòng thông tin chủ nhiệm lớp!`,
         }));
       }
-      await getListUnitLevels(selectedKey.id);
-      setIsOpen(false);
-      setSelectedItem(undefined);
-      setMode("add");
-      setIsUpload(false);
-    } catch (error) {
       setFormNotification((prev) => ({
         ...prev,
         isOpen: true,
-        status: "error",
-        message: "Thông báo",
-        description: Messages.ERROR,
       }));
-      setIsOpen(false);
-      setIsUpload(false);
+      await getListUnitLevels(selectedKey.id);
+      const timeoutId = setTimeout(() => {
+        setLoadingUpload(false);
+        setIsOpen(false);
+        setIsUpload(false);
+      }, 300);
+      return () => clearTimeout(timeoutId);
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   };
 
   const handleExportExcel = async () => {
@@ -764,6 +774,12 @@ const BM12 = () => {
   }, []);
 
   useEffect(() => {
+    setTimeout(() => {
+      setFormNotification((prev) => ({ ...prev, isOpen: false }));
+    }, 100);
+  }, [formNotification.isOpen]);
+
+  useEffect(() => {
     if (unitLevels.length > 0 && (startDate || endDate)) {
       onSearch("");
     }
@@ -862,9 +878,9 @@ const BM12 = () => {
                   onClick={handleExportExcel}
                   iconPosition="start"
                   style={{
-                    backgroundColor: "#52c41a",
-                    borderColor: "#52c41a",
-                    color: "#fff",
+                    backgroundColor: Colors.GREEN,
+                    borderColor: Colors.GREEN,
+                    color: Colors.WHITE,
                   }}
                 >
                   Xuất Excel
@@ -941,7 +957,7 @@ const BM12 = () => {
           isUpload ? (
             <>
               <FromUpload
-                formName="unit-levels"
+                formName="bm12"
                 onSubmit={handleSubmitUpload}
                 handleShowPDF={setIsShowPdf}
                 displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
@@ -954,13 +970,18 @@ const BM12 = () => {
                 onSubmit={handleSubmit}
                 initialData={selectedItem as Partial<any>}
                 mode={mode}
-                formName="unit-levels"
+                formName="bm12"
                 displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
               />
             </>
           )
         }
       />
+      {loadingUpload && (
+        <>
+          <LoadingSpin isLoadingSpin={loadingUpload} />
+        </>
+      )}
       <hr className="mb-3" />
       <TemplateForms
         loading={loading}

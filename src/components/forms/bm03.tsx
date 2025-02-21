@@ -18,7 +18,7 @@ import {
 } from "@/services/roles/rolesServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
-import { FileItem } from "@/services/uploads/uploadsServices";
+import { postFiles } from "@/services/uploads/uploadsServices";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
 import {
@@ -64,11 +64,12 @@ import CustomNotification from "../CustomNotification";
 import FormBM03 from "./activity/formBM03";
 import FromUpload from "./activity/formUpload";
 
+import Colors from "@/utility/Colors";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
+import { LoadingSpin } from "../skeletons/LoadingSpin";
 import TemplateForms from "./workloads/TemplateForms";
-import Colors from "@/utility/Colors";
 dayjs.locale("vi");
 
 type SearchProps = GetProps<typeof Input.Search>;
@@ -76,6 +77,7 @@ type SearchProps = GetProps<typeof Input.Search>;
 const BM03 = () => {
   const { Search } = Input;
   const [loading, setLoading] = useState(false);
+  const [loadingUpload, setLoadingUpload] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [admissionCounseling, setAdmissionCounseling] = useState<
     AdmissionCounselingItem[]
@@ -438,10 +440,6 @@ const BM03 = () => {
     } catch (error) {
       console.error("Error deleting selected items:", error);
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   }, [selectedRowKeys]);
   const handleEdit = (classLeader: AdmissionCounselingItem) => {
     const updatedActivity: Partial<AdmissionCounselingItem> = {
@@ -492,54 +490,52 @@ const BM03 = () => {
         description: Messages.ERROR,
       }));
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   };
 
   const handleSubmitUpload = async (
     fileParticipant: File,
-    fileAttackment: FileItem
+    fileAttachment: File
   ) => {
-    try {
+    setLoadingUpload(true);
+    const formData = new FormData();
+    formData.append("FunctionName", "admission");
+    formData.append("file", fileAttachment);
+    const results = await postFiles(formData);
+    if (results && results !== undefined) {
       const formData = new FormData();
-      formData.append("File", fileParticipant);
-      formData.append("Type", fileAttackment.type);
-      formData.append("Path", fileAttackment.path);
-      formData.append("Name", fileAttackment.name);
-      formData.append("Size", fileAttackment.size.toString());
-
+      formData.append("Excel", fileParticipant);
+      formData.append("PDF.Type", results.type);
+      formData.append("PDF.Path", results.path);
+      formData.append("PDF.Name", results.name);
+      formData.append("PDF.Size", results.size.toString());
       const response = await ImportAdmissionCounseling(formData);
-      if (response) {
+      if (response.totalError !== 0) {
         setFormNotification((prev) => ({
           ...prev,
-          isOpen: true,
           status: "error",
+          message: "Đã có lỗi xảy ra!",
+          description: `${response.messageError}`,
+        }));
+      } else {
+        setFormNotification((prev) => ({
+          ...prev,
+          status: "success",
           message: "Thông báo",
-          description: `Tải lên thành công ${response.totalCount} thông tin Cố vấn học tập, trợ giảng, phụ đạo!`,
+          description: `Tải lên thành công ${response.totalCount} dòng thông tin chủ nhiệm lớp!`,
         }));
       }
-      await getListAdmissionCounseling(selectedKey.id);
-      setIsOpen(false);
-      setSelectedItem(undefined);
-      setMode("add");
-      setIsUpload(false);
-    } catch (error) {
       setFormNotification((prev) => ({
         ...prev,
         isOpen: true,
-        status: "error",
-        message: "Thông báo",
-        description: Messages.ERROR,
       }));
-      setIsOpen(false);
-      setIsUpload(false);
+      await getListAdmissionCounseling(selectedKey.id);
+      const timeoutId = setTimeout(() => {
+        setLoadingUpload(false);
+        setIsOpen(false);
+        setIsUpload(false);
+      }, 300);
+      return () => clearTimeout(timeoutId);
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   };
 
   const handleExportExcel = async () => {
@@ -867,10 +863,6 @@ const BM03 = () => {
         description: Messages.ERROR,
       }));
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   };
 
   const handleChangeYear = (value: any) => {
@@ -922,6 +914,12 @@ const BM03 = () => {
     setLoading(false);
     onSearch("");
   }, []);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setFormNotification((prev) => ({ ...prev, isOpen: false }));
+    }, 100);
+  }, [formNotification.isOpen]);
 
   useEffect(() => {
     if (
@@ -1219,7 +1217,7 @@ const BM03 = () => {
             isUpload ? (
               <>
                 <FromUpload
-                  formName="admission"
+                  formName="bm03"
                   onSubmit={handleSubmitUpload}
                   handleShowPDF={setIsShowPdf}
                   displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
@@ -1257,6 +1255,11 @@ const BM03 = () => {
           <Input value={reason} onChange={(e) => setReason(e.target.value)} />
         </Modal>
       </div>
+      {loadingUpload && (
+        <>
+          <LoadingSpin isLoadingSpin={loadingUpload} />
+        </>
+      )}
       <hr className="mb-3" />
       <TemplateForms
         loading={loading}

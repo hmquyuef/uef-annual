@@ -9,13 +9,11 @@ import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import {
   deleteTrainingLevels,
   getAllTrainingLevels,
-  ImportTrainingLevels,
   postTrainingLevel,
   putTrainingLevel,
-  TrainingLevelItem,
+  TrainingLevelItem
 } from "@/services/trainingLevels/trainingServices";
 import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
-import { FileItem } from "@/services/uploads/uploadsServices";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
 import {
@@ -36,10 +34,8 @@ import {
   Button,
   ConfigProvider,
   DatePicker,
-  Dropdown,
   GetProps,
   Input,
-  MenuProps,
   Select,
   TableColumnsType,
   Tag,
@@ -50,18 +46,18 @@ import { Key, useCallback, useEffect, useState } from "react";
 import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
 import FormBM07 from "./activity/formBM07";
-import FromUpload from "./activity/formUpload";
 import TemplateForms from "./workloads/TemplateForms";
 
 import saveAs from "file-saver";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 
+import Colors from "@/utility/Colors";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
-import * as XLSX from "sheetjs-style";
 import Link from "next/link";
+import * as XLSX from "sheetjs-style";
 dayjs.locale("vi");
 
 const BM07 = () => {
@@ -263,45 +259,6 @@ const BM07 = () => {
     },
   ];
 
-  const items: MenuProps["items"] = [
-    {
-      key: "1",
-      label: (
-        <p
-          onClick={() => {
-            setIsOpen(true);
-            setMode("add");
-          }}
-          className="font-medium"
-        >
-          Thêm mới
-        </p>
-      ),
-      icon: <PlusOutlined />,
-      style: { color: "#1890ff" },
-    },
-    {
-      type: "divider",
-    },
-    {
-      key: "2",
-      label: (
-        <p
-          onClick={() => {
-            setIsOpen(true);
-            setMode("add");
-            setIsUpload(true);
-          }}
-          className="font-medium"
-        >
-          Import Excel
-        </p>
-      ),
-      icon: <FileExcelOutlined />,
-      style: { color: "#52c41a" },
-    },
-  ];
-
   const onSearch: SearchProps["onSearch"] = (value) => {
     if ((value === "" && !selectedKeyUnit) || selectedKeyUnit === "all")
       setData(training || []);
@@ -383,9 +340,6 @@ const BM07 = () => {
         message: "Thông báo",
       }));
       await getListTrainingLevels(selectedKey.id);
-      setIsOpen(false);
-      setSelectedItem(undefined);
-      setMode("add");
     } catch (error) {
       setFormNotification((prev) => ({
         ...prev,
@@ -394,55 +348,11 @@ const BM07 = () => {
         message: "Thông báo",
         description: Messages.ERROR,
       }));
-    }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
-  };
-
-  const handleSubmitUpload = async (
-    fileParticipant: File,
-    fileAttackment: FileItem
-  ) => {
-    try {
-      const formData = new FormData();
-      formData.append("File", fileParticipant);
-      formData.append("Type", fileAttackment.type);
-      formData.append("Path", fileAttackment.path);
-      formData.append("Name", fileAttackment.name);
-      formData.append("Size", fileAttackment.size.toString());
-
-      const response = await ImportTrainingLevels(formData);
-      if (response) {
-        setFormNotification((prev) => ({
-          ...prev,
-          isOpen: true,
-          status: "error",
-          message: "Thông báo",
-          description: `Tải lên thành công ${response.totalCount} dòng dữ liệu!`,
-        }));
-      }
-      await getListTrainingLevels(selectedKey.id);
+    } finally {
       setIsOpen(false);
       setSelectedItem(undefined);
       setMode("add");
-      setIsUpload(false);
-    } catch (error) {
-      setFormNotification((prev) => ({
-        ...prev,
-        isOpen: true,
-        status: "error",
-        message: "Thông báo",
-        description: Messages.ERROR,
-      }));
-      setIsOpen(false);
-      setIsUpload(false);
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   };
 
   const handleExportExcel = async () => {
@@ -777,6 +687,13 @@ const BM07 = () => {
       onSearch("");
     }
   }, [training, units, selectedKeyUnit, startDate, endDate]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setFormNotification((prev) => ({ ...prev, isOpen: false }));
+    }, 200);
+  }, [formNotification.isOpen]);
+
   return (
     <div>
       <div className="grid grid-cols-3 mb-3">
@@ -959,9 +876,9 @@ const BM07 = () => {
                   onClick={handleExportExcel}
                   iconPosition="start"
                   style={{
-                    backgroundColor: "#52c41a",
-                    borderColor: "#52c41a",
-                    color: "#fff",
+                    backgroundColor: Colors.GREEN,
+                    borderColor: Colors.GREEN,
+                    color: Colors.WHITE,
                   }}
                 >
                   Xuất Excel
@@ -971,14 +888,22 @@ const BM07 = () => {
           )}
           {role?.displayRole.isCreate && (
             <>
-              <Tooltip placement="top" title="Thêm mới hoạt động" arrow={true}>
-                <Dropdown menu={{ items }} trigger={["click"]}>
-                  <a onClick={(e) => e.preventDefault()}>
-                    <Button type="primary" icon={<PlusOutlined />}>
-                      Thêm hoạt động
-                    </Button>
-                  </a>
-                </Dropdown>
+              <Tooltip
+                placement="top"
+                title={"Thêm mới hoạt động"}
+                arrow={true}
+              >
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => {
+                    setIsOpen(true);
+                    setMode("add");
+                  }}
+                  iconPosition="start"
+                >
+                  Thêm hoạt động
+                </Button>
               </Tooltip>
             </>
           )}
@@ -1035,27 +960,14 @@ const BM07 = () => {
           setIsShowPdf(false);
         }}
         bodyContent={
-          isUpload ? (
-            <>
-              <FromUpload
-                formName="labor"
-                onSubmit={handleSubmitUpload}
-                handleShowPDF={setIsShowPdf}
-                displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
-              />
-            </>
-          ) : (
-            <>
-              <FormBM07
-                key="form-training-levels-bm07"
-                onSubmit={handleSubmit}
-                handleShowPDF={setIsShowPdf}
-                initialData={selectedItem as Partial<any>}
-                mode={mode}
-                displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
-              />
-            </>
-          )
+          <FormBM07
+            key="form-training-levels-bm07"
+            onSubmit={handleSubmit}
+            handleShowPDF={setIsShowPdf}
+            initialData={selectedItem as Partial<any>}
+            mode={mode}
+            displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
+          />
         }
       />
       <hr className="mb-3" />

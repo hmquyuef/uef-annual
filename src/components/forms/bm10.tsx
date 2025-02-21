@@ -15,7 +15,7 @@ import {
   RoleItem,
 } from "@/services/roles/rolesServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
-import { FileItem } from "@/services/uploads/uploadsServices";
+import { postFiles } from "@/services/uploads/uploadsServices";
 import Colors from "@/utility/Colors";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
@@ -60,12 +60,14 @@ import * as XLSX from "sheetjs-style";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
+import { LoadingSpin } from "../skeletons/LoadingSpin";
 dayjs.locale("vi");
 
 const BM10 = () => {
   type SearchProps = GetProps<typeof Input.Search>;
   const { Search } = Input;
   const [loading, setLoading] = useState(false);
+  const [loadingUpload, setLoadingUpload] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [charitables, setCharitables] = useState<CharitableItem[]>([]);
   const [data, setData] = useState<any[]>([]);
@@ -104,7 +106,7 @@ const BM10 = () => {
       if (defaultYear) {
         const { id, startDate, endDate } = defaultYear;
         setSelectedKey(defaultYear);
-        await getListLaborUnions(id);
+        await getListCharitables(id);
         setStartDate(startDate);
         setMinStartDate(startDate);
         setEndDate(endDate);
@@ -113,7 +115,7 @@ const BM10 = () => {
     }
   };
 
-  const getListLaborUnions = async (yearId: string) => {
+  const getListCharitables = async (yearId: string) => {
     const response = await getAllCharitables(yearId);
     setCharitables(response.items);
     setData(response.items);
@@ -373,16 +375,12 @@ const BM10 = () => {
           message: "Thông báo",
           description: `Đã xóa thành công ${selectedKeysArray.length} dòng thông tin!`,
         }));
-        await getListLaborUnions(selectedKey.id);
+        await getListCharitables(selectedKey.id);
         setSelectedRowKeys([]);
       }
     } catch (error) {
       console.error("Error deleting selected items:", error);
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   }, [selectedRowKeys]);
 
   const handleEdit = (labor: any) => {
@@ -419,7 +417,7 @@ const BM10 = () => {
         status: "success",
         message: "Thông báo",
       }));
-      await getListLaborUnions(selectedKey.id);
+      await getListCharitables(selectedKey.id);
       setIsOpen(false);
       setSelectedItem(undefined);
       setMode("add");
@@ -432,54 +430,52 @@ const BM10 = () => {
         description: Messages.ERROR,
       }));
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   };
 
   const handleSubmitUpload = async (
     fileParticipant: File,
-    fileAttackment: FileItem
+    fileAttachment: File
   ) => {
-    try {
+    setLoadingUpload(true);
+    const formData = new FormData();
+    formData.append("FunctionName", "general/charity");
+    formData.append("file", fileAttachment);
+    const results = await postFiles(formData);
+    if (results && results !== undefined) {
       const formData = new FormData();
-      formData.append("File", fileParticipant);
-      formData.append("Type", fileAttackment.type);
-      formData.append("Path", fileAttackment.path);
-      formData.append("Name", fileAttackment.name);
-      formData.append("Size", fileAttackment.size.toString());
-
+      formData.append("Excel", fileParticipant);
+      formData.append("PDF.Type", results.type);
+      formData.append("PDF.Path", results.path);
+      formData.append("PDF.Name", results.name);
+      formData.append("PDF.Size", results.size.toString());
       const response = await ImportCharitables(formData);
-      if (response) {
+      if (response.totalError !== 0) {
         setFormNotification((prev) => ({
           ...prev,
-          isOpen: true,
           status: "error",
+          message: "Đã có lỗi xảy ra!",
+          description: `${response.messageError}`,
+        }));
+      } else {
+        setFormNotification((prev) => ({
+          ...prev,
+          status: "success",
           message: "Thông báo",
-          description: `Tải lên thành công ${response.totalCount} dòng dữ liệu!`,
+          description: `Tải lên thành công ${response.totalCount} dòng thông tin chủ nhiệm lớp!`,
         }));
       }
-      await getListLaborUnions(selectedKey.id);
-      setIsOpen(false);
-      setSelectedItem(undefined);
-      setMode("add");
-      setIsUpload(false);
-    } catch (error) {
       setFormNotification((prev) => ({
         ...prev,
         isOpen: true,
-        status: "error",
-        message: "Thông báo",
-        description: Messages.ERROR,
       }));
-      setIsOpen(false);
-      setIsUpload(false);
+      await getListCharitables(selectedKey.id);
+      const timeoutId = setTimeout(() => {
+        setLoadingUpload(false);
+        setIsOpen(false);
+        setIsUpload(false);
+      }, 300);
+      return () => clearTimeout(timeoutId);
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   };
 
   const handleExportExcel = async () => {
@@ -507,7 +503,9 @@ const BM10 = () => {
         ],
         ["(ĐƠN VỊ)", "", "", ""],
         ["TỔNG HỢP DANH SÁCH"],
-        ["Tham gia, ủng hộ hoạt động cộng đồng, từ thiện do Trường, đơn vị thuộc Trường tổ chức"],
+        [
+          "Tham gia, ủng hộ hoạt động cộng đồng, từ thiện do Trường, đơn vị thuộc Trường tổ chức",
+        ],
         [""],
       ];
 
@@ -733,7 +731,7 @@ const BM10 = () => {
     setLoading(true);
     const temp = defaultYears.filter((x: any) => x.id === value)[0] as any;
     setSelectedKey(temp);
-    await getListLaborUnions(temp.id);
+    await getListCharitables(temp.id);
     setStartDate(temp.startDate);
     setEndDate(temp.endDate);
     const timeoutId = setTimeout(() => {
@@ -766,6 +764,12 @@ const BM10 = () => {
     setLoading(false);
     onSearch("");
   }, []);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setFormNotification((prev) => ({ ...prev, isOpen: false }));
+    }, 100);
+  }, [formNotification.isOpen]);
 
   useEffect(() => {
     if (charitables.length > 0 && (startDate || endDate)) {
@@ -945,7 +949,7 @@ const BM10 = () => {
           isUpload ? (
             <>
               <FromUpload
-                formName="charitable"
+                formName="bm10"
                 onSubmit={handleSubmitUpload}
                 handleShowPDF={setIsShowPdf}
                 displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
@@ -958,13 +962,18 @@ const BM10 = () => {
                 onSubmit={handleSubmit}
                 initialData={selectedItem as Partial<any>}
                 mode={mode}
-                formName="charitable"
+                formName="bm10"
                 displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
               />
             </>
           )
         }
       />
+      {loadingUpload && (
+        <>
+          <LoadingSpin isLoadingSpin={loadingUpload} />
+        </>
+      )}
       <hr className="mb-3" />
       <TemplateForms
         loading={loading}

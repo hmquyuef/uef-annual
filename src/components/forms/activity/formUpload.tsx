@@ -1,31 +1,28 @@
 "use client";
 
 import CustomNotification from "@/components/CustomNotification";
+import { MembersInfomations } from "@/services/generalWorks/membersInfomation";
 import { DisplayRoleItem } from "@/services/roles/rolesServices";
 import {
   deleteFiles,
   FileItem,
   postFiles,
 } from "@/services/uploads/uploadsServices";
-import Messages from "@/utility/Messages";
+import Colors from "@/utility/Colors";
 import {
-  CloseOutlined,
   CloudUploadOutlined,
   DownloadOutlined,
   MinusCircleOutlined,
-  ZoomInOutlined,
-  ZoomOutOutlined,
 } from "@ant-design/icons";
-import { Button, Tag } from "antd";
+import { Button, Progress } from "antd";
 import { FC, FormEvent, useEffect, useMemo, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { Document, Page } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
 interface FromUploadProps {
   formName: string;
-  onSubmit: (fileParticipant: File, fileAttachment: FileItem) => void;
+  onSubmit: (fileParticipant: File, fileAttachment: File) => void;
   handleShowPDF: (isVisible: boolean) => void;
   displayRole: DisplayRoleItem;
 }
@@ -33,39 +30,50 @@ interface FromUploadProps {
 const FromUpload: FC<FromUploadProps> = ({
   formName,
   onSubmit,
-  handleShowPDF,
   displayRole,
 }) => {
-  const [selectedFileParticipant, setSelectedFileParticipant] =
-    useState<File | null>(null);
-  const [selectedFileAttachment, setSelectedFileAttachment] = useState<
-    FileItem | undefined
-  >(undefined);
-  const [pathPDF, setPathPDF] = useState<string>("");
-  const [showPDF, setShowPDF] = useState(false);
-  const [isUploadedFileParticipant, setIsUploadedFileParticipant] =
-    useState(false);
-  const [isUploaded, setIsUploaded] = useState(false);
-  const [numPages, setNumPages] = useState<number>(1);
-  const [scale, setScale] = useState<number>(1.0);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoadingExcel, setIsLoadingExcel] = useState<boolean>(false);
+  const [isLoadingPDF, setIsLoadingPDF] = useState<boolean>(false);
+  const [percentExcel, setPercentExcel] = useState<number>(0);
+  const [percentPDF, setPercentPDF] = useState<number>(0);
+  const [pdf, setPdf] = useState<FileItem | undefined>(undefined);
+  const [excel, setExcel] = useState<FileItem | undefined>(undefined);
+  const [formNotification, setFormNotification] = useState<{
+    message: string;
+    description: string;
+    status: "success" | "error" | "info" | "warning";
+    isOpen: boolean;
+  }>({
+    message: "",
+    description: "",
+    status: "success",
+    isOpen: false,
+  });
 
-  const [message, setMessage] = useState("");
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState<
-    "success" | "error" | "info" | "warning"
-  >("success");
-  const [isNotificationOpen, setNotificationOpen] = useState(false);
-
-  function onDocumentLoadSuccess({ numPages }: { numPages: number }): void {
-    setNumPages(numPages);
-  }
+  const [formValues, setFormValues] = useState<{
+    fileParticipant: File;
+    fileAttachment: File;
+  }>({
+    fileParticipant: new File([""], "filename"),
+    fileAttachment: new File([""], "filename"),
+  });
 
   const handleDeleteExcel = async () => {
-    if (selectedFileParticipant && selectedFileParticipant !== undefined) {
-      setIsUploadedFileParticipant(false);
-      setSelectedFileParticipant(null);
-    } else {
-      console.log("Không có file nào để xóa.");
+    setIsLoadingExcel(true);
+    if (excel && excel.name !== "") {
+      let intervalId = setInterval(() => {
+        setPercentExcel((prevPercent) => {
+          let newPercent = prevPercent === 0 ? 100 : prevPercent - 1;
+          if (newPercent === 0) {
+            clearInterval(intervalId);
+            setExcel(undefined);
+            setIsLoadingExcel(false);
+            return 0;
+          }
+          return newPercent;
+        });
+      }, 10);
     }
   };
 
@@ -75,137 +83,192 @@ const FromUpload: FC<FromUploadProps> = ({
   } = useDropzone({
     onDrop: useMemo(
       () => async (acceptedFiles: File[]) => {
-        if (acceptedFiles.length > 0) {
-          if (
-            acceptedFiles[0].type !==
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-          ) {
-            setNotificationOpen(true);
-            setStatus("error");
-            setMessage("Thông báo");
-            setDescription(Messages.ERROR_EXCEL);
-          } else {
-            handleDeleteExcel();
-            setIsUploadedFileParticipant(true);
-            setSelectedFileParticipant(acceptedFiles[0]);
-          }
+        if (
+          acceptedFiles[0].type !==
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        ) {
+          setFormNotification((prev) => ({
+            ...prev,
+            isOpen: true,
+            status: "error",
+            message: "Định dạng tệp tin không hợp lệ!",
+            description: `Định dạng tệp tin ${acceptedFiles[0].name} là ${acceptedFiles[0].type}. Vui lòng chọn định dạng .xlsx`,
+          }));
+          return;
+        }
+        if (acceptedFiles[0].size / (1024 * 1024) > 5) {
+          setFormNotification((prev) => ({
+            ...prev,
+            isOpen: true,
+            status: "error",
+            message: "Dung lượng tệp tin quá lớn!",
+            description: `Dung lượng tệp tin ${acceptedFiles[0].name} là ${(
+              acceptedFiles[0].size /
+              (1024 * 1024)
+            ).toFixed(2)} MB, vượt quá dung lượng tối đa 5 MB!`,
+          }));
+          return;
+        }
+        if (acceptedFiles[0].size > 0) {
+          setIsLoadingExcel(true);
+          let intervalId = setInterval(() => {
+            setPercentExcel((prevPercent) => {
+              prevPercent = prevPercent === 100 ? 0 : prevPercent;
+              const newPercent = prevPercent + 1;
+              if (newPercent >= 100) {
+                clearInterval(intervalId);
+                setTimeout(() => {
+                  setIsLoadingExcel(false);
+                }, 500);
+                return 100;
+              }
+              return newPercent;
+            });
+          }, 10);
+          setExcel({
+            name: acceptedFiles[0].name,
+            path: "",
+            type: acceptedFiles[0].type,
+            size: acceptedFiles[0].size,
+          });
+          setFormValues((prev) => ({
+            ...prev,
+            fileParticipant: acceptedFiles[0],
+          }));
         }
       },
-      [selectedFileAttachment]
+      [excel, setPercentExcel]
     ),
   });
 
-  const handleDeletePicture = async () => {
-    if (selectedFileAttachment && selectedFileAttachment !== undefined) {
-      await deleteFiles(
-        selectedFileAttachment.path.replace(
-          "https://api-annual.uef.edu.vn/",
-          ""
-        )
-      );
-      setIsUploaded(false);
-      setSelectedFileAttachment(undefined);
-      setPathPDF("");
-    } else {
-      console.log("Không có file nào để xóa.");
+  const handleDeletePdf = async () => {
+    setIsLoadingPDF(true);
+    if (excel && excel.name !== "") {
+      let intervalId = setInterval(() => {
+        setPercentPDF((prevPercent) => {
+          let newPercent = prevPercent === 0 ? 100 : prevPercent - 1;
+          if (newPercent === 0) {
+            clearInterval(intervalId);
+            setPdf(undefined);
+            setIsLoadingPDF(false);
+            return 0;
+          }
+          return newPercent;
+        });
+      }, 10);
     }
   };
 
-  // Dropzone for Attachment File
-  const {
-    getRootProps: getAttachmentRootProps,
-    getInputProps: getAttachmentInputProps,
-  } = useDropzone({
-    onDrop: useMemo(
-      () => async (acceptedFiles: File[]) => {
-        if (acceptedFiles[0].type !== "application/pdf") {
-          setNotificationOpen(true);
-          setStatus("error");
-          setMessage("Thông báo");
-          setDescription(Messages.ERROR_PDF);
-        } else {
-          const formData = new FormData();
-          formData.append("FunctionName", formName);
-          formData.append("file", acceptedFiles[0]);
-          if (selectedFileAttachment && selectedFileAttachment !== undefined) {
-            await deleteFiles(
-              selectedFileAttachment.path.replace(
-                "https://api-annual.uef.edu.vn/",
-                ""
-              )
-            );
-            setPathPDF("");
+  const { getRootProps: getPDFRootProps, getInputProps: getPDFInputProps } =
+    useDropzone({
+      onDrop: useMemo(
+        () => async (acceptedFiles: File[]) => {
+          if (acceptedFiles[0].type !== "application/pdf") {
+            setFormNotification((prev) => ({
+              ...prev,
+              isOpen: true,
+              status: "error",
+              message: "Định dạng tệp tin không hợp lệ!",
+              description: `Định dạng tệp tin ${acceptedFiles[0].name} là ${acceptedFiles[0].type}. Vui lòng chọn định dạng .pdf`,
+            }));
+            return;
           }
-          const results = await postFiles(formData);
-          if (results && results !== undefined) {
-            setIsUploaded(true);
-            setSelectedFileAttachment(results);
-            setPathPDF(results.path);
+          if (acceptedFiles[0].size / (1024 * 1024) > 10) {
+            setFormNotification((prev) => ({
+              ...prev,
+              isOpen: true,
+              status: "error",
+              message: "Dung lượng tệp tin quá lớn!",
+              description: `Dung lượng tệp tin ${acceptedFiles[0].name} là ${(
+                acceptedFiles[0].size /
+                (1024 * 1024)
+              ).toFixed(2)} MB, vượt quá dung lượng tối đa 10 MB!`,
+            }));
+            return;
           }
-        }
-      },
-      [selectedFileAttachment]
-    ),
-  });
+          if (acceptedFiles[0].size > 0) {
+            setIsLoadingPDF(true);
+            let intervalId = setInterval(() => {
+              setPercentPDF((prevPercent) => {
+                prevPercent = prevPercent === 100 ? 0 : prevPercent;
+                const newPercent = prevPercent + 1;
+                if (newPercent >= 100) {
+                  clearInterval(intervalId);
+                  setTimeout(() => {
+                    setIsLoadingPDF(false);
+                  }, 500);
+                  return 100;
+                }
+                return newPercent;
+              });
+            }, 10);
+            setPdf({
+              name: acceptedFiles[0].name,
+              path: "",
+              type: acceptedFiles[0].type,
+              size: acceptedFiles[0].size,
+            });
+            setFormValues((prev) => ({
+              ...prev,
+              fileAttachment: acceptedFiles[0],
+            }));
+          }
+        },
+        [pdf, setPercentPDF]
+      ),
+    });
 
-  const handleSubmitUpload = async (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (selectedFileParticipant && selectedFileAttachment) {
-      onSubmit(selectedFileParticipant, selectedFileAttachment);
-      setIsUploadedFileParticipant(false);
-      setIsUploaded(false);
-      setSelectedFileParticipant(null);
-      setSelectedFileAttachment(undefined);
-      setShowPDF(false);
-    } else {
-      setNotificationOpen(true);
-      setStatus("error");
-      setMessage("Thông báo");
-      setDescription(Messages.ERROR_IMPORT);
-    }
+    onSubmit(formValues.fileParticipant, formValues.fileAttachment);
   };
 
   useEffect(() => {
-    handleShowPDF(showPDF);
-    isNotificationOpen && setNotificationOpen(!isNotificationOpen);
-  }, [showPDF, isNotificationOpen]);
+    setTimeout(() => {
+      setFormNotification((prev) => ({ ...prev, isOpen: false }));
+    }, 200);
+  }, [formNotification.isOpen]);
 
   return (
-    <div
-      className={`grid ${showPDF ? "grid-cols-2 gap-4" : "grid-cols-1"} mb-2`}
-    >
-      <form onSubmit={handleSubmitUpload}>
-        <hr className="mt-1 mb-2" />
-
-        {/* Dropzone for Participant File */}
-        <div className="flex flex-col gap-1 mb-2">
-          <p className="font-medium text-neutral-600">
-            Danh sách nhân sự tham gia <span className="text-red-500">(*)</span>
-          </p>
+    <section>
+      <hr className="mb-2" />
+      <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-6 mb-2">
+        <div className="flex flex-col gap-1">
+          <span className="font-medium text-neutral-600">
+            Danh sách nhân sự tham gia
+          </span>
           <div
             {...getParticipantRootProps()}
-            className="w-full min-h-20 h-fit border-2 border-dashed border-neutral-300 cursor-pointer flex justify-center items-center gap-3 rounded-xl"
+            className="w-full min-h-28 h-fit border-2 border-dashed border-green-300 hover:border-green-500 cursor-pointer flex justify-center items-center gap-3 rounded-xl"
           >
             <input {...getParticipantInputProps()} />
-            {!isUploadedFileParticipant ? (
+            {!excel || excel.name === "" ? (
               <>
-                <img src="/upload.svg" width={50} loading="lazy" alt="upload" />
-                <div className="flex flex-col gap-2">
-                  <span className="text-sm">
-                    Kéo và thả một tập tin vào đây hoặc nhấp để chọn một tập tin
+                <img src="/excel.svg" width={48} loading="lazy" alt="upload" />
+                <div className="flex flex-col">
+                  <span className="text-base text-center text-green-500 font-medium">
+                    Tải lên danh sách nhân sự tham gia
+                  </span>
+                  <span className="text-sm text-center text-green-400 mb-1">
+                    Định dạng <strong>.xlsx</strong>, tối đa{" "}
+                    <strong>5 MB</strong>
                   </span>
                   <Button
-                    color="primary"
+                    style={{
+                      backgroundColor: Colors.GREEN,
+                      color: Colors.WHITE,
+                      borderColor: Colors.GREEN,
+                    }}
                     variant="filled"
                     shape="round"
                     icon={<DownloadOutlined />}
                     size="small"
                     onClick={(e) => {
                       e.stopPropagation();
-                      const fileUrl = `/template-${formName}.xlsx`; // Đường dẫn đến file
+                      const fileUrl = `/template/template-${formName}.xlsx`; // Đường dẫn đến file
                       const link = document.createElement("a");
                       link.href = fileUrl;
-                      link.download = `template-${formName}.xlsx`;
+                      link.download = `/template/template-${formName}.xlsx`;
                       link.click();
                     }}
                   >
@@ -215,27 +278,34 @@ const FromUpload: FC<FromUploadProps> = ({
               </>
             ) : (
               <>
-                {selectedFileParticipant && (
+                {isLoadingExcel ? (
                   <>
-                    <div className="flex flex-col items-center gap-1 py-2">
-                      <div className="grid grid-cols-3 gap-2">
+                    <Progress
+                      key="progress-excel"
+                      percent={percentExcel}
+                      size={80}
+                      type="circle"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <div className="min-h-28 flex flex-col items-center justify-center gap-1 py-2">
+                      <div className="grid grid-cols-4">
                         <img
                           src={"/excel.svg"}
-                          width={50}
+                          width={48}
                           loading="lazy"
                           alt="file-preview"
                         />
-                        <div className="col-span-2 text-center content-center">
-                          <span className="text-sm">
-                            {selectedFileParticipant.name}
+                        <div className="col-span-3 flex flex-col content-center">
+                          <span className="text-[16px] text-green-500 font-medium">
+                            {excel.name}
                           </span>
-                          <span className="text-sm flex">
-                            (
-                            {(
-                              selectedFileParticipant.size /
-                              (1024 * 1024)
-                            ).toFixed(2)}{" "}
-                            MB)
+                          <span className="text-sm text-green-400">
+                            Dung lượng:{" "}
+                            <strong>
+                              {(excel.size / (1024 * 1024)).toFixed(2)} MB
+                            </strong>
                           </span>
                         </div>
                       </div>
@@ -244,7 +314,10 @@ const FromUpload: FC<FromUploadProps> = ({
                           danger
                           disabled={displayRole.isUpload === false}
                           color="danger"
-                          onClick={handleDeleteExcel}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteExcel();
+                          }}
                           size="small"
                           icon={<MinusCircleOutlined />}
                         >
@@ -266,58 +339,63 @@ const FromUpload: FC<FromUploadProps> = ({
             )}
           </div>
         </div>
-
-        {/* Dropzone for Attachment File */}
-        <div className="flex flex-col gap-1 mb-2">
-          <p className="font-medium text-neutral-600">
-            Tài liệu đính kèm <span className="text-red-500">(*)</span>
-          </p>
+        <div className="flex flex-col gap-1">
+          <span className="font-medium text-neutral-600">
+            Tài liệu đính kèm
+          </span>
           <div
-            {...getAttachmentRootProps()}
-            className="w-full min-h-20 h-fit border-2 border-dashed border-neutral-300 cursor-pointer flex justify-center items-center gap-3 rounded-xl"
+            {...getPDFRootProps()}
+            className="w-full min-h-28 h-fit border-2 border-dashed border-blue-300 hover:border-blue-500 cursor-pointer flex justify-center items-center gap-3 rounded-xl"
           >
-            <input {...getAttachmentInputProps()} />
-            {!isUploaded ? (
+            <input {...getPDFInputProps()} />
+            {!pdf || pdf.name === "" ? (
               <>
-                <img src="/upload.svg" width={50} loading="lazy" alt="upload" />
-                <span className="text-sm">
-                  Kéo và thả một tập tin vào đây hoặc nhấp để chọn một tập tin
+                <span className="text-blue-500 text-4xl">
+                  <CloudUploadOutlined />
                 </span>
+                <div className="flex flex-col">
+                  <span className="text-base text-center font-medium text-blue-500">
+                    Tải lên tài liệu đính kèm
+                  </span>
+                  <span className="text-sm text-center text-blue-400">
+                    Định dạng <strong>.pdf</strong>, tối đa{" "}
+                    <strong>10 MB</strong>
+                  </span>
+                  <span className="text-blue-400 text-sm">
+                    Kéo thả hoặc nhấn vào đây để chọn tệp!
+                  </span>
+                </div>
               </>
             ) : (
               <>
-                {selectedFileAttachment && (
+                {isLoadingPDF ? (
                   <>
-                    <div className="flex flex-col items-center gap-1 py-2">
+                    <Progress
+                      key="progress-pdf"
+                      percent={percentPDF}
+                      size={80}
+                      type="circle"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <div className="min-h-28 flex flex-col justify-center items-center gap-1 py-2">
                       <div className="grid grid-cols-3 gap-2">
                         <img
-                          src={
-                            selectedFileAttachment.type === "image/jpeg" ||
-                            selectedFileAttachment.type === "image/png"
-                              ? "https://api-annual.uef.edu.vn/" +
-                                selectedFileAttachment.path
-                              : "/file-pdf.svg"
-                          }
-                          width={50}
+                          src="/file-pdf.svg"
+                          width={42}
                           loading="lazy"
                           alt="file-preview"
                         />
                         <div className="col-span-2 text-center content-center">
-                          <span className="text-sm">
-                            {selectedFileAttachment.name}
-                          </span>
+                          <span className="text-sm">{pdf.name}</span>
                           <span className="text-sm flex">
-                            (
-                            {(
-                              selectedFileAttachment.size /
-                              (1024 * 1024)
-                            ).toFixed(2)}{" "}
-                            MB -
+                            ({(pdf.size / (1024 * 1024)).toFixed(2)} MB -
                             <span
                               className="text-sm ms-1 cursor-pointer text-blue-500 hover:text-blue-600"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setShowPDF(!showPDF);
+                                // setOpenDrawer(true);
                               }}
                             >
                               xem chi tiết
@@ -331,7 +409,10 @@ const FromUpload: FC<FromUploadProps> = ({
                           danger
                           disabled={displayRole.isUpload === false}
                           color="danger"
-                          onClick={handleDeletePicture}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeletePdf();
+                          }}
                           size="small"
                           icon={<MinusCircleOutlined />}
                         >
@@ -354,99 +435,13 @@ const FromUpload: FC<FromUploadProps> = ({
           </div>
         </div>
       </form>
-      {showPDF === true && (
-        <div>
-          <hr className="mt-1 mb-2" />
-          {pathPDF && pathPDF !== "" && (
-            <>
-              <div className="grid grid-cols-2 mb-[3px]">
-                <span className="font-medium text-neutral-600">
-                  Chế độ xem chi tiết
-                </span>
-                <div className="flex justify-end items-center">
-                  <Tag
-                    icon={<ZoomInOutlined />}
-                    color="processing"
-                    className="cursor-pointer"
-                    onClick={() => setScale((prevScale) => prevScale + 0.1)}
-                  >
-                    Phóng to
-                  </Tag>
-                  <Tag
-                    icon={<ZoomOutOutlined />}
-                    color="processing"
-                    className="cursor-pointer"
-                    onClick={() =>
-                      setScale((prevScale) => Math.max(prevScale - 0.1, 0.1))
-                    }
-                  >
-                    Thu nhỏ
-                  </Tag>
-                  <Tag
-                    icon={<CloseOutlined />}
-                    color="error"
-                    className="cursor-pointer"
-                    onClick={() => setShowPDF(!showPDF)}
-                  >
-                    Đóng
-                  </Tag>
-                </div>
-              </div>
-              <div
-                className="flex flex-col overflow-x-auto overflow-y-auto rounded-md shadow-md"
-                style={{
-                  maxHeight: "72vh",
-                }}
-              >
-                <Document
-                  file={`https://api-annual.uef.edu.vn/${pathPDF}`}
-                  onLoadSuccess={onDocumentLoadSuccess}
-                  loading={
-                    <div className="flex justify-center items-center h-full">
-                      <span>Đang tải...</span>
-                    </div>
-                  }
-                  error={
-                    <div
-                      className="flex flex-col items-center justify-center"
-                      style={{
-                        maxHeight: `calc(100vh - ${
-                          document
-                            .querySelector("form")
-                            ?.getBoundingClientRect().top
-                        }px - 42px)`,
-                      }}
-                    >
-                      <img
-                        src="/review.svg"
-                        width={"100px"}
-                        alt="review"
-                        className="mb-4"
-                      />
-                      <span>Không tìm thấy tệp tin phù hợp</span>
-                    </div>
-                  }
-                >
-                  {Array.from(new Array(numPages), (_, index) => (
-                    <Page
-                      key={`page_${index + 1}`}
-                      pageNumber={index + 1}
-                      scale={scale}
-                    />
-                  ))}
-                </Document>
-              </div>
-            </>
-          )}
-        </div>
-      )}
       <CustomNotification
-        message={message}
-        description={description}
-        status={status}
-        isOpen={isNotificationOpen}
+        isOpen={formNotification.isOpen}
+        status={formNotification.status}
+        message={formNotification.message}
+        description={formNotification.description}
       />
-    </div>
+    </section>
   );
 };
 

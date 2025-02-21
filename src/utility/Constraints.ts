@@ -13,6 +13,7 @@ enum PageTitles {
     BM11 = "Biểu mẫu 11: Hoạt động cấp Trường - UEF",
     BM12 = "Biểu mẫu 12: Hoạt động cấp Đơn vị - UEF",
     BM13 = "Biểu mẫu 13: Nội quy giảng dạy - UEF",
+    BM14 = "Biểu mẫu 14: Tham gia coi thi - UEF",
     BM15 = "Biểu mẫu 15: Nội quy lao động - UEF",
     SUMMARY_ACTIVITIES = "Tổng kết hoạt động - UEF",
     LOGS_ACTIVITY = "Lịch sử hoạt động - UEF",

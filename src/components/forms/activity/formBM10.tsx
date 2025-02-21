@@ -27,8 +27,14 @@ import { MembersInfomations } from "@/services/generalWorks/membersInfomation";
 import { DisplayRoleItem } from "@/services/roles/rolesServices";
 import Colors from "@/utility/Colors";
 
+import {
+  handleDeleteFile,
+  handleDeleteFileExcel,
+} from "@/components/files/RemoveFile";
+import { handleFileUpload } from "@/components/files/UploadExcel";
+import { handleUploadFile } from "@/components/files/UploadFile";
 import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
-import { ImportCharitables } from "@/services/generalWorks/charitableServices";
+import { ImportCharitablesMembers } from "@/services/generalWorks/charitableServices";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
@@ -94,35 +100,15 @@ const FormBM10: FC<FormBM10Props> = (props) => {
   });
 
   const handleDeleteExcel = async () => {
-    setIsLoadingExcel(true);
-    if (participants && participants !== undefined) {
-      await deleteFiles(
-        participants.path.replace("https://api-annual.uef.edu.vn/", "")
-      );
-      let intervalId = setInterval(() => {
-        setPercentExcel((prevPercent) => {
-          let newPercent = prevPercent === 0 ? 100 : prevPercent - 1;
-          if (newPercent === 0) {
-            clearInterval(intervalId);
-            setFormNotification({
-              isOpen: true,
-              status: "success",
-              message: "Thông báo",
-              description: `Đã xóa tệp tin: ${participants.name} thành công!`,
-            });
-            setParticipants(undefined);
-            setMembers([]);
-            setIsLoadingExcel(false);
-            return 0;
-          }
-          return newPercent;
-        });
-      }, 10);
-    }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
+    await handleDeleteFileExcel(
+      participants,
+      setIsLoadingExcel,
+      setPercentExcel,
+      setFormNotification,
+      deleteFiles,
+      setParticipants,
+      setMembers
+    );
   };
 
   const {
@@ -130,132 +116,53 @@ const FormBM10: FC<FormBM10Props> = (props) => {
     getInputProps: getParticipantInputProps,
   } = useDropzone({
     onDrop: useMemo(
-      () => async (acceptedFiles: File[]) => {
-        setIsLoadingExcel(true);
-        const formData = new FormData();
-        formData.append("FunctionName", "general/charity");
-        formData.append("file", acceptedFiles[0]);
-        if (participants && participants.path !== "") {
-          await deleteFiles(
-            participants.path.replace("https://api-annual.uef.edu.vn/", "")
-          );
-          setMembers([]);
-        }
-        const results = await postFiles(formData);
-        if (results && results !== undefined) {
-          setParticipants(results);
-          const formDataImport = new FormData();
-          formDataImport.append("path", results.path);
-          const response = await ImportCharitables(formDataImport);
-          if (response && response.items && response.items.length > 0) {
-            setMembers(response.items);
-            let intervalId = setInterval(() => {
-              setPercentExcel((prevPercent) => {
-                const newPercent = prevPercent + 1;
-                if (newPercent >= 100) {
-                  clearInterval(intervalId);
-                  setTimeout(() => {
-                    setFormNotification({
-                      isOpen: true,
-                      status: "success",
-                      message: "Thông báo",
-                      description: `Đã tải lên tệp tin: ${results.name} thành công!`,
-                    });
-                    setIsLoadingExcel(false);
-                  }, 500);
-                  return 100;
-                }
-                return newPercent;
-              });
-            }, 10);
-          }
-        }
-        setFormNotification((prev) => ({
-          ...prev,
-          isOpen: false,
-        }));
-      },
-      [participants, setPercentExcel]
+      () => (acceptedFiles: File[]) =>
+        handleFileUpload(
+          acceptedFiles,
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          5, // Giới hạn 5MB
+          setIsLoadingExcel,
+          setPercentExcel,
+          setFormNotification,
+          ImportCharitablesMembers,
+          deleteFiles,
+          participants,
+          setParticipants,
+          setMembers
+        ),
+      [participants]
     ),
   });
 
   const handleDeletePicture = async () => {
-    setIsLoadingPDF(true);
-    if (pdf && pdf.path !== "") {
-      await deleteFiles(pdf.path.replace("https://api-annual.uef.edu.vn/", ""));
-      let intervalId = setInterval(() => {
-        setPercentPDF((prevPercent) => {
-          let newPercent = prevPercent === 0 ? 100 : prevPercent - 1;
-          if (newPercent === 0) {
-            clearInterval(intervalId);
-            setPdf(undefined);
-            setFormNotification({
-              isOpen: true,
-              status: "success",
-              message: "Thông báo",
-              description: `Đã xóa tệp tin: ${pdf.name} thành công!`,
-            });
-            setIsLoadingPDF(false);
-            return 0;
-          }
-          return newPercent;
-        });
-      }, 10);
-    }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
+    await handleDeleteFile(
+      pdf,
+      setIsLoadingPDF,
+      setPercentPDF,
+      setFormNotification,
+      deleteFiles,
+      setPdf
+    );
   };
-
   const { getRootProps: getPDFRootProps, getInputProps: getPDFInputProps } =
     useDropzone({
       onDrop: useMemo(
         () => async (acceptedFiles: File[]) => {
-          setIsLoadingPDF(true);
-          const formData = new FormData();
-          formData.append("FunctionName", "general/charity");
-          formData.append("file", acceptedFiles[0]);
-          if (pdf && pdf.path !== "") {
-            await deleteFiles(
-              pdf.path.replace("https://api-annual.uef.edu.vn/", "")
-            );
-          }
-          const results = await postFiles(formData);
-          if (results && results !== undefined) {
-            setPdf(results);
-            let intervalId = setInterval(() => {
-              setPercentPDF((prevPercent) => {
-                const newPercent = prevPercent + 1;
-                if (newPercent >= 100) {
-                  clearInterval(intervalId);
-                  setTimeout(() => {
-                    setFormNotification({
-                      isOpen: true,
-                      status: "success",
-                      message: "Thông báo",
-                      description: `Đã tải lên tệp tin: ${results.name} thành công!`,
-                    });
-                    setIsLoadingPDF(false);
-                  }, 500);
-                  return 100;
-                }
-                return newPercent;
-              });
-            }, 10);
-          }
-          setFormNotification((prev) => ({
-            ...prev,
-            isOpen: false,
-          }));
+          await handleUploadFile(
+            acceptedFiles,
+            "general/charity",
+            setPercentPDF,
+            setIsLoadingPDF,
+            setFormNotification,
+            deleteFiles,
+            postFiles,
+            setPdf,
+            pdf
+          );
         },
         [pdf]
       ),
     });
-
-  const onClose = () => {
-    setOpenDrawer(false);
-  };
 
   const ResetForm = () => {
     setFormValues({
@@ -374,6 +281,12 @@ const FormBM10: FC<FormBM10Props> = (props) => {
     }, 500);
     return () => clearTimeout(timeoutId);
   }, [initialData, mode]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setFormNotification((prev) => ({ ...prev, isOpen: false }));
+    }, 200);
+  }, [formNotification.isOpen]);
 
   return (
     <div className="grid grid-cols-1 mb-2">
@@ -582,8 +495,12 @@ const FormBM10: FC<FormBM10Props> = (props) => {
                         alt="upload"
                       />
                       <div className="flex flex-col">
-                        <span className="text-[16px] text-center text-green-500 font-medium">
-                          Tải lên tệp danh sách nhân sự
+                        <span className="text-base text-center text-green-500 font-medium">
+                          Tải lên danh sách nhân sự tham gia
+                        </span>
+                        <span className="text-sm text-center text-green-400 mb-1">
+                          Định dạng <strong>.xlsx</strong>, tối đa{" "}
+                          <strong>5 MB</strong>
                         </span>
                         <Button
                           style={{
@@ -687,10 +604,14 @@ const FormBM10: FC<FormBM10Props> = (props) => {
                         <CloudUploadOutlined />
                       </span>
                       <div className="flex flex-col">
-                        <span className="text-[16px] text-center font-medium text-blue-500">
-                          Tải lên tệp tài liệu đính kèm
+                        <span className="text-base text-center font-medium text-blue-500">
+                          Tải lên tài liệu đính kèm
                         </span>
-                        <span className="text-blue-300 text-[13px]">
+                        <span className="text-sm text-center text-blue-400">
+                          Định dạng <strong>.pdf</strong>, tối đa{" "}
+                          <strong>10 MB</strong>
+                        </span>
+                        <span className="text-blue-400 text-sm">
                           Kéo thả hoặc nhấn vào đây để chọn tệp!
                         </span>
                       </div>
@@ -781,7 +702,7 @@ const FormBM10: FC<FormBM10Props> = (props) => {
         title="Chi tiết danh sách nhân sự tham gia sự kiện"
         placement={"bottom"}
         closable={true}
-        onClose={onClose}
+        onClose={() => setOpenDrawer(false)}
         open={openDrawer}
         height={"100%"}
         key="drawer-infomation-bm08"

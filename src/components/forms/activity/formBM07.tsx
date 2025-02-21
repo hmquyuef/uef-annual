@@ -265,7 +265,7 @@ const FormBM07: FC<FormBM07Props> = (props) => {
           type: initialData.type || "",
           note: initialData.note || "",
         });
-        setListPicture(initialData?.attackment || undefined);
+        setListPicture(initialData?.determinations.files[0] || undefined);
       } else {
         ResetForm();
         getListUnits();

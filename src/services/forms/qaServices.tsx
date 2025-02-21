@@ -1,6 +1,5 @@
 import apiClient from "../apiClient";
 import { Determinations } from "./Determinations";
-import { ImportResponse } from "./formsServices";
 import { PaymentApprovedItem } from "./PaymentApprovedItem";
 
 export interface QAItem {
@@ -62,16 +61,12 @@ export async function deleteQAs(ids: string[]): Promise<void> {
   });
 }
 
-export async function ImportQAs(data: FormData): Promise<ImportResponse> {
-  const response = await apiClient.post<ImportResponse>(
-    "api/qae/import",
-    data,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
+export async function ImportQAs(data: FormData): Promise<any> {
+  const response = await apiClient.post<any>("api/qae/import", data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 
   return response.data;
 }

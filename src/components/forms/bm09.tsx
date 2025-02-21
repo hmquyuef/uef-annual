@@ -15,7 +15,7 @@ import {
   RoleItem,
 } from "@/services/roles/rolesServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
-import { FileItem } from "@/services/uploads/uploadsServices";
+import { postFiles } from "@/services/uploads/uploadsServices";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
 import {
@@ -60,12 +60,14 @@ import Colors from "@/utility/Colors";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
+import { LoadingSpin } from "../skeletons/LoadingSpin";
 dayjs.locale("vi");
 
 const BM09 = () => {
   type SearchProps = GetProps<typeof Input.Search>;
   const { Search } = Input;
   const [loading, setLoading] = useState(false);
+  const [loadingUpload, setLoadingUpload] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [youthUnions, setYouthUnions] = useState<YouthUnionItem[]>([]);
   const [data, setData] = useState<any[]>([]);
@@ -379,10 +381,6 @@ const BM09 = () => {
     } catch (error) {
       console.error("Error deleting selected items:", error);
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   }, [selectedRowKeys]);
 
   const handleEdit = (labor: any) => {
@@ -432,54 +430,52 @@ const BM09 = () => {
         description: Messages.ERROR,
       }));
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   };
 
   const handleSubmitUpload = async (
     fileParticipant: File,
-    fileAttackment: FileItem
+    fileAttachment: File
   ) => {
-    try {
+    setLoadingUpload(true);
+    const formData = new FormData();
+    formData.append("FunctionName", "general/unions/youths");
+    formData.append("file", fileAttachment);
+    const results = await postFiles(formData);
+    if (results && results !== undefined) {
       const formData = new FormData();
-      formData.append("File", fileParticipant);
-      formData.append("Type", fileAttackment.type);
-      formData.append("Path", fileAttackment.path);
-      formData.append("Name", fileAttackment.name);
-      formData.append("Size", fileAttackment.size.toString());
-
+      formData.append("Excel", fileParticipant);
+      formData.append("PDF.Type", results.type);
+      formData.append("PDF.Path", results.path);
+      formData.append("PDF.Name", results.name);
+      formData.append("PDF.Size", results.size.toString());
       const response = await ImportYouthUnions(formData);
-      if (response) {
+      if (response.totalError !== 0) {
         setFormNotification((prev) => ({
           ...prev,
-          isOpen: true,
           status: "error",
+          message: "Đã có lỗi xảy ra!",
+          description: `${response.messageError}`,
+        }));
+      } else {
+        setFormNotification((prev) => ({
+          ...prev,
+          status: "success",
           message: "Thông báo",
-          description: `Tải lên thành công ${response.totalCount} dòng dữ liệu!`,
+          description: `Tải lên thành công ${response.totalCount} dòng thông tin chủ nhiệm lớp!`,
         }));
       }
-      await getListYouthUnions(selectedKey.id);
-      setIsOpen(false);
-      setSelectedItem(undefined);
-      setMode("add");
-      setIsUpload(false);
-    } catch (error) {
       setFormNotification((prev) => ({
         ...prev,
         isOpen: true,
-        status: "error",
-        message: "Thông báo",
-        description: Messages.ERROR,
       }));
-      setIsOpen(false);
-      setIsUpload(false);
+      await getListYouthUnions(selectedKey.id);
+      const timeoutId = setTimeout(() => {
+        setLoadingUpload(false);
+        setIsOpen(false);
+        setIsUpload(false);
+      }, 300);
+      return () => clearTimeout(timeoutId);
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   };
 
   const handleExportExcel = async () => {
@@ -507,9 +503,7 @@ const BM09 = () => {
         ],
         ["(ĐƠN VỊ)", "", "", ""],
         ["TỔNG HỢP DANH SÁCH"],
-        [
-          "Tham gia các hoạt động do Đoàn Thanh Niên phụ trách",
-        ],
+        ["Tham gia các hoạt động do Đoàn Thanh Niên phụ trách"],
         [""],
       ];
 
@@ -770,6 +764,12 @@ const BM09 = () => {
   }, []);
 
   useEffect(() => {
+    setTimeout(() => {
+      setFormNotification((prev) => ({ ...prev, isOpen: false }));
+    }, 100);
+  }, [formNotification.isOpen]);
+
+  useEffect(() => {
     if (youthUnions.length > 0 && (startDate || endDate)) {
       onSearch("");
     }
@@ -947,7 +947,7 @@ const BM09 = () => {
           isUpload ? (
             <>
               <FromUpload
-                formName="youths-union"
+                formName="bm09"
                 onSubmit={handleSubmitUpload}
                 handleShowPDF={setIsShowPdf}
                 displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
@@ -960,13 +960,18 @@ const BM09 = () => {
                 onSubmit={handleSubmit}
                 initialData={selectedItem as Partial<any>}
                 mode={mode}
-                formName="youths-union"
+                formName="bm09"
                 displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
               />
             </>
           )
         }
       />
+      {loadingUpload && (
+        <>
+          <LoadingSpin isLoadingSpin={loadingUpload} />
+        </>
+      )}
       <hr className="mb-3" />
       <TemplateForms
         loading={loading}

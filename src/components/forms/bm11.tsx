@@ -15,7 +15,7 @@ import {
   RoleItem,
 } from "@/services/roles/rolesServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
-import { FileItem } from "@/services/uploads/uploadsServices";
+import { FileItem, postFiles } from "@/services/uploads/uploadsServices";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
 import {
@@ -60,12 +60,14 @@ import Colors from "@/utility/Colors";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
+import { LoadingSpin } from "../skeletons/LoadingSpin";
 dayjs.locale("vi");
 
 const BM11 = () => {
   type SearchProps = GetProps<typeof Input.Search>;
   const { Search } = Input;
   const [loading, setLoading] = useState(false);
+  const [loadingUpload, setLoadingUpload] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [schoolLevels, setSchoolLevels] = useState<SchoolLevelItem[]>([]);
   const [data, setData] = useState<any[]>([]);
@@ -104,7 +106,7 @@ const BM11 = () => {
       if (defaultYear) {
         const { id, startDate, endDate } = defaultYear;
         setSelectedKey(defaultYear);
-        await getListLaborUnions(id);
+        await getListSchoolLevels(id);
         setStartDate(startDate);
         setMinStartDate(startDate);
         setEndDate(endDate);
@@ -113,7 +115,7 @@ const BM11 = () => {
     }
   };
 
-  const getListLaborUnions = async (yearId: string) => {
+  const getListSchoolLevels = async (yearId: string) => {
     const response = await getAllSchoolLevels(yearId);
     setSchoolLevels(response.items);
     setData(response.items);
@@ -373,16 +375,12 @@ const BM11 = () => {
           message: "Thông báo",
           description: `Đã xóa thành công ${selectedKeysArray.length} dòng thông tin!`,
         }));
-        await getListLaborUnions(selectedKey.id);
+        await getListSchoolLevels(selectedKey.id);
         setSelectedRowKeys([]);
       }
     } catch (error) {
       console.error("Error deleting selected items:", error);
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   }, [selectedRowKeys]);
 
   const handleEdit = (labor: any) => {
@@ -419,7 +417,7 @@ const BM11 = () => {
         status: "success",
         message: "Thông báo",
       }));
-      await getListLaborUnions(selectedKey.id);
+      await getListSchoolLevels(selectedKey.id);
       setIsOpen(false);
       setSelectedItem(undefined);
       setMode("add");
@@ -432,54 +430,52 @@ const BM11 = () => {
         description: Messages.ERROR,
       }));
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   };
 
   const handleSubmitUpload = async (
     fileParticipant: File,
-    fileAttackment: FileItem
+    fileAttachment: File
   ) => {
-    try {
+    setLoadingUpload(true);
+    const formData = new FormData();
+    formData.append("FunctionName", "general/schools");
+    formData.append("file", fileAttachment);
+    const results = await postFiles(formData);
+    if (results && results !== undefined) {
       const formData = new FormData();
-      formData.append("File", fileParticipant);
-      formData.append("Type", fileAttackment.type);
-      formData.append("Path", fileAttackment.path);
-      formData.append("Name", fileAttackment.name);
-      formData.append("Size", fileAttackment.size.toString());
-
+      formData.append("Excel", fileParticipant);
+      formData.append("PDF.Type", results.type);
+      formData.append("PDF.Path", results.path);
+      formData.append("PDF.Name", results.name);
+      formData.append("PDF.Size", results.size.toString());
       const response = await ImportSchoolLevels(formData);
-      if (response) {
+      if (response.totalError !== 0) {
         setFormNotification((prev) => ({
           ...prev,
-          isOpen: true,
           status: "error",
+          message: "Đã có lỗi xảy ra!",
+          description: `${response.messageError}`,
+        }));
+      } else {
+        setFormNotification((prev) => ({
+          ...prev,
+          status: "success",
           message: "Thông báo",
-          description: `Tải lên thành công ${response.totalCount} dòng dữ liệu!`,
+          description: `Tải lên thành công ${response.totalCount} dòng thông tin chủ nhiệm lớp!`,
         }));
       }
-      await getListLaborUnions(selectedKey.id);
-      setIsOpen(false);
-      setSelectedItem(undefined);
-      setMode("add");
-      setIsUpload(false);
-    } catch (error) {
       setFormNotification((prev) => ({
         ...prev,
         isOpen: true,
-        status: "error",
-        message: "Thông báo",
-        description: Messages.ERROR,
       }));
-      setIsOpen(false);
-      setIsUpload(false);
+      await getListSchoolLevels(selectedKey.id);
+      const timeoutId = setTimeout(() => {
+        setLoadingUpload(false);
+        setIsOpen(false);
+        setIsUpload(false);
+      }, 300);
+      return () => clearTimeout(timeoutId);
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   };
 
   const handleExportExcel = async () => {
@@ -733,7 +729,7 @@ const BM11 = () => {
     setLoading(true);
     const temp = defaultYears.filter((x: any) => x.id === value)[0] as any;
     setSelectedKey(temp);
-    await getListLaborUnions(temp.id);
+    await getListSchoolLevels(temp.id);
     setStartDate(temp.startDate);
     setEndDate(temp.endDate);
     const timeoutId = setTimeout(() => {
@@ -766,6 +762,12 @@ const BM11 = () => {
     setLoading(false);
     onSearch("");
   }, []);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setFormNotification((prev) => ({ ...prev, isOpen: false }));
+    }, 100);
+  }, [formNotification.isOpen]);
 
   useEffect(() => {
     if (schoolLevels.length > 0 && (startDate || endDate)) {
@@ -945,7 +947,7 @@ const BM11 = () => {
           isUpload ? (
             <>
               <FromUpload
-                formName="school-levels"
+                formName="bm11"
                 onSubmit={handleSubmitUpload}
                 handleShowPDF={setIsShowPdf}
                 displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
@@ -958,13 +960,18 @@ const BM11 = () => {
                 onSubmit={handleSubmit}
                 initialData={selectedItem as Partial<any>}
                 mode={mode}
-                formName="school-levels"
+                formName="bm11"
                 displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
               />
             </>
           )
         }
       />
+      {loadingUpload && (
+        <>
+          <LoadingSpin isLoadingSpin={loadingUpload} />
+        </>
+      )}
       <hr className="mb-3" />
       <TemplateForms
         loading={loading}

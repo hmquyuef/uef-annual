@@ -1,4 +1,5 @@
 import apiClient from "../apiClient";
+import { Determinations } from "../forms/Determinations";
 import { PaymentApprovedItem } from "../forms/PaymentApprovedItem";
 
 export interface LecturerRegulationItem {
@@ -9,9 +10,17 @@ export interface LecturerRegulationItem {
   notifiedAbsences: number;
   unnotifiedAbsences: number;
   lateEarly: number;
-  entryDate: number;
+  determinations: Determinations;
   payments: PaymentApprovedItem;
+  histories: HistoryLecturersItem[];
   note: string;
+}
+
+export interface HistoryLecturersItem {
+  notifiedAbsences: number;
+  unnotifiedAbsences: number;
+  lateEarly: number;
+  entryDate: number;
 }
 
 export interface LecturerRegulationsResponse {
@@ -26,6 +35,14 @@ export async function getAllLecturerRegulations(
     ? `api/regulations/lecturers?Years=${yearId}`
     : "api/regulations/lecturerss";
   const response = await apiClient.get<LecturerRegulationsResponse>(url);
+  return response.data;
+}
+
+export async function getCheckExistLecturerRegulations(
+  userName: string
+): Promise<boolean> {
+  let url = `api/regulations/lecturers/checkexist?userName=${userName}`;
+  const response = await apiClient.get<boolean>(url);
   return response.data;
 }
 

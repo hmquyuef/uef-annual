@@ -17,20 +17,28 @@ import {
   Drawer,
   Input,
   Progress,
+  Select,
 } from "antd";
-import { FC, FormEvent, useEffect, useMemo, useState } from "react";
+import { FC, FormEvent, Key, useEffect, useMemo, useState } from "react";
 import { useDropzone } from "react-dropzone";
 
 import CustomNotification from "@/components/CustomNotification";
 import DrawerInfomation from "@/components/drawerInfo/DrawerInfomation";
+import {
+  handleDeleteFile,
+  handleDeleteFileExcel,
+} from "@/components/files/RemoveFile";
+import { handleFileUpload } from "@/components/files/UploadExcel";
+import { handleUploadFile } from "@/components/files/UploadFile";
+import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
 import { MembersInfomations } from "@/services/generalWorks/membersInfomation";
-import { ImportUnitLevels } from "@/services/generalWorks/unitLevelServices";
+import { ImportUnitLevelsMembers } from "@/services/generalWorks/unitLevelServices";
 import { DisplayRoleItem } from "@/services/roles/rolesServices";
+import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
 import Colors from "@/utility/Colors";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
-import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
 dayjs.locale("vi");
 interface FormBM12Props {
   onSubmit: (formData: Partial<any>) => void;
@@ -54,6 +62,8 @@ const FormBM12: FC<FormBM12Props> = (props) => {
   const [participants, setParticipants] = useState<FileItem | undefined>(
     undefined
   );
+  const [selectedKeyUnit, setSelectedKeyUnit] = useState<Key | null>(null);
+  const [UnitsHRM, setUnitsHRM] = useState<UnitItem[]>([]);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [formNotification, setFormNotification] = useState<{
     message: string;
@@ -67,6 +77,7 @@ const FormBM12: FC<FormBM12Props> = (props) => {
     isOpen: false,
   });
   const [formValues, setFormValues] = useState({
+    eventsOrganizer: "",
     contents: "",
     documentNumber: "",
     internalNumber: "",
@@ -91,36 +102,21 @@ const FormBM12: FC<FormBM12Props> = (props) => {
     note: "",
   });
 
+  const getListUnits = async () => {
+    const response = await getAllUnits("true");
+    setUnitsHRM(response.items);
+  };
+
   const handleDeleteExcel = async () => {
-    setIsLoadingExcel(true);
-    if (participants && participants !== undefined) {
-      await deleteFiles(
-        participants.path.replace("https://api-annual.uef.edu.vn/", "")
-      );
-      let intervalId = setInterval(() => {
-        setPercentExcel((prevPercent) => {
-          let newPercent = prevPercent === 0 ? 100 : prevPercent - 1;
-          if (newPercent === 0) {
-            clearInterval(intervalId);
-            setFormNotification({
-              isOpen: true,
-              status: "success",
-              message: "Thông báo",
-              description: `Đã xóa tệp tin: ${participants.name} thành công!`,
-            });
-            setParticipants(undefined);
-            setMembers([]);
-            setIsLoadingExcel(false);
-            return 0;
-          }
-          return newPercent;
-        });
-      }, 10);
-    }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
+    await handleDeleteFileExcel(
+      participants,
+      setIsLoadingExcel,
+      setPercentExcel,
+      setFormNotification,
+      deleteFiles,
+      setParticipants,
+      setMembers
+    );
   };
 
   const {
@@ -128,135 +124,57 @@ const FormBM12: FC<FormBM12Props> = (props) => {
     getInputProps: getParticipantInputProps,
   } = useDropzone({
     onDrop: useMemo(
-      () => async (acceptedFiles: File[]) => {
-        setIsLoadingExcel(true);
-        const formData = new FormData();
-        formData.append("FunctionName", "general/units");
-        formData.append("file", acceptedFiles[0]);
-        if (participants && participants.path !== "") {
-          await deleteFiles(
-            participants.path.replace("https://api-annual.uef.edu.vn/", "")
-          );
-          setMembers([]);
-        }
-        const results = await postFiles(formData);
-        if (results && results !== undefined) {
-          setParticipants(results);
-          const formDataImport = new FormData();
-          formDataImport.append("path", results.path);
-          const response = await ImportUnitLevels(formDataImport);
-          if (response && response.items && response.items.length > 0) {
-            setMembers(response.items);
-            let intervalId = setInterval(() => {
-              setPercentExcel((prevPercent) => {
-                const newPercent = prevPercent + 1;
-                if (newPercent >= 100) {
-                  clearInterval(intervalId);
-                  setTimeout(() => {
-                    setFormNotification({
-                      isOpen: true,
-                      status: "success",
-                      message: "Thông báo",
-                      description: `Đã tải lên tệp tin: ${results.name} thành công!`,
-                    });
-                    setIsLoadingExcel(false);
-                  }, 500);
-                  return 100;
-                }
-                return newPercent;
-              });
-            }, 10);
-          }
-        }
-        setFormNotification((prev) => ({
-          ...prev,
-          isOpen: false,
-        }));
-      },
-      [participants, setPercentExcel]
+      () => (acceptedFiles: File[]) =>
+        handleFileUpload(
+          acceptedFiles,
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          5, // Giới hạn 5MB
+          setIsLoadingExcel,
+          setPercentExcel,
+          setFormNotification,
+          ImportUnitLevelsMembers,
+          deleteFiles,
+          participants,
+          setParticipants,
+          setMembers
+        ),
+      [participants]
     ),
   });
 
   const handleDeletePicture = async () => {
-    setIsLoadingPDF(true);
-    if (pdf && pdf.path !== "") {
-      await deleteFiles(pdf.path.replace("https://api-annual.uef.edu.vn/", ""));
-      let intervalId = setInterval(() => {
-        setPercentPDF((prevPercent) => {
-          let newPercent = prevPercent === 0 ? 100 : prevPercent - 1;
-          if (newPercent === 0) {
-            clearInterval(intervalId);
-            setPdf(undefined);
-            setFormNotification({
-              isOpen: true,
-              status: "success",
-              message: "Thông báo",
-              description: `Đã xóa tệp tin: ${pdf.name} thành công!`,
-            });
-            setIsLoadingPDF(false);
-            return 0;
-          }
-          return newPercent;
-        });
-      }, 10);
-    }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
+    await handleDeleteFile(
+      pdf,
+      setIsLoadingPDF,
+      setPercentPDF,
+      setFormNotification,
+      deleteFiles,
+      setPdf
+    );
   };
-
   const { getRootProps: getPDFRootProps, getInputProps: getPDFInputProps } =
     useDropzone({
       onDrop: useMemo(
         () => async (acceptedFiles: File[]) => {
-          setIsLoadingPDF(true);
-          const formData = new FormData();
-          formData.append("FunctionName", "general/units");
-          formData.append("file", acceptedFiles[0]);
-          if (pdf && pdf.path !== "") {
-            await deleteFiles(
-              pdf.path.replace("https://api-annual.uef.edu.vn/", "")
-            );
-          }
-          const results = await postFiles(formData);
-          if (results && results !== undefined) {
-            setPdf(results);
-            let intervalId = setInterval(() => {
-              setPercentPDF((prevPercent) => {
-                const newPercent = prevPercent + 1;
-                if (newPercent >= 100) {
-                  clearInterval(intervalId);
-                  setTimeout(() => {
-                    setFormNotification({
-                      isOpen: true,
-                      status: "success",
-                      message: "Thông báo",
-                      description: `Đã tải lên tệp tin: ${results.name} thành công!`,
-                    });
-                    setIsLoadingPDF(false);
-                  }, 500);
-                  return 100;
-                }
-                return newPercent;
-              });
-            }, 10);
-          }
-          setFormNotification((prev) => ({
-            ...prev,
-            isOpen: false,
-          }));
+          await handleUploadFile(
+            acceptedFiles,
+            "general/units",
+            setPercentPDF,
+            setIsLoadingPDF,
+            setFormNotification,
+            deleteFiles,
+            postFiles,
+            setPdf,
+            pdf
+          );
         },
         [pdf]
       ),
     });
 
-  const onClose = () => {
-    setOpenDrawer(false);
-  };
-
   const ResetForm = () => {
     setFormValues({
+      eventsOrganizer: "",
       contents: "",
       documentNumber: "",
       internalNumber: "",
@@ -289,6 +207,7 @@ const FormBM12: FC<FormBM12Props> = (props) => {
     e.preventDefault();
     const formData: Partial<any> = {
       id: initialData?.id || "",
+      eventsOrganizer: formValues.eventsOrganizer,
       contents: formValues.contents,
       eventVenue: formValues.eventVenue,
       sponsor: formValues.sponsor,
@@ -330,7 +249,12 @@ const FormBM12: FC<FormBM12Props> = (props) => {
         const excel = initialData.determinations.files.find(
           (x: { type: string }) => x.type === "application/pdf"
         );
+        const unit = UnitsHRM.find(
+          (unit) => unit.code === initialData.eventsOrganizer
+        );
+        setSelectedKeyUnit(unit?.idHrm ?? null);
         setFormValues({
+          eventsOrganizer: initialData.eventsOrganizer ?? "",
           contents: initialData.contents ?? "",
           documentNumber: initialData.determinations.documentNumber ?? "",
           internalNumber: initialData.determinations.internalNumber ?? "",
@@ -357,12 +281,19 @@ const FormBM12: FC<FormBM12Props> = (props) => {
         ResetForm();
       }
     };
+    getListUnits();
     loadUsers();
     const timeoutId = setTimeout(() => {
       setIsLoading(false);
     }, 500);
     return () => clearTimeout(timeoutId);
   }, [initialData, mode]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setFormNotification((prev) => ({ ...prev, isOpen: false }));
+    }, 200);
+  }, [formNotification.isOpen]);
 
   return (
     <div className="grid grid-cols-1 mb-2">
@@ -503,6 +434,44 @@ const FormBM12: FC<FormBM12Props> = (props) => {
             <div className="grid grid-cols-2 gap-6 mb-2">
               <div className="flex flex-col gap-1">
                 <span className="font-medium text-neutral-600">
+                  Đơn vị tổ chức
+                </span>
+                <Select
+                  showSearch
+                  disabled={
+                    displayRole.isCreate === false ||
+                    displayRole.isUpdate === false
+                  }
+                  optionFilterProp="label"
+                  filterSort={(optionA, optionB) =>
+                    (optionA?.label ?? "")
+                      .toLowerCase()
+                      .localeCompare((optionB?.label ?? "").toLowerCase())
+                  }
+                  options={UnitsHRM.map((unit: UnitItem, index) => ({
+                    value: unit.idHrm,
+                    label: unit.name,
+                    key: `${unit.idHrm}-${index}`,
+                  }))}
+                  value={selectedKeyUnit}
+                  onChange={(value) => {
+                    setSelectedKeyUnit(value);
+                    const unitSelect = UnitsHRM.find(
+                      (item) => item.idHrm === value.toString()
+                    );
+                    if (unitSelect) {
+                      setFormValues((prev) => {
+                        return {
+                          ...prev,
+                          eventsOrganizer: unitSelect.code,
+                        };
+                      });
+                    }
+                  }}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="font-medium text-neutral-600">
                   Địa điểm tổ chức
                 </span>
                 <TextArea
@@ -513,6 +482,8 @@ const FormBM12: FC<FormBM12Props> = (props) => {
                   }
                 />
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-6 mb-2">
               <div className="flex flex-col gap-1">
                 <span className="font-medium text-neutral-600">
                   Đơn vị tài trợ
@@ -555,8 +526,12 @@ const FormBM12: FC<FormBM12Props> = (props) => {
                         alt="upload"
                       />
                       <div className="flex flex-col">
-                        <span className="text-[16px] text-center text-green-500 font-medium">
-                          Tải lên tệp danh sách nhân sự
+                        <span className="text-base text-center text-green-500 font-medium">
+                          Tải lên danh sách nhân sự tham gia
+                        </span>
+                        <span className="text-sm text-center text-green-400 mb-1">
+                          Định dạng <strong>.xlsx</strong>, tối đa{" "}
+                          <strong>5 MB</strong>
                         </span>
                         <Button
                           style={{
@@ -660,10 +635,14 @@ const FormBM12: FC<FormBM12Props> = (props) => {
                         <CloudUploadOutlined />
                       </span>
                       <div className="flex flex-col">
-                        <span className="text-[16px] text-center font-medium text-blue-500">
-                          Tải lên tệp tài liệu đính kèm
+                        <span className="text-base text-center font-medium text-blue-500">
+                          Tải lên tài liệu đính kèm
                         </span>
-                        <span className="text-blue-300 text-[13px]">
+                        <span className="text-sm text-center text-blue-400">
+                          Định dạng <strong>.pdf</strong>, tối đa{" "}
+                          <strong>10 MB</strong>
+                        </span>
+                        <span className="text-blue-400 text-sm">
                           Kéo thả hoặc nhấn vào đây để chọn tệp!
                         </span>
                       </div>
@@ -754,7 +733,7 @@ const FormBM12: FC<FormBM12Props> = (props) => {
         title="Chi tiết danh sách nhân sự tham gia sự kiện"
         placement={"bottom"}
         closable={true}
-        onClose={onClose}
+        onClose={() => setOpenDrawer(false)}
         open={openDrawer}
         height={"100%"}
         key="drawer-infomation-bm08"

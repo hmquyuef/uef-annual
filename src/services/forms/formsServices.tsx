@@ -46,11 +46,6 @@ export interface ActivityInput {
   standardNumber: number;
   description: string;
 }
-
-export interface ImportResponse {
-  totalCount: number;
-}
-
 export interface ActivitiesResponse {
   items: ActivityItem[];
   totalCount: number;
@@ -107,20 +102,4 @@ export async function deleteActivities(ids: string[]): Promise<void> {
   await apiClient.delete("api/activities", {
     data: ids,
   });
-}
-
-export async function ImportActivities(
-  data: FormData
-): Promise<ImportResponse> {
-  const response = await apiClient.post<ImportResponse>(
-    "api/activities/import",
-    data,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
-
-  return response.data;
 }

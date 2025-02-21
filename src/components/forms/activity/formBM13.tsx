@@ -9,7 +9,12 @@ import {
 import { ConfigProvider, DatePicker, Input, InputNumber, Select } from "antd";
 import { FC, FormEvent, Key, useEffect, useState } from "react";
 
+import CustomNotification from "@/components/CustomNotification";
 import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
+import {
+  getCheckExistLecturerRegulations,
+  HistoryLecturersItem,
+} from "@/services/regulations/lecturersServices";
 import { DisplayRoleItem } from "@/services/roles/rolesServices";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
@@ -26,6 +31,7 @@ const FormBM13: FC<FormBM13Props> = (props) => {
   const { onSubmit, initialData, mode, displayRole } = props;
   const { TextArea } = Input;
   const timestamp = dayjs().tz("Asia/Ho_Chi_Minh").unix();
+  const [isExist, setIsExist] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [units, setUnits] = useState<UnitItem[]>([]);
   const [defaultUnits, setDefaultUnits] = useState<UnitItem[]>([]);
@@ -34,7 +40,18 @@ const FormBM13: FC<FormBM13Props> = (props) => {
   );
   const [defaultUsers, setDefaultUsers] = useState<UsersFromHRM[]>([]);
   const [selectedKey, setSelectedKey] = useState<Key | null>(null);
-
+  const [history, setHistory] = useState<HistoryLecturersItem[]>([]);
+  const [formNotification, setFormNotification] = useState<{
+    message: string;
+    description: string;
+    status: "success" | "error" | "info" | "warning";
+    isOpen: boolean;
+  }>({
+    message: "",
+    description: "",
+    status: "success",
+    isOpen: false,
+  });
   const [formValues, setFormValues] = useState({
     notifiedAbsences: 0,
     unnotifiedAbsences: 0,
@@ -53,6 +70,19 @@ const FormBM13: FC<FormBM13Props> = (props) => {
     setUsers(response);
   };
 
+  const checkExistLecturerRegulations = async (userName: string) => {
+    const response = await getCheckExistLecturerRegulations(userName);
+    if (response) {
+      setIsExist(response);
+      setFormNotification({
+        isOpen: true,
+        status: "info",
+        message: "Đã tồn tại thông tin nội quy định cho nhân viên này",
+        description: "Vui lòng kiểm tra lại thông tin!",
+      });
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const tempUser = users?.items?.find((user) => user.id === selectedKey);
@@ -64,7 +94,15 @@ const FormBM13: FC<FormBM13Props> = (props) => {
       notifiedAbsences: formValues.notifiedAbsences,
       unnotifiedAbsences: formValues.unnotifiedAbsences,
       lateEarly: formValues.lateEarly,
-      entryDate: formValues.entryDate,
+      determinations: {
+        documentNumber: "",
+        internalNumber: "",
+        documentDate: 0,
+        fromDate: formValues.entryDate,
+        toDate: formValues.entryDate,
+        entryDate: formValues.entryDate,
+        files: null,
+      },
       note: formValues.note,
     };
     onSubmit(formData);
@@ -73,6 +111,7 @@ const FormBM13: FC<FormBM13Props> = (props) => {
   const ResetForms = () => {
     setDefaultUnits([]);
     setDefaultUsers([]);
+    setHistory([]);
     setSelectedKey(null);
     setFormValues({
       notifiedAbsences: 0,
@@ -105,18 +144,30 @@ const FormBM13: FC<FormBM13Props> = (props) => {
           notifiedAbsences: initialData.notifiedAbsences,
           unnotifiedAbsences: initialData.unnotifiedAbsences,
           lateEarly: initialData.lateEarly,
-          entryDate: initialData?.entryDate ? initialData.entryDate : timestamp,
+          entryDate: initialData?.determinations.entryDate
+            ? initialData.determinations.entryDate
+            : timestamp,
           note: initialData.note,
         });
+        setHistory(initialData.histories);
       } else {
         ResetForms();
       }
     };
     getListUnits();
     loadUsers();
-    const timeoutId = setTimeout(() => {}, 500);
+    setIsExist(false);
+    const timeoutId = setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
     return () => clearTimeout(timeoutId);
   }, [initialData, mode]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setFormNotification((prev) => ({ ...prev, isOpen: false }));
+    }, 200);
+  }, [formNotification.isOpen]);
 
   return (
     <div className="grid grid-cols-1 mb-2">
@@ -184,6 +235,12 @@ const FormBM13: FC<FormBM13Props> = (props) => {
                   }
                   onChange={(value) => {
                     setSelectedKey(value);
+                    const user = users?.items?.find(
+                      (user) => user.id === value
+                    );
+                    if (user) {
+                      checkExistLecturerRegulations(user.userName);
+                    }
                   }}
                 />
               </div>
@@ -265,9 +322,77 @@ const FormBM13: FC<FormBM13Props> = (props) => {
                 }
               />
             </div>
+            {history && history.length > 0 && (
+              <>
+                <div className="mt-2">
+                  <span className="font-medium text-neutral-600">
+                    Lịch sử cập nhật
+                  </span>
+                  <table className="w-full mt-1">
+                    <thead>
+                      <tr>
+                        <th className="border border-neutral-300 p-1">STT</th>
+                        <th className="border border-neutral-300 p-1">
+                          Số buổi nghỉ có thông báo
+                        </th>
+                        <th className="border border-neutral-300 p-1">
+                          Số buổi nghỉ không thông báo
+                        </th>
+                        <th className="border border-neutral-300 p-1">
+                          Số buổi đi trễ/về sớm
+                        </th>
+                        <th className="border border-neutral-300 p-1">
+                          Ngày nhập
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {history.map((item, index) => (
+                        <tr key={index}>
+                          <td className="border border-neutral-300 text-center p-1">
+                            {index + 1}
+                          </td>
+                          <td className="border border-neutral-300 text-center p-1">
+                            {item.notifiedAbsences}
+                          </td>
+                          <td className="border border-neutral-300 text-center p-1">
+                            {item.unnotifiedAbsences}
+                          </td>
+                          <td className="border border-neutral-300 text-center p-1">
+                            {item.lateEarly}
+                          </td>
+                          <td className="border border-neutral-300 text-center p-1">
+                            {dayjs.unix(item.entryDate).format("DD/MM/YYYY")}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+            {isExist && (
+              <>
+                <div className="flex flex-col mt-3">
+                  <span className="text-red-600 font-medium">Lưu ý:</span>
+                  <span className="font-medium text-neutral-500 pl-3">
+                    - Thông tin nhân sự đã tồn tại.
+                  </span>
+                  <span className="font-medium text-neutral-500 pl-3">
+                    - Cần kiểm tra lại thông tin trước khi xác nhận.
+                  </span>
+                </div>
+              </>
+            )}
           </form>
         </>
       )}
+      <CustomNotification
+        message={formNotification.message}
+        description={formNotification.description}
+        status={formNotification.status}
+        isOpen={formNotification.isOpen}
+      />
     </div>
   );
 };

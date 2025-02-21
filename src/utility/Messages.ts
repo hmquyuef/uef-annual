@@ -14,7 +14,7 @@ enum Messages {
     ERROR_IMPORT = "Vui lòng kiểm tra lại các tệp tin!",
     ERROR_EXCEL = "Vui lòng chọn đúng tệp tin Excel!",
     ERROR_PDF = "Vui lòng chọn đúng tệp tin PDF!",
-    
+
 
     //BM01
     TITLE_ADD_CLASSLEADER = "Thêm mới thông tin chủ nhiệm lớp",
@@ -45,7 +45,7 @@ enum Messages {
     TITLE_UPDATE_QAE = "Cập nhật thông tin tham gia hỏi vấn đáp thi xếp lớp Anh văn đầu vào",
     ADD_QAE = "Thêm mới thông tin tham gia hỏi vấn đáp thi xếp lớp Anh văn đầu vào thành công!",
     UPDATE_QAE = "Cập nhật thông tin tham gia tư vấn tuyển sinh thành công!",
-    APPROVED_QAE= "Phê duyệt thông tin hỏi vấn đáp thi xếp lớp Anh văn đầu vào thành công!",
+    APPROVED_QAE = "Phê duyệt thông tin hỏi vấn đáp thi xếp lớp Anh văn đầu vào thành công!",
     REJECTED_QAE = "Đã từ chối phê duyệt thông tin hỏi vấn đáp thi xếp lớp Anh văn đầu vào!",
 
     //BM05
@@ -53,7 +53,7 @@ enum Messages {
     TITLE_UPDATE_ACTIVITY = "Cập nhật thông tin tham gia hoạt động",
     ADD_ACTIVITY = "Thêm mới thông tin tham gia hoạt động thành công!",
     UPDATE_ACTIVITY = "Cập nhật thông tin tham gia hoạt động thành công!",
-    APPROVED_ACTIVITY= "Phê duyệt thông tin hoạt động thành công!",
+    APPROVED_ACTIVITY = "Phê duyệt thông tin hoạt động thành công!",
     REJECTED_ACTIVITY = "Đã từ chối phê duyệt thông tin hoạt động!",
 
     //BM07
@@ -111,6 +111,14 @@ enum Messages {
     UPDATE_REGULATION_TEACHING = "Cập nhật thông tin nội quy giảng dạy thành công!",
     APPROVED_REGULATION_TEACHING = "Phê duyệt thông nội quy giảng dạy thành công!",
     REJECTED_REGULATION_TEACHING = "Đã từ chối phê duyệt thông nội quy giảng dạy!",
+
+    //BM14
+    TITLE_ADD_INVIGILATORS = "Thêm mới thông tin tham gia coi thi",
+    TITLE_UPDATE_INVIGILATORS = "Cập nhật thông tin tham gia coi thi",
+    ADD_INVIGILATORS = "Thêm mới thông tin nội quy giảtham gia coi thi!",
+    UPDATE_INVIGILATORS = "Cập nhật thông tin nội quy giảtham gia coi thi!",
+    APPROVED_INVIGILATORS = "Phê duyệt thông nội quy giảtham gia coi thi!",
+    REJECTED_INVIGILATORS = "Đã từ chối phê duyệt thông tham gia coi thi!",
 
     //BM15
     TITLE_ADD_REGULATION_LABOR = "Thêm mới thông tin nội quy lao động",

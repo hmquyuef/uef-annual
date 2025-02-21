@@ -1,4 +1,5 @@
 import apiClient from "../apiClient";
+import { Determinations } from "../forms/Determinations";
 import { PaymentApprovedItem } from "../forms/PaymentApprovedItem";
 
 export interface EmployeesRegulationItem {
@@ -16,9 +17,24 @@ export interface EmployeesRegulationItem {
   unpaidLeaveDays: number;
   businessTripDays: number;
   missedFingerprint: number;
-  entryDate: number;
+  determinations: Determinations;
   payments: PaymentApprovedItem;
+  histories: HistoryEmploysItem[];
   note: string;
+}
+
+export interface HistoryEmploysItem {
+  attendanceDays: number;
+  attendanceHours: number;
+  lateArrivals: number;
+  earlyDepartures: number;
+  unexcusedAbsences: number;
+  leaveDays: number;
+  maternityLeaveDays: number;
+  unpaidLeaveDays: number;
+  businessTripDays: number;
+  missedFingerprint: number;
+  entryDate: number;
 }
 
 export interface EmployeesRegulationsResponse {
@@ -36,7 +52,17 @@ export async function getAllEmployeesRegulations(
   return response.data;
 }
 
-export async function postEmployeesRegulation(data: Partial<any>): Promise<any> {
+export async function getCheckExistEmployeesRegulations(
+  userName: string
+): Promise<boolean> {
+  let url = `api/regulations/employees/checkexist?userName=${userName}`;
+  const response = await apiClient.get<boolean>(url);
+  return response.data;
+}
+
+export async function postEmployeesRegulation(
+  data: Partial<any>
+): Promise<any> {
   const response = await apiClient.post<any>("api/regulations/employees", data);
   return response.data;
 }

@@ -20,7 +20,7 @@ export interface LaborUnionsResponse {
 export async function getAllLaborUnions(
   yearId: string
 ): Promise<LaborUnionsResponse> {
-  let url = `api/general/union/labor?Years=${yearId}`;
+  let url = `api/union-labors?Years=${yearId}`;
   const response = await apiClient.get<LaborUnionsResponse>(url);
   return response.data;
 }
@@ -30,14 +30,14 @@ export async function getExportLaborUnion(
   unitCode: string | null
 ): Promise<any> {
   let url = unitCode
-    ? `api/general/union/labor/export?unitCode=${unitCode}&SchoolYearId=${yearId}&FromDate=0&ToDate=0`
-    : `api/general/union/labor/export?SchoolYearId=${yearId}&FromDate=0&ToDate=0`;
+    ? `api/union-labors/export?unitCode=${unitCode}&SchoolYearId=${yearId}&FromDate=0&ToDate=0`
+    : `api/union-labors/export?SchoolYearId=${yearId}&FromDate=0&ToDate=0`;
   const response = await apiClient.get<any>(url);
   return response.data;
 }
 
 export async function postLaborUnion(data: Partial<any>): Promise<any> {
-  const response = await apiClient.post<any>("api/general/union/labor", data);
+  const response = await apiClient.post<any>("api/union-labors", data);
   return response.data;
 }
 
@@ -45,10 +45,7 @@ export async function putLaborUnion(
   id: string,
   data: Partial<any>
 ): Promise<any> {
-  const response = await apiClient.put<any>(
-    `api/general/union/labor/${id}`,
-    data
-  );
+  const response = await apiClient.put<any>(`api/union-labors/${id}`, data);
   return response.data;
 }
 
@@ -57,41 +54,32 @@ export async function putListMembersLaborUnion(
   data: Partial<any>
 ): Promise<any> {
   const response = await apiClient.put<any>(
-    `api/general/union/labor/members/${id}`,
+    `api/union-labors/members/${id}`,
     data
   );
   return response.data;
 }
 
 export async function deleteLaborUnions(ids: string[]): Promise<void> {
-  await apiClient.delete("api/general/union/labor", {
+  await apiClient.delete("api/union-labors", {
     data: ids,
   });
 }
 
-export async function ImportLaborUnions(data: FormData): Promise<any> {
-  const response = await apiClient.post<any>(
-    "api/general/union/labor/import",
-    data,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
+export async function ImportLaborUnionsMembers(data: FormData): Promise<any> {
+  const response = await apiClient.post<any>("api/union-labors/members", data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return response.data;
 }
 
-// export async function ImportLaborUnions(data: FormData): Promise<any> {
-//   const response = await apiClient.post<any>(
-//     "api/general/union/labor/import",
-//     data,
-//     {
-//       headers: {
-//         "Content-Type": "multipart/form-data",
-//       },
-//     }
-//   );
-
-//   return response.data;
-// }
+export async function ImportLaborUnions(data: FormData): Promise<any> {
+  const response = await apiClient.post<any>("api/union-labors/import", data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data;
+}

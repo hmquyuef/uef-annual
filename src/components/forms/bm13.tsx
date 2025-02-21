@@ -1,20 +1,36 @@
 "use client";
 
 import {
+  deleteLecturerRegulations,
+  getAllLecturerRegulations,
+  ImportLecturerRegulations,
+  LecturerRegulationItem,
+  postLecturerRegulation,
+  putLecturerRegulation,
+} from "@/services/regulations/lecturersServices";
+import {
   DisplayRoleItem,
   getRoleByName,
   RoleItem,
 } from "@/services/roles/rolesServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
-import { FileItem } from "@/services/uploads/uploadsServices";
+import { postFiles } from "@/services/uploads/uploadsServices";
+import Colors from "@/utility/Colors";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
 import {
+  convertTimestampToDate,
+  defaultFooterInfo,
+  setCellStyle,
+} from "@/utility/Utilities";
+import {
   ArrowsAltOutlined,
   DeleteOutlined,
+  FallOutlined,
   FileExcelOutlined,
   PlusOutlined,
+  RiseOutlined,
   ShrinkOutlined,
 } from "@ant-design/icons";
 import {
@@ -25,46 +41,38 @@ import {
   GetProps,
   Input,
   MenuProps,
+  Modal,
   Select,
   TableColumnsType,
   Tooltip,
 } from "antd";
+
 import saveAs from "file-saver";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { AnimatePresence, motion } from "motion/react";
 import { Key, useCallback, useEffect, useState } from "react";
+import * as XLSX from "sheetjs-style";
 import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
+import { LoadingSpin } from "../skeletons/LoadingSpin";
 import FormBM13 from "./activity/formBM13";
 import FromUpload from "./activity/formUpload";
 import TemplateForms from "./workloads/TemplateForms";
 
-import {
-  deleteLecturerRegulations,
-  getAllLecturerRegulations,
-  ImportLecturerRegulations,
-  LecturerRegulationItem,
-  postLecturerRegulation,
-  putLecturerRegulation,
-} from "@/services/regulations/lecturersServices";
-import Colors from "@/utility/Colors";
-import {
-  convertTimestampToDate,
-  defaultFooterInfo,
-  setCellStyle,
-} from "@/utility/Utilities";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
-import * as XLSX from "sheetjs-style";
 dayjs.locale("vi");
 
 const BM13 = () => {
   type SearchProps = GetProps<typeof Input.Search>;
   const { Search } = Input;
   const [loading, setLoading] = useState(false);
+  const [loadingUpload, setLoadingUpload] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedFormdata, setSelectedFormdata] = useState<any>();
   const [lecturer, setLecturer] = useState<LecturerRegulationItem[]>([]);
   const [data, setData] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -250,7 +258,8 @@ const BM13 = () => {
         : true;
       const matchesDate =
         startDate && endDate
-          ? item.entryDate >= startDate && item.entryDate <= endDate
+          ? item.determinations.entryDate >= startDate &&
+            item.determinations.entryDate <= endDate
           : true;
       return matchesName && matchesUnit && matchesDate;
     });
@@ -275,10 +284,6 @@ const BM13 = () => {
     } catch (error) {
       console.error("Error deleting selected items:", error);
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   }, [selectedRowKeys]);
 
   const handleEdit = (Teaching: any) => {
@@ -291,94 +296,96 @@ const BM13 = () => {
   };
 
   const handleSubmit = async (formData: Partial<any>) => {
-    try {
-      if (mode === "edit" && selectedItem) {
-        const response = await putLecturerRegulation(
-          formData.id as string,
-          formData
-        );
-        if (response) {
-          setFormNotification((prev) => ({
-            ...prev,
-            description: Messages.UPDATE_REGULATION_TEACHING,
-          }));
-        }
-      } else {
-        const response = await postLecturerRegulation(formData);
-        if (response) {
-          setFormNotification((prev) => ({
-            ...prev,
-            description: Messages.ADD_REGULATION_TEACHING,
-          }));
-        }
-      }
-      setFormNotification((prev) => ({
-        ...prev,
-        isOpen: true,
-        status: "success",
-        message: "Thông báo",
-      }));
-      await getListTeachingRegulations(selectedKey.id);
-      setIsOpen(false);
-      setSelectedItem(undefined);
-      setMode("add");
-    } catch (error) {
-      setFormNotification((prev) => ({
-        ...prev,
-        isOpen: true,
-        status: "error",
-        message: "Thông báo",
-        description: Messages.ERROR,
-      }));
+    const { userName } = formData;
+    const checkExist = lecturer.find((x) => x.userName === userName);
+    if (checkExist && mode === "add") {
+      setSelectedFormdata(formData);
+      return setIsModalVisible(true);
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
-  };
+    setLoadingUpload(true);
+    const apiCall =
+      mode === "add"
+        ? postLecturerRegulation(formData)
+        : putLecturerRegulation(formData.id, formData);
 
-  const handleSubmitUpload = async (
-    fileParticipant: File,
-    fileAttackment: FileItem
-  ) => {
     try {
-      const formData = new FormData();
-      formData.append("File", fileParticipant);
-      formData.append("Type", fileAttackment.type);
-      formData.append("Path", fileAttackment.path);
-      formData.append("Name", fileAttackment.name);
-      formData.append("Size", fileAttackment.size.toString());
-
-      const response = await ImportLecturerRegulations(formData);
+      const response = await apiCall;
       if (response) {
         setFormNotification((prev) => ({
           ...prev,
           isOpen: true,
-          status: "error",
+          status: "success",
           message: "Thông báo",
-          description: `Tải lên thành công ${response.totalCount} dòng dữ liệu!`,
+          description:
+            mode === "add"
+              ? Messages.ADD_REGULATION_TEACHING
+              : Messages.UPDATE_REGULATION_TEACHING,
         }));
+        await getListTeachingRegulations(selectedKey.id);
       }
-      await getListTeachingRegulations(selectedKey.id);
-      setIsOpen(false);
-      setSelectedItem(undefined);
-      setMode("add");
-      setIsUpload(false);
     } catch (error) {
       setFormNotification((prev) => ({
         ...prev,
         isOpen: true,
         status: "error",
-        message: "Thông báo",
-        description: Messages.ERROR,
+        message: "Không thể cập nhật thông tin!",
+        description: `${error}`,
       }));
-      setIsOpen(false);
-      setIsUpload(false);
+    } finally {
+      setTimeout(() => {
+        setLoadingUpload(false);
+        setIsOpen(false);
+        setSelectedItem(undefined);
+        setMode("add");
+      }, 300);
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
+  };
+
+  const handleSubmitUpload = async (
+    fileParticipant: File,
+    fileAttachment: File
+  ) => {
+    try {
+      setLoadingUpload(true);
+      const formDataAttachment = new FormData();
+      formDataAttachment.append("FunctionName", "regulations/lecturers");
+      formDataAttachment.append("file", fileAttachment);
+      const results = await postFiles(formDataAttachment);
+
+      const formDataExcel = new FormData();
+      formDataExcel.append("Excel", fileParticipant);
+      Object.entries(results).forEach(([key, value]) =>
+        formDataExcel.append(`PDF.${key}`, value.toString())
+      );
+
+      const response = await ImportLecturerRegulations(formDataExcel);
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: response.totalError > 0 ? "error" : "success",
+        message: response.totalError > 0 ? "Đã có lỗi xảy ra!" : "Thông báo",
+        description:
+          response.totalError > 0
+            ? response.messageError
+            : `Tải lên thành công ${response.totalCount} dòng thông tin chủ nhiệm lớp!`,
+      }));
+
+      await getListTeachingRegulations(selectedKey.id);
+    } catch (error) {
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Không thể xử lý thông tin!",
+        description: `${error}`,
+      }));
+    } finally {
+      setTimeout(() => {
+        setIsOpen(false);
+        setLoadingUpload(false);
+        setIsUpload(false);
+      }, 300);
+    }
   };
 
   const handleExportExcel = async () => {
@@ -714,6 +721,13 @@ const BM13 = () => {
       onSearch("");
     }
   }, [lecturer, units, selectedKeyUnit, startDate, endDate]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setFormNotification((prev) => ({ ...prev, isOpen: false }));
+    }, 100);
+  }, [formNotification.isOpen]);
+
   return (
     <div>
       <div className="grid grid-cols-3 mb-3">
@@ -945,6 +959,114 @@ const BM13 = () => {
         message={formNotification.message}
         description={formNotification.description}
       />
+      {isModalVisible &&
+        (() => {
+          const oldData = lecturer.find(
+            (x) => x.userName === selectedFormdata?.userName
+          );
+          const newData = selectedFormdata;
+          const fields: {
+            key: keyof LecturerRegulationItem;
+            label: string;
+          }[] = [
+            { key: "notifiedAbsences", label: "Số lần nghỉ có thông báo" },
+            { key: "unnotifiedAbsences", label: "Số lần nghỉ không thông báo" },
+            { key: "lateEarly", label: "Số lần đi trễ/về sớm" },
+          ];
+          return (
+            <Modal
+              open={isModalVisible}
+              onCancel={() => {
+                setIsModalVisible(false);
+                setIsOpen(false);
+                setSelectedItem(undefined);
+                setMode("add");
+              }}
+              onOk={async () => {
+                setLoadingUpload(true);
+                try {
+                  const response = await putLecturerRegulation(
+                    oldData?.id as string,
+                    newData
+                  );
+                  if (response) {
+                    setFormNotification((prev) => ({
+                      ...prev,
+                      isOpen: true,
+                      status: "success",
+                      message: "Thông báo",
+                      description: Messages.UPDATE_REGULATION_TEACHING,
+                    }));
+                    await getListTeachingRegulations(selectedKey.id);
+                    const timeoutId = setTimeout(() => {
+                      setLoadingUpload(false);
+                      setIsModalVisible(false);
+                      setIsOpen(false);
+                      setSelectedItem(undefined);
+                      setMode("add");
+                    }, 300);
+                    return () => clearTimeout(timeoutId);
+                  }
+                } catch (error) {
+                  setFormNotification((prev) => ({
+                    ...prev,
+                    isOpen: true,
+                    status: "error",
+                    message: "Không thể cập nhật thông tin!",
+                    description: `${error}`,
+                  }));
+                }
+              }}
+              title={Messages.TITLE_UPDATE_REGULATION_TEACHING}
+              width={500}
+            >
+              <hr className="mb-2" />
+              <div className="flex flex-col justify-center items-center">
+                <span>
+                  Xác nhận thông tin cập nhật nội quy lao động cho nhân sự
+                </span>
+                <span>{oldData?.fullName}</span>
+                <div>
+                  <span>{oldData?.userName}</span>-
+                  <span>{oldData?.unitName}</span>
+                </div>
+              </div>
+              {oldData && newData && (
+                <>
+                  <span className="font-semibold mt-4">Thông tin cập nhật</span>
+                  {fields.map(({ key, label }) => (
+                    <div key={key}>
+                      <hr />
+                      <div className="grid grid-cols-2 gap-1">
+                        <span className="text-neutral-500">{label}:</span>
+                        <div className="flex justify-center gap-5">
+                          <span className="font-medium">
+                            {oldData?.[key].toString()}
+                          </span>
+                          <span>
+                            {oldData[key] > newData[key] ? (
+                              <span className="text-red-500">
+                                <FallOutlined />
+                              </span>
+                            ) : oldData[key] < newData[key] ? (
+                              <span className="text-green-500">
+                                <RiseOutlined />
+                              </span>
+                            ) : (
+                              "="
+                            )}
+                          </span>
+                          <span className="font-medium">{newData[key]}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <hr />
+                </>
+              )}
+            </Modal>
+          );
+        })()}
       <CustomModal
         isOpen={isOpen}
         width={isShowPdf ? "85vw" : "800px"}
@@ -975,7 +1097,7 @@ const BM13 = () => {
           isUpload ? (
             <>
               <FromUpload
-                formName="teaching"
+                formName="bm13"
                 onSubmit={handleSubmitUpload}
                 handleShowPDF={setIsShowPdf}
                 displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
@@ -994,6 +1116,11 @@ const BM13 = () => {
           )
         }
       />
+      {loadingUpload && (
+        <>
+          <LoadingSpin isLoadingSpin={loadingUpload} />
+        </>
+      )}
       <hr className="mb-3" />
       <TemplateForms
         loading={loading}

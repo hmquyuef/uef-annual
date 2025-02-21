@@ -1,6 +1,5 @@
 import apiClient from "../apiClient";
 import { Determinations } from "./Determinations";
-import { ImportResponse } from "./formsServices";
 import { PaymentApprovedItem } from "./PaymentApprovedItem";
 export interface ClassLeaderItem {
   id: string;
@@ -72,18 +71,12 @@ export async function deleteClassLeaders(ids: string[]): Promise<void> {
   });
 }
 
-export async function ImportClassLeaders(
-  data: FormData
-): Promise<ImportResponse> {
-  const response = await apiClient.post<ImportResponse>(
-    "api/leaders/import",
-    data,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
+export async function ImportClassLeaders(data: FormData): Promise<any> {
+  const response = await apiClient.post<any>("api/leaders/import", data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 
   return response.data;
 }

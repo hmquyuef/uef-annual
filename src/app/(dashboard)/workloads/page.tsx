@@ -21,10 +21,8 @@ import {
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
 import {
-  CheckOutlined,
   EditOutlined,
   HomeOutlined,
-  InfoCircleOutlined,
   PieChartOutlined,
   PlusOutlined,
   ProfileOutlined,
@@ -118,7 +116,6 @@ const Workloads = () => {
         item.name.toLowerCase().includes(value.toLowerCase()) ||
         item.shortName.toLowerCase().includes(value.toLowerCase()) ||
         item.groupName.toLowerCase().includes(value.toLowerCase());
-
       return matchesName;
     });
     setTempTypes(filteredData || []);
@@ -188,7 +185,6 @@ const Workloads = () => {
         }
       }
       setNotificationOpen(true);
-
       setStatus("success");
       setMessage("Thông báo");
       setIsOpened(false);

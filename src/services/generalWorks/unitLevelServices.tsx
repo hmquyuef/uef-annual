@@ -21,7 +21,7 @@ export interface UnitLevelsResponse {
 export async function getAllUnitLevels(
   yearId: string
 ): Promise<UnitLevelsResponse> {
-  let url = `api/general/units?Years=${yearId}`;
+  let url = `api/level-units?Years=${yearId}`;
   const response = await apiClient.get<UnitLevelsResponse>(url);
   return response.data;
 }
@@ -31,14 +31,14 @@ export async function getExportUnitLevel(
   unitCode: string | null
 ): Promise<any> {
   let url = unitCode
-    ? `api/general/units/export?unitCode=${unitCode}&SchoolYearId=${yearId}&FromDate=0&ToDate=0`
-    : `api/general/units/export?SchoolYearId=${yearId}&FromDate=0&ToDate=0`;
+    ? `api/level-units/export?unitCode=${unitCode}&SchoolYearId=${yearId}&FromDate=0&ToDate=0`
+    : `api/level-units/export?SchoolYearId=${yearId}&FromDate=0&ToDate=0`;
   const response = await apiClient.get<any>(url);
   return response.data;
 }
 
 export async function postUnitLevel(data: Partial<any>): Promise<any> {
-  const response = await apiClient.post<any>("api/general/units", data);
+  const response = await apiClient.post<any>("api/level-units", data);
   return response.data;
 }
 
@@ -46,7 +46,7 @@ export async function putUnitLevel(
   id: string,
   data: Partial<any>
 ): Promise<any> {
-  const response = await apiClient.put<any>(`api/general/units/${id}`, data);
+  const response = await apiClient.put<any>(`api/level-units/${id}`, data);
   return response.data;
 }
 
@@ -55,20 +55,29 @@ export async function putListMembersUnitLevel(
   data: Partial<any>
 ): Promise<any> {
   const response = await apiClient.put<any>(
-    `api/general/units/members/${id}`,
+    `api/level-units/members/${id}`,
     data
   );
   return response.data;
 }
 
 export async function deleteUnitLevels(ids: string[]): Promise<void> {
-  await apiClient.delete("api/general/units", {
+  await apiClient.delete("api/level-units", {
     data: ids,
   });
 }
 
+export async function ImportUnitLevelsMembers(data: FormData): Promise<any> {
+  const response = await apiClient.post<any>("api/level-units/members", data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data;
+}
+
 export async function ImportUnitLevels(data: FormData): Promise<any> {
-  const response = await apiClient.post<any>("api/general/units/import", data, {
+  const response = await apiClient.post<any>("api/level-units/import", data, {
     headers: {
       "Content-Type": "multipart/form-data",
     },

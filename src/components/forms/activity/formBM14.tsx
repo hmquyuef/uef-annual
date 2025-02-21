@@ -1,11 +1,7 @@
 "use client";
 
-import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
-import {
-  getUsersFromHRMbyId,
-  UsersFromHRM,
-  UsersFromHRMResponse,
-} from "@/services/users/usersServices";
+import { DisplayRoleItem } from "@/services/roles/rolesServices";
+import { FC, FormEvent, Key, useEffect, useState } from "react";
 import {
   Button,
   ConfigProvider,
@@ -15,32 +11,34 @@ import {
   Progress,
   Select,
 } from "antd";
-import { FC, FormEvent, Key, useEffect, useState } from "react";
+import {
+  getUsersFromHRMbyId,
+  UsersFromHRM,
+  UsersFromHRMResponse,
+} from "@/services/users/usersServices";
+import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
 
+import locale from "antd/locale/vi_VN";
+import dayjs from "dayjs";
+import "dayjs/locale/vi";
 import CustomNotification from "@/components/CustomNotification";
 import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
-import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
-import { DisplayRoleItem } from "@/services/roles/rolesServices";
+import { CloudUploadOutlined, MinusCircleOutlined } from "@ant-design/icons";
+import { handleDeleteFile } from "@/components/files/RemoveFile";
+import { handleUploadFile } from "@/components/files/UploadFile";
 import {
   deleteFiles,
   FileItem,
   postFiles,
 } from "@/services/uploads/uploadsServices";
-import { CloudUploadOutlined, MinusCircleOutlined } from "@ant-design/icons";
 import { useDropzone } from "react-dropzone";
+import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 import InfoApproved from "./infoApproved";
 import InfoPDF from "./infoPDF";
+import { getCheckExistInvigilator } from "@/services/forms/invigilatorsServices";
+dayjs.locale("vi");
 
-import { handleDeleteFile } from "@/components/files/RemoveFile";
-import { handleUploadFile } from "@/components/files/UploadFile";
-import locale from "antd/locale/vi_VN";
-import dayjs from "dayjs";
-import timezone from "dayjs/plugin/timezone";
-import utc from "dayjs/plugin/utc";
-dayjs.extend(utc);
-dayjs.extend(timezone);
-
-interface FormBM03Props {
+interface FormBM14Props {
   onSubmit: (formData: Partial<any>) => void;
   initialData?: Partial<any>;
   handleShowPDF: (isVisible: boolean) => void;
@@ -50,7 +48,7 @@ interface FormBM03Props {
   displayRole: DisplayRoleItem;
 }
 
-const FormBM03: FC<FormBM03Props> = (props) => {
+const FormBM14: FC<FormBM14Props> = (props) => {
   const {
     onSubmit,
     handleShowPDF,
@@ -73,11 +71,10 @@ const FormBM03: FC<FormBM03Props> = (props) => {
   const [listPicture, setListPicture] = useState<FileItem | undefined>(
     undefined
   );
-
+  const [isExist, setIsExist] = useState<boolean>(false);
   const [isLoadingPDF, setIsLoadingPDF] = useState<boolean>(false);
   const [percent, setPercent] = useState<number>(0);
   const [showPDF, setShowPDF] = useState<boolean>(false);
-
   const [formNotification, setFormNotification] = useState<{
     message: string;
     description: string;
@@ -89,17 +86,12 @@ const FormBM03: FC<FormBM03Props> = (props) => {
     status: "success",
     isOpen: false,
   });
-
   const [formValues, setFormValues] = useState({
-    standardValues: 0,
-    location: "",
-    position: "",
-    numberOfTime: 0,
     documentNumber: "",
     internalNumber: "",
     documentDate: 0,
-    fromDate: 0,
-    toDate: 0,
+    totalSessions: 0,
+    standardNumber: 0,
     entryDate: timestamp,
     attackmentFile: {
       type: "",
@@ -115,9 +107,22 @@ const FormBM03: FC<FormBM03Props> = (props) => {
     setUnits(response.items);
   };
 
-  const getUsersFromHRMByUnitId = async (unitId: string) => {
-    const response = await getUsersFromHRMbyId(unitId);
+  const getAllUsersFromHRM = async (id: Key) => {
+    const response = await getUsersFromHRMbyId(id.toString());
     setUsers(response);
+  };
+
+  const checkExistInvigilator = async (userName: string) => {
+    const response = await getCheckExistInvigilator(userName);
+    if (response) {
+      setIsExist(response);
+      setFormNotification({
+        isOpen: true,
+        status: "info",
+        message: "Đã tồn tại thông tin nội quy định cho nhân viên này",
+        description: "Vui lòng kiểm tra lại thông tin!",
+      });
+    }
   };
 
   const handleDeletePicture = async () => {
@@ -134,7 +139,7 @@ const FormBM03: FC<FormBM03Props> = (props) => {
   const handleUploadPDF = async (acceptedFiles: File[]) => {
     await handleUploadFile(
       acceptedFiles, // Dữ liệu tệp tin được chấp nhận
-      "admission", // FunctionName (Thay đổi ở đây)
+      "invigilators", // FunctionName (Thay đổi ở đây)
       setPercent, // Hàm cập nhật phần trăm
       setIsLoadingPDF, // Hàm cập nhật trạng thái loading
       setFormNotification, // Hàm hiển thị thông báo
@@ -158,16 +163,14 @@ const FormBM03: FC<FormBM03Props> = (props) => {
       userName: mode !== "edit" ? tempUser?.userName : defaultUsers[0].userName,
       fullName: mode !== "edit" ? tempUser?.fullName : defaultUsers[0].fullName,
       unitName: mode !== "edit" ? tempUser?.unitName : defaultUsers[0].unitName,
-      location: formValues.location,
-      position: formValues.position,
-      numberOfTime: formValues.numberOfTime,
-      standardNumber: formValues.standardValues,
+      totalSessions: formValues.totalSessions,
+      standardNumber: formValues.standardNumber,
       determinations: {
         documentNumber: formValues.documentNumber,
         internalNumber: formValues.internalNumber,
         documentDate: formValues.documentDate,
-        fromDate: formValues.fromDate,
-        toDate: formValues.toDate,
+        fromDate: formValues.entryDate,
+        toDate: formValues.entryDate,
         entryDate: formValues.entryDate,
         files: [
           {
@@ -180,35 +183,44 @@ const FormBM03: FC<FormBM03Props> = (props) => {
       },
       note: formValues.note,
     };
+    if (isExist) {
+      setFormNotification({
+        isOpen: true,
+        status: "info",
+        message: "Đã tồn tại thông tin nội quy định cho nhân viên này",
+        description: "Vui lòng kiểm tra lại thông tin!",
+      });
+      return;
+    }
     onSubmit(formData);
+  };
+
+  const ResetForms = () => {
+    setDefaultUnits([]);
+    setDefaultUsers([]);
+    setSelectedKey(null);
+    setFormValues({
+      documentNumber: "",
+      internalNumber: "",
+      documentDate: 0,
+      totalSessions: 0,
+      standardNumber: 0,
+      entryDate: timestamp,
+      attackmentFile: {
+        type: "",
+        path: "",
+        name: "",
+        size: 0,
+      },
+      note: "",
+    });
+    setDefaultUnits([]);
+    setDefaultUsers([]);
+    setListPicture(undefined);
   };
 
   useEffect(() => {
     setIsLoading(true);
-    const resetForm = () => {
-      setFormValues({
-        standardValues: 0,
-        location: "",
-        position: "",
-        numberOfTime: 0,
-        documentNumber: "",
-        internalNumber: "",
-        documentDate: 0,
-        fromDate: 0,
-        toDate: 0,
-        entryDate: timestamp,
-        attackmentFile: {
-          type: "",
-          path: "",
-          name: "",
-          size: 0,
-        },
-        note: "",
-      });
-      setDefaultUnits([]);
-      setDefaultUsers([]);
-      setListPicture(undefined);
-    };
     const loadUsers = async () => {
       if (mode === "edit" && initialData !== undefined) {
         const units = await getAllUnits("true");
@@ -226,40 +238,35 @@ const FormBM03: FC<FormBM03Props> = (props) => {
           setDefaultUsers([userTemp] as UsersFromHRM[]);
         }
         setFormValues({
-          standardValues: initialData.standardNumber || 0,
-          location: initialData.location || "",
-          position: initialData.position || "",
-          numberOfTime: initialData.numberOfTime || 0,
-          documentNumber: initialData?.determinations.documentNumber || "",
-          internalNumber: initialData?.determinations.internalNumber || "",
-          documentDate: initialData?.determinations.documentDate || 0,
-          fromDate: initialData?.determinations.fromDate || 0,
-          toDate: initialData?.toDate || 0,
+          totalSessions: initialData.totalSessions,
+          standardNumber: initialData.standardNumber,
+          documentNumber: initialData.determinations.documentNumber,
+          internalNumber: initialData.determinations.internalNumber,
+          documentDate: initialData.determinations.documentDate,
           entryDate: initialData?.determinations.entryDate
             ? initialData.determinations.entryDate
             : timestamp,
           attackmentFile: {
-            type: initialData?.determinations.files[0]?.type || "",
-            path: initialData?.determinations.files[0]?.path || "",
-            name: initialData?.determinations.files[0]?.name || "",
-            size: initialData?.determinations.files[0]?.size || 0,
+            type: initialData?.determinations?.files[0]?.type || "",
+            path: initialData?.determinations?.files[0]?.path || "",
+            name: initialData?.determinations?.files[0]?.name || "",
+            size: initialData?.determinations?.files[0]?.size || 0,
           },
-          note: initialData.note || "",
+          note: initialData.note,
         });
-        setListPicture(initialData?.determinations.files[0] || undefined);
+        setListPicture(initialData?.determinations?.files[0] || undefined);
       } else {
-        resetForm();
+        ResetForms();
       }
     };
     getListUnits();
     loadUsers();
-    setShowPDF(false);
-    handleShowPDF(false);
+    setIsExist(false);
     const timeoutId = setTimeout(() => {
       setIsLoading(false);
     }, 500);
     return () => clearTimeout(timeoutId);
-  }, [initialData, mode, handleShowPDF]);
+  }, [initialData, mode]);
 
   useEffect(() => {
     setTimeout(() => {
@@ -278,8 +285,8 @@ const FormBM03: FC<FormBM03Props> = (props) => {
       ) : (
         <>
           <form onSubmit={handleSubmit}>
-            <hr className="mt-1 mb-3" />
-            <div className="grid grid-cols-6 gap-6 mb-2">
+            <hr className="mt-1 mb-2" />
+            <div className="grid grid-cols-4 gap-6 mb-2">
               <div className="flex flex-col gap-1">
                 <span className="font-medium text-neutral-600">Số văn bản</span>
                 <TextArea
@@ -319,52 +326,6 @@ const FormBM03: FC<FormBM03Props> = (props) => {
                 </ConfigProvider>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="font-medium text-neutral-600">Từ ngày</span>
-                <ConfigProvider locale={locale}>
-                  <DatePicker
-                    allowClear={false}
-                    placeholder="dd/mm/yyyy"
-                    format="DD/MM/YYYY"
-                    value={
-                      formValues.fromDate
-                        ? dayjs.unix(formValues.fromDate).tz("Asia/Ho_Chi_Minh")
-                        : null
-                    }
-                    onChange={(date) => {
-                      setFormValues((prev) => ({
-                        ...prev,
-                        fromDate: date
-                          ? dayjs(date).tz("Asia/Ho_Chi_Minh").unix()
-                          : 0,
-                      }));
-                    }}
-                  />
-                </ConfigProvider>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="font-medium text-neutral-600">Đến ngày</span>
-                <ConfigProvider locale={locale}>
-                  <DatePicker
-                    allowClear={false}
-                    placeholder="dd/mm/yyyy"
-                    format="DD/MM/YYYY"
-                    value={
-                      formValues.toDate
-                        ? dayjs.unix(formValues.toDate).tz("Asia/Ho_Chi_Minh")
-                        : 0
-                    }
-                    onChange={(date) => {
-                      setFormValues((prev) => ({
-                        ...prev,
-                        toDate: date
-                          ? dayjs(date).tz("Asia/Ho_Chi_Minh").unix()
-                          : 0,
-                      }));
-                    }}
-                  />
-                </ConfigProvider>
-              </div>
-              <div className="flex flex-col gap-1">
                 <span className="font-medium text-neutral-600">
                   Số lưu văn bản
                 </span>
@@ -396,28 +357,12 @@ const FormBM03: FC<FormBM03Props> = (props) => {
                 </ConfigProvider>
               </div>
             </div>
-            <div className="flex flex-col gap-1 mb-2">
-              <span className="font-medium text-neutral-600">
-                Địa điểm <span className="text-red-500">(*)</span>
-              </span>
-              <TextArea
-                autoSize
-                value={formValues.location}
-                onChange={(e) =>
-                  setFormValues((prev) => ({
-                    ...prev,
-                    location: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-6 mb-2">
-              <div className="flex flex-col gap-1">
+            <div className="grid grid-cols-4 gap-6 mb-2">
+              <div className="col-span-2 flex flex-col gap-1">
                 <span className="font-medium text-neutral-600">Đơn vị</span>
                 <Select
                   showSearch
                   disabled={
-                    isBlock ||
                     displayRole.isCreate === false ||
                     displayRole.isUpdate === false
                   }
@@ -436,22 +381,22 @@ const FormBM03: FC<FormBM03Props> = (props) => {
                     defaultUnits.length > 0 ? defaultUnits[0].name : undefined
                   }
                   onChange={(value) => {
-                    getUsersFromHRMByUnitId(value);
+                    getAllUsersFromHRM(value);
                   }}
                 />
               </div>
-              <div className="flex flex-col gap-1">
+              <div className="col-span-2 flex flex-col gap-1">
                 <span className="font-medium text-neutral-600">
                   Tìm mã CB-GV-NV
                 </span>
                 <Select
                   showSearch
                   disabled={
-                    isBlock ||
                     displayRole.isCreate === false ||
                     displayRole.isUpdate === false
                   }
                   optionFilterProp="label"
+                  defaultValue={""}
                   filterSort={(optionA, optionB) =>
                     (optionA?.label ?? "")
                       .toLowerCase()
@@ -468,11 +413,34 @@ const FormBM03: FC<FormBM03Props> = (props) => {
                   }
                   onChange={(value) => {
                     setSelectedKey(value);
+                    const user = users?.items?.find(
+                      (user) => user.id === value
+                    );
+                    if (user) {
+                      checkExistInvigilator(user.userName);
+                    }
                   }}
                 />
               </div>
             </div>
-            <div className="grid grid-cols-4 gap-6 mb-2">
+            <div className="grid grid-cols-4 mb-2 gap-6">
+              <div className="flex flex-col gap-1">
+                <span className="font-medium text-neutral-600">
+                  Số buổi coi thi
+                </span>
+                <InputNumber
+                  min={0}
+                  defaultValue={0}
+                  value={formValues.totalSessions}
+                  onChange={(value) =>
+                    setFormValues({
+                      ...formValues,
+                      totalSessions: value ?? 0,
+                    })
+                  }
+                  style={{ width: "100%" }}
+                />
+              </div>
               <div className="flex flex-col gap-1">
                 <span className="font-medium text-neutral-600">
                   Số tiết chuẩn
@@ -480,47 +448,18 @@ const FormBM03: FC<FormBM03Props> = (props) => {
                 <InputNumber
                   min={0}
                   defaultValue={0}
-                  value={formValues.standardValues}
+                  value={formValues.standardNumber}
                   onChange={(value) =>
-                    setFormValues((prev) => ({
-                      ...prev,
-                      standardValues: value ?? 0,
-                    }))
+                    setFormValues({
+                      ...formValues,
+                      standardNumber: value ?? 0,
+                    })
                   }
                   style={{ width: "100%" }}
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="font-medium text-neutral-600">Số buổi</span>
-                <InputNumber
-                  min={0}
-                  defaultValue={0}
-                  value={formValues.numberOfTime}
-                  onChange={(value) =>
-                    setFormValues((prev) => ({
-                      ...prev,
-                      numberOfTime: value ?? 0,
-                    }))
-                  }
-                  style={{ width: "100%" }}
-                />
-              </div>
-              <div className="col-span-2 flex flex-col gap-1">
-                <span className="font-medium text-neutral-600">
-                  Vị trí tham gia
-                </span>
-                <Input
-                  value={formValues.position}
-                  onChange={(e) =>
-                    setFormValues((prev) => ({
-                      ...prev,
-                      position: e.target.value,
-                    }))
-                  }
                 />
               </div>
             </div>
-            <div className="flex flex-col gap-1 mb-2">
+            <div className="flex flex-col gap-[2px] mb-2">
               <span className="font-medium text-neutral-600">
                 Tài liệu đính kèm
               </span>
@@ -626,17 +565,30 @@ const FormBM03: FC<FormBM03Props> = (props) => {
                 )}
               </div>
             </div>
-            <div className="flex flex-col gap-1 mb-3">
+            <div className="flex flex-col gap-1 mb-2">
               <p className="font-medium text-neutral-600">Ghi chú</p>
               <TextArea
                 autoSize
                 value={formValues.note}
                 onChange={(e) =>
-                  setFormValues((prev) => ({ ...prev, note: e.target.value }))
+                  setFormValues({ ...formValues, note: e.target.value })
                 }
               />
             </div>
             <InfoApproved mode={mode} isPayment={isPayment} />
+            {isExist && (
+              <>
+                <div className="flex flex-col mt-3">
+                  <span className="text-red-600 font-medium">Lưu ý:</span>
+                  <span className="font-medium text-neutral-500 pl-3">
+                    - Thông tin nhân sự đã tồn tại.
+                  </span>
+                  <span className="font-medium text-neutral-500 pl-3">
+                    - Cần kiểm tra lại thông tin trước khi xác nhận.
+                  </span>
+                </div>
+              </>
+            )}
           </form>
         </>
       )}
@@ -657,5 +609,4 @@ const FormBM03: FC<FormBM03Props> = (props) => {
     </div>
   );
 };
-
-export default FormBM03;
+export default FormBM14;

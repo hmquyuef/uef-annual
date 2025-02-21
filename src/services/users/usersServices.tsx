@@ -95,10 +95,36 @@ export async function getUsers(code: string): Promise<UsersResponse> {
   return response.data;
 }
 
+// export async function getUserNameByEmail(email: string): Promise<{
+//   statusCode: number;
+//   data: any;
+//   message: string;
+// }> {
+//   let url = `api/users/hrm/findby/${email}`;
+//   try {
+//     const response = await apiClient.get<any>(url);
+//     return {
+//       statusCode: response.status,
+//       data: response.data,
+//       message: "Thành công",
+//     };
+//   } catch (error: any) {
+//     return {
+//       statusCode: error?.status || 500,
+//       data: null,
+//       message: error?.message || "Có lỗi xảy ra, vui lòng thử lại!",
+//     };
+//   }
+// }
+
 export async function getUserNameByEmail(email: string): Promise<any> {
   let url = `api/users/hrm/findby/${email}`;
-  const response = await apiClient.get<any>(url);
-  return response.data;
+  try {
+    const response = await apiClient.get<any>(url);
+    return response.data;
+  } catch (error) {
+    return null;
+  }
 }
 
 export async function getUsersFromHRMbyId(

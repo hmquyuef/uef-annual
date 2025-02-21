@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 // import Marquee from "react-fast-marquee";
 import { jwtDecode } from "jwt-decode";
+import Colors from "@/utility/Colors";
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
@@ -197,7 +198,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <React.Fragment>
-      <div className="flex min-h-screen bg-[#fcfaf6]">
+      <div
+        className="flex min-h-screen"
+        style={{ backgroundColor: Colors.BACKGROUND }}
+      >
         <div className="h-full fixed top-0 left-0 z-30">
           <aside
             className={`flex flex-col transition-all duration-300 ${

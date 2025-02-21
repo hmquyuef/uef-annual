@@ -1,8 +1,7 @@
 "use client";
 
-import {
-  GoogleOutlined
-} from "@ant-design/icons";
+import Colors from "@/utility/Colors";
+import { GoogleOutlined } from "@ant-design/icons";
 import { Button, Divider } from "antd";
 import { signIn } from "next-auth/react";
 
@@ -62,7 +61,10 @@ const Login = () => {
     //     </div>
     //   </div>
     // </div>
-    <section className="flex flex-col justify-center bg-[#fcfaf6] h-svh min-w-[425px]">
+    <section
+      className="flex flex-col justify-center h-svh min-w-[425px]"
+      style={{ backgroundColor: Colors.BACKGROUND }}
+    >
       <div className="flex justify-center mt-[-150px] mb-6">
         <img src="/logoUEF.svg" width={300} alt="login" />
       </div>

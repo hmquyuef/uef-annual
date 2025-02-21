@@ -1,6 +1,5 @@
 import apiClient from "../apiClient";
 import { Determinations } from "./Determinations";
-import { ImportResponse } from "./formsServices";
 import { PaymentApprovedItem } from "./PaymentApprovedItem";
 
 export interface ClassAssistantItem {
@@ -75,18 +74,12 @@ export async function deleteClassAssistants(ids: string[]): Promise<void> {
   });
 }
 
-export async function ImportClassAssistants(
-  data: FormData
-): Promise<ImportResponse> {
-  const response = await apiClient.post<ImportResponse>(
-    "api/assistants/import",
-    data,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
+export async function ImportClassAssistants(data: FormData): Promise<any> {
+  const response = await apiClient.post<any>("api/assistants/import", data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 
   return response.data;
 }

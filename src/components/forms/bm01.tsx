@@ -19,7 +19,7 @@ import {
 } from "@/services/roles/rolesServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
-import { FileItem } from "@/services/uploads/uploadsServices";
+import { postFiles } from "@/services/uploads/uploadsServices";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
 import {
@@ -71,6 +71,7 @@ import saveAs from "file-saver";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import * as XLSX from "sheetjs-style";
+import { LoadingSpin } from "../skeletons/LoadingSpin";
 dayjs.locale("vi");
 
 type SearchProps = GetProps<typeof Input.Search>;
@@ -78,6 +79,7 @@ type SearchProps = GetProps<typeof Input.Search>;
 const BM01 = () => {
   const { Search } = Input;
   const [loading, setLoading] = useState(false);
+  const [loadingUpload, setLoadingUpload] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [classLeaders, setClassLeaders] = useState<ClassLeaderItem[]>([]);
   const [data, setData] = useState<ClassLeaderItem[]>([]);
@@ -222,11 +224,13 @@ const BM01 = () => {
       ),
       dataIndex: "proof",
       key: "proof",
-      render: (proof: string, record: ClassLeaderItem) => {
+      render: (_, record: ClassLeaderItem) => {
         const ngayLap = record.determinations.fromDate;
         return (
           <div className="flex flex-col">
-            <span className="text-center font-medium">{proof}</span>
+            <span className="text-center font-medium">
+              {record.determinations.documentNumber}
+            </span>
             <span className="text-center text-[13px]">
               {convertTimestampToDate(ngayLap)}
             </span>
@@ -325,7 +329,7 @@ const BM01 = () => {
       dataIndex: "internalNumber",
       key: "internalNumber",
       className: "customInfoColors text-center w-[70px]",
-      render: (internalNumber: string, item: ClassLeaderItem) => {
+      render: (_, item: ClassLeaderItem) => {
         const path = item.determinations.files[0]?.path;
         return (
           <>
@@ -373,9 +377,9 @@ const BM01 = () => {
       label: (
         <p
           onClick={() => {
+            setIsUpload(true);
             setIsOpen(true);
             setMode("add");
-            setIsUpload(true);
           }}
           className="font-medium"
         >
@@ -454,10 +458,6 @@ const BM01 = () => {
     } catch (error) {
       console.error("Error deleting selected items:", error);
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   }, [selectedRowKeys]);
 
   const handleEdit = (classLeader: any) => {
@@ -510,54 +510,52 @@ const BM01 = () => {
         description: Messages.ERROR,
       }));
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   };
 
   const handleSubmitUpload = async (
     fileParticipant: File,
-    fileAttackment: FileItem
+    fileAttachment: File
   ) => {
-    try {
+    setLoadingUpload(true);
+    const formData = new FormData();
+    formData.append("FunctionName", "classleader");
+    formData.append("file", fileAttachment);
+    const results = await postFiles(formData);
+    if (results && results !== undefined) {
       const formData = new FormData();
-      formData.append("File", fileParticipant);
-      formData.append("Type", fileAttackment.type);
-      formData.append("Path", fileAttackment.path);
-      formData.append("Name", fileAttackment.name);
-      formData.append("Size", fileAttackment.size.toString());
-
+      formData.append("Excel", fileParticipant);
+      formData.append("PDF.Type", results.type);
+      formData.append("PDF.Path", results.path);
+      formData.append("PDF.Name", results.name);
+      formData.append("PDF.Size", results.size.toString());
       const response = await ImportClassLeaders(formData);
-      if (response) {
+      if (response.totalError !== 0) {
         setFormNotification((prev) => ({
           ...prev,
-          isOpen: true,
+          status: "error",
+          message: "Đã có lỗi xảy ra!",
+          description: `${response.messageError}`,
+        }));
+      } else {
+        setFormNotification((prev) => ({
+          ...prev,
           status: "success",
           message: "Thông báo",
-          description: `Tải lên thành công ${response.totalCount} thông tin chủ nhiệm lớp!`,
+          description: `Tải lên thành công ${response.totalCount} dòng thông tin chủ nhiệm lớp!`,
         }));
       }
-      await getListClassLeaders(selectedKey.id);
-      setIsOpen(false);
-      setSelectedItem(undefined);
-      setMode("add");
-      setIsUpload(false);
-    } catch (error) {
       setFormNotification((prev) => ({
         ...prev,
         isOpen: true,
-        status: "error",
-        message: "Thông báo",
-        description: Messages.ERROR,
       }));
-      setIsOpen(false);
-      setIsUpload(false);
+      await getListClassLeaders(selectedKey.id);
+      const timeoutId = setTimeout(() => {
+        setLoadingUpload(false);
+        setIsOpen(false);
+        setIsUpload(false);
+      }, 300);
+      return () => clearTimeout(timeoutId);
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   };
 
   const handleExportExcel = async () => {
@@ -904,7 +902,7 @@ const BM01 = () => {
     setEndDate(temp.endDate);
     const timeoutId = setTimeout(() => {
       setLoading(false);
-    }, 500);
+    }, 300);
     return () => clearTimeout(timeoutId);
   };
 
@@ -947,6 +945,12 @@ const BM01 = () => {
   }, []);
 
   useEffect(() => {
+    setTimeout(() => {
+      setFormNotification((prev) => ({ ...prev, isOpen: false }));
+    }, 100);
+  }, [formNotification.isOpen]);
+
+  useEffect(() => {
     if (
       classLeaders.length > 0 &&
       units.length > 0 &&
@@ -975,11 +979,10 @@ const BM01 = () => {
             >
               <div className="grid grid-cols-6 gap-3">
                 <div className="col-span-2 flex flex-col justify-center gap-1">
-                  <span className="text-[14px] text-neutral-500">
-                    Tìm kiếm:
-                  </span>
+                  <span className="text-[14px] text-neutral-500">Tìm kiếm</span>
                   <Search
-                    placeholder=" "
+                    className="whitespace-nowrap overflow-hidden text-ellipsis"
+                    placeholder="Tìm theo mã cb-gv-nv, họ tên"
                     onChange={(e) => onSearch(e.target.value)}
                     enterButton
                   />
@@ -989,9 +992,7 @@ const BM01 = () => {
                   hidden={role && role.name === "secretary"}
                 >
                   <div className="flex flex-col justify-center gap-1">
-                    <span className="text-[14px] text-neutral-500">
-                      Đơn vị:
-                    </span>
+                    <span className="text-[14px] text-neutral-500">Đơn vị</span>
                     <Select
                       showSearch
                       allowClear
@@ -1240,7 +1241,7 @@ const BM01 = () => {
           isUpload ? (
             <>
               <FromUpload
-                formName="classleader"
+                formName="bm01"
                 onSubmit={handleSubmitUpload}
                 handleShowPDF={setIsShowPdf}
                 displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
@@ -1278,6 +1279,11 @@ const BM01 = () => {
       >
         <Input value={reason} onChange={(e) => setReason(e.target.value)} />
       </Modal>
+      {loadingUpload && (
+        <>
+          <LoadingSpin isLoadingSpin={loadingUpload} />
+        </>
+      )}
       <hr className="mb-3" />
       <TemplateForms
         loading={loading}

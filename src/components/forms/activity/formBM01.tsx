@@ -25,14 +25,17 @@ import {
   Progress,
   Select,
 } from "antd";
-import locale from "antd/locale/vi_VN";
-import dayjs from "dayjs";
-import timezone from "dayjs/plugin/timezone";
-import utc from "dayjs/plugin/utc";
 import { FC, FormEvent, Key, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import InfoApproved from "./infoApproved";
 import InfoPDF from "./infoPDF";
+
+import { handleUploadFile } from "@/components/files/UploadFile";
+import locale from "antd/locale/vi_VN";
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+import { handleDeleteFile } from "@/components/files/RemoveFile";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -110,73 +113,28 @@ const FormBM01: FC<FormBM01Props> = (props) => {
   };
 
   const handleDeletePicture = async () => {
-    setIsLoadingPDF(true);
-    if (listPicture && listPicture.path !== "") {
-      await deleteFiles(
-        listPicture.path.replace("https://api-annual.uef.edu.vn/", "")
-      );
-      let intervalId = setInterval(() => {
-        setPercent((prevPercent) => {
-          let newPercent = prevPercent === 0 ? 100 : prevPercent - 1;
-          if (newPercent === 0) {
-            clearInterval(intervalId);
-            setListPicture({ type: "", path: "", name: "", size: 0 });
-            setFormNotification({
-              isOpen: true,
-              status: "success",
-              message: "Thông báo",
-              description: `Đã xóa tệp tin: ${listPicture.name} thành công!`,
-            });
-            setIsLoadingPDF(false);
-            return 0;
-          }
-          return newPercent;
-        });
-      }, 10);
-    }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
+    await handleDeleteFile(
+      listPicture, // Danh sách tệp tin (có thể thay đổi)
+      setIsLoadingPDF, // Hàm cập nhật trạng thái loading
+      setPercent, // Hàm cập nhật phần trăm xóa
+      setFormNotification, // Hàm hiển thị thông báo
+      deleteFiles, // Hàm xóa tệp tin
+      setListPicture // Hàm cập nhật danh sách tệp tin sau khi xóa
+    );
   };
 
   const handleUploadPDF = async (acceptedFiles: File[]) => {
-    setIsLoadingPDF(true);
-    const formData = new FormData();
-    formData.append("FunctionName", "classleader");
-    formData.append("file", acceptedFiles[0]);
-    if (listPicture && listPicture.path !== "") {
-      await deleteFiles(
-        listPicture.path.replace("https://api-annual.uef.edu.vn/", "")
-      );
-    }
-    const results = await postFiles(formData);
-    if (results && results !== undefined) {
-      setListPicture(results);
-      let intervalId = setInterval(() => {
-        setPercent((prevPercent) => {
-          const newPercent = prevPercent + 1;
-          if (newPercent >= 100) {
-            clearInterval(intervalId);
-            setTimeout(() => {
-              setFormNotification({
-                message: "Thông báo",
-                description: `Tải lên tệp tin: ${results.name} thành công!`,
-                status: "success",
-                isOpen: true,
-              });
-              setIsLoadingPDF(false);
-            }, 500);
-            return 100;
-          }
-          return newPercent;
-        });
-      }, 10);
-    }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
+    await handleUploadFile(
+      acceptedFiles, // Dữ liệu tệp tin được chấp nhận
+      "classleader", // FunctionName (Thay đổi ở đây)
+      setPercent, // Hàm cập nhật phần trăm
+      setIsLoadingPDF, // Hàm cập nhật trạng thái loading
+      setFormNotification, // Hàm hiển thị thông báo
+      deleteFiles, // Hàm xóa tệp tin
+      postFiles, // Hàm gọi API tải lên tệp
+      setListPicture, // Hàm cập nhật danh sách hình ảnh
+      listPicture // Danh sách hình ảnh
+    );
   };
 
   const { getRootProps, getInputProps } = useDropzone({
@@ -216,7 +174,6 @@ const FormBM01: FC<FormBM01Props> = (props) => {
       note: formValues.note,
     };
     onSubmit(formData);
-    setFormNotification((prev) => ({ ...prev, isOpen: false }));
   };
 
   const resetForm = () => {
@@ -274,7 +231,9 @@ const FormBM01: FC<FormBM01Props> = (props) => {
           documentDate: initialData?.determinations.documentDate || 0,
           fromDate: initialData?.determinations.fromDate || 0,
           toDate: initialData?.determinations.toDate || 0,
-          entryDate: initialData?.determinations.entryDate ? initialData.determinations.entryDate : timestamp,
+          entryDate: initialData?.determinations.entryDate
+            ? initialData.determinations.entryDate
+            : timestamp,
           attackmentFile: {
             type: initialData?.determinations.files[0]?.type || "",
             path: initialData?.determinations.files[0]?.path || "",
@@ -297,6 +256,12 @@ const FormBM01: FC<FormBM01Props> = (props) => {
     };
     loadUsers();
   }, [initialData, mode, handleShowPDF]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setFormNotification((prev) => ({ ...prev, isOpen: false }));
+    }, 200);
+  }, [formNotification.isOpen]);
 
   return (
     <div
@@ -564,7 +529,7 @@ const FormBM01: FC<FormBM01Props> = (props) => {
               </span>
               <div
                 {...getRootProps()}
-                className="w-full h-24 border-2 border-dashed border-blue-200 hover:border-blue-400 cursor-pointer flex justify-center items-center gap-3 rounded-xl"
+                className="w-full min-h-24 h-fit border-2 border-dashed border-blue-300 hover:border-blue-500 cursor-pointer flex justify-center items-center gap-3 rounded-xl"
               >
                 <input {...getInputProps()} />
                 {!listPicture || listPicture.path === "" ? (
@@ -574,9 +539,13 @@ const FormBM01: FC<FormBM01Props> = (props) => {
                     </span>
                     <div className="flex flex-col">
                       <span className="text-base text-center font-medium text-blue-500">
-                        Tải lên tệp tài liệu đính kèm
+                        Tải lên tài liệu đính kèm
                       </span>
-                      <span className="text-blue-300 text-[13px]">
+                      <span className="text-sm text-center text-blue-400">
+                        Định dạng <strong>.pdf</strong>, tối đa{" "}
+                        <strong>10 MB</strong>
+                      </span>
+                      <span className="text-blue-400 text-sm">
                         Kéo thả hoặc nhấn vào đây để chọn tệp!
                       </span>
                     </div>

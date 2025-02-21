@@ -1,6 +1,11 @@
 "use client";
 
+import CustomNotification from "@/components/CustomNotification";
 import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
+import {
+  getCheckExistEmployeesRegulations,
+  HistoryEmploysItem,
+} from "@/services/regulations/employeesServices";
 import { DisplayRoleItem } from "@/services/roles/rolesServices";
 import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
 import {
@@ -12,7 +17,6 @@ import { ConfigProvider, DatePicker, Input, InputNumber, Select } from "antd";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
-import moment from "moment";
 import { FC, FormEvent, Key, useEffect, useState } from "react";
 dayjs.locale("vi");
 
@@ -28,14 +32,26 @@ const FormBM15: FC<FormBM15Props> = (props) => {
   const { TextArea } = Input;
   const timestamp = dayjs().tz("Asia/Ho_Chi_Minh").unix();
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isExist, setIsExist] = useState<boolean>(false);
   const [units, setUnits] = useState<UnitItem[]>([]);
   const [defaultUnits, setDefaultUnits] = useState<UnitItem[]>([]);
+  const [history, setHistory] = useState<HistoryEmploysItem[]>([]);
   const [users, setUsers] = useState<UsersFromHRMResponse | undefined>(
     undefined
   );
   const [defaultUsers, setDefaultUsers] = useState<UsersFromHRM[]>([]);
   const [selectedKey, setSelectedKey] = useState<Key | null>(null);
-
+  const [formNotification, setFormNotification] = useState<{
+    message: string;
+    description: string;
+    status: "success" | "error" | "info" | "warning";
+    isOpen: boolean;
+  }>({
+    message: "",
+    description: "",
+    status: "success",
+    isOpen: false,
+  });
   const [formValues, setFormValues] = useState({
     attendanceDays: 0,
     attendanceHours: 0,
@@ -61,6 +77,19 @@ const FormBM15: FC<FormBM15Props> = (props) => {
     setUsers(response);
   };
 
+  const checkExistEmployeesRegulations = async (userName: string) => {
+    const response = await getCheckExistEmployeesRegulations(userName);
+    if (response) {
+      setIsExist(response);
+      setFormNotification({
+        isOpen: true,
+        status: "info",
+        message: "Đã tồn tại thông tin nội quy định cho nhân viên này",
+        description: "Vui lòng kiểm tra lại thông tin!",
+      });
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const tempUser = users?.items?.find((user) => user.id === selectedKey);
@@ -79,7 +108,15 @@ const FormBM15: FC<FormBM15Props> = (props) => {
       unpaidLeaveDays: formValues.unpaidLeaveDays,
       businessTripDays: formValues.businessTripDays,
       missedFingerprint: formValues.missedFingerprint,
-      entryDate: formValues.entryDate,
+      determinations: {
+        documentNumber: "",
+        internalNumber: "",
+        documentDate: 0,
+        fromDate: formValues.entryDate,
+        toDate: formValues.entryDate,
+        entryDate: formValues.entryDate,
+        files: null,
+      },
       note: formValues.note,
     };
     onSubmit(formData);
@@ -89,6 +126,8 @@ const FormBM15: FC<FormBM15Props> = (props) => {
     setSelectedKey(null);
     setDefaultUnits([]);
     setDefaultUsers([]);
+    setHistory([]);
+    setIsExist(false);
     setFormValues({
       attendanceDays: 0,
       attendanceHours: 0,
@@ -134,9 +173,13 @@ const FormBM15: FC<FormBM15Props> = (props) => {
           unpaidLeaveDays: initialData.unpaidLeaveDays,
           businessTripDays: initialData.businessTripDays,
           missedFingerprint: initialData.missedFingerprint,
-          entryDate: initialData?.entryDate ? initialData.entryDate : timestamp,
+          entryDate: initialData?.determinations.entryDate
+            ? initialData.determinations.entryDate
+            : timestamp,
           note: initialData.note,
         });
+        setHistory(initialData.histories);
+        setIsExist(false);
       } else {
         ResetForms();
       }
@@ -148,6 +191,12 @@ const FormBM15: FC<FormBM15Props> = (props) => {
     }, 500);
     return () => clearTimeout(timeoutId);
   }, [initialData, mode]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setFormNotification((prev) => ({ ...prev, isOpen: false }));
+    }, 200);
+  }, [formNotification.isOpen]);
 
   return (
     <div className="grid grid-cols-1 mb-2">
@@ -215,6 +264,12 @@ const FormBM15: FC<FormBM15Props> = (props) => {
                   }
                   onChange={(value) => {
                     setSelectedKey(value);
+                    const user = users?.items?.find(
+                      (user) => user.id === value
+                    );
+                    if (user) {
+                      checkExistEmployeesRegulations(user.userName);
+                    }
                   }}
                 />
               </div>
@@ -411,9 +466,117 @@ const FormBM15: FC<FormBM15Props> = (props) => {
                 }
               />
             </div>
+            {history && history.length > 0 && (
+              <>
+                <div className="mt-2">
+                  <span className="font-medium text-neutral-600">
+                    Lịch sử cập nhật
+                  </span>
+                  <table className="w-full mt-1">
+                    <thead>
+                      <tr>
+                        <th className="border border-neutral-300 p-1">STT</th>
+                        <th className="border border-neutral-300 p-1">
+                          Số ngày chấm công
+                        </th>
+                        <th className="border border-neutral-300 p-1">
+                          Số giờ chấm công
+                        </th>
+                        <th className="border border-neutral-300 p-1">
+                          Số buổi đi trễ
+                        </th>
+                        <th className="border border-neutral-300 p-1">
+                          Số buổi về sớm
+                        </th>
+                        <th className="border border-neutral-300 p-1">
+                          Nghỉ không phép
+                        </th>
+                        <th className="border border-neutral-300 p-1">
+                          Nghỉ có phép
+                        </th>
+                        <th className="border border-neutral-300 p-1">
+                          Nghỉ hậu sản
+                        </th>
+                        <th className="border border-neutral-300 p-1">
+                          Nghỉ không lương
+                        </th>
+                        <th className="border border-neutral-300 p-1">
+                          Nghỉ công tác
+                        </th>
+                        <th className="border border-neutral-300 p-1">
+                          Không bấm vân tay
+                        </th>
+                        <th className="border border-neutral-300 p-1">Ngày nhập</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {history.map((item, index) => (
+                        <tr key={index}>
+                          <td className="border border-neutral-300 text-center p-1">
+                            {index + 1}
+                          </td>
+                          <td className="border border-neutral-300 text-center p-1">
+                            {item.attendanceDays}
+                          </td>
+                          <td className="border border-neutral-300 text-center p-1">
+                            {item.attendanceHours}
+                          </td>
+                          <td className="border border-neutral-300 text-center p-1">
+                            {item.lateArrivals}
+                          </td>
+                          <td className="border border-neutral-300 text-center p-1">
+                            {item.earlyDepartures}
+                          </td>
+                          <td className="border border-neutral-300 text-center p-1">
+                            {item.unexcusedAbsences}
+                          </td>
+                          <td className="border border-neutral-300 text-center p-1">
+                            {item.leaveDays}
+                          </td>
+                          <td className="border border-neutral-300 text-center p-1">
+                            {item.maternityLeaveDays}
+                          </td>
+                          <td className="border border-neutral-300 text-center p-1">
+                            {item.unpaidLeaveDays}
+                          </td>
+                          <td className="border border-neutral-300 text-center p-1">
+                            {item.businessTripDays}
+                          </td>
+                          <td className="border border-neutral-300 text-center p-1">
+                            {item.missedFingerprint}
+                          </td>
+                          <td className="border border-neutral-300 text-center p-1">
+                            {dayjs.unix(item.entryDate).format("DD/MM/YYYY")}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+            {isExist && (
+              <>
+                <div className="flex flex-col mt-3">
+                  <span className="text-red-600 font-medium">Lưu ý:</span>
+                  <span className="font-medium text-neutral-500 pl-3">
+                    - Thông tin nhân sự đã tồn tại.
+                  </span>
+                  <span className="font-medium text-neutral-500 pl-3">
+                    - Cần kiểm tra lại thông tin trước khi xác nhận.
+                  </span>
+                </div>
+              </>
+            )}
           </form>
         </>
       )}
+      <CustomNotification
+        message={formNotification.message}
+        description={formNotification.description}
+        status={formNotification.status}
+        isOpen={formNotification.isOpen}
+      />
     </div>
   );
 };

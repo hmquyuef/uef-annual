@@ -1,5 +1,4 @@
 "use client";
-import Colors from "@/utility/Colors";
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -24,68 +23,73 @@ const CustomNotification: FC<NotificationProps> = ({
 }) => {
   const [api, contextHolder] = notification.useNotification();
 
-  const openNotification = () => {
-    let backgroundColor;
-    switch (status) {
-      case "success":
-        backgroundColor = "#d4edda";
-        break;
-      case "error":
-        backgroundColor = "#f8d7da";
-        break;
-      case "info":
-        backgroundColor = "#d1ecf1";
-        break;
-      case "warning":
-        backgroundColor = "#fff3cd";
-        break;
-      default:
-        backgroundColor = "#ffffff";
-    }
-
-    api.open({
-      message: <span className="font-medium">{message}</span>,
-      description,
-      icon:
-        status === "success" ? (
-          <CheckCircleOutlined style={{ color: Colors.GREEN }} />
-        ) : status === "error" ? (
-          <CloseCircleOutlined style={{ color: Colors.RED }} />
-        ) : status === "info" ? (
-          <InfoCircleOutlined style={{ color: "#00e5ff" }} />
-        ) : (
-          <SmileOutlined style={{ color: Colors.ORANGE }} />
-        ),
-      style: {
-        backgroundColor,
-        borderLeft: `4px solid ${
-          status === "success"
-            ? Colors.GREEN
-            : status === "error"
-            ? Colors.RED
-            : status === "info"
-            ? "#00e5ff"
-            : Colors.ORANGE
-        }`,
-        borderRadius: "8px",
-        boxShadow: `0 4px 8px ${
-          status === "success"
-            ? "rgba(16, 222, 42, 0.4)"
-            : status === "error"
-            ? "rgba(229, 27, 27, 0.4)"
-            : status === "info"
-            ? "rgba(0, 229, 255, 0.4)"
-            : "rgba(251, 164, 27, 0.4)"
-        }`,
-      },
-    });
-  };
-
   useEffect(() => {
     if (isOpen) {
       openNotification();
     }
-  }, [isOpen]);
+  }, [isOpen, status]);
+
+  const openNotification = () => {
+    const colors = {
+      success: {
+        bg: "#d4edda",
+        text: "green",
+        sub: "#05bd30",
+        border: "green",
+        shadow: "rgba(21, 252, 52, 0.4)",
+      },
+      error: {
+        bg: "#f8d7da",
+        text: "red",
+        sub: "#fa505e",
+        border: "red",
+        shadow: "rgba(229, 27, 27, 0.4)",
+      },
+      info: {
+        bg: "#d1ecf1",
+        text: "sky",
+        sub: "#25b4f7",
+        border: "#0ea5e9",
+        shadow: "rgba(0, 229, 255, 0.4)",
+      },
+      warning: {
+        bg: "#fff3cd",
+        text: "orange",
+        sub: "#fdde76",
+        border: "orange",
+        shadow: "rgba(251, 164, 27, 0.4)",
+      },
+    };
+
+    const currentColor = colors[status ?? "info"];
+
+    api.open({
+      message: (
+        <span className={`font-medium text-${currentColor.text}-500`}>
+          {message}
+        </span>
+      ),
+      description: (
+        <span style={{ color: currentColor.sub }}>{description}</span>
+      ),
+      icon:
+        status === "success" ? (
+          <CheckCircleOutlined style={{ color: "green" }} />
+        ) : status === "error" ? (
+          <CloseCircleOutlined style={{ color: "red" }} />
+        ) : status === "info" ? (
+          <InfoCircleOutlined style={{ color: "#0ea5e9" }} />
+        ) : (
+          <SmileOutlined style={{ color: "orange" }} />
+        ),
+      style: {
+        backgroundColor: currentColor.bg,
+        borderLeft: `4px solid ${currentColor.border}`,
+        borderRadius: "8px",
+        boxShadow: `0 4px 8px ${currentColor.shadow}`,
+      },
+    });
+  };
 
   return <>{contextHolder}</>;
 };
