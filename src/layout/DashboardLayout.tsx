@@ -243,12 +243,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           }`}
         >
           {itemsMenu && itemsMenu.length > 0 && (
-            <>
+            <div>
               <TopHeaders
                 name={session?.user?.name || ""}
                 email={session?.user?.email || ""}
               />
-              {children}
+              <div
+                className="flex-1"
+                style={{ minHeight: "calc(100svh - 104px)" }}
+              >
+                {children}
+              </div>
               <footer className="bg-white h-10 max-h-10 px-3 py-2 border-t-2 border-gray-100 text-center align-middle">
                 <Tooltip title="Về đầu trang">
                   <FloatButton.BackTop />
@@ -260,7 +265,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   <span className="font-semibold">TT.QLCNTT</span>
                 </span>
               </footer>
-            </>
+            </div>
           )}
         </div>
       </div>
