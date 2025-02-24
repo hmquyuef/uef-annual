@@ -1,12 +1,14 @@
 "use client";
 
 import TopHeaders from "@/components/TopHeader";
+import WebSocketPing from "@/components/WebSocketPing";
 import {
   postInfoToGetToken,
   putTokenByRefresh,
 } from "@/services/auth/authServices";
 import { getAllPermissionsForMenuByUserName } from "@/services/permissions/permissionForMenu";
 import { getUserNameByEmail } from "@/services/users/usersServices";
+import Colors from "@/utility/Colors";
 import {
   ArrowLeftOutlined,
   ArrowRightOutlined,
@@ -14,13 +16,11 @@ import {
 } from "@ant-design/icons";
 import { Image, Menu, MenuProps } from "antd";
 import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-// import Marquee from "react-fast-marquee";
-import { jwtDecode } from "jwt-decode";
-import Colors from "@/utility/Colors";
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
@@ -30,8 +30,6 @@ interface LevelKeysProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  // const [isOnline, setIsOnline] = useState(true);
-  // const [isSlowConnection, setIsSlowConnection] = useState(false);
   const { data: session } = useSession();
   const router = useRouter();
   type MenuItem = Required<MenuProps>["items"][number];
@@ -216,7 +214,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <Menu
                 style={{
                   width: "100%",
-                  height: "calc(100svh - 104px)",
+                  height: "calc(100svh - 136px)",
                 }}
                 defaultSelectedKeys={[Cookies.get("m_k") || "12"]}
                 openKeys={stateOpenKeys}
@@ -229,6 +227,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               />
             </article>
             <footer className="w-full">
+              <WebSocketPing isOpen={isOpened} />
               <button
                 onClick={() => setIsOpened(!isOpened)}
                 className="w-full p-2 bg-red-500 text-white"
@@ -249,36 +248,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 name={session?.user?.name || ""}
                 email={session?.user?.email || ""}
               />
-              {/* {!isOnline && (
-                <div className="mx-4 pt-4">
-                  <Alert
-                    banner
-                    message={
-                      <Marquee pauseOnHover gradient={false}>
-                        Kết nối mạng hiện tại của bạn không khả dụng. Vui lòng
-                        kiểm tra lại.
-                      </Marquee>
-                    }
-                    type="error"
-                    showIcon
-                  />
-                </div>
-              )}
-              {isSlowConnection && isOnline && (
-                <div className="mx-4 pt-4">
-                  <Alert
-                    banner
-                    message={
-                      <Marquee pauseOnHover gradient={false}>
-                        Tốc độ mạng của bạn hiện tại đang rất chậm. Điều này có
-                        thể ảnh hưởng đến trải nghiệm của bạn.
-                      </Marquee>
-                    }
-                    type="warning"
-                    showIcon
-                  />
-                </div>
-              )} */}
               {children}
             </>
           )}

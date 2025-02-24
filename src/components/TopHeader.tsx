@@ -8,6 +8,7 @@ import type { MenuProps } from "antd";
 import { Badge, Dropdown } from "antd";
 import Cookies from "js-cookie";
 import { signOut } from "next-auth/react";
+import WebSocketPing from "./WebSocketPing";
 
 interface TopHeadersProps {
   name: string;
