@@ -27,7 +27,6 @@ const useWebSocketPing = (url: string, interval = 5000, timeout = 5000) => {
                         socketRef.current.onmessage = (event) => {
                             const message = event.data;
                             if (message === "true") {
-                                setStatus("fast");
                                 const latency = Date.now() - start;
                                 setLatency(latency);
 
@@ -44,19 +43,15 @@ const useWebSocketPing = (url: string, interval = 5000, timeout = 5000) => {
                     }
                 }, interval);
             };
-
             socketRef.current.onclose = () => {
                 console.log("❌ WebSocket disconnected!");
                 setStatus("disconnected");
                 setLatency(null);
-
                 if (pingTimer.current) {
                     clearInterval(pingTimer.current);
                 }
-
                 setTimeout(connectWebSocket, 5000);
             };
-
             socketRef.current.onerror = (error) => {
                 console.error("⚠ WebSocket error:", error);
                 setStatus("disconnected");
