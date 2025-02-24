@@ -14,7 +14,7 @@ import {
   ArrowRightOutlined,
   HomeOutlined,
 } from "@ant-design/icons";
-import { Image, Menu, MenuProps } from "antd";
+import { FloatButton, Image, Menu, MenuProps, Tooltip } from "antd";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { useSession } from "next-auth/react";
@@ -249,6 +249,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 email={session?.user?.email || ""}
               />
               {children}
+              <footer className="bg-white h-10 max-h-10 px-3 py-2 border-t-2 border-gray-100 text-center align-middle">
+                <Tooltip title="Về đầu trang">
+                  <FloatButton.BackTop />
+                </Tooltip>
+                <span className="text-sm text-neutral-600">
+                  Bản quyền © {new Date().getFullYear()} thuộc{" "}
+                  <span className="text-red-500 font-semibold">UEF</span> -
+                  Thiết kế và phát triển bới{" "}
+                  <span className="font-semibold">TT.QLCNTT</span>
+                </span>
+              </footer>
             </>
           )}
         </div>

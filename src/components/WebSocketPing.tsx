@@ -26,12 +26,22 @@ const WebSocketPing: FC<WebSocketPingProps> = (props) => {
   });
 
   useEffect(() => {
+    if (status === "slow") {
+      setFormNotification({
+        isOpen: true,
+        status: "warning",
+        message: "Kết nối yếu!",
+        description:
+          "Kết nối tới máy chủ xử lý dữ liệu hiện tại đang không ổn định, có thể ảnh hưởng đến trải nghiệm của bạn!",
+      });
+    }
     if (status === "disconnected") {
       setFormNotification({
-        message: "Kết nối mạng đã bị ngắt",
-        description: "Vui lòng kiểm tra lại kết nối mạng",
-        status: "error",
         isOpen: true,
+        status: "error",
+        message: "Không thể kết nối đến máy chủ dữ liệu!",
+        description:
+          "Hiện tại không thể kết nối tới máy chủ xử lý dữ liệu. Vui lòng kiểm tra lại kết nối mạng hoặc thử lại sau!",
       });
     }
     setTimeout(() => {
@@ -41,9 +51,13 @@ const WebSocketPing: FC<WebSocketPingProps> = (props) => {
 
   return (
     <div
-      className={`h-8 border-t-2 border-${
-        status === "fast" ? "green" : status === "slow" ? "orange" : "red"
-      }-500`}
+      className={`h-8 border-t-2 ${
+        status === "fast"
+          ? "border-green-500"
+          : status === "slow"
+          ? "border-orange-500"
+          : "border-red-500"
+      }`}
       style={{ backgroundColor: "#001529" }}
     >
       <div
