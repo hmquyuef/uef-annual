@@ -1,7 +1,12 @@
 "use client";
 
 import { DisplayRoleItem } from "@/services/roles/rolesServices";
-import { FC, FormEvent, Key, useEffect, useState } from "react";
+import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
+import {
+  getUsersFromHRMbyId,
+  UsersFromHRM,
+  UsersFromHRMResponse,
+} from "@/services/users/usersServices";
 import {
   Button,
   ConfigProvider,
@@ -11,31 +16,26 @@ import {
   Progress,
   Select,
 } from "antd";
-import {
-  getUsersFromHRMbyId,
-  UsersFromHRM,
-  UsersFromHRMResponse,
-} from "@/services/users/usersServices";
-import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
+import { FC, FormEvent, Key, useEffect, useState } from "react";
 
-import locale from "antd/locale/vi_VN";
-import dayjs from "dayjs";
-import "dayjs/locale/vi";
 import CustomNotification from "@/components/CustomNotification";
-import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
-import { CloudUploadOutlined, MinusCircleOutlined } from "@ant-design/icons";
 import { handleDeleteFile } from "@/components/files/RemoveFile";
 import { handleUploadFile } from "@/components/files/UploadFile";
+import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
+import { getCheckExistInvigilator } from "@/services/forms/invigilatorsServices";
+import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 import {
   deleteFiles,
   FileItem,
   postFiles,
 } from "@/services/uploads/uploadsServices";
+import { CloudUploadOutlined, MinusCircleOutlined } from "@ant-design/icons";
+import locale from "antd/locale/vi_VN";
+import dayjs from "dayjs";
+import "dayjs/locale/vi";
 import { useDropzone } from "react-dropzone";
-import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 import InfoApproved from "./infoApproved";
 import InfoPDF from "./infoPDF";
-import { getCheckExistInvigilator } from "@/services/forms/invigilatorsServices";
 dayjs.locale("vi");
 
 interface FormBM14Props {
@@ -289,8 +289,7 @@ const FormBM14: FC<FormBM14Props> = (props) => {
             <div className="grid grid-cols-4 gap-6 mb-2">
               <div className="flex flex-col gap-1">
                 <span className="font-medium text-neutral-600">Số văn bản</span>
-                <TextArea
-                  autoSize
+                <Input
                   value={formValues.documentNumber}
                   onChange={(e) =>
                     setFormValues((prev) => ({

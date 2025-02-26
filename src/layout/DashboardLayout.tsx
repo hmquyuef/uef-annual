@@ -7,7 +7,7 @@ import {
   putTokenByRefresh,
 } from "@/services/auth/authServices";
 import { getAllPermissionsForMenuByUserName } from "@/services/permissions/permissionForMenu";
-import { getUserNameByEmail } from "@/services/users/usersServices";
+import { getUserInfoFromToken } from "@/utility/Auth";
 import Colors from "@/utility/Colors";
 import {
   ArrowLeftOutlined,
@@ -16,8 +16,7 @@ import {
 } from "@ant-design/icons";
 import { FloatButton, Image, Menu, MenuProps, Tooltip } from "antd";
 import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -80,10 +79,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     );
   };
   const getMenuByUserName = async (email: string) => {
-    const response = await getUserNameByEmail(email);
-    if (!response) return router.push("/not-permission");
+    const userName = localStorage.getItem("s_username");
     const listmenus = await getAllPermissionsForMenuByUserName(
-      response.userName
+      userName as string
     );
     if (listmenus.items.length === 0) return router.push("/not-permission");
     const tempMenu: any[] = listmenus.items[0].permissions.map((item) => {
@@ -107,14 +105,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         };
       }
     });
-    const token = Cookies.get("s_t") as string;
-    const decodedRole = jwtDecode<{
-      "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
-    }>(token);
-    const role =
-      decodedRole[
-        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-      ];
+    const { role } = getUserInfoFromToken();
     if (role === "admin" || role === "user" || role === "manager") {
       setItemsMenu([
         {
@@ -145,6 +136,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       Cookies.set("s_r", response.refreshToken, {
         expires: expiresRefresh,
       });
+      const { role, userName, family_name } = getUserInfoFromToken();
+      // Chỉ sử dụng localStorage ở phía client
+      if (typeof window !== "undefined") {
+        localStorage.setItem("s_role", role as string);
+        localStorage.setItem("s_username", userName as string);
+        localStorage.setItem("s_family", family_name as string);
+      }
     }
   };
 
@@ -158,6 +156,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       Cookies.remove("s_r");
       await getToken(email);
     }
+  };
+
+  const signOutWithCallback = async () => {
+    ["s_t", "s_r", "m_i", "m_k", "p_s"].forEach((cookie) =>
+      Cookies.remove(cookie)
+    );
+    await signOut({ callbackUrl: "/login" });
   };
 
   useEffect(() => {
@@ -192,6 +197,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
     fetchData();
     loadMenuFromCookies();
+    const userName = localStorage.getItem("s_username");
+    if (userName === null) {
+      signOutWithCallback();
+    }
   }, [session, router]);
 
   return (

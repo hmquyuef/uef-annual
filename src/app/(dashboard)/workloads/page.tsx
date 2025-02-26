@@ -42,7 +42,6 @@ import {
 } from "antd";
 import { SearchProps } from "antd/es/input";
 import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import CountUp from "react-countup";
@@ -227,34 +226,18 @@ const Workloads = () => {
     return () => clearTimeout(timeoutId);
   };
 
-  const getDisplayRole = async (name: string) => {
-    const response = await getRoleByName(name);
+  const getDisplayRole = async () => {
+    const userName = localStorage.getItem("s_username");
+    setUserName(userName as string);
+    const response = await getRoleByName(userName as string);
     setRole(response.items[0]);
   };
 
   useEffect(() => {
     setLoading(true);
     document.title = PageTitles.BM;
-    const token = Cookies.get("s_t");
-    if (token) {
-      const decodedRole = jwtDecode<{
-        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
-      }>(token);
-      const role =
-        decodedRole[
-          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-        ];
-      getDisplayRole(role as string);
-      const decodedToken = jwtDecode(token);
-      if (decodedToken.sub) {
-        setUserName(decodedToken.sub);
-      }
-    }
+    getDisplayRole();
     getDefaultYears();
-    const timeoutId = setTimeout(() => {
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timeoutId);
   }, []);
 
   return (
@@ -407,12 +390,26 @@ const Workloads = () => {
                                 )}
                             </div>
                             <div className="min-h-10">
-                              <span className="text-neutral-400">
-                                Biểu mẫu:{" "}
-                              </span>
-                              <span className="font-medium text-neutral-600 whitespace-wrap text-ellipsis">
-                                {type.name}
-                              </span>
+                              <div>
+                                <span className="text-neutral-400">
+                                  Biểu mẫu:{" "}
+                                </span>
+                                <span className="font-medium text-neutral-600 whitespace-wrap text-ellipsis">
+                                  {type.name}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-neutral-400">
+                                  Cấp quyền:{" "}
+                                </span>
+                                <span className="font-medium text-neutral-600 whitespace-wrap text-ellipsis">
+                                  {type.emails.split(",").length}
+                                </span>
+                                <span className="text-neutral-400">
+                                  {" "}
+                                  cán bộ
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </Card>

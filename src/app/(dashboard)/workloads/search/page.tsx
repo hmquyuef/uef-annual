@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  handleExportForBMAll,
-  handleExportForBMGeneral,
-  handleExportForBMOther,
-} from "@/components/forms/exportExcel/ExportAllDetail";
+import { handleExportForBMGeneral } from "@/components/forms/exportExcel/ExportAllDetail";
 import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
 import {
   DetailUserItem,
@@ -39,8 +35,6 @@ import {
   Table,
   TableColumnsType,
 } from "antd";
-import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
 import { Key, useEffect, useState } from "react";
 
 import {
@@ -304,8 +298,10 @@ const SearchMembers = () => {
             <span className="font-medium">
               {record.determinations.documentNumber}
             </span>
-            <span className="text-[13px]">
-              {convertTimestampToDate(record.determinations.documentDate)}
+            <span className="text-center text-[13px]">
+              {record.determinations.documentDate !== 0
+                ? convertTimestampToDate(record.determinations.documentDate)
+                : ""}
             </span>
           </div>
         );
@@ -406,17 +402,13 @@ const SearchMembers = () => {
   useEffect(() => {
     setLoading(true);
     document.title = PageTitles.SEARCH;
-    const token = Cookies.get("s_t");
-    if (token) {
-      const decodedToken = jwtDecode(token);
-      if (decodedToken.sub) {
-        setUserName(decodedToken.sub);
-      }
-    }
+    const s_username = localStorage.getItem("s_username");
+    setUserName(s_username ?? "");
     Promise.all([getDefaultYears(), getUsersHRM()]);
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       setLoading(false);
     }, 500);
+    return () => clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {

@@ -1,13 +1,24 @@
 "use client";
 
-import PageTitles from "@/utility/Constraints";
+import CustomModal from "@/components/CustomModal";
+import CustomNotification from "@/components/CustomNotification";
+import FormUnit from "@/components/forms/units/formUnit";
+import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
 import {
-  CheckOutlined,
+  deleteUnits,
+  getAllUnits,
+  postUnit,
+  putUnit,
+  UnitsResponse,
+} from "@/services/units/unitsServices";
+import PageTitles from "@/utility/Constraints";
+import Messages from "@/utility/Messages";
+import {
   DeleteOutlined,
   GoldOutlined,
   HomeOutlined,
   PlusOutlined,
-  SettingOutlined,
+  SettingOutlined
 } from "@ant-design/icons";
 import {
   Breadcrumb,
@@ -19,23 +30,8 @@ import {
   Tag,
   Tooltip,
 } from "antd";
-import { Key, useCallback, useEffect, useState } from "react";
-import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
-import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
-import {
-  deleteUnits,
-  getAllUnits,
-  postUnit,
-  putUnit,
-  UnitsResponse,
-} from "@/services/units/unitsServices";
-import { convertTimestampToDate } from "@/utility/Utilities";
 import { TableRowSelection } from "antd/es/table/interface";
-import CustomNotification from "@/components/CustomNotification";
-import CustomModal from "@/components/CustomModal";
-import FormUnit from "@/components/forms/units/formUnit";
-import Messages from "@/utility/Messages";
+import { Key, useCallback, useEffect, useState } from "react";
 
 const Units = () => {
   const [role, setRole] = useState<RoleItem>();
@@ -194,25 +190,18 @@ const Units = () => {
     setNotificationOpen(false);
   };
 
-  const getDisplayRole = async (name: string) => {
-    const response = await getRoleByName(name);
-    setRole(response.items[0]);
+  const getDisplayRole = async () => {
+    if (typeof window !== "undefined") {
+      const s_role = localStorage.getItem("s_role");
+      const response = await getRoleByName(s_role as string);
+      setRole(response.items[0]);
+    }
   };
 
   useEffect(() => {
     document.title = PageTitles.UNITS;
     getListUnits();
-    const token = Cookies.get("s_t");
-    if (token) {
-      const decodedRole = jwtDecode<{
-        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
-      }>(token);
-      const role =
-        decodedRole[
-          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-        ];
-      getDisplayRole(role as string);
-    }
+    getDisplayRole();
   }, []);
   return (
     <div>
@@ -346,7 +335,9 @@ const Units = () => {
           }}
           rowSelection={rowSelection}
           columns={columns}
-          dataSource={units?.items.sort((a: any, b: any) => a.name.localeCompare(b.name))}
+          dataSource={units?.items.sort((a: any, b: any) =>
+            a.name.localeCompare(b.name)
+          )}
           locale={{ emptyText: <Empty description={Messages.NO_DATA}></Empty> }}
           onChange={handleTableChange}
         />

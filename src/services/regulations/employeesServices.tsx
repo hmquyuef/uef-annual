@@ -52,6 +52,17 @@ export async function getAllEmployeesRegulations(
   return response.data;
 }
 
+export async function getExportEmployees(
+  unitCode: string,
+  yearId: string
+): Promise<any> {
+  let url = unitCode
+    ? `api/regulations/employees/export?unitCode=${unitCode}&SchoolYearId=${yearId}&FromDate=0&ToDate=0`
+    : `api/regulations/employees/export?SchoolYearId=${yearId}&FromDate=0&ToDate=0`;
+  const response = await apiClient.get<any>(url);
+  return response.data;
+}
+
 export async function getCheckExistEmployeesRegulations(
   userName: string
 ): Promise<boolean> {

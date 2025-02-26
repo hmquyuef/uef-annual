@@ -3,12 +3,14 @@
 import {
   deleteInvigilators,
   getAllInvigilators,
+  getExportInvigilators,
   ImportInvigilators,
   InvigilatorItem,
   postAddInvigilator,
   putUpdateApprovedInvigilator,
   putUpdateInvigilator,
 } from "@/services/forms/invigilatorsServices";
+import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 import {
   DisplayRoleItem,
   getRoleByName,
@@ -18,7 +20,13 @@ import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
 import { postFiles } from "@/services/uploads/uploadsServices";
 import Colors from "@/utility/Colors";
+import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
+import {
+  convertTimestampToDate,
+  defaultFooterInfo,
+  setCellStyle,
+} from "@/utility/Utilities";
 import {
   ArrowsAltOutlined,
   CheckOutlined,
@@ -42,24 +50,20 @@ import {
   Tag,
   Tooltip,
 } from "antd";
-import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
-import { Key, useCallback, useEffect, useState } from "react";
-
-import PageTitles from "@/utility/Constraints";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
+import saveAs from "file-saver";
 import { AnimatePresence, motion } from "motion/react";
+import Link from "next/link";
+import { Key, useCallback, useEffect, useState } from "react";
+import * as XLSX from "sheetjs-style";
 import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
 import { LoadingSpin } from "../skeletons/LoadingSpin";
 import FormBM14 from "./activity/formBM14";
 import FromUpload from "./activity/formUpload";
 import TemplateForms from "./workloads/TemplateForms";
-import Link from "next/link";
-import { convertTimestampToDate } from "@/utility/Utilities";
-import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 dayjs.locale("vi");
 
 const BM14 = () => {
@@ -191,14 +195,15 @@ const BM14 = () => {
       dataIndex: "proof",
       key: "proof",
       render: (_, record: InvigilatorItem) => {
-        const ngayLap = record.determinations.documentDate;
         return (
           <div className="flex flex-col">
             <span className="text-center font-medium">
               {record.determinations.documentNumber}
             </span>
             <span className="text-center text-[13px]">
-              {convertTimestampToDate(ngayLap)}
+              {record.determinations.documentDate !== 0
+                ? convertTimestampToDate(record.determinations.documentDate)
+                : ""}
             </span>
           </div>
         );
@@ -359,6 +364,272 @@ const BM14 = () => {
     setIsOpen(true);
   };
 
+  const handleExportExcel = async () => {
+    setLoadingUpload(true);
+    const unit = units.find(
+      (unit: any) => unit.idHrm === selectedKeyUnit
+    ) as any;
+    const results = await getExportInvigilators(unit?.code, selectedKey.id);
+    if (results.totalError > 0) {
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Không thể tải tệp báo cáo!",
+        description: `${results.messageError}`,
+      }));
+      setLoadingUpload(false);
+      return;
+    }
+    const defaultInfo = [
+      ["", "", "", "", "", "", "", "", "BM-14"],
+      [
+        "TRƯỜNG ĐẠI HỌC KINH TẾ - TÀI CHÍNH",
+        "",
+        "",
+        "",
+        "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM",
+        "",
+        "",
+      ],
+      [
+        "THÀNH PHỐ HỒ CHÍ MINH",
+        "",
+        "",
+        "",
+        "Độc lập - Tự do - Hạnh phúc",
+        "",
+        "",
+      ],
+      ["(ĐƠN VỊ)", "", "", ""],
+      ["TỔNG HỢP DANH SÁCH"],
+      ["Tham gia công tác coi thi"],
+      [""],
+    ];
+
+    const dataArray = [
+      [
+        "STT",
+        "Mã số CB-GV-NV",
+        "Họ và tên",
+        "Đơn vị",
+        "Tổng số ca coi thi",
+        "Số tiết chuẩn",
+        "Số văn bản, ngày lập",
+        "Số lưu văn bản",
+        "Ghi chú",
+      ],
+      ...results.data.map((item: any) => [
+        item.stt,
+        item.userName,
+        item.fullName,
+        item.unitName ?? "",
+        item.totalSessions,
+        item.standardNumber,
+        item.determinations.documentNumber !== ""
+          ? item.determinations.documentNumber +
+            ", " +
+            convertTimestampToDate(item.determinations.documentDate)
+          : "",
+        item.determinations.internalNumber ?? "",
+        item.note ?? "",
+      ]),
+    ];
+
+    const combinedData = [...defaultInfo, ...dataArray];
+    const combinedFooterData = [...combinedData, ...defaultFooterInfo];
+    const worksheet = XLSX.utils.aoa_to_sheet(combinedFooterData);
+    worksheet["!pageSetup"] = {
+      paperSize: 9,
+      orientation: "landscape",
+      scale: 100,
+      fitToWidth: 1,
+      fitToHeight: 0,
+      fitToPage: true,
+    };
+    worksheet["!margins"] = {
+      left: 0.1,
+      right: 0.1,
+      top: 0.1,
+      bottom: 0.1,
+      header: 0,
+      footer: 0,
+    };
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+
+    worksheet["!rows"] = [];
+    worksheet["!cols"] = [];
+    worksheet["!cols"][0] = { wch: 4 };
+    worksheet["!cols"][1] = { wch: 20 };
+    worksheet["!cols"][2] = { wch: 20 };
+    worksheet["!cols"][6] = { wch: 10 };
+    worksheet["I1"].s = {
+      fill: {
+        fgColor: { rgb: "FFFF00" },
+      },
+      font: {
+        name: "Times New Roman",
+        sz: 11,
+      },
+      alignment: {
+        wrapText: true,
+        vertical: "center",
+        horizontal: "center",
+      },
+      border: {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+        bottom: { style: "thin" },
+      },
+    };
+    setCellStyle(worksheet, "A2", 11, true, "center", "center", false, false);
+    setCellStyle(worksheet, "E2", 11, true, "center", "center", false, false);
+    setCellStyle(worksheet, "A3", 11, true, "center", "center", false, false);
+    setCellStyle(worksheet, "E3", 11, true, "center", "center", false, false);
+    setCellStyle(worksheet, "A4", 11, true, "center", "center", false, false);
+    setCellStyle(worksheet, "A5", 16, true, "center", "center", false, false);
+    setCellStyle(worksheet, "A6", 11, true, "center", "center", true, false);
+
+    // Merge các ô từ A6 đến M6
+    worksheet["!merges"] = [];
+    const tempMerge = [];
+    const range = XLSX.utils.decode_range(worksheet["!ref"]!);
+    for (let row = 7; row <= range.e.r - defaultFooterInfo.length; row++) {
+      for (let col = range.s.c; col <= range.e.c; col++) {
+        const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+        if (row === 7) {
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            true,
+            "center",
+            "center",
+            true,
+            true
+          );
+          continue;
+        }
+        if (col === 1 || col === 2 || col === 8) {
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            false,
+            "left",
+            "center",
+            true,
+            true
+          );
+        } else {
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            false,
+            "center",
+            "center",
+            true,
+            true
+          );
+        }
+      }
+    }
+
+    for (
+      let row = range.e.r - defaultFooterInfo.length + 1;
+      row <= range.e.r;
+      row++
+    ) {
+      if (row < range.e.r)
+        tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 8 } });
+      else {
+        tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 3 } });
+      }
+
+      for (let col = range.s.c; col <= range.e.c; col++) {
+        const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+        setCellStyle(
+          worksheet,
+          cellRef,
+          11,
+          false,
+          "left",
+          "center",
+          true,
+          false
+        );
+        if (row === range.e.r - 6)
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            true,
+            "left",
+            "center",
+            true,
+            false
+          );
+        if (row === range.e.r)
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            true,
+            "center",
+            "center",
+            true,
+            false
+          );
+      }
+    }
+
+    const defaultMerges = [
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
+      { s: { r: 1, c: 4 }, e: { r: 1, c: 8 } },
+      { s: { r: 2, c: 0 }, e: { r: 2, c: 2 } },
+      { s: { r: 2, c: 4 }, e: { r: 2, c: 8 } },
+      { s: { r: 3, c: 0 }, e: { r: 3, c: 2 } },
+      { s: { r: 4, c: 0 }, e: { r: 4, c: 8 } },
+      { s: { r: 5, c: 0 }, e: { r: 5, c: 8 } },
+    ];
+
+    worksheet["!merges"].push(...defaultMerges, ...tempMerge);
+    // Xuất file Excel
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const blob = new Blob([excelBuffer], {
+      type: "application/octet-stream",
+    });
+    const now = new Date();
+    const formattedDate = `${String(now.getDate()).padStart(2, "0")}-${String(
+      now.getMonth() + 1
+    ).padStart(2, "0")}-${now.getFullYear()}-${String(now.getHours()).padStart(
+      2,
+      "0"
+    )}-${String(now.getMinutes()).padStart(2, "0")}`;
+
+    let filename = unit?.code
+      ? "BM14-" + unit?.code + "-" + formattedDate + ".xlsx"
+      : "BM14-" + formattedDate + ".xlsx";
+    saveAs(blob, filename);
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: true,
+      status: "success",
+      message: "Thông báo",
+      description: `Tải xuống tệp ${filename} thành công!`,
+    }));
+    const timeoutId = setTimeout(() => {
+      setLoadingUpload(false);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  };
+
   const handleApproved = async (isRejected: boolean) => {
     const formData = {
       ids: selectedRowKeys.length > 0 ? selectedRowKeys : [selectedItem?.id],
@@ -406,10 +677,6 @@ const BM14 = () => {
         description: Messages.ERROR,
       }));
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   };
 
   const handleSubmit = async (formData: Partial<any>) => {
@@ -512,48 +779,36 @@ const BM14 = () => {
     return () => clearTimeout(timeoutId);
   };
 
-  const getDisplayRole = async (name: string) => {
-    const response = await getRoleByName(name);
-    setRole(response.items[0]);
+  const getDisplayRole = async () => {
+    if (typeof window !== "undefined") {
+      const s_username = localStorage.getItem("s_username");
+      setUserName(s_username as string);
+      const s_role = localStorage.getItem("s_role");
+      const s_family = localStorage.getItem("s_family");
+      if (s_family && s_role === "secretary") {
+        setSelectedKeyUnit(s_family.toLowerCase());
+      }
+      const response = await getRoleByName(s_role as string);
+      setRole(response.items[0]);
+    }
   };
 
   useEffect(() => {
     setLoading(true);
     document.title = PageTitles.BM14;
-
     Promise.all([getDefaultYears(), getListUnits()]);
-    const token = Cookies.get("s_t");
-    if (token) {
-      const decodedRole = jwtDecode<{
-        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
-      }>(token);
-      const role =
-        decodedRole[
-          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-        ];
-      getDisplayRole(role as string);
-      const decodedUserName = jwtDecode(token);
-      if (decodedUserName.sub) {
-        setUserName(decodedUserName.sub);
-      }
-      if (role === "secretary") {
-        const decodedUnitId = jwtDecode<{
-          family_name: string;
-        }>(token);
-        const unitId = decodedUnitId.family_name;
-        if (unitId && unitId !== selectedKeyUnit) {
-          setSelectedKeyUnit(unitId.toLowerCase());
-        }
-      }
-    }
-    setLoading(false);
+    getDisplayRole();
     onSearch("");
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+    }, 500);
+    return () => clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
     if (
-      invigilators.length > 0 &&
-      units.length > 0 &&
+      invigilators.length &&
+      units.length &&
       (selectedKeyUnit || startDate || endDate)
     ) {
       onSearch("");
@@ -561,9 +816,11 @@ const BM14 = () => {
   }, [invigilators, units, selectedKeyUnit, startDate, endDate]);
 
   useEffect(() => {
-    setTimeout(() => {
-      setFormNotification((prev) => ({ ...prev, isOpen: false }));
-    }, 100);
+    const timer = setTimeout(
+      () => setFormNotification((prev) => ({ ...prev, isOpen: false })),
+      100
+    );
+    return () => clearTimeout(timer);
   }, [formNotification.isOpen]);
 
   return (
@@ -745,8 +1002,7 @@ const BM14 = () => {
               <Tooltip placement="top" title="Xuất dữ liệu Excel" arrow={true}>
                 <Button
                   icon={<FileExcelOutlined />}
-                  onClick={() => {}}
-                  // onClick={handleExportExcel}
+                  onClick={handleExportExcel}
                   iconPosition="start"
                   style={{
                     backgroundColor: Colors.GREEN,

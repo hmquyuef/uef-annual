@@ -20,7 +20,7 @@ import {
   DeleteOutlined,
   FileDoneOutlined,
   HomeOutlined,
-  PlusOutlined
+  PlusOutlined,
 } from "@ant-design/icons";
 import {
   Breadcrumb,
@@ -32,11 +32,10 @@ import {
   Table,
   TableColumnsType,
   Tag,
-  Tooltip
+  Tooltip,
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
 import { Key, useCallback, useEffect, useState } from "react";
 type SearchProps = GetProps<typeof Input.Search>;
 
@@ -195,9 +194,12 @@ const WorkloadGroups = () => {
     );
   };
 
-  const getDisplayRole = async (name: string) => {
-    const response = await getRoleByName(name);
-    setRole(response.items[0]);
+  const getDisplayRole = async () => {
+    if (typeof window !== "undefined") {
+      const s_role = localStorage.getItem("s_role");
+      const response = await getRoleByName(s_role as string);
+      setRole(response.items[0]);
+    }
   };
 
   useEffect(() => {
@@ -212,19 +214,12 @@ const WorkloadGroups = () => {
       });
     }
     getListWorkloadGroup();
+    getDisplayRole();
 
-    const token = Cookies.get("s_t");
-    if (token) {
-      const decodedRole = jwtDecode<{
-        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
-      }>(token);
-      const role =
-        decodedRole[
-          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-        ];
-      getDisplayRole(role as string);
-    }
-    setLoading(false);
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+    }, 500);
+    return () => clearTimeout(timeoutId);
   }, []);
   return (
     <div>

@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 
 const useWebSocketPing = (url: string, interval = 5000, timeout = 5000) => {
@@ -8,68 +7,63 @@ const useWebSocketPing = (url: string, interval = 5000, timeout = 5000) => {
     const pingTimer = useRef<NodeJS.Timeout | null>(null);
     const responseTimer = useRef<NodeJS.Timeout | null>(null);
 
-    useEffect(() => {
-        const connectWebSocket = () => {
-            if (socketRef.current) {
-                socketRef.current.close();
-            }
-            socketRef.current = new WebSocket(url);
+    const updateStatus = (lat: number) => {
+        if (lat < 500) setStatus("fast");
+        else if (lat < 10000) setStatus("slow");
+        else setStatus("disconnected");
+    };
 
-            socketRef.current.onopen = () => {
-                console.log("✅ WebSocket connected!");
-                pingTimer.current = setInterval(() => {
-                    if (socketRef.current?.readyState === WebSocket.OPEN) {
-                        const start = Date.now();
-                        socketRef.current.send("ping");
-                        responseTimer.current = setTimeout(() => {
-                            setStatus("slow");
-                        }, timeout);
-                        socketRef.current.onmessage = (event) => {
-                            const message = event.data;
-                            if (message === "true") {
-                                const latency = Date.now() - start;
-                                setLatency(latency);
+    const sendPing = () => {
+        if (socketRef.current?.readyState === WebSocket.OPEN) {
+            const start = Date.now();
+            socketRef.current.send("ping");
+            responseTimer.current = setTimeout(() => setStatus("slow"), timeout);
 
-                                if (latency < 500) {
-                                    setStatus("fast");
-                                } else if (latency >= 500 && latency < 10000) {
-                                    setStatus("slow");
-                                } else {
-                                    setStatus("disconnected");
-                                }
-                                clearTimeout(responseTimer.current!);
-                            }
-                        };
-                    }
-                }, interval);
-            };
-            socketRef.current.onclose = () => {
-                console.log("❌ WebSocket disconnected!");
-                setStatus("disconnected");
-                setLatency(null);
-                if (pingTimer.current) {
-                    clearInterval(pingTimer.current);
+            socketRef.current.onmessage = (event) => {
+                if (event.data === "true") {
+                    const lat = Date.now() - start;
+                    setLatency(lat);
+                    updateStatus(lat);
+                    clearTimeout(responseTimer.current!);
                 }
-                setTimeout(connectWebSocket, 5000);
             };
-            socketRef.current.onerror = (error) => {
-                console.error("⚠ WebSocket error:", error);
-                setStatus("disconnected");
-            };
+        }
+    };
+
+    const cleanup = () => {
+        if (socketRef.current) socketRef.current.close();
+        if (pingTimer.current) clearInterval(pingTimer.current);
+        if (responseTimer.current) clearTimeout(responseTimer.current);
+    };
+
+    const connectWebSocket = () => {
+        cleanup();
+        socketRef.current = new WebSocket(url);
+
+        socketRef.current.onopen = () => {
+            console.log("✅ WebSocket connected!");
+            pingTimer.current = setInterval(sendPing, interval);
         };
+
+        socketRef.current.onclose = () => {
+            console.log("❌ WebSocket disconnected!");
+            setStatus("disconnected");
+            setLatency(null);
+            cleanup();
+            setTimeout(connectWebSocket, 5000); // Tự động reconnect
+        };
+
+        socketRef.current.onerror = (error) => {
+            console.error("⚠ WebSocket error:", error);
+            setStatus("disconnected");
+        };
+    };
+
+    useEffect(() => {
         connectWebSocket();
-        return () => {
-            if (socketRef.current) {
-                socketRef.current.close();
-            }
-            if (pingTimer.current) {
-                clearInterval(pingTimer.current);
-            }
-            if (responseTimer.current) {
-                clearTimeout(responseTimer.current);
-            }
-        };
+        return cleanup; // Cleanup khi unmount hoặc dependency thay đổi
     }, [url, interval, timeout]);
+
     return { latency, status };
 };
 

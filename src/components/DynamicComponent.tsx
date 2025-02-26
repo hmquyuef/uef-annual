@@ -1,3 +1,5 @@
+"use client";
+
 import BM01 from "./forms/bm01";
 import BM02 from "./forms/bm02";
 import BM03 from "./forms/bm03";
@@ -14,7 +16,15 @@ import BM14 from "./forms/bm14";
 import BM15 from "./forms/bm15";
 import NotFound from "./NotFound";
 
-const DynamicComponent = ({ params }: { params: { shortName: string } }) => {
+interface DynamicComponentProps {
+  params: {
+    shortName: string;
+  };
+}
+
+const DynamicComponent = ({ params }: DynamicComponentProps) => {
+  const { shortName } = params;
+
   const componentsMap: Record<string, JSX.Element> = {
     bm01: <BM01 />,
     bm02: <BM02 />,
@@ -31,9 +41,7 @@ const DynamicComponent = ({ params }: { params: { shortName: string } }) => {
     bm14: <BM14 />,
     bm15: <BM15 />,
   };
-  const component = componentsMap[params.shortName.toLowerCase()] || (
-    <NotFound />
-  );
+  const component = componentsMap[shortName.toLowerCase()] || <NotFound />;
   return <>{component}</>;
 };
 

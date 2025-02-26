@@ -52,8 +52,6 @@ import FromUpload from "./activity/formUpload";
 import TemplateForms from "./workloads/TemplateForms";
 
 import saveAs from "file-saver";
-import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
 import * as XLSX from "sheetjs-style";
 
 import Colors from "@/utility/Colors";
@@ -150,12 +148,13 @@ const BM09 = () => {
       dataIndex: "documentNumber",
       key: "documentNumber",
       render: (documentNumber: string, record: YouthUnionItem) => {
-        const ngayLap = record.determinations.documentDate;
         return (
           <div className="flex flex-col">
             <span className="text-center font-medium">{documentNumber}</span>
             <span className="text-center text-[13px]">
-              {convertTimestampToDate(ngayLap)}
+              {record.determinations.documentDate !== 0
+                ? convertTimestampToDate(record.determinations.documentDate)
+                : ""}
             </span>
           </div>
         );
@@ -479,187 +478,163 @@ const BM09 = () => {
   };
 
   const handleExportExcel = async () => {
+    setLoadingUpload(true);
     const results = await getExportYouthUnion(selectedKey.id, null);
-    if (results) {
-      const defaultInfo = [
-        ["", "", "", "", "", "", "", "", "", "", "", "BM-09"],
-        [
-          "TRƯỜNG ĐẠI HỌC KINH TẾ - TÀI CHÍNH",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM",
-        ],
-        [
-          "THÀNH PHỐ HỒ CHÍ MINH",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "Độc lập - Tự do - Hạnh phúc",
-        ],
-        ["(ĐƠN VỊ)", "", "", ""],
-        ["TỔNG HỢP DANH SÁCH"],
-        ["Tham gia các hoạt động do Đoàn Thanh Niên phụ trách"],
-        [""],
-      ];
+    if (results.totalError > 0) {
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Không thể tải tệp báo cáo!",
+        description: `${results.messageError}`,
+      }));
+      setLoadingUpload(false);
+      return;
+    }
+    const defaultInfo = [
+      ["", "", "", "", "", "", "", "", "", "", "", "BM-09"],
+      [
+        "TRƯỜNG ĐẠI HỌC KINH TẾ - TÀI CHÍNH",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM",
+      ],
+      [
+        "THÀNH PHỐ HỒ CHÍ MINH",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "Độc lập - Tự do - Hạnh phúc",
+      ],
+      ["(ĐƠN VỊ)", "", "", ""],
+      ["TỔNG HỢP DANH SÁCH"],
+      ["Tham gia các hoạt động do Đoàn Thanh Niên phụ trách"],
+      [""],
+    ];
 
-      const dataArray = [
-        [
-          "STT",
-          "Mã số CB-GV-NV",
-          "Họ và tên",
-          "Đơn vị",
-          "Nội dung hoạt động",
-          "",
-          "Địa điểm tổ chức",
-          "",
-          "Nhà tài trợ",
-          "Số văn bản, ngày lập",
-          "Thời gian hoạt động",
-          "Ghi chú",
-        ],
-        ...results.data.map((item: any, index: number) => [
-          index + 1,
-          item.userName,
-          item.fullName,
-          item.unitName ?? "",
-          item.contents ?? "",
-          "",
-          item.eventVenue ?? "",
-          "",
-          item.sponsor ?? "",
-          item.determinations.documentNumber +
-            ", " +
-            convertTimestampToDate(item.determinations.documentDate),
-          item.determinations.fromDate !== 0 && item.determinations.toDate !== 0
-            ? convertTimestampToDate(item.determinations.fromDate) +
-              " - " +
-              convertTimestampToDate(item.determinations.toDate)
-            : "",
-          item.note ?? "",
-        ]),
-      ];
+    const dataArray = [
+      [
+        "STT",
+        "Mã số CB-GV-NV",
+        "Họ và tên",
+        "Đơn vị",
+        "Nội dung hoạt động",
+        "",
+        "Địa điểm tổ chức",
+        "",
+        "Nhà tài trợ",
+        "Số văn bản, ngày lập",
+        "Thời gian hoạt động",
+        "Ghi chú",
+      ],
+      ...results.data.map((item: any, index: number) => [
+        index + 1,
+        item.userName,
+        item.fullName,
+        item.unitName ?? "",
+        item.contents ?? "",
+        "",
+        item.eventVenue ?? "",
+        "",
+        item.sponsor ?? "",
+        item.determinations.documentNumber +
+          ", " +
+          convertTimestampToDate(item.determinations.documentDate),
+        item.determinations.fromDate !== 0 && item.determinations.toDate !== 0
+          ? convertTimestampToDate(item.determinations.fromDate) +
+            " - " +
+            convertTimestampToDate(item.determinations.toDate)
+          : "",
+        item.note ?? "",
+      ]),
+    ];
 
-      const combinedData = [...defaultInfo, ...dataArray];
-      const combinedFooterData = [...combinedData, ...defaultFooterInfo];
-      const worksheet = XLSX.utils.aoa_to_sheet(combinedFooterData);
-      worksheet["!pageSetup"] = {
-        paperSize: 9,
-        orientation: "landscape",
-        scale: 100,
-        fitToWidth: 1,
-        fitToHeight: 0,
-        fitToPage: true,
-      };
-      worksheet["!margins"] = {
-        left: 0.1,
-        right: 0.1,
-        top: 0.1,
-        bottom: 0.1,
-        header: 0,
-        footer: 0,
-      };
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+    const combinedData = [...defaultInfo, ...dataArray];
+    const combinedFooterData = [...combinedData, ...defaultFooterInfo];
+    const worksheet = XLSX.utils.aoa_to_sheet(combinedFooterData);
+    worksheet["!pageSetup"] = {
+      paperSize: 9,
+      orientation: "landscape",
+      scale: 100,
+      fitToWidth: 1,
+      fitToHeight: 0,
+      fitToPage: true,
+    };
+    worksheet["!margins"] = {
+      left: 0.1,
+      right: 0.1,
+      top: 0.1,
+      bottom: 0.1,
+      header: 0,
+      footer: 0,
+    };
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
 
-      worksheet["!rows"] = [];
-      worksheet["!cols"] = [];
-      worksheet["!cols"][0] = { wch: 4 };
-      worksheet["!cols"][1] = { wch: 20 };
-      worksheet["!cols"][2] = { wch: 20 };
-      worksheet["!cols"][6] = { wch: 15 };
-      worksheet["!cols"][9] = { wch: 10 };
-      worksheet["!cols"][10] = { wch: 10 };
-      worksheet["L1"].s = {
-        fill: {
-          fgColor: { rgb: "FFFF00" },
-        },
-        font: {
-          name: "Times New Roman",
-          sz: 11,
-        },
-        alignment: {
-          wrapText: true,
-          vertical: "center",
-          horizontal: "center",
-        },
-        border: {
-          top: { style: "thin" },
-          left: { style: "thin" },
-          right: { style: "thin" },
-          bottom: { style: "thin" },
-        },
-      };
-      setCellStyle(worksheet, "A2", 11, true, "center", "center", false, false);
-      setCellStyle(worksheet, "G2", 11, true, "center", "center", false, false);
-      setCellStyle(worksheet, "A3", 11, true, "center", "center", false, false);
-      setCellStyle(worksheet, "G3", 11, true, "center", "center", false, false);
-      setCellStyle(worksheet, "A4", 11, true, "center", "center", false, false);
-      setCellStyle(worksheet, "A5", 16, true, "center", "center", false, false);
-      setCellStyle(worksheet, "A6", 11, true, "center", "center", true, false);
+    worksheet["!rows"] = [];
+    worksheet["!cols"] = [];
+    worksheet["!cols"][0] = { wch: 4 };
+    worksheet["!cols"][1] = { wch: 20 };
+    worksheet["!cols"][2] = { wch: 20 };
+    worksheet["!cols"][6] = { wch: 15 };
+    worksheet["!cols"][9] = { wch: 10 };
+    worksheet["!cols"][10] = { wch: 10 };
+    worksheet["L1"].s = {
+      fill: {
+        fgColor: { rgb: "FFFF00" },
+      },
+      font: {
+        name: "Times New Roman",
+        sz: 11,
+      },
+      alignment: {
+        wrapText: true,
+        vertical: "center",
+        horizontal: "center",
+      },
+      border: {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+        bottom: { style: "thin" },
+      },
+    };
+    setCellStyle(worksheet, "A2", 11, true, "center", "center", false, false);
+    setCellStyle(worksheet, "G2", 11, true, "center", "center", false, false);
+    setCellStyle(worksheet, "A3", 11, true, "center", "center", false, false);
+    setCellStyle(worksheet, "G3", 11, true, "center", "center", false, false);
+    setCellStyle(worksheet, "A4", 11, true, "center", "center", false, false);
+    setCellStyle(worksheet, "A5", 16, true, "center", "center", false, false);
+    setCellStyle(worksheet, "A6", 11, true, "center", "center", true, false);
 
-      // Merge các ô từ A6 đến M6
-      worksheet["!merges"] = [];
-      const tempMerge = [];
-      const range = XLSX.utils.decode_range(worksheet["!ref"]!);
-      for (let row = 7; row <= combinedData.length - 1; row++) {
-        tempMerge.push({ s: { r: row, c: 4 }, e: { r: row, c: 5 } });
-        tempMerge.push({ s: { r: row, c: 6 }, e: { r: row, c: 7 } });
-        for (let col = range.s.c; col <= range.e.c; col++) {
-          const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-          if (row === 7) {
-            setCellStyle(
-              worksheet,
-              cellRef,
-              11,
-              true,
-              "center",
-              "center",
-              true,
-              true
-            );
-            continue;
-          }
-          if (col === 1 || col === 2 || col === 11) {
-            setCellStyle(
-              worksheet,
-              cellRef,
-              11,
-              false,
-              "left",
-              "center",
-              true,
-              true
-            );
-          } else {
-            setCellStyle(
-              worksheet,
-              cellRef,
-              11,
-              false,
-              "center",
-              "center",
-              true,
-              true
-            );
-          }
+    // Merge các ô từ A6 đến M6
+    worksheet["!merges"] = [];
+    const tempMerge = [];
+    const range = XLSX.utils.decode_range(worksheet["!ref"]!);
+    for (let row = 7; row <= combinedData.length - 1; row++) {
+      tempMerge.push({ s: { r: row, c: 4 }, e: { r: row, c: 5 } });
+      tempMerge.push({ s: { r: row, c: 6 }, e: { r: row, c: 7 } });
+      for (let col = range.s.c; col <= range.e.c; col++) {
+        const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+        if (row === 7) {
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            true,
+            "center",
+            "center",
+            true,
+            true
+          );
+          continue;
         }
-      }
-
-      for (let row = combinedData.length + 1; row <= range.e.r; row++) {
-        if (row < range.e.r)
-          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 9 } });
-        else {
-          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 3 } });
-          tempMerge.push({ s: { r: row, c: 8 }, e: { r: row, c: 9 } });
-        }
-
-        for (let col = range.s.c; col <= range.e.c; col++) {
-          const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+        if (col === 1 || col === 2 || col === 11) {
           setCellStyle(
             worksheet,
             cellRef,
@@ -668,61 +643,107 @@ const BM09 = () => {
             "left",
             "center",
             true,
-            false
+            true
           );
-          if (row === range.e.r - 6)
-            setCellStyle(
-              worksheet,
-              cellRef,
-              11,
-              true,
-              "left",
-              "center",
-              true,
-              false
-            );
-          if (row === range.e.r)
-            setCellStyle(
-              worksheet,
-              cellRef,
-              11,
-              true,
-              "center",
-              "center",
-              true,
-              false
-            );
+        } else {
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            false,
+            "center",
+            "center",
+            true,
+            true
+          );
         }
       }
-
-      const defaultMerges = [
-        { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } },
-        { s: { r: 1, c: 6 }, e: { r: 1, c: 10 } },
-        { s: { r: 2, c: 0 }, e: { r: 2, c: 3 } },
-        { s: { r: 2, c: 6 }, e: { r: 2, c: 10 } },
-        { s: { r: 3, c: 0 }, e: { r: 3, c: 3 } },
-        { s: { r: 4, c: 0 }, e: { r: 4, c: 10 } },
-        { s: { r: 5, c: 0 }, e: { r: 5, c: 10 } },
-      ];
-
-      worksheet["!merges"].push(...defaultMerges, ...tempMerge);
-      // Xuất file Excel
-      const excelBuffer = XLSX.write(workbook, {
-        bookType: "xlsx",
-        type: "array",
-      });
-      const blob = new Blob([excelBuffer], {
-        type: "application/octet-stream",
-      });
-      const now = new Date();
-      const formattedDate = `${String(now.getDate()).padStart(2, "0")}-${String(
-        now.getMonth() + 1
-      ).padStart(2, "0")}-${now.getFullYear()}-${String(
-        now.getHours()
-      ).padStart(2, "0")}-${String(now.getMinutes()).padStart(2, "0")}`;
-      let filename = "BM09-" + formattedDate + ".xlsx";
-      saveAs(blob, filename);
     }
+
+    for (let row = combinedData.length + 1; row <= range.e.r; row++) {
+      if (row < range.e.r)
+        tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 9 } });
+      else {
+        tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 3 } });
+        tempMerge.push({ s: { r: row, c: 8 }, e: { r: row, c: 9 } });
+      }
+
+      for (let col = range.s.c; col <= range.e.c; col++) {
+        const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+        setCellStyle(
+          worksheet,
+          cellRef,
+          11,
+          false,
+          "left",
+          "center",
+          true,
+          false
+        );
+        if (row === range.e.r - 6)
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            true,
+            "left",
+            "center",
+            true,
+            false
+          );
+        if (row === range.e.r)
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            true,
+            "center",
+            "center",
+            true,
+            false
+          );
+      }
+    }
+
+    const defaultMerges = [
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } },
+      { s: { r: 1, c: 6 }, e: { r: 1, c: 10 } },
+      { s: { r: 2, c: 0 }, e: { r: 2, c: 3 } },
+      { s: { r: 2, c: 6 }, e: { r: 2, c: 10 } },
+      { s: { r: 3, c: 0 }, e: { r: 3, c: 3 } },
+      { s: { r: 4, c: 0 }, e: { r: 4, c: 10 } },
+      { s: { r: 5, c: 0 }, e: { r: 5, c: 10 } },
+    ];
+
+    worksheet["!merges"].push(...defaultMerges, ...tempMerge);
+    // Xuất file Excel
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const blob = new Blob([excelBuffer], {
+      type: "application/octet-stream",
+    });
+    const now = new Date();
+    const formattedDate = `${String(now.getDate()).padStart(2, "0")}-${String(
+      now.getMonth() + 1
+    ).padStart(2, "0")}-${now.getFullYear()}-${String(now.getHours()).padStart(
+      2,
+      "0"
+    )}-${String(now.getMinutes()).padStart(2, "0")}`;
+    let filename = "BM09-" + formattedDate + ".xlsx";
+    saveAs(blob, filename);
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: true,
+      status: "success",
+      message: "Thông báo",
+      description: `Tải xuống tệp ${filename} thành công!`,
+    }));
+    const timeoutId = setTimeout(() => {
+      setLoadingUpload(false);
+    }, 500);
+    return () => clearTimeout(timeoutId);
   };
 
   const handleChangeYear = async (value: any) => {
@@ -738,42 +759,40 @@ const BM09 = () => {
     return () => clearTimeout(timeoutId);
   };
 
-  const getDisplayRole = async (name: string) => {
-    const response = await getRoleByName(name);
-    setRole(response.items[0]);
+  const getDisplayRole = async () => {
+    if (typeof window !== "undefined") {
+      const s_role = localStorage.getItem("s_role");
+      const response = await getRoleByName(s_role as string);
+      setRole(response.items[0]);
+    }
   };
 
   useEffect(() => {
     setLoading(true);
     document.title = PageTitles.BM09;
-
     getDefaultYears();
-    const token = Cookies.get("s_t");
-    if (token) {
-      const decodedRole = jwtDecode<{
-        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
-      }>(token);
-      const role =
-        decodedRole[
-          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-        ];
-      getDisplayRole(role as string);
-    }
-    setLoading(false);
+    getDisplayRole();
     onSearch("");
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+    }, 500);
+    return () => clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
-    setTimeout(() => {
-      setFormNotification((prev) => ({ ...prev, isOpen: false }));
-    }, 100);
-  }, [formNotification.isOpen]);
-
-  useEffect(() => {
-    if (youthUnions.length > 0 && (startDate || endDate)) {
+    if (youthUnions.length && (startDate || endDate)) {
       onSearch("");
     }
   }, [youthUnions, startDate, endDate]);
+
+  useEffect(() => {
+    const timer = setTimeout(
+      () => setFormNotification((prev) => ({ ...prev, isOpen: false })),
+      100
+    );
+    return () => clearTimeout(timer);
+  }, [formNotification.isOpen]);
+
   return (
     <div>
       <div className="grid grid-cols-3 mb-3">

@@ -33,8 +33,6 @@ import {
   Tooltip,
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
-import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
 import { Key, useCallback, useEffect, useState } from "react";
 
 const SchoolYear = () => {
@@ -182,10 +180,6 @@ const SchoolYear = () => {
     setSchoolYears(response);
     setNotificationOpen(false);
   };
-  const getDisplayRole = async (name: string) => {
-    const response = await getRoleByName(name);
-    setRole(response.items[0]);
-  };
 
   const handleSubmit = async (formData: Partial<any>) => {
     try {
@@ -234,20 +228,18 @@ const SchoolYear = () => {
     }
   }, [selectedRowKeys]);
 
+  const getDisplayRole = async () => {
+    if (typeof window !== "undefined") {
+      const s_role = localStorage.getItem("s_role");
+      const response = await getRoleByName(s_role as string);
+      setRole(response.items[0]);
+    }
+  };
+
   useEffect(() => {
     document.title = PageTitles.SCHOOL_YEARS;
     getSchoolYears();
-    const token = Cookies.get("s_t");
-    if (token) {
-      const decodedRole = jwtDecode<{
-        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
-      }>(token);
-      const role =
-        decodedRole[
-          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-        ];
-      getDisplayRole(role as string);
-    }
+    getDisplayRole();
   }, []);
   return (
     <div>
@@ -329,7 +321,11 @@ const SchoolYear = () => {
         <CustomModal
           isOpen={isOpen}
           width={"25vw"}
-          title={mode === "edit" ? "Cập nhật thời gian năm học" : "Thêm mới thời gian năm học"}
+          title={
+            mode === "edit"
+              ? "Cập nhật thời gian năm học"
+              : "Thêm mới thời gian năm học"
+          }
           role={role || undefined}
           onOk={() => {
             const formElement = document.querySelector("form");

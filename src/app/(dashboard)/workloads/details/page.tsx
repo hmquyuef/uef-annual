@@ -23,8 +23,6 @@ import {
   Table,
   TableColumnsType,
 } from "antd";
-import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
 import { useEffect, useState } from "react";
 
 import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
@@ -349,8 +347,10 @@ const WorkloadDetails = () => {
             <span className="font-medium">
               {record.determinations.documentNumber}
             </span>
-            <span className="text-[13px]">
-              {convertTimestampToDate(record.determinations.documentDate)}
+            <span className="text-center text-[13px]">
+              {record.determinations.documentDate !== 0
+                ? convertTimestampToDate(record.determinations.documentDate)
+                : ""}
             </span>
           </div>
         );
@@ -424,17 +424,13 @@ const WorkloadDetails = () => {
   useEffect(() => {
     setLoading(true);
     document.title = PageTitles.SUMMARY_ACTIVITIES;
-    const token = Cookies.get("s_t");
-    if (token) {
-      const decodedToken = jwtDecode(token);
-      if (decodedToken.sub) {
-        setUserName(decodedToken.sub);
-      }
-    }
+    const s_username = localStorage.getItem("s_username");
+    setUserName(s_username as string);
     getDefaultYears();
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       setLoading(false);
     }, 500);
+    return () => clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {

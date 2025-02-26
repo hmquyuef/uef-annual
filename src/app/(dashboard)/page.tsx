@@ -159,8 +159,9 @@ const Home = () => {
   };
 
   const getHumanChart = async (yearId: string) => {
-    const response = await getDataHuman(yearId);
-    setDataHuman(response.items);
+    // const response = await getDataHuman(yearId);
+    // setDataHuman(response.items);
+    setDataHuman([]);
   };
 
   const handleChangeYear = (value: any) => {

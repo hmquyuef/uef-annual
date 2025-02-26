@@ -27,13 +27,24 @@ export async function getAllInvigilators(
   return response.data;
 }
 
+export async function getExportInvigilators(
+  unitCode: string,
+  yearId: string
+): Promise<any> {
+  let url = unitCode
+    ? `api/invigilators/export?unitCode=${unitCode}&SchoolYearId=${yearId}&FromDate=0&ToDate=0`
+    : `api/invigilators/export?SchoolYearId=${yearId}&FromDate=0&ToDate=0`;
+  const response = await apiClient.get<any>(url);
+  return response.data;
+}
+
 export async function getCheckExistInvigilator(
-    userName: string
-  ): Promise<boolean> {
-    let url = `api/invigilators/checkexist?userName=${userName}`;
-    const response = await apiClient.get<boolean>(url);
-    return response.data;
-  }
+  userName: string
+): Promise<boolean> {
+  let url = `api/invigilators/checkexist?userName=${userName}`;
+  const response = await apiClient.get<boolean>(url);
+  return response.data;
+}
 
 export async function getExportInvigilator(
   unitCode: string,

@@ -31,10 +31,19 @@ export interface LecturerRegulationsResponse {
 export async function getAllLecturerRegulations(
   yearId: string
 ): Promise<LecturerRegulationsResponse> {
-  let url = yearId
-    ? `api/regulations/lecturers?Years=${yearId}`
-    : "api/regulations/lecturerss";
+  let url = `api/regulations/lecturers?Years=${yearId}`;
   const response = await apiClient.get<LecturerRegulationsResponse>(url);
+  return response.data;
+}
+
+export async function getExportLecturers(
+  unitCode: string,
+  yearId: string
+): Promise<any> {
+  let url = unitCode
+    ? `api/regulations/lecturers/export?unitCode=${unitCode}&SchoolYearId=${yearId}&FromDate=0&ToDate=0`
+    : `api/regulations/lecturers/export?SchoolYearId=${yearId}&FromDate=0&ToDate=0`;
+  const response = await apiClient.get<any>(url);
   return response.data;
 }
 

@@ -47,7 +47,7 @@ const WebSocketPing: FC<WebSocketPingProps> = (props) => {
     setTimeout(() => {
       setFormNotification((prev) => ({ ...prev, isOpen: false }));
     }, 200);
-  }, [status, formNotification.isOpen]);
+  }, [status, latency, formNotification.isOpen]);
 
   return (
     <div
@@ -84,11 +84,11 @@ const WebSocketPing: FC<WebSocketPingProps> = (props) => {
           {isOpen && (
             <>
               {status === "fast" ? (
-                <span className="text-green-500">Tốt</span>
+                <span className="text-green-500 text-sm">Tốt</span>
               ) : status === "slow" ? (
-                <span className="text-orange-500">Trung bình</span>
+                <span className="text-orange-500 text-sm">Trung bình</span>
               ) : (
-                <span className="text-red-500">Yếu</span>
+                <span className="text-red-500 text-sm">Yếu</span>
               )}
             </>
           )}

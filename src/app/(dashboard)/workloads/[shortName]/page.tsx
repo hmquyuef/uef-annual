@@ -3,7 +3,7 @@
 import DynamicComponent from "@/components/DynamicComponent";
 import {
   getWorkloadTypesByHref,
-  WorkloadTypeItem
+  WorkloadTypeItem,
 } from "@/services/workloads/typesServices";
 import { HomeOutlined, ProfileOutlined } from "@ant-design/icons";
 import { Breadcrumb } from "antd";
@@ -13,13 +13,16 @@ import { useEffect, useState } from "react";
 const WorkloadPage = () => {
   const { shortName } = useParams();
   const [item, setItem] = useState<WorkloadTypeItem[]>([]);
+
   const getWorkloadType = async () => {
     const response = await getWorkloadTypesByHref(shortName.toString());
     setItem(response.items);
   };
+
   useEffect(() => {
     getWorkloadType();
   }, []);
+
   return (
     <div>
       <div className="mb-3">

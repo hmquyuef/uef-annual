@@ -16,6 +16,7 @@ import {
   postAddPermission,
   putUpdatePermission,
 } from "@/services/permissions/permissionServices";
+import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
 import PageTitles from "@/utility/Constraints";
 import { convertTimestampToDate } from "@/utility/Utilities";
 import {
@@ -37,9 +38,6 @@ import {
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import { Key, useCallback, useEffect, useState } from "react";
-import { jwtDecode } from "jwt-decode";
-import Cookies from "js-cookie";
-import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
 
 const Permissions = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
@@ -271,24 +269,17 @@ const Permissions = () => {
   const fetchData = async () => {
     await Promise.all([getListPermissions(), getListPermissionsForMenu()]);
   };
-  const getDisplayRole = async (name: string) => {
-    const response = await getRoleByName(name);
-    setRole(response.items[0]);
+  const getDisplayRole = async () => {
+    if (typeof window !== "undefined") {
+      const s_role = localStorage.getItem("s_role");
+      const response = await getRoleByName(s_role as string);
+      setRole(response.items[0]);
+    }
   };
   useEffect(() => {
     document.title = PageTitles.PERMISSIONS;
     fetchData();
-    const token = Cookies.get("s_t");
-    if (token) {
-      const decodedRole = jwtDecode<{
-        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
-      }>(token);
-      const role =
-        decodedRole[
-          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-        ];
-      getDisplayRole(role as string);
-    }
+    getDisplayRole();
   }, []);
 
   return (

@@ -1,5 +1,6 @@
 "use client";
 
+import CustomNotification from "@/components/CustomNotification";
 import {
   deleteLogActivities,
   getAllLogActivities,
@@ -7,6 +8,7 @@ import {
   LogActivityResponses,
 } from "@/services/history/logActivityServices";
 import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
+import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import PageTitles from "@/utility/Constraints";
 import { convertTimestampToFullDateTime } from "@/utility/Utilities";
 import {
@@ -29,13 +31,9 @@ import {
   Tooltip,
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
-import { jwtDecode } from "jwt-decode";
 import { Key, useCallback, useEffect, useState } from "react";
 import { allExpanded, darkStyles, JsonView } from "react-json-view-lite";
 import "react-json-view-lite/dist/index.css";
-import Cookies from "js-cookie";
-import CustomNotification from "@/components/CustomNotification";
-import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 
 type SearchProps = GetProps<typeof Input.Search>;
 const { Search } = Input;
@@ -159,7 +157,8 @@ const LogsActivities = () => {
           </>
         </>
       ),
-      className: "max-w-[10rem] whitespace-nowrap overflow-hidden text-ellipsis",
+      className:
+        "max-w-[10rem] whitespace-nowrap overflow-hidden text-ellipsis",
     },
     {
       title: "QUERY",
@@ -285,9 +284,12 @@ const LogsActivities = () => {
     });
   };
 
-  const getDisplayRole = async (name: string) => {
-    const response = await getRoleByName(name);
-    setRole(response.items[0]);
+  const getDisplayRole = async () => {
+    if (typeof window !== "undefined") {
+      const s_role = localStorage.getItem("s_role");
+      const response = await getRoleByName(s_role as string);
+      setRole(response.items[0]);
+    }
   };
 
   const handleChangeYear = (value: any) => {
@@ -305,18 +307,11 @@ const LogsActivities = () => {
     setLoading(true);
     document.title = PageTitles.LOGS_ACTIVITY;
     getDefaultYears();
-    const token = Cookies.get("s_t");
-    if (token) {
-      const decodedRole = jwtDecode<{
-        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
-      }>(token);
-      const role =
-        decodedRole[
-          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-        ];
-      getDisplayRole(role as string);
+    getDisplayRole();
+    const timeoutId = setTimeout(() => {
       setLoading(false);
-    }
+    }, 500);
+    return () => clearTimeout(timeoutId);
   }, []);
   return (
     <div>

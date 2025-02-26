@@ -51,26 +51,23 @@ import {
   RoleItem,
 } from "@/services/roles/rolesServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
+import { postFiles } from "@/services/uploads/uploadsServices";
 import Colors from "@/utility/Colors";
 import Messages from "@/utility/Messages";
+import locale from "antd/locale/vi_VN";
+import dayjs from "dayjs";
+import "dayjs/locale/vi";
+import saveAs from "file-saver";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { Key, useCallback, useEffect, useState } from "react";
 import * as XLSX from "sheetjs-style";
 import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
+import { LoadingSpin } from "../skeletons/LoadingSpin";
 import FormBM02 from "./activity/formBM02";
 import FromUpload from "./activity/formUpload";
 import TemplateForms from "./workloads/TemplateForms";
-
-import { postFiles } from "@/services/uploads/uploadsServices";
-import locale from "antd/locale/vi_VN";
-import dayjs from "dayjs";
-import "dayjs/locale/vi";
-import saveAs from "file-saver";
-import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
-import { LoadingSpin } from "../skeletons/LoadingSpin";
 dayjs.locale("vi");
 
 type SearchProps = GetProps<typeof Input.Search>;
@@ -219,12 +216,13 @@ const BM02 = () => {
       dataIndex: "proof",
       key: "proof",
       render: (proof: string, record: ClassAssistantItem) => {
-        const ngayLap = record.determinations.fromDate;
         return (
           <div className="flex flex-col">
             <span className="text-center font-medium">{proof}</span>
             <span className="text-center text-[13px]">
-              {convertTimestampToDate(ngayLap)}
+              {record.determinations.documentDate !== 0
+                ? convertTimestampToDate(record.determinations.documentDate)
+                : ""}
             </span>
           </div>
         );
@@ -504,9 +502,18 @@ const BM02 = () => {
     }
   };
 
-  const getDisplayRole = async (name: string) => {
-    const response = await getRoleByName(name);
-    setRole(response.items[0]);
+  const getDisplayRole = async () => {
+    if (typeof window !== "undefined") {
+      const s_username = localStorage.getItem("s_username");
+      setUserName(s_username as string);
+      const s_role = localStorage.getItem("s_role");
+      const s_family = localStorage.getItem("s_family");
+      if (s_family && s_role === "secretary") {
+        setSelectedKeyUnit(s_family.toLowerCase());
+      }
+      const response = await getRoleByName(s_role as string);
+      setRole(response.items[0]);
+    }
   };
 
   const handleSubmitUpload = async (
@@ -556,211 +563,169 @@ const BM02 = () => {
   };
 
   const handleExportExcel = async () => {
+    setLoadingUpload(true);
     const unit = units.find(
       (unit: any) => unit.idHrm === selectedKeyUnit
     ) as any;
     const results = await getExportAssistant(unit?.code, selectedKey.id);
-    if (results) {
-      const defaultInfo = [
-        ["", "", "", "", "", "", "", "", "", "", "BM-02"],
-        [
-          "TRƯỜNG ĐẠI HỌC KINH TẾ - TÀI CHÍNH",
-          "",
-          "",
-          "",
-          "",
-          "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM",
-        ],
-        [
-          "THÀNH PHỐ HỒ CHÍ MINH",
-          "",
-          "",
-          "",
-          "",
-          "Độc lập - Tự do - Hạnh phúc",
-        ],
-        ["(ĐƠN VỊ)", "", "", ""],
-        ["TỔNG HỢP DANH SÁCH"],
-        [
-          "Tham gia cố vấn môn học, trợ giảng, phụ đạo được Ban điều hành phê duyệt tiết chuẩn",
-        ],
-        [""],
-      ];
+    if (results.totalError > 0) {
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Không thể tải tệp báo cáo!",
+        description: `${results.messageError}`,
+      }));
+      setLoadingUpload(false);
+      return;
+    }
+    const defaultInfo = [
+      ["", "", "", "", "", "", "", "", "", "", "BM-02"],
+      [
+        "TRƯỜNG ĐẠI HỌC KINH TẾ - TÀI CHÍNH",
+        "",
+        "",
+        "",
+        "",
+        "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM",
+      ],
+      ["THÀNH PHỐ HỒ CHÍ MINH", "", "", "", "", "Độc lập - Tự do - Hạnh phúc"],
+      ["(ĐƠN VỊ)", "", "", ""],
+      ["TỔNG HỢP DANH SÁCH"],
+      [
+        "Tham gia cố vấn môn học, trợ giảng, phụ đạo được Ban điều hành phê duyệt tiết chuẩn",
+      ],
+      [""],
+    ];
 
-      const dataArray = [
-        [
-          "STT",
-          "Mã số CB-GV-NV",
-          "Họ và Tên",
-          "Đơn vị",
-          "Tên công tác sư phạm",
-          "Tên lớp",
-          "Học kỳ",
-          "Số tiết chuẩn",
-          "Số văn bản, ngày lập",
-          "Thời gian hoạt động",
-          "Ghi chú",
-        ],
-        ...results.data.map((item: any, index: number) => [
-          index + 1,
-          item.userName,
-          item.fullName,
-          item.unitName ?? "",
-          item.activityName ?? "",
-          item.classCode ?? "",
-          item.semester ?? "",
-          item.standardNumber,
-          item.determinations.documentNumber +
-            ", " +
-            convertTimestampToDate(item.determinations.fromDate),
-          item.determinations.fromDate !== 0 && item.determinations.toDate !== 0
-            ? convertTimestampToDate(item.determinations.fromDate) +
-              " - " +
-              convertTimestampToDate(item.determinations.toDate)
-            : "",
-          item.note ?? "",
-        ]),
-        [
-          "TỔNG SỐ TIẾT CHUẨN",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          `${data.reduce((acc, x) => acc + x.standardNumber, 0)}`,
-          "",
-          "",
-          "",
-        ],
-      ];
+    const dataArray = [
+      [
+        "STT",
+        "Mã số CB-GV-NV",
+        "Họ và Tên",
+        "Đơn vị",
+        "Tên công tác sư phạm",
+        "Tên lớp",
+        "Học kỳ",
+        "Số tiết chuẩn",
+        "Số văn bản, ngày lập",
+        "Thời gian hoạt động",
+        "Ghi chú",
+      ],
+      ...results.data.map((item: any, index: number) => [
+        index + 1,
+        item.userName,
+        item.fullName,
+        item.unitName ?? "",
+        item.activityName ?? "",
+        item.classCode ?? "",
+        item.semester ?? "",
+        item.standardNumber,
+        item.determinations.documentNumber +
+          ", " +
+          convertTimestampToDate(item.determinations.fromDate),
+        item.determinations.fromDate !== 0 && item.determinations.toDate !== 0
+          ? convertTimestampToDate(item.determinations.fromDate) +
+            " - " +
+            convertTimestampToDate(item.determinations.toDate)
+          : "",
+        item.note ?? "",
+      ]),
+      [
+        "TỔNG SỐ TIẾT CHUẨN",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        `${data.reduce((acc, x) => acc + x.standardNumber, 0)}`,
+        "",
+        "",
+        "",
+      ],
+    ];
 
-      const combinedData = [...defaultInfo, ...dataArray];
-      const combinedFooterData = [...combinedData, ...defaultFooterInfo];
-      const worksheet = XLSX.utils.aoa_to_sheet(combinedFooterData);
-      worksheet["!pageSetup"] = {
-        paperSize: 9,
-        orientation: "landscape",
-        scale: 100,
-        fitToWidth: 1,
-        fitToHeight: 0,
-        fitToPage: true,
-      };
-      worksheet["!margins"] = {
-        left: 0.1,
-        right: 0.1,
-        top: 0.1,
-        bottom: 0.1,
-        header: 0,
-        footer: 0,
-      };
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-      worksheet["!cols"] = [];
-      worksheet["!cols"][0] = { wch: 4 };
-      worksheet["!cols"][1] = { wch: 20 };
-      worksheet["!cols"][2] = { wch: 20 };
-      worksheet["!cols"][3] = { wch: 10 };
-      worksheet["!cols"][4] = { wch: 30 };
-      worksheet["!cols"][8] = { wch: 10 };
-      worksheet["!cols"][10] = { wch: 15 };
-      worksheet["K1"].s = {
-        fill: {
-          fgColor: { rgb: "FFFF00" },
-        },
-        font: {
-          name: "Times New Roman",
-          sz: 11,
-        },
-        alignment: {
-          wrapText: true,
-          vertical: "center",
-          horizontal: "center",
-        },
-        border: {
-          top: { style: "thin" },
-          left: { style: "thin" },
-          right: { style: "thin" },
-          bottom: { style: "thin" },
-        },
-      };
-      setCellStyle(worksheet, "A2", 11, true, "center", "center", false, false);
-      setCellStyle(worksheet, "F2", 11, true, "center", "center", false, false);
-      setCellStyle(worksheet, "A3", 11, true, "center", "center", false, false);
-      setCellStyle(worksheet, "F3", 11, true, "center", "center", false, false);
-      setCellStyle(worksheet, "A4", 11, true, "center", "center", false, false);
-      setCellStyle(worksheet, "A5", 16, true, "center", "center", false, false);
-      setCellStyle(worksheet, "A6", 11, true, "center", "center", false, false);
+    const combinedData = [...defaultInfo, ...dataArray];
+    const combinedFooterData = [...combinedData, ...defaultFooterInfo];
+    const worksheet = XLSX.utils.aoa_to_sheet(combinedFooterData);
+    worksheet["!pageSetup"] = {
+      paperSize: 9,
+      orientation: "landscape",
+      scale: 100,
+      fitToWidth: 1,
+      fitToHeight: 0,
+      fitToPage: true,
+    };
+    worksheet["!margins"] = {
+      left: 0.1,
+      right: 0.1,
+      top: 0.1,
+      bottom: 0.1,
+      header: 0,
+      footer: 0,
+    };
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+    worksheet["!cols"] = [];
+    worksheet["!cols"][0] = { wch: 4 };
+    worksheet["!cols"][1] = { wch: 20 };
+    worksheet["!cols"][2] = { wch: 20 };
+    worksheet["!cols"][3] = { wch: 10 };
+    worksheet["!cols"][4] = { wch: 30 };
+    worksheet["!cols"][8] = { wch: 10 };
+    worksheet["!cols"][10] = { wch: 15 };
+    worksheet["K1"].s = {
+      fill: {
+        fgColor: { rgb: "FFFF00" },
+      },
+      font: {
+        name: "Times New Roman",
+        sz: 11,
+      },
+      alignment: {
+        wrapText: true,
+        vertical: "center",
+        horizontal: "center",
+      },
+      border: {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        right: { style: "thin" },
+        bottom: { style: "thin" },
+      },
+    };
+    setCellStyle(worksheet, "A2", 11, true, "center", "center", false, false);
+    setCellStyle(worksheet, "F2", 11, true, "center", "center", false, false);
+    setCellStyle(worksheet, "A3", 11, true, "center", "center", false, false);
+    setCellStyle(worksheet, "F3", 11, true, "center", "center", false, false);
+    setCellStyle(worksheet, "A4", 11, true, "center", "center", false, false);
+    setCellStyle(worksheet, "A5", 16, true, "center", "center", false, false);
+    setCellStyle(worksheet, "A6", 11, true, "center", "center", false, false);
 
-      worksheet["!merges"] = [];
-      const tempMerge = [];
-      const range = XLSX.utils.decode_range(worksheet["!ref"]!);
-      for (let row = 7; row <= range.e.r; row++) {
-        if (row === combinedData.length - 1) {
-          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 6 } });
-        }
-        for (let col = range.s.c; col <= range.e.c; col++) {
-          const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
-          if (row === 7) {
-            setCellStyle(
-              worksheet,
-              cellRef,
-              11,
-              true,
-              "center",
-              "center",
-              true,
-              true
-            );
-            continue;
-          }
-          if (col === 1 || col === 2 || col === 4 || col === 10) {
-            setCellStyle(
-              worksheet,
-              cellRef,
-              11,
-              false,
-              "left",
-              "center",
-              true,
-              true
-            );
-          } else {
-            setCellStyle(
-              worksheet,
-              cellRef,
-              11,
-              false,
-              "center",
-              "center",
-              true,
-              true
-            );
-          }
-          if (row === combinedData.length - 1) {
-            setCellStyle(
-              worksheet,
-              cellRef,
-              11,
-              true,
-              "center",
-              "center",
-              true,
-              true
-            );
-          }
-        }
+    worksheet["!merges"] = [];
+    const tempMerge = [];
+    const range = XLSX.utils.decode_range(worksheet["!ref"]!);
+    for (let row = 7; row <= range.e.r; row++) {
+      if (row === combinedData.length - 1) {
+        tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 6 } });
       }
-
-      for (
-        let row = range.e.r - defaultFooterInfo.length + 1;
-        row <= range.e.r;
-        row++
-      ) {
-        if (row < range.e.r)
-          tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 10 } });
-        for (let col = range.s.c; col <= range.e.c; col++) {
-          const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+      for (let col = range.s.c; col <= range.e.c; col++) {
+        const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+        if (row === 7) {
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            true,
+            "center",
+            "center",
+            true,
+            true
+          );
+          continue;
+        }
+        if (col === 1 || col === 2 || col === 4 || col === 10) {
           setCellStyle(
             worksheet,
             cellRef,
@@ -769,65 +734,122 @@ const BM02 = () => {
             "left",
             "center",
             true,
-            false
+            true
           );
-          if (row === range.e.r - 6)
-            setCellStyle(
-              worksheet,
-              cellRef,
-              11,
-              true,
-              "left",
-              "center",
-              true,
-              false
-            );
-          if (row === range.e.r)
-            setCellStyle(
-              worksheet,
-              cellRef,
-              11,
-              true,
-              "center",
-              "center",
-              true,
-              false
-            );
+        } else {
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            false,
+            "center",
+            "center",
+            true,
+            true
+          );
+        }
+        if (row === combinedData.length - 1) {
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            true,
+            "center",
+            "center",
+            true,
+            true
+          );
         }
       }
-
-      const defaultMerges = [
-        { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
-        { s: { r: 1, c: 5 }, e: { r: 1, c: 10 } },
-        { s: { r: 2, c: 0 }, e: { r: 2, c: 2 } },
-        { s: { r: 2, c: 5 }, e: { r: 2, c: 10 } },
-        { s: { r: 3, c: 0 }, e: { r: 3, c: 2 } },
-        { s: { r: 4, c: 0 }, e: { r: 4, c: 10 } },
-        { s: { r: 5, c: 0 }, e: { r: 5, c: 10 } },
-        { s: { r: range.e.r, c: 0 }, e: { r: range.e.r, c: 2 } },
-        { s: { r: range.e.r, c: 8 }, e: { r: range.e.r, c: 9 } },
-      ];
-
-      worksheet["!merges"].push(...defaultMerges, ...tempMerge);
-      // Xuất file Excel
-      const excelBuffer = XLSX.write(workbook, {
-        bookType: "xlsx",
-        type: "array",
-      });
-      const blob = new Blob([excelBuffer], {
-        type: "application/octet-stream",
-      });
-      const now = new Date();
-      const formattedDate = `${String(now.getDate()).padStart(2, "0")}-${String(
-        now.getMonth() + 1
-      ).padStart(2, "0")}-${now.getFullYear()}-${String(
-        now.getHours()
-      ).padStart(2, "0")}-${String(now.getMinutes()).padStart(2, "0")}`;
-      let filename = unit?.code
-        ? "BM02-" + unit?.code + "-" + formattedDate + ".xlsx"
-        : "BM02-" + formattedDate + ".xlsx";
-      saveAs(blob, filename);
     }
+
+    for (
+      let row = range.e.r - defaultFooterInfo.length + 1;
+      row <= range.e.r;
+      row++
+    ) {
+      if (row < range.e.r)
+        tempMerge.push({ s: { r: row, c: 0 }, e: { r: row, c: 10 } });
+      for (let col = range.s.c; col <= range.e.c; col++) {
+        const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+        setCellStyle(
+          worksheet,
+          cellRef,
+          11,
+          false,
+          "left",
+          "center",
+          true,
+          false
+        );
+        if (row === range.e.r - 6)
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            true,
+            "left",
+            "center",
+            true,
+            false
+          );
+        if (row === range.e.r)
+          setCellStyle(
+            worksheet,
+            cellRef,
+            11,
+            true,
+            "center",
+            "center",
+            true,
+            false
+          );
+      }
+    }
+
+    const defaultMerges = [
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
+      { s: { r: 1, c: 5 }, e: { r: 1, c: 10 } },
+      { s: { r: 2, c: 0 }, e: { r: 2, c: 2 } },
+      { s: { r: 2, c: 5 }, e: { r: 2, c: 10 } },
+      { s: { r: 3, c: 0 }, e: { r: 3, c: 2 } },
+      { s: { r: 4, c: 0 }, e: { r: 4, c: 10 } },
+      { s: { r: 5, c: 0 }, e: { r: 5, c: 10 } },
+      { s: { r: range.e.r, c: 0 }, e: { r: range.e.r, c: 2 } },
+      { s: { r: range.e.r, c: 8 }, e: { r: range.e.r, c: 9 } },
+    ];
+
+    worksheet["!merges"].push(...defaultMerges, ...tempMerge);
+    // Xuất file Excel
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const blob = new Blob([excelBuffer], {
+      type: "application/octet-stream",
+    });
+    const now = new Date();
+    const formattedDate = `${String(now.getDate()).padStart(2, "0")}-${String(
+      now.getMonth() + 1
+    ).padStart(2, "0")}-${now.getFullYear()}-${String(now.getHours()).padStart(
+      2,
+      "0"
+    )}-${String(now.getMinutes()).padStart(2, "0")}`;
+    let filename = unit?.code
+      ? "BM02-" + unit?.code + "-" + formattedDate + ".xlsx"
+      : "BM02-" + formattedDate + ".xlsx";
+    saveAs(blob, filename);
+    setFormNotification((prev) => ({
+      ...prev,
+      isOpen: true,
+      status: "success",
+      message: "Thông báo",
+      description: `Tải xuống tệp ${filename} thành công!`,
+    }));
+    const timeoutId = setTimeout(() => {
+      setLoadingUpload(false);
+    }, 500);
+    return () => clearTimeout(timeoutId);
   };
 
   const handleApproved = async (isRejected: boolean) => {
@@ -895,51 +917,33 @@ const BM02 = () => {
   useEffect(() => {
     setLoading(true);
     document.title = PageTitles.BM02;
-
     Promise.all([getDefaultYears(), getListUnits()]);
-    const token = Cookies.get("s_t");
-    if (token) {
-      const decodedRole = jwtDecode<{
-        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
-      }>(token);
-      const role =
-        decodedRole[
-          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-        ];
-      getDisplayRole(role as string);
-      const decodedUserName = jwtDecode(token);
-      if (decodedUserName.sub) {
-        setUserName(decodedUserName.sub);
-      }
-      if (role === "secretary") {
-        const decodedUnitId = jwtDecode<{
-          family_name: string;
-        }>(token);
-        const unitId = decodedUnitId.family_name;
-        if (unitId && unitId !== selectedKeyUnit) {
-          setSelectedKeyUnit(unitId.toLowerCase());
-        }
-      }
-    }
-    setLoading(false);
+    getDisplayRole();
     onSearch("");
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+    }, 500);
+    return () => clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
-    setTimeout(() => {
-      setFormNotification((prev) => ({ ...prev, isOpen: false }));
-    }, 100);
-  }, [formNotification.isOpen]);
-
-  useEffect(() => {
     if (
-      classAssistants.length > 0 &&
-      units.length > 0 &&
+      classAssistants.length &&
+      units.length &&
       (selectedKeyUnit || startDate || endDate)
     ) {
       onSearch("");
     }
   }, [classAssistants, units, selectedKeyUnit, startDate, endDate]);
+
+  useEffect(() => {
+    const timer = setTimeout(
+      () => setFormNotification((prev) => ({ ...prev, isOpen: false })),
+      100
+    );
+    return () => clearTimeout(timer);
+  }, [formNotification.isOpen]);
+
   return (
     <div>
       <div className="grid grid-cols-3 mb-4">

@@ -11,7 +11,7 @@ import {
   getAllTrainingLevels,
   postTrainingLevel,
   putTrainingLevel,
-  TrainingLevelItem
+  TrainingLevelItem,
 } from "@/services/trainingLevels/trainingServices";
 import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
 import PageTitles from "@/utility/Constraints";
@@ -49,8 +49,6 @@ import FormBM07 from "./activity/formBM07";
 import TemplateForms from "./workloads/TemplateForms";
 
 import saveAs from "file-saver";
-import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
 
 import Colors from "@/utility/Colors";
 import locale from "antd/locale/vi_VN";
@@ -644,9 +642,16 @@ const BM07 = () => {
     return () => clearTimeout(timeoutId);
   };
 
-  const getDisplayRole = async (name: string) => {
-    const response = await getRoleByName(name);
-    setRole(response.items[0]);
+  const getDisplayRole = async () => {
+    if (typeof window !== "undefined") {
+      const s_role = localStorage.getItem("s_role");
+      const s_family = localStorage.getItem("s_family");
+      if (s_family && s_role === "secretary") {
+        setSelectedKeyUnit(s_family.toLowerCase());
+      }
+      const response = await getRoleByName(s_role as string);
+      setRole(response.items[0]);
+    }
   };
 
   useEffect(() => {
@@ -654,34 +659,18 @@ const BM07 = () => {
     document.title = PageTitles.BM07;
 
     Promise.all([getDefaultYears(), getListUnits()]);
-    const token = Cookies.get("s_t");
-    if (token) {
-      const decodedRole = jwtDecode<{
-        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
-      }>(token);
-      const role =
-        decodedRole[
-          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-        ];
-      getDisplayRole(role as string);
-      if (role === "secretary") {
-        const decodedUnitId = jwtDecode<{
-          family_name: string;
-        }>(token);
-        const unitId = decodedUnitId.family_name;
-        if (unitId && unitId !== selectedKeyUnit) {
-          setSelectedKeyUnit(unitId.toLowerCase());
-        }
-      }
-    }
-    setLoading(false);
+    getDisplayRole();
     onSearch("");
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+    }, 500);
+    return () => clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
     if (
-      training.length > 0 &&
-      units.length > 0 &&
+      training.length &&
+      units.length &&
       (selectedKeyUnit || startDate || endDate)
     ) {
       onSearch("");
@@ -689,9 +678,11 @@ const BM07 = () => {
   }, [training, units, selectedKeyUnit, startDate, endDate]);
 
   useEffect(() => {
-    setTimeout(() => {
-      setFormNotification((prev) => ({ ...prev, isOpen: false }));
-    }, 200);
+    const timer = setTimeout(
+      () => setFormNotification((prev) => ({ ...prev, isOpen: false })),
+      100
+    );
+    return () => clearTimeout(timer);
   }, [formNotification.isOpen]);
 
   return (

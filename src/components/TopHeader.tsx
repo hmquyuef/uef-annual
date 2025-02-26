@@ -8,7 +8,6 @@ import type { MenuProps } from "antd";
 import { Badge, Dropdown } from "antd";
 import Cookies from "js-cookie";
 import { signOut } from "next-auth/react";
-import WebSocketPing from "./WebSocketPing";
 
 interface TopHeadersProps {
   name: string;
@@ -137,6 +136,7 @@ const TopHeaders: React.FC<TopHeadersProps> = ({ name, email }) => {
     items: createMenuItems(name, email as string),
     onClick: handleMenuClick,
   };
+
   return (
     <div className="h-16 bg-white sticky top-0 right-0 shadow-md z-10">
       <div className="h-full flex justify-end items-center gap-6 pr-6">
