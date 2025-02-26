@@ -16,7 +16,7 @@ import {
 } from "@ant-design/icons";
 import { FloatButton, Image, Menu, MenuProps, Tooltip } from "antd";
 import Cookies from "js-cookie";
-import { signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -158,13 +158,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
-  const signOutWithCallback = async () => {
-    ["s_t", "s_r", "m_i", "m_k", "p_s"].forEach((cookie) =>
-      Cookies.remove(cookie)
-    );
-    await signOut({ callbackUrl: "/login" });
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       if (session === undefined || session === null) {
@@ -197,10 +190,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
     fetchData();
     loadMenuFromCookies();
-    const userName = localStorage.getItem("s_username");
-    if (userName === null) {
-      signOutWithCallback();
-    }
   }, [session, router]);
 
   return (
