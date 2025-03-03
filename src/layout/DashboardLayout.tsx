@@ -16,7 +16,7 @@ import {
 } from "@ant-design/icons";
 import { FloatButton, Image, Menu, MenuProps, Tooltip } from "antd";
 import Cookies from "js-cookie";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -158,6 +158,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
+  const checkUserName = async () => {
+    if (
+      localStorage.getItem("s_username") === null ||
+      localStorage.getItem("s_username") === undefined
+    ) {
+      Cookies.remove("s_t");
+      Cookies.remove("s_r");
+      await signOut({ callbackUrl: "/login" });
+      return;
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       if (session === undefined || session === null) {
@@ -190,6 +202,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
     fetchData();
     loadMenuFromCookies();
+    checkUserName();
   }, [session, router]);
 
   return (
@@ -205,7 +218,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             }`}
           >
             <header className="h-16 flex items-center justify-center bg-white">
-              <Image width={150} src="/logoUEF.svg" />
+              <Image width={150} src="/logoUEF.svg" className="px-3 py-2" />
             </header>
             <hr />
             <article>

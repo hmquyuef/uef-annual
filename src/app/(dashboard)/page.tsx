@@ -36,6 +36,7 @@ import {
 import { Key, useEffect, useState } from "react";
 
 const Home = () => {
+  const listPercent = ["bm01", "bm02", "bm03", "bm04", "bm05"];
   const [loading, setLoading] = useState(false);
   const [defaultYears, setDefaultYears] = useState<any>();
   const [selectedKey, setSelectedKey] = useState<any>();
@@ -110,14 +111,7 @@ const Home = () => {
           .filter((x) => x.method !== "GET")
           .slice(0, 5)
           .map((item) => {
-            const message =
-              item.method === "GET"
-                ? "đã xem"
-                : item.method === "POST"
-                ? "đã tạo"
-                : item.method === "PUT"
-                ? "đã cập nhật"
-                : "đã xóa";
+            const message = item.method === "GET" ? "đã xem" : "đã";
             return {
               color:
                 item.method === "GET"
@@ -249,11 +243,26 @@ const Home = () => {
         </>
       ) : (
         <>
-          {dataReports && (
+          <div className="grid grid-cols-5 gap-5 mb-4">
+            {dataReports &&
+              dataReports.items.map((form: any) => {
+                return (
+                  <TotalFormCard
+                    data={form}
+                    color="neutral"
+                    src="class-leader.svg"
+                  />
+                );
+              })}
+          </div>
+          {/* (
             <>
-              <div className="grid grid-cols-5 gap-4 mb-4">
+              <div className="grid grid-cols-6 gap-4 mb-4">
                 <TotalFormCard
-                  data={dataReports.form_BM01}
+                  data={
+                    dataReports.items.find((x: any) => x.formName === "BM01") ??
+                    {}
+                  }
                   color="blue"
                   src="class-leader.svg"
                 />
@@ -277,9 +286,14 @@ const Home = () => {
                   color="violet"
                   src="activity.svg"
                 />
+                <TotalFormCard
+                  data={dataReports.form_BM05}
+                  color="violet"
+                  src="activity.svg"
+                />
               </div>
             </>
-          )}
+          )} */}
           <section className="mb-4">
             <div className="grid grid-cols-5 gap-4">
               <div className="bg-white flex flex-col rounded-lg shadow-lg cursor-pointer">
@@ -353,7 +367,23 @@ const Home = () => {
                   <Button type="text" shape="circle" icon={<MoreOutlined />} />
                 </div>
                 <hr />
-                {dataReports && (
+                <div className="h-full px-3 flex flex-col items-center justify-center gap-[14px]">
+                  {dataReports &&
+                    dataReports.items
+                      .filter((form: any) =>
+                        listPercent.includes(form.shortName)
+                      )
+                      .map((form: any) => {
+                        return (
+                          <PercentForms
+                            data={form}
+                            color="blue"
+                            src="class-leader.svg"
+                          />
+                        );
+                      })}
+                </div>
+                {/* {dataReports && (
                   <>
                     <div className="h-full px-3 flex flex-col items-center justify-center gap-[14px]">
                       <PercentForms
@@ -383,7 +413,7 @@ const Home = () => {
                       />
                     </div>
                   </>
-                )}
+                )} */}
               </div>
             </div>
           </section>

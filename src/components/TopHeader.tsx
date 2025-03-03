@@ -1,13 +1,16 @@
+"use client";
+
 import {
   IdcardOutlined,
+  InfoCircleOutlined,
   LogoutOutlined,
-  MailOutlined,
-  UserOutlined,
+  MailOutlined
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { Badge, Dropdown } from "antd";
 import Cookies from "js-cookie";
 import { signOut } from "next-auth/react";
+import { useState } from "react";
 
 interface TopHeadersProps {
   name: string;
@@ -56,108 +59,70 @@ const createMenuItems = (name: string, email: string): MenuProps["items"] => [
   },
 ];
 
-// const itemNotifications: MenuProps["items"] = [
-//   {
-//     key: "1",
-//     label: (
-//       <>
-//         <div className="flex flex-col w-64">
-//           <span>Thông báo</span>
-//           <span className="text-xs text-gray-400 mb-1">Nội dung thông báo</span>
-//           <div className="flex justify-end">
-//             <span className="text-xs text-gray-400">2 phút trước</span>
-//           </div>
-//         </div>
-//       </>
-//     ),
-//     icon: <InfoCircleOutlined />,
-//   },
-//   {
-//     type: "divider",
-//   },
-//   {
-//     key: "2",
-//     label: (
-//       <>
-//         <div className="flex flex-col w-64">
-//           <span>Thông báo</span>
-//           <span className="text-xs text-gray-400 mb-1">Nội dung thông báo</span>
-//           <div className="flex justify-end">
-//             <span className="text-xs text-gray-400">2 phút trước</span>
-//           </div>
-//         </div>
-//       </>
-//     ),
-//     icon: <UserOutlined />,
-//   },
-//   {
-//     type: "divider",
-//   },
-//   {
-//     key: "3",
-//     label: (
-//       <>
-//         <div className="flex flex-col w-64">
-//           <span>Thông báo</span>
-//           <span className="text-xs text-gray-400 mb-1">Nội dung thông báo</span>
-//           <div className="flex justify-end">
-//             <span className="text-xs text-gray-400">2 phút trước</span>
-//           </div>
-//         </div>
-//       </>
-//     ),
-//     icon: <UserOutlined />,
-//   },
-//   {
-//     type: "divider",
-//   },
-//   {
-//     key: "4",
-//     label: (
-//       <>
-//         <div className="flex flex-col w-64">
-//           <span>Thông báo</span>
-//           <span className="text-xs text-gray-400 mb-1">Nội dung thông báo</span>
-//           <div className="flex justify-end">
-//             <span className="text-xs text-gray-400">2 phút trước</span>
-//           </div>
-//         </div>
-//       </>
-//     ),
-//     icon: <UserOutlined />,
-//   },
-//   {
-//     type: "divider",
-//   },
-// ];
+const itemNotifications: MenuProps["items"] = [
+  {
+    key: "1",
+    label: (
+      <>
+        <div className="flex flex-col w-64">
+          <span>Thông báo đang cập nhật</span>
+          <span className="text-xs text-gray-400 mb-1">Đang cập nhật</span>
+          <div className="flex justify-end">
+            <span className="text-xs text-gray-400">đang cập nhật</span>
+          </div>
+        </div>
+      </>
+    ),
+    icon: <InfoCircleOutlined />,
+  },
+];
 
 const TopHeaders: React.FC<TopHeadersProps> = ({ name, email }) => {
   const menuProps: MenuProps = {
     items: createMenuItems(name, email as string),
     onClick: handleMenuClick,
   };
+  const notificationsProps: MenuProps = {
+    items: itemNotifications,
+    onClick: handleMenuClick,
+  };
+  const [isNotification, setIsNotification] = useState(false);
 
   return (
-    <div className="h-16 bg-white sticky top-0 right-0 shadow-md z-10">
-      <div className="h-full flex justify-end items-center gap-6 pr-6">
-        {/* <Badge count={5} >
+    <div className="h-16 sticky top-0 right-0 shadow-md z-10 bg-white">
+      <div className="h-full flex justify-end items-center gap-2 pr-5">
+        <Badge>
           <Dropdown
-            menu={{ items: itemNotifications }}
+            trigger={["click"]}
+            menu={notificationsProps}
             placement="bottomRight"
             className="hover:cursor-pointer"
           >
-            <BellOutlined className="text-2xl" style={{ color: "gray" }} />
-          </Dropdown>
-        </Badge> */}
-        <Badge dot={true} status="success" className="custom-dot">
-          <Dropdown
-            menu={menuProps}
-            placement="bottomRight"
-            className="hover:cursor-pointer"
-          >
-            <UserOutlined className="text-2xl" style={{ color: "gray" }} />
+            <img
+              src={`${isNotification ? "bell.svg" : "bell-off.svg"}`}
+              alt="bell"
+              className={`p-1 hover:rounded-lg hover:shadow-lg ${
+                isNotification
+                  ? "w-9 h-9 hover:shadow-purple-300 hover:bg-purple-100"
+                  : "w-8 h-8 hover:shadow-orange-300 hover:bg-orange-100"
+              }`}
+            />
           </Dropdown>
         </Badge>
+        <Dropdown
+          trigger={["click"]}
+          menu={menuProps}
+          placement="bottomRight"
+          className="hover:cursor-pointer"
+        >
+          <a onClick={(e) => e.preventDefault()}>
+            <img
+              src="users/user.svg"
+              alt="user"
+              className="w-9 h-9 p-1 hover:bg-blue-100 hover:rounded-lg hover:shadow-lg hover:shadow-blue-300"
+            />
+          </a>
+        </Dropdown>
       </div>
     </div>
   );

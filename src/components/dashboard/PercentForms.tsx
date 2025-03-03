@@ -1,6 +1,5 @@
 "use client";
 
-import { FastBackwardOutlined } from "@ant-design/icons";
 import { Progress } from "antd";
 import { FC, useEffect, useState } from "react";
 
@@ -49,11 +48,11 @@ const PercentForms: FC<PercentFormsProps> = ({ data, color, src }) => {
         className={`p-3 rounded-lg bg-${color}-100`}
       />
       <div className="col-span-4 flex flex-col justify-center">
-        <div className="flex justify-between">
-          <span className={`text-${color}-400 font-semibold text-[14px]`}>
+        <div className="grid grid-cols-5">
+          <span className={`col-span-4 text-${color}-400 font-semibold text-[13px]`}>
             {data.formName} ({data.totalApprovedItems}/{data.totalItems})
           </span>
-          <span className={`text-${color}-400 font-semibold text-[14px]`}>
+          <span className={`text-${color}-400 font-semibold text-end text-sm`}>
             {data.approvedPercent}%
           </span>
         </div>

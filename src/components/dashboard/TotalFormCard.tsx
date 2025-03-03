@@ -1,7 +1,7 @@
 "use client";
 
 import Colors from "@/utility/Colors";
-import { FastBackwardOutlined } from "@ant-design/icons";
+import { Badge, Card } from "antd";
 import clsx from "clsx";
 import { FC, useEffect, useState } from "react";
 
@@ -25,7 +25,15 @@ const TotalFormCard: FC<TotalFormCardProps> = ({ data, color, src }) => {
 
   return (
     <div className="cursor-pointer transition-transform duration-300 hover:-translate-y-2">
-      <div className="flex justify-center">
+      <Badge.Ribbon text={`tỉ lệ: ${data.approvedPercent}%`}>
+        <Card title={data.shortName.toUpperCase()} size="small">
+          <div className="flex flex-col justify-center">
+            <span>Biểu mẫu: {data.formName}</span>
+            <span>Số sự kiện: {totalItems}</span>
+          </div>
+        </Card>
+      </Badge.Ribbon>
+      {/* <div className="flex justify-center">
         <div
           className={clsx(
             "w-2/3 shadow-sm rounded-lg h-5",
@@ -45,14 +53,14 @@ const TotalFormCard: FC<TotalFormCardProps> = ({ data, color, src }) => {
           <div className="row-span-2 flex justify-between items-start mt-1">
             <div className="w-full flex flex-col">
               <span
-                className={clsx(`text-${color}-400 font-semibold text-[14px]`)}
+                className={clsx(`text-${color}-400 max-h-11 h-11 font-semibold text-[14px]`)}
               >
                 {data.formName}
               </span>
               <div className="px-4">
                 <span
                   className={clsx(
-                    `font-bold font-serif text-${color}-500 text-5xl`
+                    `font-bold font-serif text-${color}-600 text-5xl`
                   )}
                 >
                   {totalItems}
@@ -80,7 +88,7 @@ const TotalFormCard: FC<TotalFormCardProps> = ({ data, color, src }) => {
             </span>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
