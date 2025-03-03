@@ -158,18 +158,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
-  const checkUserName = async () => {
-    if (
-      localStorage.getItem("s_username") === null ||
-      localStorage.getItem("s_username") === undefined
-    ) {
-      Cookies.remove("s_t");
-      Cookies.remove("s_r");
-      await signOut({ callbackUrl: "/login" });
-      return;
-    }
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       if (session === undefined || session === null) {
@@ -189,16 +177,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         }
         await getMenuByUserName(email);
       }
+      if (!localStorage?.getItem("s_username")) {
+        Cookies.remove("s_t");
+        Cookies.remove("s_r");
+        await signOut({ callbackUrl: "/login" });
+      }
     };
 
-    const loadMenuFromCookies = async () => {
+    const loadMenuFromCookies = () => {
       const menuOpen = Cookies.get("m_i");
       if (menuOpen) {
         const openKeys = JSON.parse(menuOpen);
         setStateOpenKeys([openKeys[0], openKeys[1]]);
         router.push(openKeys[2]);
       }
-      await checkUserName();
     };
 
     fetchData();
