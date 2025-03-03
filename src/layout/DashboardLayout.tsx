@@ -191,18 +191,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       }
     };
 
-    const loadMenuFromCookies = () => {
+    const loadMenuFromCookies = async () => {
       const menuOpen = Cookies.get("m_i");
       if (menuOpen) {
         const openKeys = JSON.parse(menuOpen);
         setStateOpenKeys([openKeys[0], openKeys[1]]);
         router.push(openKeys[2]);
       }
+      await checkUserName();
     };
 
     fetchData();
     loadMenuFromCookies();
-    checkUserName();
   }, [session, router]);
 
   return (
