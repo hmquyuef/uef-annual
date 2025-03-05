@@ -13,8 +13,7 @@ import {
   Skeleton,
   Spin,
   Table,
-  TableColumnsType,
-  Tooltip,
+  TableColumnsType
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import Cookies from "js-cookie";
@@ -116,45 +115,20 @@ const TemplateForms: FC<TemplateFormsProps> = ({
             {record.payments ? (
               <>
                 {isRejected ? (
-                  <Tooltip
-                    title={
-                      <>
-                        <div>- P.TC đã từ chối vào lúc {time}</div>
-                        <div>- Lý do: {reason}</div>
-                      </>
-                    }
-                  >
-                    <span className="text-red-500">
-                      <CloseOutlined className="me-1" /> Từ chối
-                    </span>
-                  </Tooltip>
+                  <span className="text-red-500">
+                    <CloseOutlined className="me-1" /> Từ chối
+                  </span>
                 ) : (
-                  <Tooltip
-                    title={
-                      <>
-                        <div>- P.TC đã phê duyệt vào lúc {time}</div>
-                      </>
-                    }
-                  >
-                    <span className="text-green-500">
-                      <SafetyOutlined className="me-1" /> Đã duyệt
-                    </span>
-                  </Tooltip>
+                  <span className="text-green-500">
+                    <SafetyOutlined className="me-1" /> Đã duyệt
+                  </span>
                 )}
               </>
             ) : (
               <>
-                <Tooltip
-                  title={
-                    <>
-                      <div>- Đợi phê duyệt từ P.TC</div>
-                    </>
-                  }
-                >
-                  <span className="text-sky-500 flex justify-center items-center gap-2">
-                    <Spin size="small" /> Chờ duyệt
-                  </span>
-                </Tooltip>
+                <span className="text-sky-500 flex justify-center items-center gap-2">
+                  <Spin size="small" /> Chờ duyệt
+                </span>
               </>
             )}
           </>

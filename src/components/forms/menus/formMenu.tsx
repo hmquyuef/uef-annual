@@ -2,7 +2,7 @@
 
 import {
   AddUpdateMenu,
-  AddUpdateMenuItem
+  AddUpdateMenuItem,
 } from "@/services/menus/menuServices";
 import { CloseCircleOutlined, PlusSquareOutlined } from "@ant-design/icons";
 import {
@@ -12,8 +12,7 @@ import {
   InputNumber,
   Table,
   TableColumnsType,
-  Tag,
-  Tooltip
+  Tag
 } from "antd";
 import { FC, FormEvent, useEffect, useState } from "react";
 
@@ -156,17 +155,15 @@ const FormMenu: FC<FormMenuProps> = ({ onSubmit, initialData, mode }) => {
       dataIndex: "stt",
       key: "stt",
       render: (_, record, index) => (
-        <div>
-          <Tooltip placement="right" title="Xóa dữ liệu" arrow={true}>
-            <Button
-              color="danger"
-              variant="text"
-              onClick={() => onRemoveMenu(index)}
-            >
-              <CloseCircleOutlined />
-            </Button>
-          </Tooltip>
-        </div>
+        <>
+          <Button
+            color="danger"
+            variant="text"
+            onClick={() => onRemoveMenu(index)}
+          >
+            <CloseCircleOutlined />
+          </Button>
+        </>
       ),
       className: "w-[10px]",
     },

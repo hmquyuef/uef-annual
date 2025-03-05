@@ -35,7 +35,6 @@ import {
   Select,
   Table,
   TableColumnsType,
-  Tooltip,
 } from "antd";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
@@ -225,18 +224,16 @@ const FormBM05: FC<FormBM05Props> = ({
       key: "id",
       render: (id: string) => {
         return (
-          <div>
-            <Tooltip placement="right" title="Xóa dữ liệu" arrow={true}>
-              <Button
-                disabled={isBlock || displayRole.isDelete === false}
-                color="danger"
-                variant="text"
-                onClick={() => onRemoveUsers(id)}
-              >
-                <CloseCircleOutlined />
-              </Button>
-            </Tooltip>
-          </div>
+          <>
+            <Button
+              disabled={isBlock || displayRole.isDelete === false}
+              color="danger"
+              variant="text"
+              onClick={() => onRemoveUsers(id)}
+            >
+              <CloseCircleOutlined />
+            </Button>
+          </>
         );
       },
       className: "w-[10px]",

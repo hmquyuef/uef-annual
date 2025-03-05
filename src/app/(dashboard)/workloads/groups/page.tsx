@@ -31,8 +31,7 @@ import {
   PaginationProps,
   Table,
   TableColumnsType,
-  Tag,
-  Tooltip,
+  Tag
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import Cookies from "js-cookie";
@@ -249,37 +248,33 @@ const WorkloadGroups = () => {
       <div className="flex justify-end mt-6 gap-3 mb-3">
         {role?.displayRole.isCreate && (
           <>
-            <Tooltip placement="top" title={"Thêm mới nhóm"} arrow={true}>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => {
-                  setIsOpen(true);
-                  setMode("add");
-                }}
-                iconPosition="start"
-              >
-                Thêm nhóm
-              </Button>
-            </Tooltip>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => {
+                setIsOpen(true);
+                setMode("add");
+              }}
+              iconPosition="start"
+            >
+              Thêm nhóm
+            </Button>
           </>
         )}
         {role?.displayRole.isDelete && (
           <>
-            <Tooltip placement="top" title="Xóa các nhóm" arrow={true}>
-              <Button
-                type="dashed"
-                disabled={selectedRowKeys.length === 0}
-                danger
-                onClick={handleDelete}
-                icon={<DeleteOutlined />}
-              >
-                Xóa{" "}
-                {selectedRowKeys.length !== 0
-                  ? `(${selectedRowKeys.length})`
-                  : ""}
-              </Button>
-            </Tooltip>
+            <Button
+              type="dashed"
+              disabled={selectedRowKeys.length === 0}
+              danger
+              onClick={handleDelete}
+              icon={<DeleteOutlined />}
+            >
+              Xóa{" "}
+              {selectedRowKeys.length !== 0
+                ? `(${selectedRowKeys.length})`
+                : ""}
+            </Button>
           </>
         )}
       </div>

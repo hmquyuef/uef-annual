@@ -30,7 +30,6 @@ import {
   Table,
   TableColumnsType,
   Tag,
-  Tooltip,
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import { Key, useCallback, useEffect, useState } from "react";
@@ -278,35 +277,31 @@ const SchoolYear = () => {
       <div className="flex justify-end gap-4 mb-4">
         {role?.displayRole.isCreate && (
           <>
-            <Tooltip placement="top" title={"Thêm mới năm học"} arrow={true}>
-              <Button
-                type="primary"
-                onClick={() => {
-                  setIsOpen(true);
-                  setMode("add");
-                }}
-                icon={<PlusOutlined />}
-                iconPosition="start"
-              >
-                Thêm vai trò
-              </Button>
-            </Tooltip>
+            <Button
+              type="primary"
+              onClick={() => {
+                setIsOpen(true);
+                setMode("add");
+              }}
+              icon={<PlusOutlined />}
+              iconPosition="start"
+            >
+              Thêm vai trò
+            </Button>
           </>
         )}
         {role?.displayRole.isDelete && (
           <>
-            <Tooltip placement="top" title="Xóa năm học" arrow={true}>
-              <Button
-                type="dashed"
-                disabled={selectedRowKeys.length === 0}
-                danger
-                onClick={handleDelete}
-                icon={<DeleteOutlined />}
-                iconPosition="start"
-              >
-                Xóa
-              </Button>
-            </Tooltip>
+            <Button
+              type="dashed"
+              disabled={selectedRowKeys.length === 0}
+              danger
+              onClick={handleDelete}
+              icon={<DeleteOutlined />}
+              iconPosition="start"
+            >
+              Xóa
+            </Button>
           </>
         )}
       </div>

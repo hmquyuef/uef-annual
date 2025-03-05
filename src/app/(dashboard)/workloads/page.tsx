@@ -37,8 +37,7 @@ import {
   Input,
   Select,
   Statistic,
-  StatisticProps,
-  Tooltip,
+  StatisticProps
 } from "antd";
 import { SearchProps } from "antd/es/input";
 import { useRouter } from "next/navigation";
@@ -375,17 +374,11 @@ const Workloads = () => {
                               {userName &&
                                 type.emails?.includes(userName) &&
                                 role?.name === "admin" && (
-                                  <Tooltip
-                                    key={`${type.id}-tooltip-access`}
-                                    placement="top"
-                                    title={"Đã được cấp quyền"}
-                                    arrow={true}
-                                  >
+                                  <>
                                     <div className="flex items-center gap-1 text-green-500">
                                       <img src="/ticker.svg" width={24} />
-                                      {/* <span>Được cấp quyền</span> */}
                                     </div>
-                                  </Tooltip>
+                                  </>
                                 )}
                             </div>
                             <div className="min-h-10">

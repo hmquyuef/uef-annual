@@ -18,7 +18,7 @@ import {
   GoldOutlined,
   HomeOutlined,
   PlusOutlined,
-  SettingOutlined
+  SettingOutlined,
 } from "@ant-design/icons";
 import {
   Breadcrumb,
@@ -27,8 +27,7 @@ import {
   PaginationProps,
   Table,
   TableColumnsType,
-  Tag,
-  Tooltip,
+  Tag
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import { Key, useCallback, useEffect, useState } from "react";
@@ -240,43 +239,31 @@ const Units = () => {
       <div className="flex justify-end gap-4 mb-4">
         {role?.displayRole.isCreate && (
           <>
-            <Tooltip
-              placement="top"
-              title={Messages.TITLE_ADD_UNITS}
-              arrow={true}
+            <Button
+              type="primary"
+              onClick={() => {
+                setIsOpen(true);
+                setMode("add");
+              }}
+              icon={<PlusOutlined />}
+              iconPosition="start"
             >
-              <Button
-                type="primary"
-                onClick={() => {
-                  setIsOpen(true);
-                  setMode("add");
-                }}
-                icon={<PlusOutlined />}
-                iconPosition="start"
-              >
-                Thêm đơn vị
-              </Button>
-            </Tooltip>
+              Thêm đơn vị
+            </Button>
           </>
         )}
         {role?.displayRole.isDelete && (
           <>
-            <Tooltip
-              placement="top"
-              title={Messages.TITLE_DELETE_UNITS}
-              arrow={true}
+            <Button
+              type="dashed"
+              disabled={selectedRowKeys.length === 0}
+              danger
+              onClick={handleDelete}
+              icon={<DeleteOutlined />}
+              iconPosition="start"
             >
-              <Button
-                type="dashed"
-                disabled={selectedRowKeys.length === 0}
-                danger
-                onClick={handleDelete}
-                icon={<DeleteOutlined />}
-                iconPosition="start"
-              >
-                Xóa
-              </Button>
-            </Tooltip>
+              Xóa
+            </Button>
           </>
         )}
       </div>

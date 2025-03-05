@@ -40,8 +40,7 @@ import {
   Modal,
   Select,
   TableColumnsType,
-  Tag,
-  Tooltip,
+  Tag
 } from "antd";
 
 import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
@@ -1119,75 +1118,63 @@ const BM02 = () => {
         <div className="flex justify-end mt-6 gap-3">
           {role?.displayRole.isApprove && role?.displayRole.isReject && (
             <>
-              <Tooltip placement="top" title="Phê duyệt dữ liệu" arrow={true}>
-                <Dropdown menu={{ items: itemsApproved }} trigger={["click"]}>
-                  <a onClick={(e) => e.preventDefault()}>
-                    <Button
-                      type="primary"
-                      icon={<FileProtectOutlined />}
-                      disabled={selectedRowKeys.length === 0}
-                    >
-                      Phê duyệt{" "}
-                      {selectedRowKeys.length !== 0
-                        ? `(${selectedRowKeys.length})`
-                        : ""}
-                    </Button>
-                  </a>
-                </Dropdown>
-              </Tooltip>
+              <Dropdown menu={{ items: itemsApproved }} trigger={["click"]}>
+                <a onClick={(e) => e.preventDefault()}>
+                  <Button
+                    type="primary"
+                    icon={<FileProtectOutlined />}
+                    disabled={selectedRowKeys.length === 0}
+                  >
+                    Phê duyệt{" "}
+                    {selectedRowKeys.length !== 0
+                      ? `(${selectedRowKeys.length})`
+                      : ""}
+                  </Button>
+                </a>
+              </Dropdown>
             </>
           )}
           {role?.displayRole.isExport && (
             <>
-              <Tooltip placement="top" title="Xuất dữ liệu Excel" arrow={true}>
-                <Button
-                  icon={<FileExcelOutlined />}
-                  onClick={handleExportExcel}
-                  iconPosition="start"
-                  style={{
-                    backgroundColor: Colors.GREEN,
-                    borderColor: Colors.GREEN,
-                    color: Colors.WHITE,
-                  }}
-                >
-                  Xuất Excel
-                </Button>
-              </Tooltip>
+              <Button
+                icon={<FileExcelOutlined />}
+                onClick={handleExportExcel}
+                iconPosition="start"
+                style={{
+                  backgroundColor: Colors.GREEN,
+                  borderColor: Colors.GREEN,
+                  color: Colors.WHITE,
+                }}
+              >
+                Xuất Excel
+              </Button>
             </>
           )}
           {role?.displayRole.isCreate && (
             <>
-              <Tooltip
-                placement="top"
-                title={"Thêm mới hoạt động"}
-                arrow={true}
-              >
-                <Dropdown menu={{ items }} trigger={["click"]}>
-                  <a onClick={(e) => e.preventDefault()}>
-                    <Button type="primary" icon={<PlusOutlined />}>
-                      Thêm hoạt động
-                    </Button>
-                  </a>
-                </Dropdown>
-              </Tooltip>
+              <Dropdown menu={{ items }} trigger={["click"]}>
+                <a onClick={(e) => e.preventDefault()}>
+                  <Button type="primary" icon={<PlusOutlined />}>
+                    Thêm hoạt động
+                  </Button>
+                </a>
+              </Dropdown>
             </>
           )}
           {role?.displayRole.isDelete && (
             <>
-              <Tooltip placement="top" title="Xóa các hoạt động" arrow={true}>
-                <Button
-                  type="dashed"
-                  disabled={selectedRowKeys.length === 0}
-                  danger
-                  onClick={handleDelete}
-                  icon={<DeleteOutlined />}
-                >
-                  Xóa{" "}
-                  {selectedRowKeys.length !== 0
-                    ? `(${selectedRowKeys.length})`
-                    : ""}
-                </Button>
-              </Tooltip>
+              <Button
+                type="dashed"
+                disabled={selectedRowKeys.length === 0}
+                danger
+                onClick={handleDelete}
+                icon={<DeleteOutlined />}
+              >
+                Xóa{" "}
+                {selectedRowKeys.length !== 0
+                  ? `(${selectedRowKeys.length})`
+                  : ""}
+              </Button>
             </>
           )}
         </div>

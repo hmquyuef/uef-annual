@@ -29,8 +29,7 @@ import {
   Table,
   TableColumnsType,
   TableProps,
-  Tag,
-  Tooltip,
+  Tag
 } from "antd";
 import { Key, useEffect, useState } from "react";
 
@@ -263,31 +262,27 @@ const Menus = () => {
         />
       </div>
       <div className="flex justify-end gap-4 mb-4">
-        <Tooltip placement="top" title={"Thêm mới hoạt động"} arrow={true}>
-          <Button
-            type="primary"
-            onClick={() => {
-              setIsOpen(true);
-              setMode("add");
-            }}
-            icon={<PlusOutlined />}
-            iconPosition="start"
-          >
-            Thêm chức năng
-          </Button>
-        </Tooltip>
-        <Tooltip placement="top" title="Xóa các hoạt động" arrow={true}>
-          <Button
-            type="dashed"
-            disabled={selectedRowKeys.length === 0}
-            danger
-            onClick={handleDelete}
-            icon={<DeleteOutlined />}
-            iconPosition="start"
-          >
-            Xóa
-          </Button>
-        </Tooltip>
+        <Button
+          type="primary"
+          onClick={() => {
+            setIsOpen(true);
+            setMode("add");
+          }}
+          icon={<PlusOutlined />}
+          iconPosition="start"
+        >
+          Thêm chức năng
+        </Button>
+        <Button
+          type="dashed"
+          disabled={selectedRowKeys.length === 0}
+          danger
+          onClick={handleDelete}
+          icon={<DeleteOutlined />}
+          iconPosition="start"
+        >
+          Xóa
+        </Button>
       </div>
       <div>
         <CustomNotification

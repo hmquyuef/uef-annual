@@ -33,8 +33,7 @@ import {
   PaginationProps,
   Table,
   TableColumnsType,
-  Tag,
-  Tooltip,
+  Tag
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import { Key, useCallback, useEffect, useState } from "react";
@@ -319,36 +318,32 @@ const Permissions = () => {
       <div className="flex justify-end gap-4 mb-4">
         {role?.displayRole.isCreate && (
           <>
-            <Tooltip placement="top" title={"Thêm mới phân quyền"} arrow={true}>
-              <Button
-                type="primary"
-                onClick={() => {
-                  setIsOpen(true);
-                  setMode("add");
-                }}
-                icon={<PlusOutlined />}
-                iconPosition="start"
-              >
-                Thêm phân quyền
-              </Button>
-            </Tooltip>
+            <Button
+              type="primary"
+              onClick={() => {
+                setIsOpen(true);
+                setMode("add");
+              }}
+              icon={<PlusOutlined />}
+              iconPosition="start"
+            >
+              Thêm phân quyền
+            </Button>
           </>
         )}
 
         {role?.displayRole.isCreate && (
           <>
-            <Tooltip placement="top" title="Xóa các hoạt động" arrow={true}>
-              <Button
-                type="dashed"
-                disabled={selectedRowKeys.length === 0}
-                danger
-                onClick={handleDelete}
-                icon={<DeleteOutlined />}
-                iconPosition="start"
-              >
-                Xóa
-              </Button>
-            </Tooltip>
+            <Button
+              type="dashed"
+              disabled={selectedRowKeys.length === 0}
+              danger
+              onClick={handleDelete}
+              icon={<DeleteOutlined />}
+              iconPosition="start"
+            >
+              Xóa
+            </Button>
           </>
         )}
       </div>

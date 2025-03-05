@@ -38,8 +38,7 @@ import {
   Input,
   Select,
   TableColumnsType,
-  Tag,
-  Tooltip,
+  Tag
 } from "antd";
 import { AnimatePresence, motion } from "motion/react";
 import { Key, useCallback, useEffect, useState } from "react";
@@ -861,59 +860,49 @@ const BM07 = () => {
         <div className="flex justify-end mt-6 gap-3">
           {role?.displayRole.isExport && (
             <>
-              <Tooltip placement="top" title="Xuất dữ liệu Excel" arrow={true}>
-                <Button
-                  icon={<FileExcelOutlined />}
-                  onClick={handleExportExcel}
-                  iconPosition="start"
-                  style={{
-                    backgroundColor: Colors.GREEN,
-                    borderColor: Colors.GREEN,
-                    color: Colors.WHITE,
-                  }}
-                >
-                  Xuất Excel
-                </Button>
-              </Tooltip>
+              <Button
+                icon={<FileExcelOutlined />}
+                onClick={handleExportExcel}
+                iconPosition="start"
+                style={{
+                  backgroundColor: Colors.GREEN,
+                  borderColor: Colors.GREEN,
+                  color: Colors.WHITE,
+                }}
+              >
+                Xuất Excel
+              </Button>
             </>
           )}
           {role?.displayRole.isCreate && (
             <>
-              <Tooltip
-                placement="top"
-                title={"Thêm mới hoạt động"}
-                arrow={true}
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => {
+                  setIsOpen(true);
+                  setMode("add");
+                }}
+                iconPosition="start"
               >
-                <Button
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  onClick={() => {
-                    setIsOpen(true);
-                    setMode("add");
-                  }}
-                  iconPosition="start"
-                >
-                  Thêm hoạt động
-                </Button>
-              </Tooltip>
+                Thêm hoạt động
+              </Button>
             </>
           )}
           {role?.displayRole.isDelete && (
             <>
-              <Tooltip placement="top" title="Xóa các hoạt động" arrow={true}>
-                <Button
-                  type="dashed"
-                  disabled={selectedRowKeys.length === 0}
-                  danger
-                  onClick={handleDelete}
-                  icon={<DeleteOutlined />}
-                >
-                  Xóa{" "}
-                  {selectedRowKeys.length !== 0
-                    ? `(${selectedRowKeys.length})`
-                    : ""}
-                </Button>
-              </Tooltip>
+              <Button
+                type="dashed"
+                disabled={selectedRowKeys.length === 0}
+                danger
+                onClick={handleDelete}
+                icon={<DeleteOutlined />}
+              >
+                Xóa{" "}
+                {selectedRowKeys.length !== 0
+                  ? `(${selectedRowKeys.length})`
+                  : ""}
+              </Button>
             </>
           )}
         </div>

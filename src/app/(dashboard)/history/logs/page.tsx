@@ -27,12 +27,10 @@ import {
   Select,
   Skeleton,
   Table,
-  TableColumnsType,
-  Tooltip,
+  TableColumnsType
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import { Key, useCallback, useEffect, useState } from "react";
-import { allExpanded, darkStyles, JsonView } from "react-json-view-lite";
 import "react-json-view-lite/dist/index.css";
 
 type SearchProps = GetProps<typeof Input.Search>;
@@ -148,15 +146,7 @@ const LogsActivities = () => {
       title: "ĐƯỜNG DẪN",
       dataIndex: "path",
       key: "path",
-      render: (path: string) => (
-        <>
-          <>
-            <Tooltip title={path} placement="bottomLeft">
-              {path}
-            </Tooltip>
-          </>
-        </>
-      ),
+      render: (path: string) => <>{path}</>,
       className:
         "max-w-[10rem] whitespace-nowrap overflow-hidden text-ellipsis",
     },
@@ -164,22 +154,7 @@ const LogsActivities = () => {
       title: "QUERY",
       dataIndex: "query",
       key: "query",
-      render: (query: string) => (
-        <>
-          <Tooltip
-            title={
-              <JsonView
-                data={query}
-                shouldExpandNode={allExpanded}
-                style={darkStyles}
-              />
-            }
-            placement="bottomLeft"
-          >
-            {query}
-          </Tooltip>
-        </>
-      ),
+      render: (query: string) => <>{query}</>,
       className:
         "max-w-[15rem] whitespace-nowrap overflow-hidden text-ellipsis",
     },
@@ -187,20 +162,7 @@ const LogsActivities = () => {
       title: "REQUEST BODY",
       dataIndex: "requestBody",
       key: "requestBody",
-      render: (requestBody: string) => (
-        <Tooltip
-          title={
-            <JsonView
-              data={requestBody}
-              shouldExpandNode={allExpanded}
-              style={darkStyles}
-            />
-          }
-          placement="bottomLeft"
-        >
-          {requestBody}
-        </Tooltip>
-      ),
+      render: (requestBody: string) => <>{requestBody}</>,
       className:
         "max-w-[15rem] whitespace-nowrap overflow-hidden text-ellipsis",
     },
@@ -399,24 +361,18 @@ const LogsActivities = () => {
             <>
               {role?.displayRole.isDelete && role.name === "admin" && (
                 <>
-                  <Tooltip
-                    placement="top"
-                    title="Xóa các hoạt động"
-                    arrow={true}
+                  <Button
+                    type="dashed"
+                    disabled={selectedRowKeys.length === 0}
+                    danger
+                    onClick={handleDelete}
+                    icon={<DeleteOutlined />}
                   >
-                    <Button
-                      type="dashed"
-                      disabled={selectedRowKeys.length === 0}
-                      danger
-                      onClick={handleDelete}
-                      icon={<DeleteOutlined />}
-                    >
-                      Xóa{" "}
-                      {selectedRowKeys.length !== 0
-                        ? `(${selectedRowKeys.length})`
-                        : ""}
-                    </Button>
-                  </Tooltip>
+                    Xóa{" "}
+                    {selectedRowKeys.length !== 0
+                      ? `(${selectedRowKeys.length})`
+                      : ""}
+                  </Button>
                 </>
               )}
             </>

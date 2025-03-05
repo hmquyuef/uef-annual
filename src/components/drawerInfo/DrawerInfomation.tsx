@@ -1,7 +1,11 @@
 "use client";
 
+import { putListMembersCharitable } from "@/services/generalWorks/charitableServices";
 import { putListMembersLaborUnion } from "@/services/generalWorks/laborUnionServices";
 import { MembersInfomations } from "@/services/generalWorks/membersInfomation";
+import { putListMembersSchoolLevel } from "@/services/generalWorks/schoolLevelServices";
+import { putListMembersUnitLevel } from "@/services/generalWorks/unitLevelServices";
+import { putListMembersYouthUnion } from "@/services/generalWorks/youthUnionServices";
 import { getUsersFromHRM, UsersFromHRM } from "@/services/users/usersServices";
 import { SaveOutlined } from "@ant-design/icons";
 import {
@@ -10,17 +14,12 @@ import {
   Table,
   TableColumnsType,
   TableProps,
-  Tooltip,
   Transfer,
-  TransferProps,
+  TransferProps
 } from "antd";
 import { FC, Key, useEffect, useState } from "react";
 import CustomNotification from "../CustomNotification";
 import PDFViewer from "../files/PDFViewer";
-import { putListMembersYouthUnion } from "@/services/generalWorks/youthUnionServices";
-import { putListMembersCharitable } from "@/services/generalWorks/charitableServices";
-import { putListMembersSchoolLevel } from "@/services/generalWorks/schoolLevelServices";
-import { putListMembersUnitLevel } from "@/services/generalWorks/unitLevelServices";
 
 type TransferItem = GetProp<TransferProps, "dataSource">[number];
 type TableRowSelection<T extends object> = TableProps<T>["rowSelection"];
@@ -224,19 +223,17 @@ const DrawerInfomation: FC<FormBM08DrawerProps> = ({
     <div className="grid grid-cols-3 gap-6">
       {users && (
         <div className="col-span-2 max-h-fit">
-          <Tooltip title="Cập nhật thông tin" placement="topLeft">
-            <Button
-              type="primary"
-              icon={<SaveOutlined />}
-              className="mb-4"
-              onClick={(e) => {
-                e.preventDefault();
-                handleSave();
-              }}
-            >
-              Cập nhật
-            </Button>
-          </Tooltip>
+          <Button
+            type="primary"
+            icon={<SaveOutlined />}
+            className="mb-4"
+            onClick={(e) => {
+              e.preventDefault();
+              handleSave();
+            }}
+          >
+            Cập nhật
+          </Button>
           <TableTransfer
             dataSource={users
               .sort((a, b) => a.unitName.localeCompare(b.unitName))
