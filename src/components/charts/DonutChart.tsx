@@ -1,9 +1,9 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import React, { FC, useEffect, useState } from "react";
-import { ApexOptions } from "apexcharts";
 import Colors from "@/utility/Colors";
+import { ApexOptions } from "apexcharts";
+import dynamic from "next/dynamic";
+import { FC, useEffect, useState } from "react";
 // Import động ReactApexChart
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -41,29 +41,19 @@ const DonutChart: FC<DonutChartProps> = ({ categories, seriesData }) => {
       Colors.ORANGE,
       Colors.RED,
       Colors.PURPLE,
+      Colors.INDIGO_500,
+      Colors.ROSE_500,
+      Colors.AMBER_500,
+      Colors.YELLOW_300,
+      Colors.LIME_400,
+      Colors.CYAN_400,
+      Colors.ZINC_800,
+      Colors.YELLOW_700,
+      Colors.RED_300,
     ],
-    fill: {
-      type: "gradient",
-      gradient: {
-        shade: "dark",
-        type: "diagonal1",
-        shadeIntensity: 0.5,
-        gradientToColors: [
-          Colors.BLUE,
-          Colors.GREEN,
-          Colors.ORANGE,
-          Colors.RED,
-          Colors.PURPLE,
-        ],
-        inverseColors: false,
-        opacityFrom: 1,
-        opacityTo: 1,
-        stops: [0, 100], // Các điểm dừng màu
-      },
-    },
     legend: {
       position: "right",
-      offsetY: 80,
+      offsetY: -20,
       formatter: (seriesName: string, opts: any) => {
         const value = opts.w.config.series[opts.seriesIndex];
         const color = opts.w.config.colors[opts.seriesIndex];
@@ -72,7 +62,7 @@ const DonutChart: FC<DonutChartProps> = ({ categories, seriesData }) => {
     },
     labels: categories,
     dataLabels: {
-      enabled: true,
+      enabled: false,
       formatter: (val: number) => {
         return `${val.toFixed(1)}%`;
       },
@@ -80,7 +70,7 @@ const DonutChart: FC<DonutChartProps> = ({ categories, seriesData }) => {
     plotOptions: {
       pie: {
         donut: {
-          size: "60%",
+          size: "40%",
           labels: {
             show: true,
             total: {
@@ -97,14 +87,14 @@ const DonutChart: FC<DonutChartProps> = ({ categories, seriesData }) => {
     },
     responsive: [
       {
-        breakpoint: 480,
+        breakpoint: 500,
         options: {
           chart: {
-            width: 300,
+            width: 400,
           },
-          legend: {
-            position: "bottom",
-          },
+          // legend: {
+          //   position: "bottom",
+          // },
         },
       },
     ],
@@ -118,12 +108,12 @@ const DonutChart: FC<DonutChartProps> = ({ categories, seriesData }) => {
   }, [seriesData]);
 
   return (
-    <div className="w-full">
+    <div className="h-full w-full flex justify-center items-center">
       <ReactApexChart
         options={options}
         series={dataSeries}
         type="donut"
-        height={320}
+        width={500}
       />
     </div>
   );

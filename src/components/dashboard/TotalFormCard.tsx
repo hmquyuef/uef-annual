@@ -1,94 +1,53 @@
 "use client";
 
-import Colors from "@/utility/Colors";
-import { Badge, Card } from "antd";
-import clsx from "clsx";
-import { FC, useEffect, useState } from "react";
+import { Statistic, StatisticProps } from "antd";
+import { FC, useMemo } from "react";
+import CountUp from "react-countup";
 
 interface TotalFormCardProps {
   data: any;
-  color: string;
-  src: string;
 }
 
-const TotalFormCard: FC<TotalFormCardProps> = ({ data, color, src }) => {
-  const [totalItems, setTotalItems] = useState<number>(0);
+const categories: Record<string, string[]> = {
+  "Nội quy lao động": ["bm13", "bm15"],
+  "Bồi dưỡng trình độ": ["bm07"],
+  "Công tác chung": ["bm08", "bm09", "bm10", "bm11", "bm12"],
+  "Công tác khác": ["bm01", "bm02", "bm03", "bm04", "bm05", "bm14"],
+};
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTotalItems((prev) =>
-        prev < data.totalItems ? prev + 1 : data.totalItems
+const TotalFormCard: FC<TotalFormCardProps> = ({ data }) => {
+  const totals = useMemo(() => {
+    return Object.keys(categories).reduce((acc, key) => {
+      acc[key] = data.reduce(
+        (sum: number, item: any) =>
+          categories[key].includes(item.shortName)
+            ? sum + item.totalItems
+            : sum,
+        0
       );
-    }, 10);
-    return () => clearInterval(interval);
-  }, [data.totalItems]);
+      return acc;
+    }, {} as Record<string, number>);
+  }, [data]);
+
+  const formatter: StatisticProps["formatter"] = (value) => (
+    <CountUp end={value as number} duration={3} separator="," />
+  );
 
   return (
-    <div className="cursor-pointer transition-transform duration-300 hover:-translate-y-2">
-      <Badge.Ribbon text={`tỉ lệ: ${data.approvedPercent}%`}>
-        <Card title={data.shortName.toUpperCase()} size="small">
-          <div className="flex flex-col justify-center">
-            <span>Biểu mẫu: {data.formName}</span>
-            <span>Số sự kiện: {totalItems}</span>
-          </div>
-        </Card>
-      </Badge.Ribbon>
-      {/* <div className="flex justify-center">
+    <div className="grid grid-cols-2 gap-6">
+      {Object.entries(totals).map(([label, value], index) => (
         <div
-          className={clsx(
-            "w-2/3 shadow-sm rounded-lg h-5",
-            `shadow-${color}-100`,
-            `hover:shadow-${color}-200`
-          )}
-          style={{ backgroundColor: Colors.BACKGROUND }}
-        />
-      </div>
-      <div
-        className={clsx(
-          `bg-${color}-50 rounded-lg h-32 shadow-md mt-[-8px] p-4`,
-          `shadow-${color}-200 hover:shadow-lg hover:shadow-${color}-300`
-        )}
-      >
-        <div className="grid grid-rows-3 h-full">
-          <div className="row-span-2 flex justify-between items-start mt-1">
-            <div className="w-full flex flex-col">
-              <span
-                className={clsx(`text-${color}-400 max-h-11 h-11 font-semibold text-[14px]`)}
-              >
-                {data.formName}
-              </span>
-              <div className="px-4">
-                <span
-                  className={clsx(
-                    `font-bold font-serif text-${color}-600 text-5xl`
-                  )}
-                >
-                  {totalItems}
-                </span>
-                <span
-                  className={clsx(
-                    `text-${color}-400 font-semibold text-[13px] ms-2`
-                  )}
-                >
-                  sự kiện
-                </span>
-              </div>
-            </div>
-            <img
-              src={`/${src}`}
-              width={60}
-              className={`p-3 rounded-lg bg-${color}-100`}
-            />
-          </div>
-          <div className="flex justify-end items-end">
-            <span
-              className={clsx(`text-[13px] font-semibold text-${color}-400`)}
-            >
-              tỉ lệ: {data.percentage}%
-            </span>
-          </div>
+          key={label}
+          className="flex flex-col justify-center items-center px-12 py-4 cursor-pointer border border-neutral-200 rounded-lg hover:border-blue-500 hover:shadow-lg hover:shadow-blue-200"
+        >
+          <Statistic
+            value={value}
+            formatter={formatter}
+            valueStyle={{ fontSize: "48px" }}
+          />
+          <span className="text-neutral-400 text-sm">{label}</span>
         </div>
-      </div> */}
+      ))}
     </div>
   );
 };

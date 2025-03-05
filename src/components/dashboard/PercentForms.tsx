@@ -1,30 +1,30 @@
 "use client";
 
+import Colors from "@/utility/Colors";
 import { Progress } from "antd";
 import { FC, useEffect, useState } from "react";
 
 interface PercentFormsProps {
   data: any;
-  color: string;
-  src: string;
+  color: number | 0;
 }
 
-const PercentForms: FC<PercentFormsProps> = ({ data, color, src }) => {
+const PercentForms: FC<PercentFormsProps> = ({ data, color }) => {
   const [datapercent, setDataPercent] = useState<number | 0>(0);
-  const getColor = (color: string): string => {
+  const getColor = (color: number): string => {
     switch (color) {
-      case "blue":
-        return "rgb(59 130 246)";
-      case "red":
-        return "rgb(239 68 68)";
-      case "orange":
-        return "rgb(249 115 22)";
-      case "violet":
-        return "rgb(139 92 246)";
-      case "green":
-        return "rgb(34 197 94)";
+      case 0:
+        return Colors.BLUE;
+      case 1:
+        return Colors.GREEN;
+      case 2:
+        return Colors.ORANGE;
+      case 3:
+        return Colors.RED;
+      case 4:
+        return Colors.PURPLE;
       default:
-        return "rgb(0 0 0)";
+        return "black";
     }
   };
   useEffect(() => {
@@ -38,31 +38,45 @@ const PercentForms: FC<PercentFormsProps> = ({ data, color, src }) => {
     return () => clearInterval(interval);
   }, [data.approvedPercent]);
   return (
-    <div className="grid grid-cols-5 gap-3">
-      {/* <FastBackwardOutlined
-        className={`bg-${color}-100 text-${color}-600 p-3 text-2xl rounded-lg`}
-      /> */}
-      <img
-        src={`/${src}`}
-        width={60}
-        className={`p-3 rounded-lg bg-${color}-100`}
-      />
-      <div className="col-span-4 flex flex-col justify-center">
-        <div className="grid grid-cols-5">
-          <span className={`col-span-4 text-${color}-400 font-semibold text-[13px]`}>
-            {data.formName} ({data.totalApprovedItems}/{data.totalItems})
-          </span>
-          <span className={`text-${color}-400 font-semibold text-end text-sm`}>
-            {data.approvedPercent}%
-          </span>
-        </div>
-        <Progress
-          percent={datapercent}
-          status="active"
-          showInfo={false}
-          strokeColor={{ from: getColor(color), to: getColor(color) }}
-        />
+    <div>
+      <div className="flex justify-between text-purple-400">
+        <span
+          className={`font-semibold text-sm text-${
+            color === 0
+              ? "blue"
+              : color === 1
+              ? "green"
+              : color === 2
+              ? "orange"
+              : color === 3
+              ? "red"
+              : "purple"
+          }-400`}
+        >
+          {data.formName} ({data.totalApprovedItems}/{data.totalItems})
+        </span>
+        <span
+          className={`font-semibold text-sm text-${
+            color === 0
+              ? "blue"
+              : color === 1
+              ? "green"
+              : color === 2
+              ? "orange"
+              : color === 3
+              ? "red"
+              : "purple"
+          }-400`}
+        >
+          {data.approvedPercent}%
+        </span>
       </div>
+      <Progress
+        percent={datapercent}
+        status="active"
+        showInfo={false}
+        strokeColor={{ from: getColor(color), to: getColor(color) }}
+      />
     </div>
   );
 };

@@ -4,14 +4,13 @@ import BarChart from "@/components/charts/BarChart";
 import DonutChart from "@/components/charts/DonutChart";
 import MultiLineChart from "@/components/charts/MultiLineChart";
 import PercentForms from "@/components/dashboard/PercentForms";
-import TopHumanChart from "@/components/dashboard/TopHumanChart";
 import TotalFormCard from "@/components/dashboard/TotalFormCard";
+import { LoadingSpin } from "@/components/skeletons/LoadingSpin";
 import { getAllLogActivities } from "@/services/history/logActivityServices";
 import {
   getAllReports,
   getDataFaculties,
   getDataFacultiesById,
-  getDataHuman,
   getReportMultiMonths,
   getReportMultiYears,
 } from "@/services/reports/reportsServices";
@@ -19,24 +18,28 @@ import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
 import PageTitles from "@/utility/Constraints";
 import { convertTimestampToFullDateTime } from "@/utility/Utilities";
-import {
-  HomeOutlined,
-  LineChartOutlined,
-  MoreOutlined,
-} from "@ant-design/icons";
+import { HomeOutlined, LineChartOutlined } from "@ant-design/icons";
 import {
   Breadcrumb,
-  Button,
   Empty,
   Segmented,
   Select,
-  Spin,
+  Statistic,
+  StatisticProps,
+  Table,
+  Tabs,
+  TabsProps,
   Timeline,
 } from "antd";
 import { Key, useEffect, useState } from "react";
+import CountUp from "react-countup";
 
 const Home = () => {
-  const listPercent = ["bm01", "bm02", "bm03", "bm04", "bm05"];
+  const listUnions = ["bm13", "bm15"];
+  const listTrainings = ["bm07"];
+  const listGenerals = ["bm08", "bm09", "bm10", "bm11", "bm12"];
+  const listOthers = ["bm01", "bm02", "bm03", "bm04", "bm05", "bm14"];
+
   const [loading, setLoading] = useState(false);
   const [defaultYears, setDefaultYears] = useState<any>();
   const [selectedKey, setSelectedKey] = useState<any>();
@@ -47,9 +50,98 @@ const Home = () => {
   const [dataHistory, setDataHistory] = useState<any>();
   const [dataFaculties, setDataFaculties] = useState<any>();
   const [dataFacultyById, setDataFacultyById] = useState<any>();
-  const [dataHuman, setDataHuman] = useState<any>();
   const [units, setUnits] = useState<UnitItem[]>([]);
   const [selectedKeyUnit, setSelectedKeyUnit] = useState<Key | null>(null);
+  const formatter: StatisticProps["formatter"] = (value) => (
+    <CountUp end={value as number} duration={3} separator="," />
+  );
+
+  const onChange = (key: string) => {
+    console.log(key);
+  };
+
+  const columns = [
+    {
+      title: <div className="py-2">STT</div>,
+      dataIndex: "stt",
+      key: "stt",
+      render: (_: any, __: any, index: number) => {
+        return <>{index + 1}</>;
+      },
+      className: "text-center w-[40px]",
+    },
+    {
+      title: "VIẾT TẮT",
+      dataIndex: "shortName",
+      key: "shortName",
+      className: "text-center w-[100px]",
+      render: (shortName: string) => <>{shortName.toLocaleUpperCase()}</>,
+    },
+    {
+      title: "BIỂU MẪU",
+      dataIndex: "formName",
+      key: "formName",
+      className: "max-w-1/2",
+      render: (formName: string) => <>{formName}</>,
+    },
+    {
+      title: "NHÓM",
+      dataIndex: "groupName",
+      key: "groupName",
+      className: "text-center w-[200px]",
+      render: (groupName: string) => <>{groupName}</>,
+    },
+    {
+      title: "SỐ HOẠT ĐỘNG",
+      dataIndex: "totalItems",
+      key: "totalItems",
+      className: "text-center w-[150px]",
+      render: (totalItems: string) => <>{totalItems}</>,
+    },
+  ];
+
+  const generateTab = (key: string, label: string, filterList: string[]) => ({
+    key,
+    label,
+    children: (
+      <Table
+        size="small"
+        pagination={false}
+        bordered
+        dataSource={dataReports?.items.filter((x: any) =>
+          filterList.includes(x.shortName)
+        )}
+        summary={() => (
+          <Table.Summary.Row>
+            <Table.Summary.Cell
+              colSpan={4}
+              index={0}
+              className="text-center font-semibold text-base bg-blue-50"
+            >
+              Tổng số hoạt động
+            </Table.Summary.Cell>
+            <Table.Summary.Cell
+              index={5}
+              className="text-center font-semibold text-base bg-blue-50"
+            >
+              {dataReports?.items
+                .filter((x: any) => filterList.includes(x.shortName))
+                .reduce((acc: number, cur: any) => acc + cur.totalItems, 0)}
+            </Table.Summary.Cell>
+          </Table.Summary.Row>
+        )}
+        columns={columns}
+        className="custom-table-header"
+      />
+    ),
+  });
+
+  const items: TabsProps["items"] = [
+    generateTab("1", "Nội quy lao động", listUnions),
+    generateTab("2", "Bồi dưỡng trình độ", listTrainings),
+    generateTab("3", "Công tác chung", listGenerals),
+    generateTab("4", "Công tác khác", listOthers),
+  ];
 
   const getListUnits = async () => {
     const response = await getAllUnits("true");
@@ -77,7 +169,6 @@ const Home = () => {
       getMultiLineMonths(yearId.id),
       getHistory(yearId.id),
       getFacultiesChart(yearId.id),
-      getHumanChart(yearId.id),
       getFacultiesChartById(yearId.id, tempUnits[0].id),
     ]);
     const timeoutId = setTimeout(() => {
@@ -109,7 +200,7 @@ const Home = () => {
       response &&
         response.items
           .filter((x) => x.method !== "GET")
-          .slice(0, 5)
+          .slice(0, 7)
           .map((item) => {
             const message = item.method === "GET" ? "đã xem" : "đã";
             return {
@@ -122,13 +213,23 @@ const Home = () => {
                   ? "orange"
                   : "red",
               children: (
-                <div className="mb-[-16px]">
-                  <p className="text-[13px]">
+                <div className="border-b">
+                  <p className="text-sm">
                     <span className="font-semibold text-blue-500">
                       {item.username}
                     </span>{" "}
                     {message}{" "}
-                    <span className="font-semibold text-blue-500">
+                    <span
+                      className={`font-semibold text-${
+                        item.method === "GET"
+                          ? "blue"
+                          : item.method === "POST"
+                          ? "green"
+                          : item.method === "PUT"
+                          ? "orange"
+                          : "red"
+                      }-500`}
+                    >
                       {item.functionName}
                     </span>
                   </p>
@@ -152,12 +253,6 @@ const Home = () => {
     setDataFacultyById(response);
   };
 
-  const getHumanChart = async (yearId: string) => {
-    // const response = await getDataHuman(yearId);
-    // setDataHuman(response.items);
-    setDataHuman([]);
-  };
-
   const handleChangeYear = (value: any) => {
     setLoading(true);
     const temp = defaultYears.filter((x: any) => x.id === value)[0] as any;
@@ -167,7 +262,6 @@ const Home = () => {
       getMultiLineMonths(temp.id),
       getHistory(temp.id),
       getFacultiesChart(temp.id),
-      getHumanChart(temp.id),
       getFacultiesChartById(temp.id, units[0].id),
     ]);
     const timeoutId = setTimeout(() => {
@@ -190,7 +284,7 @@ const Home = () => {
   }, []);
 
   return (
-    <section>
+    <section className="px-2">
       <div className="mb-3">
         <Breadcrumb
           items={[
@@ -229,7 +323,6 @@ const Home = () => {
               value: year.id,
               label: year.title,
             }))}
-            //
             value={selectedKey && selectedKey.title}
             onChange={(value) => handleChangeYear(value)}
             className="w-fit"
@@ -239,191 +332,138 @@ const Home = () => {
       <hr className="mb-3" />
       {loading ? (
         <>
-          <Spin tip="Đang tải dữ liệu...">{<div className="p-[80px]" />}</Spin>
+          <LoadingSpin isLoadingSpin={loading} />
         </>
       ) : (
         <>
-          <div className="grid grid-cols-5 gap-5 mb-4">
-            {dataReports &&
-              dataReports.items.map((form: any) => {
-                return (
-                  <TotalFormCard
-                    data={form}
-                    color="neutral"
-                    src="class-leader.svg"
-                  />
-                );
-              })}
-          </div>
-          {/* (
-            <>
-              <div className="grid grid-cols-6 gap-4 mb-4">
-                <TotalFormCard
-                  data={
-                    dataReports.items.find((x: any) => x.formName === "BM01") ??
-                    {}
-                  }
-                  color="blue"
-                  src="class-leader.svg"
-                />
-                <TotalFormCard
-                  data={dataReports.form_BM02}
-                  color="green"
-                  src="assistant.svg"
-                />
-                <TotalFormCard
-                  data={dataReports.form_BM03}
-                  color="orange"
-                  src="admission.svg"
-                />
-                <TotalFormCard
-                  data={dataReports.form_BM04}
-                  color="red"
-                  src="qae.svg"
-                />
-                <TotalFormCard
-                  data={dataReports.form_BM05}
-                  color="violet"
-                  src="activity.svg"
-                />
-                <TotalFormCard
-                  data={dataReports.form_BM05}
-                  color="violet"
-                  src="activity.svg"
-                />
+          <section className="grid grid-cols-3 gap-6 my-6">
+            <div className="bg-white flex flex-col justify-between rounded-lg shadow-lg">
+              <div className="px-4 py-3 h-14 border-b">
+                <span className="text-neutral-400 align-middle">Tổng quan</span>
               </div>
-            </>
-          )} */}
-          <section className="mb-4">
-            <div className="grid grid-cols-5 gap-4">
-              <div className="bg-white flex flex-col rounded-lg shadow-lg cursor-pointer">
-                <div className="px-4 py-3 flex justify-between items-center">
-                  <span className="text-neutral-400 font-semibold text-[14px]">
-                    Các hoạt động gần đây
-                  </span>
-                  <Button type="text" shape="circle" icon={<MoreOutlined />} />
-                </div>
-                <hr />
-                <div className="h-full p-3 flex justify-center mt-2">
-                  {dataHistory && dataHistory.length > 0 ? (
+              <div
+                className="flex flex-col justify-center items-center"
+                style={{ height: "calc(100% - 56px)" }}
+              >
+                <div className="flex flex-col items-center mb-6">
+                  {dataReports && (
                     <>
-                      <Timeline items={dataHistory} className="h-fit mt-3" />
-                    </>
-                  ) : (
-                    <div className="flex items-center">
-                      <Empty description="Không có dữ liệu..."></Empty>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="bg-white col-span-3 flex flex-col rounded-lg shadow-lg cursor-pointer">
-                <div className="px-4 py-3 flex justify-between items-center">
-                  <span className="text-neutral-400 font-semibold text-[14px]">
-                    Thống kê các hoạt động theo thời gian
-                  </span>
-                  <div className="flex gap-4">
-                    <Segmented
-                      options={["Tháng", "Năm"]}
-                      onChange={(value) => handleChangeMultiLineType(value)}
-                    />
-                  </div>
-                </div>
-                <hr />
-                <div className="h-full px-3 py-2 flex items-center justify-center">
-                  {typeChart === "month" ? (
-                    <>
-                      {dataMultiLineMonths && (
-                        <>
-                          <div className="my-[-20px] w-full">
-                            <MultiLineChart
-                              categories={dataMultiLineMonths.categories}
-                              seriesData={dataMultiLineMonths.data}
-                            />
-                          </div>
-                        </>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      {dataMultiLineYears && (
-                        <>
-                          <div className="my-[-20px] w-full">
-                            <MultiLineChart
-                              categories={dataMultiLineYears.categories}
-                              seriesData={dataMultiLineYears.data}
-                            />
-                          </div>
-                        </>
-                      )}
+                      <Statistic
+                        value={dataReports.totalItems}
+                        formatter={formatter}
+                        valueStyle={{ fontSize: "72px", color: "black" }}
+                      />
                     </>
                   )}
-                </div>
-              </div>
-              <div className="bg-white flex flex-col rounded-lg shadow-lg cursor-pointer">
-                <div className="px-4 py-3 flex justify-between items-center">
-                  <span className="text-neutral-400 font-semibold text-[14px]">
-                    Tỉ lệ phê duyệt
+                  <span className="text-neutral-400 text-sm">
+                    Tổng số hoạt động
                   </span>
-                  <Button type="text" shape="circle" icon={<MoreOutlined />} />
                 </div>
-                <hr />
-                <div className="h-full px-3 flex flex-col items-center justify-center gap-[14px]">
-                  {dataReports &&
-                    dataReports.items
-                      .filter((form: any) =>
-                        listPercent.includes(form.shortName)
-                      )
-                      .map((form: any) => {
-                        return (
-                          <PercentForms
-                            data={form}
-                            color="blue"
-                            src="class-leader.svg"
-                          />
-                        );
-                      })}
-                </div>
-                {/* {dataReports && (
+                {dataReports && (
                   <>
-                    <div className="h-full px-3 flex flex-col items-center justify-center gap-[14px]">
-                      <PercentForms
-                        data={dataReports.form_BM01}
-                        color="blue"
-                        src="class-leader.svg"
-                      />
-                      <PercentForms
-                        data={dataReports.form_BM02}
-                        color="green"
-                        src="assistant.svg"
-                      />
-                      <PercentForms
-                        data={dataReports.form_BM03}
-                        color="orange"
-                        src="admission.svg"
-                      />
-                      <PercentForms
-                        data={dataReports.form_BM04}
-                        color="red"
-                        src="qae.svg"
-                      />
-                      <PercentForms
-                        data={dataReports.form_BM05}
-                        color="violet"
-                        src="activity.svg"
-                      />
-                    </div>
+                    <TotalFormCard data={dataReports.items} />
                   </>
-                )} */}
+                )}
+              </div>
+            </div>
+            <div className="col-span-2 h-[550px] bg-white rounded-lg shadow-lg cursor-pointer">
+              <div className="px-4 py-3 h-14 flex justify-between items-center">
+                <span className="text-neutral-400 align-middle">
+                  Thống kê các hoạt động theo thời gian
+                </span>
+                <div className="flex gap-4">
+                  <Segmented
+                    options={["Tháng", "Năm"]}
+                    onChange={(value) => handleChangeMultiLineType(value)}
+                  />
+                </div>
+              </div>
+              <hr />
+              <div className="h-fit px-4 py-5 flex items-center justify-center">
+                {typeChart === "month" ? (
+                  <>
+                    {dataMultiLineMonths && (
+                      <>
+                        <div className="w-full">
+                          <MultiLineChart
+                            categories={dataMultiLineMonths.categories}
+                            seriesData={dataMultiLineMonths.data}
+                          />
+                        </div>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {dataMultiLineYears && (
+                      <>
+                        <div className="w-full">
+                          <MultiLineChart
+                            categories={dataMultiLineYears.categories}
+                            seriesData={dataMultiLineYears.data}
+                          />
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           </section>
-          <section className="grid grid-cols-3 gap-4 mb-4">
+          <section className="grid grid-cols-3 gap-6 mb-6">
+            <div className="col-span-2 bg-white flex flex-col rounded-lg shadow-lg cursor-pointer">
+              <div className="px-4 py-3 h-14 flex justify-between items-center">
+                <span className="text-neutral-400 align-middle">
+                  Thông tin các biểu mẫu
+                </span>
+              </div>
+              <hr />
+              {dataReports && (
+                <>
+                  <div className="h-full px-6 py-2">
+                    <Tabs
+                      defaultActiveKey="1"
+                      items={items}
+                      onChange={onChange}
+                      indicator={{
+                        size: (origin: any) => origin - 20,
+                        align: "center",
+                      }}
+                      className="h-full"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
             <div className="bg-white flex flex-col rounded-lg shadow-lg cursor-pointer">
-              <div className="px-4 py-3 flex justify-between items-center">
-                <span className="text-neutral-400 font-semibold text-[14px]">
+              <div className="px-4 py-3 h-14 flex justify-between items-center">
+                <span className="text-neutral-400 align-middle">
+                  Tỉ lệ phê duyệt
+                </span>
+              </div>
+              <hr />
+              <div className="h-full px-6 py-4 flex flex-col gap-4">
+                {dataReports &&
+                  dataReports.items
+                    .filter((form: any) => listOthers.includes(form.shortName))
+                    .map((form: any, index: number) => {
+                      return (
+                        <PercentForms
+                          key={`percent-form-${index}`}
+                          data={form}
+                          color={index}
+                        />
+                      );
+                    })}
+              </div>
+            </div>
+          </section>
+          <section className="grid grid-cols-3 gap-6 mb-6">
+            <div className="bg-white flex flex-col rounded-lg shadow-lg cursor-pointer">
+              <div className="px-4 py-3 h-14 flex justify-between items-center">
+                <span className="text-neutral-400 align-middle">
                   Thống kê hoạt động theo đơn vị
                 </span>
-                <Button type="text" shape="circle" icon={<MoreOutlined />} />
               </div>
               <hr />
               <div className="h-full p-3 flex justify-center mt-2">
@@ -440,8 +480,8 @@ const Home = () => {
               </div>
             </div>
             <div className="bg-white flex flex-col rounded-lg shadow-lg cursor-pointer">
-              <div className="px-4 py-3 flex justify-between items-center">
-                <span className="text-neutral-400 font-semibold text-[14px]">
+              <div className="px-4 py-3 h-14 flex justify-between items-center">
+                <span className="text-neutral-400 align-middle">
                   Tổng hợp hoạt động theo
                 </span>
                 <Select
@@ -476,7 +516,25 @@ const Home = () => {
                 )}
               </div>
             </div>
-            {dataHuman && <TopHumanChart data={dataHuman} />}
+            <div className="bg-white flex flex-col rounded-lg shadow-lg cursor-pointer">
+              <div className="px-4 py-3 h-14 flex justify-between items-center">
+                <span className="text-neutral-400 align-middle">
+                  Các hoạt động gần đây
+                </span>
+              </div>
+              <hr />
+              <div className="px-3 pt-8 flex justify-center">
+                {dataHistory ? (
+                  <>
+                    <Timeline items={dataHistory} className="h-fit w-11/12" />
+                  </>
+                ) : (
+                  <div className="flex items-center">
+                    <Empty description="Không có dữ liệu..."></Empty>
+                  </div>
+                )}
+              </div>
+            </div>
           </section>
         </>
       )}

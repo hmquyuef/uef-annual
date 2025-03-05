@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import React, { FC, useEffect, useState } from "react";
 import { ApexOptions } from "apexcharts";
+import Colors from "@/utility/Colors";
 // Import động ReactApexChart
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -39,7 +40,22 @@ const BarChart: FC<BarChartProps> = ({ categories, seriesData }) => {
       offsetY: -16,
       style: {
         fontSize: "11px",
-        colors: ["#000000a0"],
+        colors: [
+          Colors.BLUE,
+          Colors.GREEN,
+          Colors.ORANGE,
+          Colors.RED,
+          Colors.PURPLE,
+          Colors.INDIGO_500,
+          Colors.ROSE_500,
+          Colors.AMBER_500,
+          Colors.YELLOW_300,
+          Colors.LIME_400,
+          Colors.CYAN_400,
+          Colors.ZINC_800,
+          Colors.YELLOW_700,
+          Colors.RED_300,
+        ],
       },
       textAnchor: "middle",
       formatter: function (val) {
@@ -49,7 +65,22 @@ const BarChart: FC<BarChartProps> = ({ categories, seriesData }) => {
     legend: {
       show: false,
     },
-    colors: ["#53fbdd"],
+    colors: [
+      Colors.BLUE,
+      Colors.GREEN,
+      Colors.ORANGE,
+      Colors.RED,
+      Colors.PURPLE,
+      Colors.INDIGO_500,
+      Colors.ROSE_500,
+      Colors.AMBER_500,
+      Colors.YELLOW_300,
+      Colors.LIME_400,
+      Colors.CYAN_400,
+      Colors.ZINC_800,
+      Colors.YELLOW_700,
+      Colors.RED_300,
+    ],
     plotOptions: {
       bar: {
         columnWidth: "45%",
@@ -64,6 +95,27 @@ const BarChart: FC<BarChartProps> = ({ categories, seriesData }) => {
     },
     xaxis: {
       categories: categories,
+      labels: {
+        style: {
+          fontSize: "11px",
+          colors: [
+            Colors.BLUE,
+            Colors.GREEN,
+            Colors.ORANGE,
+            Colors.RED,
+            Colors.PURPLE,
+            Colors.INDIGO_500,
+            Colors.ROSE_500,
+            Colors.AMBER_500,
+            Colors.YELLOW_300,
+            Colors.LIME_400,
+            Colors.CYAN_400,
+            Colors.ZINC_800,
+            Colors.YELLOW_700,
+            Colors.RED_300,
+          ],
+        },
+      },
     },
   };
 
@@ -80,7 +132,7 @@ const BarChart: FC<BarChartProps> = ({ categories, seriesData }) => {
       options={options}
       series={dataSeries}
       type="bar"
-      height={350}
+      height={500}
     />
   );
 };

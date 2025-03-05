@@ -23,7 +23,7 @@ const MultiLineChart: FC<MultiLineChartProps> = ({
   const options: ApexOptions = {
     chart: {
       zoom: {
-        enabled: true,
+        enabled: false,
       },
       stackOnlyBar: false,
       toolbar: {
@@ -39,14 +39,14 @@ const MultiLineChart: FC<MultiLineChartProps> = ({
       },
       animations: {
         enabled: true,
-        speed: 500,
+        speed: 600,
         animateGradually: {
           enabled: true,
-          delay: 150,
+          delay: 250,
         },
         dynamicAnimation: {
           enabled: true,
-          speed: 800,
+          speed: 900,
         },
       },
     },
@@ -59,7 +59,7 @@ const MultiLineChart: FC<MultiLineChartProps> = ({
       },
     },
     markers: {
-      size: 4,
+      size: 6,
     },
     stroke: {
       curve: "smooth",
@@ -71,6 +71,18 @@ const MultiLineChart: FC<MultiLineChartProps> = ({
     tooltip: {
       enabled: true,
       shared: true,
+      followCursor: false,
+      intersect: false,
+      theme: "light",
+      x: {
+        show: true,
+      },
+      y: {
+        formatter: (value: number) => `${value.toLocaleString()} hoạt động`,
+      },
+      marker: {
+        show: true,
+      },
     },
     legend: {
       position: "bottom",
@@ -88,10 +100,19 @@ const MultiLineChart: FC<MultiLineChartProps> = ({
       Colors.ORANGE,
       Colors.RED,
       Colors.PURPLE,
+      Colors.INDIGO_500,
+      Colors.ROSE_500,
+      Colors.AMBER_500,
+      Colors.YELLOW_300,
+      Colors.LIME_400,
+      Colors.CYAN_400,
+      Colors.ZINC_800,
+      Colors.YELLOW_700,
+      Colors.RED_300,
     ],
     grid: {
       borderColor: "#e7e7e7",
-      strokeDashArray: 4,
+      strokeDashArray: 5,
     },
   };
 
@@ -108,7 +129,7 @@ const MultiLineChart: FC<MultiLineChartProps> = ({
         options={options}
         series={dataSeries}
         type="line"
-        height="300"
+        height="450"
       />
     </div>
   );
