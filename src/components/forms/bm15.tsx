@@ -37,7 +37,7 @@ import {
   Modal,
   Select,
   TableColumnsType,
-  Tag
+  Tag,
 } from "antd";
 
 import saveAs from "file-saver";
@@ -307,11 +307,13 @@ const BM15 = () => {
       key: "file",
       className: "customInfoColors text-center w-[100px]",
       render: (_, item: EmployeesRegulationItem) => {
-        const path = item.determinations.files[0]?.path;
-        return path !== "" && path !== undefined ? (
+        const file = item.determinations.files.find(
+          (x) => x.type === "application/pdf"
+        );
+        return file && file !== undefined ? (
           <>
             <Link
-              href={"https://api-annual.uef.edu.vn/" + path}
+              href={"https://api-annual.uef.edu.vn/" + file.path}
               target="__blank"
             >
               <span className="text-green-500">

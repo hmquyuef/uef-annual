@@ -288,6 +288,8 @@ const FormBM15: FC<FormBM15Props> = (props) => {
         if (fileData) setListPicture(fileData);
 
         setHistory(initialData.histories ?? []);
+        setShowPDF(false);
+        if (handleShowPDF) handleShowPDF(false);
       } catch (error) {
         console.error("Error loading users:", error);
       } finally {
@@ -310,7 +312,9 @@ const FormBM15: FC<FormBM15Props> = (props) => {
   }, [formNotification.isOpen]);
 
   return (
-    <div className="grid grid-cols-1 mb-2">
+    <div
+      className={`grid ${showPDF ? "grid-cols-2 gap-4" : "grid-cols-1"} mb-2`}
+    >
       {isLoading ? (
         <>
           <LoadingSkeleton />

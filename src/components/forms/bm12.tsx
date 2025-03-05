@@ -40,7 +40,7 @@ import {
   MenuProps,
   Select,
   TableColumnsType,
-  Tag
+  Tag,
 } from "antd";
 import { Key, useCallback, useEffect, useState } from "react";
 import CustomModal from "../CustomModal";
@@ -262,11 +262,13 @@ const BM12 = () => {
       key: "file",
       className: "customInfoColors text-center w-[110px]",
       render: (_, item: UnitLevelItem) => {
-        const path = item.determinations.files[0]?.path;
-        return path !== "" && path !== undefined ? (
+        const file = item.determinations.files.find(
+          (x) => x.type === "application/pdf"
+        );
+        return file && file !== undefined ? (
           <>
             <Link
-              href={"https://api-annual.uef.edu.vn/" + path}
+              href={"https://api-annual.uef.edu.vn/" + file.path}
               target="__blank"
             >
               <span className="text-green-500">

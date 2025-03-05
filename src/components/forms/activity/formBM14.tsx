@@ -279,6 +279,8 @@ const FormBM14: FC<FormBM14Props> = (props) => {
         // Cập nhật danh sách ảnh nếu có file đính kèm
         const fileData = getFileData(initialData.determinations.files);
         if (fileData) setListPicture(fileData);
+        setShowPDF(false);
+        if (handleShowPDF) handleShowPDF(false);
       } catch (error) {
         console.error("Error loading users:", error);
       } finally {

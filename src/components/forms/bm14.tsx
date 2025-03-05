@@ -47,7 +47,7 @@ import {
   Modal,
   Select,
   TableColumnsType,
-  Tag
+  Tag,
 } from "antd";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
@@ -219,11 +219,13 @@ const BM14 = () => {
       key: "file",
       className: "customInfoColors text-center w-[100px]",
       render: (_, item: InvigilatorItem) => {
-        const path = item.determinations.files[0]?.path;
-        return path !== "" && path !== undefined ? (
+        const file = item.determinations.files.find(
+          (x) => x.type === "application/pdf"
+        );
+        return file && file !== undefined ? (
           <>
             <Link
-              href={"https://api-annual.uef.edu.vn/" + path}
+              href={"https://api-annual.uef.edu.vn/" + file.path}
               target="__blank"
             >
               <span className="text-green-500">

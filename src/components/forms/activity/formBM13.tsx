@@ -265,6 +265,8 @@ const FormBM13: FC<FormBM13Props> = (props) => {
         } else {
           ResetForms();
         }
+        setShowPDF(false);
+        if (handleShowPDF) handleShowPDF(false);
       } catch (error) {
         console.error("Error loading users:", error);
       } finally {
@@ -287,7 +289,9 @@ const FormBM13: FC<FormBM13Props> = (props) => {
   }, [formNotification.isOpen]);
 
   return (
-    <div className="grid grid-cols-1 mb-2">
+    <div
+      className={`grid ${showPDF ? "grid-cols-2 gap-4" : "grid-cols-1"} mb-2`}
+    >
       {isLoading ? (
         <>
           <LoadingSkeleton />

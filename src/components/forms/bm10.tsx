@@ -41,7 +41,7 @@ import {
   MenuProps,
   Select,
   TableColumnsType,
-  Tag
+  Tag,
 } from "antd";
 import Link from "next/link";
 import { Key, useCallback, useEffect, useState } from "react";
@@ -252,11 +252,13 @@ const BM10 = () => {
       key: "file",
       className: "customInfoColors text-center w-[110px]",
       render: (_, item: CharitableItem) => {
-        const path = item.determinations.files[0]?.path;
-        return path !== "" && path !== undefined ? (
+        const file = item.determinations.files.find(
+          (x) => x.type === "application/pdf"
+        );
+        return file && file !== undefined ? (
           <>
             <Link
-              href={"https://api-annual.uef.edu.vn/" + path}
+              href={"https://api-annual.uef.edu.vn/" + file.path}
               target="__blank"
             >
               <span className="text-green-500">
