@@ -1,13 +1,8 @@
 "use client";
 
 import CustomNotification from "@/components/CustomNotification";
-import { MembersInfomations } from "@/services/generalWorks/membersInfomation";
 import { DisplayRoleItem } from "@/services/roles/rolesServices";
-import {
-  deleteFiles,
-  FileItem,
-  postFiles,
-} from "@/services/uploads/uploadsServices";
+import { FileItem } from "@/services/uploads/uploadsServices";
 import Colors from "@/utility/Colors";
 import {
   CloudUploadOutlined,
@@ -15,7 +10,14 @@ import {
   MinusCircleOutlined,
 } from "@ant-design/icons";
 import { Button, Progress } from "antd";
-import { FC, FormEvent, useEffect, useMemo, useState } from "react";
+import {
+  FC,
+  FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState
+} from "react";
 import { useDropzone } from "react-dropzone";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -32,7 +34,6 @@ const FromUpload: FC<FromUploadProps> = ({
   onSubmit,
   displayRole,
 }) => {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLoadingExcel, setIsLoadingExcel] = useState<boolean>(false);
   const [isLoadingPDF, setIsLoadingPDF] = useState<boolean>(false);
   const [percentExcel, setPercentExcel] = useState<number>(0);
@@ -58,163 +59,156 @@ const FromUpload: FC<FromUploadProps> = ({
     fileParticipant: new File([""], "filename"),
     fileAttachment: new File([""], "filename"),
   });
-
   const handleDeleteExcel = async () => {
+    if (!excel || !excel.name) return;
+
     setIsLoadingExcel(true);
-    if (excel && excel.name !== "") {
-      let intervalId = setInterval(() => {
-        setPercentExcel((prevPercent) => {
-          let newPercent = prevPercent === 0 ? 100 : prevPercent - 1;
-          if (newPercent === 0) {
-            clearInterval(intervalId);
-            setExcel(undefined);
-            setIsLoadingExcel(false);
-            return 0;
-          }
-          return newPercent;
-        });
-      }, 10);
-    }
+    setPercentExcel(100);
+
+    let percent = 100;
+    const intervalId = setInterval(() => {
+      percent -= 1;
+      setPercentExcel((prev) => Math.max(prev - 1, 0));
+
+      if (percent <= 0) {
+        clearInterval(intervalId);
+        setExcel(undefined);
+        setIsLoadingExcel(false);
+      }
+    }, 10);
   };
+
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    if (acceptedFiles.length === 0) return;
+
+    const file = acceptedFiles[0];
+
+    // Kiểm tra định dạng file
+    if (
+      file.type !==
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    ) {
+      setFormNotification({
+        isOpen: true,
+        status: "error",
+        message: "Định dạng tệp tin không hợp lệ!",
+        description: `Tệp ${file.name} có định dạng ${file.type}. Vui lòng chọn tệp .xlsx`,
+      });
+      return;
+    }
+
+    // Kiểm tra dung lượng file
+    if (file.size / (1024 * 1024) > 5) {
+      setFormNotification({
+        isOpen: true,
+        status: "error",
+        message: "Dung lượng tệp tin quá lớn!",
+        description: `Tệp ${file.name} có dung lượng ${(
+          file.size /
+          (1024 * 1024)
+        ).toFixed(2)} MB, vượt quá 5MB!`,
+      });
+      return;
+    }
+
+    setIsLoadingExcel(true);
+    setPercentExcel(0);
+
+    let percent = 0;
+    const intervalId = setInterval(() => {
+      percent += 1;
+      setPercentExcel((prev) => Math.min(prev + 1, 100));
+
+      if (percent >= 100) {
+        clearInterval(intervalId);
+        setTimeout(() => setIsLoadingExcel(false), 500);
+      }
+    }, 10);
+
+    setExcel({ name: file.name, path: "", type: file.type, size: file.size });
+    setFormValues((prev) => ({ ...prev, fileParticipant: file }));
+  }, []);
 
   const {
     getRootProps: getParticipantRootProps,
     getInputProps: getParticipantInputProps,
-  } = useDropzone({
-    onDrop: useMemo(
-      () => async (acceptedFiles: File[]) => {
-        if (
-          acceptedFiles[0].type !==
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        ) {
-          setFormNotification((prev) => ({
-            ...prev,
-            isOpen: true,
-            status: "error",
-            message: "Định dạng tệp tin không hợp lệ!",
-            description: `Định dạng tệp tin ${acceptedFiles[0].name} là ${acceptedFiles[0].type}. Vui lòng chọn định dạng .xlsx`,
-          }));
-          return;
-        }
-        if (acceptedFiles[0].size / (1024 * 1024) > 5) {
-          setFormNotification((prev) => ({
-            ...prev,
-            isOpen: true,
-            status: "error",
-            message: "Dung lượng tệp tin quá lớn!",
-            description: `Dung lượng tệp tin ${acceptedFiles[0].name} là ${(
-              acceptedFiles[0].size /
-              (1024 * 1024)
-            ).toFixed(2)} MB, vượt quá dung lượng tối đa 5 MB!`,
-          }));
-          return;
-        }
-        if (acceptedFiles[0].size > 0) {
-          setIsLoadingExcel(true);
-          let intervalId = setInterval(() => {
-            setPercentExcel((prevPercent) => {
-              prevPercent = prevPercent === 100 ? 0 : prevPercent;
-              const newPercent = prevPercent + 1;
-              if (newPercent >= 100) {
-                clearInterval(intervalId);
-                setTimeout(() => {
-                  setIsLoadingExcel(false);
-                }, 500);
-                return 100;
-              }
-              return newPercent;
-            });
-          }, 10);
-          setExcel({
-            name: acceptedFiles[0].name,
-            path: "",
-            type: acceptedFiles[0].type,
-            size: acceptedFiles[0].size,
-          });
-          setFormValues((prev) => ({
-            ...prev,
-            fileParticipant: acceptedFiles[0],
-          }));
-        }
-      },
-      [excel, setPercentExcel]
-    ),
-  });
+  } = useDropzone({ onDrop });
 
   const handleDeletePdf = async () => {
+    if (!pdf || !pdf.name) return;
+
     setIsLoadingPDF(true);
-    if (excel && excel.name !== "") {
-      let intervalId = setInterval(() => {
-        setPercentPDF((prevPercent) => {
-          let newPercent = prevPercent === 0 ? 100 : prevPercent - 1;
-          if (newPercent === 0) {
-            clearInterval(intervalId);
-            setPdf(undefined);
-            setIsLoadingPDF(false);
-            return 0;
-          }
-          return newPercent;
-        });
-      }, 10);
-    }
+    setPercentPDF(100);
+
+    let percent = 100;
+    const intervalId = setInterval(() => {
+      percent -= 1;
+      setPercentPDF((prev) => Math.max(prev - 1, 0));
+
+      if (percent <= 0) {
+        clearInterval(intervalId);
+        setPdf(undefined);
+        setIsLoadingPDF(false);
+      }
+    }, 10);
   };
 
   const { getRootProps: getPDFRootProps, getInputProps: getPDFInputProps } =
     useDropzone({
       onDrop: useMemo(
         () => async (acceptedFiles: File[]) => {
-          if (acceptedFiles[0].type !== "application/pdf") {
-            setFormNotification((prev) => ({
-              ...prev,
+          if (acceptedFiles.length === 0) return;
+
+          const file = acceptedFiles[0];
+
+          // Kiểm tra định dạng file
+          if (file.type !== "application/pdf") {
+            setFormNotification({
               isOpen: true,
               status: "error",
               message: "Định dạng tệp tin không hợp lệ!",
-              description: `Định dạng tệp tin ${acceptedFiles[0].name} là ${acceptedFiles[0].type}. Vui lòng chọn định dạng .pdf`,
-            }));
+              description: `Tệp ${file.name} có định dạng ${file.type}. Vui lòng chọn tệp .pdf`,
+            });
             return;
           }
-          if (acceptedFiles[0].size / (1024 * 1024) > 10) {
-            setFormNotification((prev) => ({
-              ...prev,
+
+          // Kiểm tra dung lượng file
+          if (file.size / (1024 * 1024) > 10) {
+            setFormNotification({
               isOpen: true,
               status: "error",
               message: "Dung lượng tệp tin quá lớn!",
-              description: `Dung lượng tệp tin ${acceptedFiles[0].name} là ${(
-                acceptedFiles[0].size /
+              description: `Tệp ${file.name} có dung lượng ${(
+                file.size /
                 (1024 * 1024)
-              ).toFixed(2)} MB, vượt quá dung lượng tối đa 10 MB!`,
-            }));
+              ).toFixed(2)} MB, vượt quá 10MB!`,
+            });
             return;
           }
-          if (acceptedFiles[0].size > 0) {
-            setIsLoadingPDF(true);
-            let intervalId = setInterval(() => {
-              setPercentPDF((prevPercent) => {
-                prevPercent = prevPercent === 100 ? 0 : prevPercent;
-                const newPercent = prevPercent + 1;
-                if (newPercent >= 100) {
-                  clearInterval(intervalId);
-                  setTimeout(() => {
-                    setIsLoadingPDF(false);
-                  }, 500);
-                  return 100;
-                }
-                return newPercent;
-              });
-            }, 10);
-            setPdf({
-              name: acceptedFiles[0].name,
-              path: "",
-              type: acceptedFiles[0].type,
-              size: acceptedFiles[0].size,
-            });
-            setFormValues((prev) => ({
-              ...prev,
-              fileAttachment: acceptedFiles[0],
-            }));
-          }
+
+          setIsLoadingPDF(true);
+          setPercentPDF(0);
+
+          let percent = 0;
+          const intervalId = setInterval(() => {
+            percent += 1;
+            setPercentPDF((prev) => Math.min(prev + 1, 100));
+
+            if (percent >= 100) {
+              clearInterval(intervalId);
+              setTimeout(() => setIsLoadingPDF(false), 500);
+            }
+          }, 10);
+
+          setPdf({
+            name: file.name,
+            path: "",
+            type: file.type,
+            size: file.size,
+          });
+          setFormValues((prev) => ({ ...prev, fileAttachment: file }));
         },
-        [pdf, setPercentPDF]
+        []
       ),
     });
 

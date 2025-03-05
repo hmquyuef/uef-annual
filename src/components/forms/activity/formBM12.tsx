@@ -240,59 +240,84 @@ const FormBM12: FC<FormBM12Props> = (props) => {
   };
 
   useEffect(() => {
-    setIsLoading(true);
+    const findFile = (type: string) =>
+      initialData?.determinations?.files?.find(
+        (file: any) => file.type === type
+      );
+
     const loadUsers = async () => {
-      if (mode === "edit" && initialData !== undefined) {
-        const file = initialData.determinations.files.find(
-          (x: { type: string }) => x.type === "application/pdf"
-        );
-        const excel = initialData.determinations.files.find(
-          (x: { type: string }) => x.type === "application/pdf"
-        );
-        const unit = UnitsHRM.find(
-          (unit) => unit.code === initialData.eventsOrganizer
-        );
-        setSelectedKeyUnit(unit?.idHrm ?? null);
-        setFormValues({
-          eventsOrganizer: initialData.eventsOrganizer ?? "",
-          contents: initialData.contents ?? "",
-          documentNumber: initialData.determinations.documentNumber ?? "",
-          internalNumber: initialData.determinations.internalNumber ?? "",
-          documentDate: initialData.determinations.documentDate ?? 0,
-          fromDate: initialData.determinations.fromDate ?? 0,
-          toDate: initialData.determinations.toDate ?? 0,
-          entryDate: initialData?.determinations.entryDate
-            ? initialData.determinations.entryDate
-            : timestamp,
-          eventVenue: initialData.eventVenue ?? "",
-          sponsor: initialData.sponsor ?? "",
-          attackmentFile: file,
-          attackmentExcel: excel,
-          note: initialData.note ?? "",
-        });
-        setMembers(initialData.members);
-        if (initialData.attackmentFile) {
-          setPdf(initialData.attackmentFile);
+      setIsLoading(true);
+      try {
+        if (mode === "edit" && initialData) {
+          const file = findFile("application/pdf");
+          const excel = findFile(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          );
+
+          const unit = UnitsHRM.find(
+            (unit) => unit.code === initialData.eventsOrganizer
+          );
+          setSelectedKeyUnit(unit?.idHrm ?? null);
+
+          setFormValues((prev) => {
+            const newValues = {
+              eventsOrganizer: initialData.eventsOrganizer ?? "",
+              contents: initialData.contents ?? "",
+              documentNumber: initialData.determinations?.documentNumber ?? "",
+              internalNumber: initialData.determinations?.internalNumber ?? "",
+              documentDate: initialData.determinations?.documentDate ?? 0,
+              fromDate: initialData.determinations?.fromDate ?? 0,
+              toDate: initialData.determinations?.toDate ?? 0,
+              entryDate: initialData.determinations?.entryDate ?? timestamp,
+              eventVenue: initialData.eventVenue ?? "",
+              sponsor: initialData.sponsor ?? "",
+              attackmentFile: file ?? null,
+              attackmentExcel: excel ?? null,
+              note: initialData.note ?? "",
+            };
+            return JSON.stringify(prev) !== JSON.stringify(newValues)
+              ? newValues
+              : prev;
+          });
+
+          setMembers((prev) =>
+            JSON.stringify(prev) !== JSON.stringify(initialData.members)
+              ? initialData.members
+              : prev
+          );
+
+          if (file?.path) {
+            setPdf((prev) =>
+              JSON.stringify(prev) !== JSON.stringify(file) ? file : prev
+            );
+          }
+
+          if (excel?.path) {
+            setParticipants((prev) =>
+              JSON.stringify(prev) !== JSON.stringify(excel) ? excel : prev
+            );
+          }
+        } else {
+          ResetForm();
         }
-        if (initialData.attackmentExcel) {
-          setParticipants(initialData.attackmentExcel);
-        }
-      } else {
-        ResetForm();
+      } catch (error) {
+        console.error("Error loading users:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
+
     getListUnits();
     loadUsers();
-    const timeoutId = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-    return () => clearTimeout(timeoutId);
   }, [initialData, mode]);
 
   useEffect(() => {
-    setTimeout(() => {
-      setFormNotification((prev) => ({ ...prev, isOpen: false }));
-    }, 200);
+    if (formNotification.isOpen) {
+      const timeoutId = setTimeout(() => {
+        setFormNotification((prev) => ({ ...prev, isOpen: false }));
+      }, 200);
+      return () => clearTimeout(timeoutId);
+    }
   }, [formNotification.isOpen]);
 
   return (

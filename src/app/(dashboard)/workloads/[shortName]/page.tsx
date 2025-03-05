@@ -15,8 +15,10 @@ const WorkloadPage = () => {
   const [item, setItem] = useState<WorkloadTypeItem[]>([]);
 
   const getWorkloadType = async () => {
-    const response = await getWorkloadTypesByHref(shortName.toString());
-    setItem(response.items);
+    if (shortName) {
+      const response = await getWorkloadTypesByHref(shortName.toString());
+      setItem(response.items);
+    }
   };
 
   useEffect(() => {

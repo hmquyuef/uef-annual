@@ -30,12 +30,12 @@ import { useDropzone } from "react-dropzone";
 import InfoApproved from "./infoApproved";
 import InfoPDF from "./infoPDF";
 
+import { handleDeleteFile } from "@/components/files/RemoveFile";
 import { handleUploadFile } from "@/components/files/UploadFile";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
-import { handleDeleteFile } from "@/components/files/RemoveFile";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -205,62 +205,91 @@ const FormBM01: FC<FormBM01Props> = (props) => {
   };
 
   useEffect(() => {
-    setIsLoading(true);
     const loadUsers = async () => {
-      const units = await getAllUnits("true");
-      if (mode === "edit") {
-        const unit = units.items.find((u) => u.code === initialData?.unitName);
-        if (unit) {
-          setDefaultUnits([unit]);
-          const usersTemp = await getUsersFromHRMbyId(unit.idHrm);
-          const userTemp = usersTemp.items.find(
-            (user) =>
-              user.userName.toUpperCase() ===
-              initialData?.userName?.toUpperCase()
+      setIsLoading(true);
+
+      try {
+        const units = await getAllUnits("true");
+        if (mode === "edit" && initialData) {
+          const unit = units.items.find((u) => u.code === initialData.unitName);
+
+          if (unit) {
+            setDefaultUnits((prev) =>
+              JSON.stringify(prev) !== JSON.stringify([unit]) ? [unit] : prev
+            );
+
+            const usersTemp = await getUsersFromHRMbyId(unit.idHrm);
+            const userTemp = usersTemp.items.find(
+              (user) =>
+                user.userName.toUpperCase() ===
+                initialData.userName?.toUpperCase()
+            );
+
+            setDefaultUsers((prev) =>
+              userTemp && JSON.stringify(prev) !== JSON.stringify([userTemp])
+                ? [userTemp]
+                : prev
+            );
+          }
+
+          const newFormValues = {
+            semester: initialData.semester || "",
+            subject: initialData.subject || "",
+            course: initialData.course || "",
+            classCode: initialData.classCode || "",
+            standardValues: initialData.standardNumber || 0,
+            documentNumber: initialData.determinations?.documentNumber || "",
+            internalNumber: initialData.determinations?.internalNumber || "",
+            documentDate: initialData.determinations?.documentDate || 0,
+            fromDate: initialData.determinations?.fromDate || 0,
+            toDate: initialData.determinations?.toDate || 0,
+            entryDate: initialData.determinations?.entryDate || timestamp,
+            attackmentFile: initialData.determinations?.files?.[0] || {
+              type: "",
+              path: "",
+              name: "",
+              size: 0,
+            },
+            note: initialData.note || "",
+          };
+
+          setFormValues((prev) =>
+            JSON.stringify(prev) !== JSON.stringify(newFormValues)
+              ? newFormValues
+              : prev
           );
-          setDefaultUsers([userTemp] as UsersFromHRM[]);
+
+          const newListPicture =
+            initialData.determinations?.files?.[0] || undefined;
+          setListPicture((prev) =>
+            JSON.stringify(prev) !== JSON.stringify(newListPicture)
+              ? newListPicture
+              : prev
+          );
+        } else {
+          resetForm();
+          setUnits(units.items);
         }
-        setFormValues({
-          semester: initialData?.semester || "",
-          subject: initialData?.subject || "",
-          course: initialData?.course || "",
-          classCode: initialData?.classCode || "",
-          standardValues: initialData?.standardNumber || 0,
-          documentNumber: initialData?.determinations.documentNumber || "",
-          internalNumber: initialData?.determinations.internalNumber || "",
-          documentDate: initialData?.determinations.documentDate || 0,
-          fromDate: initialData?.determinations.fromDate || 0,
-          toDate: initialData?.determinations.toDate || 0,
-          entryDate: initialData?.determinations.entryDate
-            ? initialData.determinations.entryDate
-            : timestamp,
-          attackmentFile: {
-            type: initialData?.determinations.files[0]?.type || "",
-            path: initialData?.determinations.files[0]?.path || "",
-            name: initialData?.determinations.files[0]?.name || "",
-            size: initialData?.determinations.files[0]?.size || 0,
-          },
-          note: initialData?.note || "",
-        });
-        setListPicture(initialData?.determinations.files[0] || undefined);
-      } else {
-        resetForm();
-        setUnits(units.items);
-      }
-      handleShowPDF(false);
-      setShowPDF(false);
-      const timeoutId = setTimeout(() => {
+
+        setShowPDF(false);
+        if (handleShowPDF) handleShowPDF(false);
+      } catch (error) {
+        console.error("Error loading users:", error);
+      } finally {
         setIsLoading(false);
-      }, 500);
-      return () => clearTimeout(timeoutId);
+      }
     };
+
     loadUsers();
-  }, [initialData, mode, handleShowPDF]);
+  }, [initialData, mode]); // Giữ dependencies tối thiểu để tránh re-render liên tục
 
   useEffect(() => {
-    setTimeout(() => {
-      setFormNotification((prev) => ({ ...prev, isOpen: false }));
-    }, 200);
+    if (formNotification.isOpen) {
+      const timeoutId = setTimeout(() => {
+        setFormNotification((prev) => ({ ...prev, isOpen: false }));
+      }, 200);
+      return () => clearTimeout(timeoutId);
+    }
   }, [formNotification.isOpen]);
 
   return (

@@ -230,55 +230,88 @@ const FormBM07: FC<FormBM07Props> = (props) => {
   };
 
   useEffect(() => {
-    setIsLoading(true);
     const loadUsers = async () => {
-      if (mode === "edit" && initialData !== undefined) {
-        const units = await getAllUnits("true");
-        const unit = units.items.find(
-          (unit) => unit.code === initialData.unitName
-        );
-        if (unit) {
-          setDefaultUnits([unit]);
-          const usersTemp = await getUsersFromHRMbyId(unit.idHrm);
-          const userTemp = usersTemp.items.find(
-            (user) =>
-              user.userName.toUpperCase() ===
-              initialData.userName?.toUpperCase()
+      setIsLoading(true);
+
+      try {
+        if (mode === "edit" && initialData) {
+          const units = await getAllUnits("true");
+          const unit = units.items.find(
+            (unit) => unit.code === initialData.unitName
           );
-          setDefaultUsers([userTemp] as UsersFromHRM[]);
+
+          if (unit) {
+            setDefaultUnits((prev) =>
+              JSON.stringify(prev) !== JSON.stringify([unit]) ? [unit] : prev
+            );
+
+            const usersTemp = await getUsersFromHRMbyId(unit.idHrm);
+            const userTemp = usersTemp.items.find(
+              (user) =>
+                user.userName.toUpperCase() ===
+                initialData.userName?.toUpperCase()
+            );
+
+            setDefaultUsers((prev) =>
+              userTemp && JSON.stringify(prev) !== JSON.stringify([userTemp])
+                ? [userTemp]
+                : prev
+            );
+          }
+
+          setFormValues((prev) => {
+            const newValues = {
+              contents: initialData.contents || "",
+              issuanceDate: initialData.issuanceDate || 0,
+              issuancePlace: initialData.issuancePlace || "",
+              entryDate: initialData.determinations?.entryDate || timestamp,
+              documentNumber: initialData.determinations?.documentNumber || "",
+              documentDate: initialData.determinations?.documentDate || 0,
+              attackmentFile: initialData.determinations?.files?.[0] || {
+                type: "",
+                path: "",
+                name: "",
+                size: 0,
+              },
+              type: initialData.type || "",
+              note: initialData.note || "",
+            };
+            return JSON.stringify(prev) !== JSON.stringify(newValues)
+              ? newValues
+              : prev;
+          });
+
+          setListPicture((prev) =>
+            JSON.stringify(prev) !==
+            JSON.stringify(initialData.determinations?.files?.[0])
+              ? initialData.determinations?.files?.[0]
+              : prev
+          );
+        } else {
+          ResetForm();
+          getListUnits();
         }
-        setFormValues({
-          contents: initialData.contents || "",
-          issuanceDate: initialData.issuanceDate || 0,
-          issuancePlace: initialData.issuancePlace || "",
-          entryDate: initialData?.determinations.entryDate
-            ? initialData.determinations.entryDate
-            : timestamp,
-          documentNumber: initialData?.determinations.documentNumber || "",
-          documentDate: initialData?.determinations.documentDate || 0,
-          attackmentFile: {
-            type: initialData?.determinations.files[0]?.type || "",
-            path: initialData?.determinations.files[0]?.path || "",
-            name: initialData?.determinations.files[0]?.name || "",
-            size: initialData?.determinations.files[0]?.size || 0,
-          },
-          type: initialData.type || "",
-          note: initialData.note || "",
-        });
-        setListPicture(initialData?.determinations.files[0] || undefined);
-      } else {
-        ResetForm();
-        getListUnits();
+
+        setShowPDF(false);
+        if (handleShowPDF) handleShowPDF(false);
+      } catch (error) {
+        console.error("Error loading users:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
+
     loadUsers();
-    handleShowPDF(false);
-    setShowPDF(false);
-    const timeoutId = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-    return () => clearTimeout(timeoutId);
   }, [initialData, mode]);
+
+  useEffect(() => {
+    if (formNotification.isOpen) {
+      const timeoutId = setTimeout(() => {
+        setFormNotification((prev) => ({ ...prev, isOpen: false }));
+      }, 200);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [formNotification.isOpen]);
 
   return (
     <div

@@ -220,23 +220,44 @@ const FormBM14: FC<FormBM14Props> = (props) => {
   };
 
   useEffect(() => {
-    setIsLoading(true);
     const loadUsers = async () => {
-      if (mode === "edit" && initialData !== undefined) {
+      setIsLoading(true);
+      try {
+        if (mode !== "edit" || !initialData) {
+          ResetForms();
+          return;
+        }
+
+        // Lấy danh sách đơn vị
         const units = await getAllUnits("true");
-        const unit = units.items.find(
-          (unit) => unit.code === initialData.unitName
-        );
+        const unit = units.items.find((u) => u.code === initialData.unitName);
+
         if (unit) {
           setDefaultUnits([unit]);
+
+          // Lấy danh sách người dùng của đơn vị
           const usersTemp = await getUsersFromHRMbyId(unit.idHrm);
           const userTemp = usersTemp.items.find(
             (user) =>
               user.userName.toUpperCase() ===
               initialData.userName?.toUpperCase()
           );
-          setDefaultUsers([userTemp] as UsersFromHRM[]);
+
+          if (userTemp) setDefaultUsers([userTemp] as UsersFromHRM[]);
         }
+
+        // Hàm lấy thông tin file đính kèm
+        const getFileData = (files?: any[]) => {
+          if (!files?.length) return null;
+          const file = files[0];
+          return {
+            type: file.type || "",
+            path: file.path || "",
+            name: file.name || "",
+            size: file.size || 0,
+          };
+        };
+
         setFormValues({
           totalSessions: initialData.totalSessions,
           standardNumber: initialData.standardNumber,
@@ -254,24 +275,29 @@ const FormBM14: FC<FormBM14Props> = (props) => {
           },
           note: initialData.note,
         });
-        setListPicture(initialData?.determinations?.files[0] || undefined);
-      } else {
-        ResetForms();
+
+        // Cập nhật danh sách ảnh nếu có file đính kèm
+        const fileData = getFileData(initialData.determinations.files);
+        if (fileData) setListPicture(fileData);
+      } catch (error) {
+        console.error("Error loading users:", error);
+      } finally {
+        setIsLoading(false);
+        setIsExist(false);
       }
     };
+
     getListUnits();
     loadUsers();
-    setIsExist(false);
-    const timeoutId = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-    return () => clearTimeout(timeoutId);
   }, [initialData, mode]);
 
   useEffect(() => {
-    setTimeout(() => {
-      setFormNotification((prev) => ({ ...prev, isOpen: false }));
-    }, 200);
+    if (formNotification.isOpen) {
+      const timeoutId = setTimeout(() => {
+        setFormNotification((prev) => ({ ...prev, isOpen: false }));
+      }, 200);
+      return () => clearTimeout(timeoutId);
+    }
   }, [formNotification.isOpen]);
 
   return (

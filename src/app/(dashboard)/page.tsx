@@ -56,9 +56,9 @@ const Home = () => {
     <CountUp end={value as number} duration={3} separator="," />
   );
 
-  const onChange = (key: string) => {
-    console.log(key);
-  };
+  // const onChange = (key: string) => {
+  //   console.log(key);
+  // };
 
   const columns = [
     {
@@ -104,35 +104,37 @@ const Home = () => {
     key,
     label,
     children: (
-      <Table
-        size="small"
-        pagination={false}
-        bordered
-        dataSource={dataReports?.items.filter((x: any) =>
-          filterList.includes(x.shortName)
-        )}
-        summary={() => (
-          <Table.Summary.Row>
-            <Table.Summary.Cell
-              colSpan={4}
-              index={0}
-              className="text-center font-semibold text-base bg-blue-50"
-            >
-              Tổng số hoạt động
-            </Table.Summary.Cell>
-            <Table.Summary.Cell
-              index={5}
-              className="text-center font-semibold text-base bg-blue-50"
-            >
-              {dataReports?.items
-                .filter((x: any) => filterList.includes(x.shortName))
-                .reduce((acc: number, cur: any) => acc + cur.totalItems, 0)}
-            </Table.Summary.Cell>
-          </Table.Summary.Row>
-        )}
-        columns={columns}
-        className="custom-table-header"
-      />
+      <>
+        <Table
+          size="small"
+          pagination={false}
+          bordered
+          dataSource={dataReports?.items
+            .filter((x: any) => filterList.includes(x.shortName))
+            .map((item: any) => ({ ...item, key: item.id || item.shortName }))}
+          summary={() => (
+            <Table.Summary.Row  key={`${label}-${key}-summary`}>
+              <Table.Summary.Cell
+                colSpan={4}
+                index={0}
+                className="text-center font-semibold text-base bg-blue-50"
+              >
+                Tổng số hoạt động
+              </Table.Summary.Cell>
+              <Table.Summary.Cell
+                index={5}
+                className="text-center font-semibold text-base bg-blue-50"
+              >
+                {dataReports?.items
+                  .filter((x: any) => filterList.includes(x.shortName))
+                  .reduce((acc: number, cur: any) => acc + cur.totalItems, 0)}
+              </Table.Summary.Cell>
+            </Table.Summary.Row>
+          )}
+          columns={columns}
+          className="custom-table-header"
+        />
+      </>
     ),
   });
 
@@ -424,9 +426,9 @@ const Home = () => {
                     <Tabs
                       defaultActiveKey="1"
                       items={items}
-                      onChange={onChange}
+                      // onChange={onChange}
                       indicator={{
-                        size: (origin: any) => origin - 20,
+                        size: (origin: any) => origin - 25,
                         align: "center",
                       }}
                       className="h-full"

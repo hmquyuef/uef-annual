@@ -225,65 +225,88 @@ const FormBM15: FC<FormBM15Props> = (props) => {
   };
 
   useEffect(() => {
-    setIsLoading(true);
     const loadUsers = async () => {
-      if (mode === "edit" && initialData !== undefined) {
+      setIsLoading(true);
+      try {
+        if (mode !== "edit" || !initialData) {
+          ResetForms();
+          return;
+        }
+
+        // Lấy danh sách đơn vị
         const units = await getAllUnits("true");
-        const unit = units.items.find(
-          (unit) => unit.code === initialData.unitName
-        );
+        const unit = units.items.find((u) => u.code === initialData.unitName);
+
         if (unit) {
           setDefaultUnits([unit]);
+
+          // Lấy danh sách người dùng của đơn vị
           const usersTemp = await getUsersFromHRMbyId(unit.idHrm);
           const userTemp = usersTemp.items.find(
             (user) =>
               user.userName.toUpperCase() ===
               initialData.userName?.toUpperCase()
           );
-          setDefaultUsers([userTemp] as UsersFromHRM[]);
+
+          if (userTemp) setDefaultUsers([userTemp] as UsersFromHRM[]);
         }
-        const file = initialData.determinations.files.find(
-          (x: { type: string }) => x.type === "application/pdf"
+
+        // Hàm lấy thông tin file đính kèm
+        const getFileData = (files?: any[]) =>
+          files?.find((f) => f.type === "application/pdf") ?? null;
+
+        const fileData = getFileData(initialData.determinations.files);
+
+        // Cập nhật form values
+        const newFormValues = {
+          documentNumber: initialData.determinations.documentNumber ?? "",
+          internalNumber: initialData.determinations.internalNumber ?? "",
+          documentDate: initialData.determinations.documentDate ?? 0,
+          attendanceDays: initialData.attendanceDays ?? 0,
+          attendanceHours: initialData.attendanceHours ?? 0,
+          lateArrivals: initialData.lateArrivals ?? 0,
+          earlyDepartures: initialData.earlyDepartures ?? 0,
+          unexcusedAbsences: initialData.unexcusedAbsences ?? 0,
+          leaveDays: initialData.leaveDays ?? 0,
+          maternityLeaveDays: initialData.maternityLeaveDays ?? 0,
+          unpaidLeaveDays: initialData.unpaidLeaveDays ?? 0,
+          businessTripDays: initialData.businessTripDays ?? 0,
+          missedFingerprint: initialData.missedFingerprint ?? 0,
+          entryDate: initialData.determinations.entryDate ?? timestamp,
+          attackmentFile: fileData,
+          note: initialData.note ?? "",
+        };
+
+        // Chỉ cập nhật nếu dữ liệu thay đổi
+        setFormValues((prev) =>
+          JSON.stringify(prev) !== JSON.stringify(newFormValues)
+            ? newFormValues
+            : prev
         );
-        setFormValues({
-          documentNumber: initialData.determinations.documentNumber,
-          internalNumber: initialData.determinations.internalNumber,
-          documentDate: initialData.determinations.documentDate,
-          attendanceDays: initialData.attendanceDays,
-          attendanceHours: initialData.attendanceHours,
-          lateArrivals: initialData.lateArrivals,
-          earlyDepartures: initialData.earlyDepartures,
-          unexcusedAbsences: initialData.unexcusedAbsences,
-          leaveDays: initialData.leaveDays,
-          maternityLeaveDays: initialData.maternityLeaveDays,
-          unpaidLeaveDays: initialData.unpaidLeaveDays,
-          businessTripDays: initialData.businessTripDays,
-          missedFingerprint: initialData.missedFingerprint,
-          entryDate: initialData?.determinations.entryDate
-            ? initialData.determinations.entryDate
-            : timestamp,
-          attackmentFile: file,
-          note: initialData.note,
-        });
-        setHistory(initialData.histories);
-        setListPicture(file);
-      } else {
-        ResetForms();
+
+        // Cập nhật danh sách ảnh nếu có file đính kèm
+        if (fileData) setListPicture(fileData);
+
+        setHistory(initialData.histories ?? []);
+      } catch (error) {
+        console.error("Error loading users:", error);
+      } finally {
+        setIsLoading(false);
+        setIsExist(false);
       }
     };
+
     getListUnits();
     loadUsers();
-    setIsExist(false);
-    const timeoutId = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-    return () => clearTimeout(timeoutId);
   }, [initialData, mode]);
 
   useEffect(() => {
-    setTimeout(() => {
-      setFormNotification((prev) => ({ ...prev, isOpen: false }));
-    }, 200);
+    if (formNotification.isOpen) {
+      const timeoutId = setTimeout(() => {
+        setFormNotification((prev) => ({ ...prev, isOpen: false }));
+      }, 200);
+      return () => clearTimeout(timeoutId);
+    }
   }, [formNotification.isOpen]);
 
   return (

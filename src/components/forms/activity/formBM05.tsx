@@ -1,6 +1,8 @@
 "use client";
 
 import CustomNotification from "@/components/CustomNotification";
+import { handleDeleteFile } from "@/components/files/RemoveFile";
+import { handleUploadFile } from "@/components/files/UploadFile";
 import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
 import {
   ActivityInput,
@@ -43,8 +45,6 @@ import { FC, FormEvent, Key, useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import InfoApproved from "./infoApproved";
 import InfoPDF from "./infoPDF";
-import { handleUploadFile } from "@/components/files/UploadFile";
-import { handleDeleteFile } from "@/components/files/RemoveFile";
 dayjs.locale("vi");
 interface FormBM05Props {
   onSubmit: (formData: Partial<AddUpdateActivityItem>) => void;
@@ -305,75 +305,78 @@ const FormBM05: FC<FormBM05Props> = ({
     };
     onSubmit(formData);
   };
+  const resetForm = () => {
+    setDeterEntryDate(timestamp);
+    setName("");
+    setDeterNumber("");
+    setDeterFromDate(0);
+    setDeterEventDate(0);
+    setTableUsers([]);
+    setListPicture(undefined);
+    setDescription("");
+    setDocumentNumber("");
+  };
 
   useEffect(() => {
-    const resetForm = () => {
-      setDeterEntryDate(timestamp);
-      setName("");
-      setDeterNumber("");
-      setDeterFromDate(0);
-      setDeterEventDate(0);
-      setTableUsers([]);
-      setListPicture(undefined);
-      setDescription("");
-      setDocumentNumber("");
-    };
     const loadUsers = async () => {
       setIsLoading(true);
-      if (mode === "edit" && initialData !== undefined) {
-        setName(initialData.name || "");
-        setDeterNumber(initialData.determinations?.documentNumber || "");
-        setDeterEntryDate(
-          initialData.determinations?.entryDate
-            ? new Date(initialData.determinations.entryDate * 1000).getTime()
-            : 0
-        );
-        setDeterEntryDate(
-          initialData.determinations?.entryDate
-            ? initialData.determinations?.entryDate
-            : timestamp
-        );
-        setDeterEventDate(
-          initialData.determinations?.documentDate
-            ? new Date(initialData.determinations.documentDate * 1000).getTime()
-            : 0
-        );
-        setDeterFromDate(
-          initialData.determinations?.fromDate
-            ? new Date(initialData.determinations.fromDate * 1000).getTime()
-            : 0
-        );
-        if (initialData.participants && initialData.participants.length > 0) {
-          setTableUsers(initialData.participants);
-        }
-        if (initialData.determinations?.files[0] !== null) {
-          setListPicture(
-            initialData.determinations?.files[0]
-              ? initialData.determinations.files[0]
-              : undefined
+
+      try {
+        if (mode === "edit" && initialData) {
+          setName(initialData.name || "");
+          setDeterNumber(initialData.determinations?.documentNumber || "");
+          setDeterEntryDate(initialData.determinations?.entryDate || timestamp);
+          setDeterEventDate(
+            initialData.determinations?.documentDate
+              ? new Date(
+                  initialData.determinations.documentDate * 1000
+                ).getTime()
+              : 0
           );
+          setDeterFromDate(
+            initialData.determinations?.fromDate
+              ? new Date(initialData.determinations.fromDate * 1000).getTime()
+              : 0
+          );
+
+          if (initialData.participants?.length) {
+            setTableUsers(initialData.participants);
+          }
+
+          setListPicture((prev) =>
+            JSON.stringify(prev) !==
+            JSON.stringify(initialData.determinations?.files?.[0])
+              ? initialData.determinations?.files?.[0]
+              : prev
+          );
+
+          setDocumentNumber(initialData.determinations?.internalNumber || "");
+        } else {
+          resetForm();
         }
-        setDocumentNumber(initialData.determinations?.internalNumber || "");
-      } else {
-        resetForm();
+
+        setSelectedKey(null);
+        setSelectedKeyUnit(null);
+        setShowPDF(false);
+        if (handleShowPDF) handleShowPDF(false);
+      } catch (error) {
+        console.error("Error loading users:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
+
     loadUsers();
     getListUnits();
-    setSelectedKey(null);
-    setSelectedKeyUnit(null);
-    setShowPDF(false);
-    handleShowPDF(false);
-    const timeoutId = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-    return () => clearTimeout(timeoutId);
   }, [initialData, mode, numberActivity, handleShowPDF]);
 
   useEffect(() => {
-    setTimeout(() => {
-      setFormNotification((prev) => ({ ...prev, isOpen: false }));
-    }, 200);
+    if (formNotification.isOpen) {
+      const timeoutId = setTimeout(() => {
+        setFormNotification((prev) => ({ ...prev, isOpen: false }));
+      }, 200);
+      return () => clearTimeout(timeoutId);
+    }
   }, [formNotification.isOpen]);
 
   return (

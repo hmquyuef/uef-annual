@@ -207,63 +207,85 @@ const FormBM02: FC<FormBM02Props> = (props) => {
   };
 
   useEffect(() => {
-    setIsLoading(true);
     const loadUsers = async () => {
-      if (mode === "edit" && initialData !== undefined) {
-        const units = await getAllUnits("true");
-        const unit = units.items.find(
-          (unit) => unit.code === initialData.unitName
-        );
-        if (unit) {
-          setDefaultUnits([unit]);
-          const usersTemp = await getUsersFromHRMbyId(unit.idHrm);
-          const userTemp = usersTemp.items.find(
-            (user) =>
-              user.userName.toUpperCase() ===
-              initialData.userName?.toUpperCase()
+      setIsLoading(true);
+      try {
+        if (mode === "edit" && initialData) {
+          const units = await getAllUnits("true");
+          const unit = units.items.find((u) => u.code === initialData.unitName);
+
+          if (unit) {
+            setDefaultUnits((prev) =>
+              JSON.stringify(prev) !== JSON.stringify([unit]) ? [unit] : prev
+            );
+
+            const usersTemp = await getUsersFromHRMbyId(unit.idHrm);
+            const userTemp = usersTemp.items.find(
+              (user) =>
+                user.userName.toUpperCase() ===
+                initialData.userName?.toUpperCase()
+            );
+
+            setDefaultUsers((prev) =>
+              userTemp && JSON.stringify(prev) !== JSON.stringify([userTemp])
+                ? [userTemp]
+                : prev
+            );
+          }
+          const newFormValues = {
+            semester: initialData.semester || "",
+            standardValues: initialData.standardNumber || 0,
+            activityName: initialData.activityName || "",
+            classCode: initialData.classCode || "",
+            documentNumber: initialData?.determinations?.documentNumber || "",
+            internalNumber: initialData?.determinations?.internalNumber || "",
+            documentDate: initialData?.determinations?.documentDate || 0,
+            fromDate: initialData?.determinations?.fromDate || 0,
+            toDate: initialData?.toDate || 0,
+            entryDate: initialData?.determinations?.entryDate || timestamp,
+            attackmentFile: initialData?.determinations?.files?.[0] || {
+              type: "",
+              path: "",
+              name: "",
+              size: 0,
+            },
+            note: initialData.note || "",
+          };
+
+          setFormValues((prev) =>
+            JSON.stringify(prev) !== JSON.stringify(newFormValues)
+              ? newFormValues
+              : prev
           );
-          setDefaultUsers([userTemp] as UsersFromHRM[]);
+
+          setListPicture((prev) =>
+            JSON.stringify(prev) !==
+            JSON.stringify(initialData?.determinations?.files?.[0])
+              ? initialData?.determinations?.files?.[0]
+              : prev
+          );
+        } else {
+          resetForm();
         }
-        setFormValues({
-          semester: initialData.semester || "",
-          standardValues: initialData.standardNumber || 0,
-          activityName: initialData.activityName || "",
-          classCode: initialData.classCode || "",
-          documentNumber: initialData?.determinations.documentNumber || "",
-          internalNumber: initialData?.determinations.internalNumber || "",
-          documentDate: initialData?.determinations.documentDate || 0,
-          fromDate: initialData?.determinations.fromDate || 0,
-          toDate: initialData?.toDate || 0,
-          entryDate: initialData?.determinations.entryDate
-            ? initialData.determinations.entryDate
-            : timestamp,
-          attackmentFile: {
-            type: initialData?.determinations.files[0]?.type || "",
-            path: initialData?.determinations.files[0]?.path || "",
-            name: initialData?.determinations.files[0]?.name || "",
-            size: initialData?.determinations.files[0]?.size || 0,
-          },
-          note: initialData.note || "",
-        });
-        setListPicture(initialData?.determinations.files[0] || undefined);
-      } else {
-        resetForm();
+        setShowPDF(false);
+        if (handleShowPDF) handleShowPDF(false);
+      } catch (error) {
+        console.error("Error loading users:", error);
+      } finally {
+        setTimeout(() => setIsLoading(false), 500);
       }
     };
-    getListUnits();
     loadUsers();
-    setShowPDF(false);
-    handleShowPDF(false);
-    const timeoutId = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-    return () => clearTimeout(timeoutId);
-  }, [initialData, mode, handleShowPDF]);
+    getListUnits();
+  }, [initialData, mode]);
 
   useEffect(() => {
-    setTimeout(() => {
-      setFormNotification((prev) => ({ ...prev, isOpen: false }));
-    }, 200);
+    if (formNotification.isOpen) {
+      const timeoutId = setTimeout(() => {
+        setFormNotification((prev) => ({ ...prev, isOpen: false }));
+      }, 200);
+      return () => clearTimeout(timeoutId);
+    }
   }, [formNotification.isOpen]);
 
   return (

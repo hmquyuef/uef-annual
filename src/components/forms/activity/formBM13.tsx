@@ -204,58 +204,86 @@ const FormBM13: FC<FormBM13Props> = (props) => {
   };
 
   useEffect(() => {
-    setIsLoading(true);
+    const findFile = (type: string) =>
+      initialData?.determinations?.files?.find(
+        (file: any) => file.type === type
+      );
+
     const loadUsers = async () => {
-      if (mode === "edit" && initialData !== undefined) {
-        const units = await getAllUnits("true");
-        const unit = units.items.find(
-          (unit) => unit.code === initialData.unitName
-        );
-        if (unit) {
-          setDefaultUnits([unit]);
-          const usersTemp = await getUsersFromHRMbyId(unit.idHrm);
-          const userTemp = usersTemp.items.find(
-            (user) =>
-              user.userName.toUpperCase() ===
-              initialData.userName?.toUpperCase()
+      setIsLoading(true);
+      try {
+        if (mode === "edit" && initialData) {
+          const units = await getAllUnits("true");
+          const unit = units.items.find((u) => u.code === initialData.unitName);
+
+          if (unit) {
+            setDefaultUnits((prev) =>
+              JSON.stringify(prev) !== JSON.stringify([unit]) ? [unit] : prev
+            );
+
+            const usersTemp = await getUsersFromHRMbyId(unit.idHrm);
+            const userTemp = usersTemp.items.find(
+              (user) =>
+                user.userName.toUpperCase() ===
+                initialData.userName?.toUpperCase()
+            );
+            setDefaultUsers((prev) =>
+              JSON.stringify(prev) !== JSON.stringify([userTemp])
+                ? ([userTemp] as UsersFromHRM[])
+                : prev
+            );
+          }
+
+          const file = findFile("application/pdf");
+
+          setFormValues((prev) => {
+            const newValues = {
+              documentNumber: initialData.determinations.documentNumber ?? "",
+              internalNumber: initialData.determinations.internalNumber ?? "",
+              documentDate: initialData.determinations.documentDate ?? 0,
+              notifiedAbsences: initialData.notifiedAbsences ?? 0,
+              unnotifiedAbsences: initialData.unnotifiedAbsences ?? 0,
+              lateEarly: initialData.lateEarly ?? 0,
+              entryDate: initialData?.determinations?.entryDate ?? timestamp,
+              attackmentFile: file ?? null,
+              note: initialData.note ?? "",
+            };
+            return JSON.stringify(prev) !== JSON.stringify(newValues)
+              ? newValues
+              : prev;
+          });
+
+          setHistory((prev) =>
+            JSON.stringify(prev) !== JSON.stringify(initialData.histories)
+              ? initialData.histories
+              : prev
           );
-          setDefaultUsers([userTemp] as UsersFromHRM[]);
+
+          setListPicture((prev) =>
+            JSON.stringify(prev) !== JSON.stringify(file) ? file : prev
+          );
+        } else {
+          ResetForms();
         }
-        const file = initialData.determinations.files.find(
-          (x: { type: string }) => x.type === "application/pdf"
-        );
-        setFormValues({
-          documentNumber: initialData.determinations.documentNumber,
-          internalNumber: initialData.determinations.internalNumber,
-          documentDate: initialData.determinations.documentDate,
-          notifiedAbsences: initialData.notifiedAbsences,
-          unnotifiedAbsences: initialData.unnotifiedAbsences,
-          lateEarly: initialData.lateEarly,
-          entryDate: initialData?.determinations.entryDate
-            ? initialData.determinations.entryDate
-            : timestamp,
-          attackmentFile: file,
-          note: initialData.note,
-        });
-        setHistory(initialData.histories);
-        setListPicture(file);
-      } else {
-        ResetForms();
+      } catch (error) {
+        console.error("Error loading users:", error);
+      } finally {
+        setIsLoading(false);
+        setIsExist(false);
       }
     };
+
     getListUnits();
     loadUsers();
-    setIsExist(false);
-    const timeoutId = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-    return () => clearTimeout(timeoutId);
   }, [initialData, mode]);
 
   useEffect(() => {
-    setTimeout(() => {
-      setFormNotification((prev) => ({ ...prev, isOpen: false }));
-    }, 200);
+    if (formNotification.isOpen) {
+      const timeoutId = setTimeout(() => {
+        setFormNotification((prev) => ({ ...prev, isOpen: false }));
+      }, 200);
+      return () => clearTimeout(timeoutId);
+    }
   }, [formNotification.isOpen]);
 
   return (

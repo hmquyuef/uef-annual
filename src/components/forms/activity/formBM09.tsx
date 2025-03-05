@@ -234,56 +234,74 @@ const FormBM09: FC<FormBM09Props> = (props) => {
   };
 
   useEffect(() => {
-    setIsLoading(true);
+    const findFile = (type: string) =>
+      initialData?.determinations?.files?.find(
+        (file: any) => file.type === type
+      );
+
     const loadUsers = async () => {
-      if (mode === "edit" && initialData !== undefined) {
-        const file = initialData.determinations.files.find(
-          (x: { type: string }) => x.type === "application/pdf"
-        );
-        const excel = initialData.determinations.files.find(
-          (x: { type: string }) =>
-            x.type ===
+      setIsLoading(true);
+
+      try {
+        if (mode === "edit" && initialData) {
+          const file = findFile("application/pdf");
+          const excel = findFile(
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        );
-        setFormValues({
-          contents: initialData.contents || "",
-          documentNumber: initialData.determinations.documentNumber || "",
-          internalNumber: initialData.determinations.internalNumber || "",
-          documentDate: initialData.determinations.documentDate || 0,
-          fromDate: initialData.determinations.fromDate || 0,
-          toDate: initialData.determinations.toDate || 0,
-          entryDate: initialData?.determinations.entryDate
-            ? initialData.determinations.entryDate
-            : timestamp,
-          eventVenue: initialData.eventVenue || "",
-          sponsor: initialData.sponsor || "",
-          attackmentFile: file,
-          attackmentExcel: excel,
-          note: initialData.note || "",
-        });
-        if (file && file.path !== "") {
-          setPdf(file);
-          setIsLoadingPDF(false);
+          );
+
+          setFormValues((prev) => {
+            const newValues = {
+              contents: initialData.contents || "",
+              documentNumber: initialData.determinations?.documentNumber || "",
+              internalNumber: initialData.determinations?.internalNumber || "",
+              documentDate: initialData.determinations?.documentDate || 0,
+              fromDate: initialData.determinations?.fromDate || 0,
+              toDate: initialData.determinations?.toDate || 0,
+              entryDate: initialData.determinations?.entryDate || timestamp,
+              eventVenue: initialData.eventVenue || "",
+              sponsor: initialData.sponsor || "",
+              attackmentFile: file || null,
+              attackmentExcel: excel || null,
+              note: initialData.note || "",
+            };
+            return JSON.stringify(prev) !== JSON.stringify(newValues)
+              ? newValues
+              : prev;
+          });
+
+          if (file?.path) {
+            setPdf((prev) =>
+              JSON.stringify(prev) !== JSON.stringify(file) ? file : prev
+            );
+            setIsLoadingPDF(false);
+          }
+
+          if (excel?.path) {
+            setParticipants((prev) =>
+              JSON.stringify(prev) !== JSON.stringify(excel) ? excel : prev
+            );
+            setIsLoadingExcel(false);
+          }
+        } else {
+          ResetForm();
         }
-        if (excel && excel.path !== "") {
-          setParticipants(excel);
-          setIsLoadingExcel(false);
-        }
-      } else {
-        ResetForm();
+      } catch (error) {
+        console.error("Error loading users:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
+
     loadUsers();
-    const timeoutId = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-    return () => clearTimeout(timeoutId);
   }, [initialData, mode]);
 
   useEffect(() => {
-    setTimeout(() => {
-      setFormNotification((prev) => ({ ...prev, isOpen: false }));
-    }, 200);
+    if (formNotification.isOpen) {
+      const timeoutId = setTimeout(() => {
+        setFormNotification((prev) => ({ ...prev, isOpen: false }));
+      }, 200);
+      return () => clearTimeout(timeoutId);
+    }
   }, [formNotification.isOpen]);
 
   return (
