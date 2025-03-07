@@ -885,14 +885,11 @@ const BM10 = () => {
           {role?.displayRole.isExport && (
             <>
               <Button
+                color="green"
+                variant="solid"
                 icon={<FileExcelOutlined />}
                 onClick={handleExportExcel}
                 iconPosition="start"
-                style={{
-                  backgroundColor: Colors.GREEN,
-                  borderColor: Colors.GREEN,
-                  color: Colors.WHITE,
-                }}
               >
                 Xuất Excel
               </Button>
@@ -912,7 +909,7 @@ const BM10 = () => {
           {role?.displayRole.isDelete && (
             <>
               <Button
-                color="danger"
+                color="red"
                 variant="solid"
                 disabled={selectedRowKeys.length === 0}
                 onClick={handleDelete}

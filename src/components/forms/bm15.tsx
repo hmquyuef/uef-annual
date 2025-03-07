@@ -60,7 +60,6 @@ import {
   putEmployeesRegulation,
 } from "@/services/regulations/employeesServices";
 
-import Colors from "@/utility/Colors";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
@@ -1068,14 +1067,11 @@ const BM15 = () => {
           {role?.displayRole.isExport && (
             <>
               <Button
+                color="green"
+                variant="solid"
                 icon={<FileExcelOutlined />}
                 onClick={handleExportExcel}
                 iconPosition="start"
-                style={{
-                  backgroundColor: Colors.GREEN,
-                  borderColor: Colors.GREEN,
-                  color: Colors.WHITE,
-                }}
               >
                 Xuất Excel
               </Button>
@@ -1095,7 +1091,7 @@ const BM15 = () => {
           {role?.displayRole.isDelete && (
             <>
               <Button
-                color="danger"
+                color="red"
                 variant="solid"
                 disabled={selectedRowKeys.length === 0}
                 onClick={handleDelete}

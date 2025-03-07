@@ -30,10 +30,13 @@ import {
 import {
   ArrowsAltOutlined,
   CheckOutlined,
+  CloseCircleOutlined,
   CloseOutlined,
   DeleteOutlined,
   FileExcelOutlined,
+  FileProtectOutlined,
   PlusOutlined,
+  SafetyOutlined,
   ShrinkOutlined,
 } from "@ant-design/icons";
 import {
@@ -631,6 +634,32 @@ const BM14 = () => {
     return () => clearTimeout(timeoutId);
   };
 
+  const itemsApproved: MenuProps["items"] = [
+    {
+      key: "1",
+      label: (
+        <p onClick={() => handleApproved(false)} className="font-medium">
+          Chấp nhận
+        </p>
+      ),
+      icon: <SafetyOutlined />,
+      style: { color: Colors.GREEN },
+    },
+    {
+      type: "divider",
+    },
+    {
+      key: "2",
+      label: (
+        <span onClick={() => setIsModalVisible(true)} className="font-medium">
+          Từ chối
+        </span>
+      ),
+      icon: <CloseCircleOutlined />,
+      style: { color: Colors.RED },
+    },
+  ];
+
   const handleApproved = async (isRejected: boolean) => {
     const formData = {
       ids: selectedRowKeys.length > 0 ? selectedRowKeys : [selectedItem?.id],
@@ -998,17 +1027,33 @@ const BM14 = () => {
           </AnimatePresence>
         </div>
         <div className="flex justify-end mt-6 gap-3">
+          {role?.displayRole.isApprove && role?.displayRole.isReject && (
+            <>
+              <Dropdown menu={{ items: itemsApproved }} trigger={["click"]}>
+                <a onClick={(e) => e.preventDefault()}>
+                  <Button
+                    color="purple"
+                    variant="solid"
+                    icon={<FileProtectOutlined />}
+                    disabled={selectedRowKeys.length === 0}
+                  >
+                    Phê duyệt{" "}
+                    {selectedRowKeys.length !== 0
+                      ? `(${selectedRowKeys.length})`
+                      : ""}
+                  </Button>
+                </a>
+              </Dropdown>
+            </>
+          )}
           {role?.displayRole.isExport && (
             <>
               <Button
+                color="green"
+                variant="solid"
                 icon={<FileExcelOutlined />}
                 onClick={handleExportExcel}
                 iconPosition="start"
-                style={{
-                  backgroundColor: Colors.GREEN,
-                  borderColor: Colors.GREEN,
-                  color: Colors.WHITE,
-                }}
               >
                 Xuất Excel
               </Button>
@@ -1028,7 +1073,7 @@ const BM14 = () => {
           {role?.displayRole.isDelete && (
             <>
               <Button
-                color="danger"
+                color="red"
                 variant="solid"
                 disabled={selectedRowKeys.length === 0}
                 onClick={handleDelete}

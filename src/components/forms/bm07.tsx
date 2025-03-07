@@ -49,7 +49,6 @@ import TemplateForms from "./workloads/TemplateForms";
 
 import saveAs from "file-saver";
 
-import Colors from "@/utility/Colors";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
@@ -861,14 +860,11 @@ const BM07 = () => {
           {role?.displayRole.isExport && (
             <>
               <Button
+                color="green"
+                variant="solid"
                 icon={<FileExcelOutlined />}
                 onClick={handleExportExcel}
                 iconPosition="start"
-                style={{
-                  backgroundColor: Colors.GREEN,
-                  borderColor: Colors.GREEN,
-                  color: Colors.WHITE,
-                }}
               >
                 Xuất Excel
               </Button>
@@ -892,7 +888,7 @@ const BM07 = () => {
           {role?.displayRole.isDelete && (
             <>
               <Button
-                color="danger"
+                color="red"
                 variant="solid"
                 disabled={selectedRowKeys.length === 0}
                 onClick={handleDelete}

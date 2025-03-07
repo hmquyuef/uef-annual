@@ -1121,7 +1121,8 @@ const BM04 = () => {
               <Dropdown menu={{ items: itemsApproved }} trigger={["click"]}>
                 <a onClick={(e) => e.preventDefault()}>
                   <Button
-                    type="primary"
+                    color="purple"
+                    variant="solid"
                     icon={<FileProtectOutlined />}
                     disabled={selectedRowKeys.length === 0}
                   >
@@ -1137,14 +1138,11 @@ const BM04 = () => {
           {role?.displayRole.isExport && (
             <>
               <Button
+                color="green"
+                variant="solid"
                 icon={<FileExcelOutlined />}
                 onClick={handleExportExcel}
                 iconPosition="start"
-                style={{
-                  backgroundColor: Colors.GREEN,
-                  borderColor: Colors.GREEN,
-                  color: Colors.WHITE,
-                }}
               >
                 Xuất Excel
               </Button>
@@ -1164,7 +1162,7 @@ const BM04 = () => {
           {role?.displayRole.isDelete && (
             <>
               <Button
-                color="danger"
+                color="red"
                 variant="solid"
                 disabled={selectedRowKeys.length === 0}
                 onClick={handleDelete}
