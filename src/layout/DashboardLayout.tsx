@@ -20,6 +20,7 @@ import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
+
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
@@ -212,7 +213,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <header className="h-16 flex items-center justify-center bg-white">
               <Image width={150} src="/logoUEF.svg" className="px-3 py-2" />
             </header>
-            <hr />
             <article>
               <Menu
                 style={{

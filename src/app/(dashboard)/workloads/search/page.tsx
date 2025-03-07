@@ -440,7 +440,7 @@ const SearchMembers = () => {
           ]}
         />
       </div>
-      <div className="grid grid-cols-10 gap-4 mb-3">
+      <div className="grid grid-cols-10 gap-4 mb-3 border-b border-neutral-200 pb-3">
         <div className="col-span-2 flex flex-col justify-center gap-1">
           <span className="text-[14px] text-neutral-500">Tìm kiếm:</span>
           <Select
@@ -496,7 +496,6 @@ const SearchMembers = () => {
           </div>
         </div>
       </div>
-      <hr className="mb-3" />
       {loading ? (
         <>
           <LoadingSkeleton />

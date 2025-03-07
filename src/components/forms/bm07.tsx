@@ -38,7 +38,7 @@ import {
   Input,
   Select,
   TableColumnsType,
-  Tag
+  Tag,
 } from "antd";
 import { AnimatePresence, motion } from "motion/react";
 import { Key, useCallback, useEffect, useState } from "react";
@@ -686,7 +686,7 @@ const BM07 = () => {
 
   return (
     <div>
-      <div className="grid grid-cols-3 mb-3">
+      <div className="grid grid-cols-3 mb-3 border-b border-neutral-300 pb-3">
         <div className="col-span-2">
           <AnimatePresence>
             <motion.div
@@ -892,9 +892,9 @@ const BM07 = () => {
           {role?.displayRole.isDelete && (
             <>
               <Button
-                type="dashed"
+                color="danger"
+                variant="solid"
                 disabled={selectedRowKeys.length === 0}
-                danger
                 onClick={handleDelete}
                 icon={<DeleteOutlined />}
               >
@@ -950,7 +950,6 @@ const BM07 = () => {
           />
         }
       />
-      <hr className="mb-3" />
       <TemplateForms
         loading={loading}
         data={data}

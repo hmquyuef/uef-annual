@@ -37,7 +37,7 @@ import {
   Input,
   Select,
   Statistic,
-  StatisticProps
+  StatisticProps,
 } from "antd";
 import { SearchProps } from "antd/es/input";
 import { useRouter } from "next/navigation";
@@ -272,13 +272,13 @@ const Workloads = () => {
           ]}
         />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-9 gap-5 mb-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-9 gap-5 border-b border-neutral-300 pb-3">
         <div className="xl:col-span-2 flex flex-col justify-center gap-1">
-          <span className="text-[14px] text-neutral-500">Tìm kiếm:</span>
+          <span className="text-sm text-neutral-500">Tìm kiếm:</span>
           <Search placeholder=" " onSearch={onSearch} enterButton />
         </div>
         <div className="xl:col-span-2 flex flex-col justify-center gap-1">
-          <span className="text-[14px] text-neutral-500">Nhóm:</span>
+          <span className="text-sm text-neutral-500">Nhóm:</span>
           <Select
             allowClear
             placeholder="Tất cả nhóm"
@@ -292,7 +292,7 @@ const Workloads = () => {
           />
         </div>
         <div className="flex flex-col justify-center gap-1">
-          <span className="text-[14px] text-neutral-500">Năm học:</span>
+          <span className="text-sm text-neutral-500">Năm học:</span>
           <Select
             showSearch
             optionFilterProp="label"
@@ -310,7 +310,6 @@ const Workloads = () => {
           />
         </div>
       </div>
-      <hr className="mb-3" />
       {loading ? (
         <>
           <LoadingSkeleton />
@@ -352,7 +351,7 @@ const Workloads = () => {
                           key={type.id}
                           actions={actions(type)}
                           size="small"
-                          className="hover:shadow-lg transition-transform duration-300 hover:-translate-y-1 hover:shadow-blue-200"
+                          className="shadow-lg transition-transform duration-300 hover:-translate-y-1 hover:shadow-blue-200"
                         >
                           <div
                             onClick={() => {

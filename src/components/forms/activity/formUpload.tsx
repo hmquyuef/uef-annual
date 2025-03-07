@@ -225,8 +225,7 @@ const FromUpload: FC<FromUploadProps> = ({
 
   return (
     <section>
-      <hr className="mb-2" />
-      <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-6 mb-2">
+      <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-6 border-t border-neutral-300 pt-3 mb-2">
         <div className="flex flex-col gap-1">
           <span className="font-medium text-neutral-600">
             Danh sách nhân sự tham gia

@@ -798,7 +798,7 @@ const BM10 = () => {
 
   return (
     <div>
-      <div className="grid grid-cols-3 mb-3">
+      <div className="grid grid-cols-3 mb-3 border-b border-neutral-300 pb-3">
         <div className="col-span-2">
           <div className="grid grid-cols-6 gap-3">
             <div className="col-span-2 flex flex-col justify-center gap-1">
@@ -912,9 +912,9 @@ const BM10 = () => {
           {role?.displayRole.isDelete && (
             <>
               <Button
-                type="dashed"
+                color="danger"
+                variant="solid"
                 disabled={selectedRowKeys.length === 0}
-                danger
                 onClick={handleDelete}
                 icon={<DeleteOutlined />}
               >
@@ -988,7 +988,6 @@ const BM10 = () => {
           <LoadingSpin isLoadingSpin={loadingUpload} />
         </>
       )}
-      <hr className="mb-3" />
       <TemplateForms
         loading={loading}
         data={data}

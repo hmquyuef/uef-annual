@@ -1,20 +1,10 @@
 "use client";
 
+import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
 import Messages from "@/utility/Messages";
-import {
-  convertTimestampToDate,
-  convertTimestampToFullDateTime,
-} from "@/utility/Utilities";
+import { convertTimestampToDate } from "@/utility/Utilities";
 import { CloseOutlined, SafetyOutlined } from "@ant-design/icons";
-import {
-  Card,
-  Empty,
-  PaginationProps,
-  Skeleton,
-  Spin,
-  Table,
-  TableColumnsType
-} from "antd";
+import { Empty, PaginationProps, Spin, Table, TableColumnsType } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import Cookies from "js-cookie";
 import { FC, Key, useEffect, useState } from "react";
@@ -23,6 +13,7 @@ interface TemplateFormsProps {
   loading: boolean;
   data: any;
   title: any[];
+  hideEntryDate?: boolean;
   onEdit?: (record: any) => void;
   onSelectionChange?: (selectedKeys: Key[]) => void;
   onSetBlock?: (isBlock: boolean) => void;
@@ -33,6 +24,7 @@ const TemplateForms: FC<TemplateFormsProps> = ({
   loading,
   data,
   title,
+  hideEntryDate,
   onEdit,
   onSelectionChange,
   onSetBlock,
@@ -72,8 +64,7 @@ const TemplateForms: FC<TemplateFormsProps> = ({
         const [current, pageSize] = JSON.parse(Cookies.get("p_s") || "[1, 15]");
         return <>{pageSize * (current - 1) + index + 1}</>;
       },
-      className: "text-center w-[40px]",
-      fixed: "left",
+      className: "text-center text-black w-[40px]",
     },
     ...title,
     {
@@ -91,10 +82,9 @@ const TemplateForms: FC<TemplateFormsProps> = ({
       },
       render: (_, record) => {
         const fromDate = record.entryDate || record.determinations?.entryDate;
-        return fromDate ? convertTimestampToDate(fromDate) : "";
+        return fromDate && convertTimestampToDate(fromDate);
       },
       className: "customInfoColors text-center w-[110px]",
-      fixed: "right",
     },
     {
       title: (
@@ -104,12 +94,7 @@ const TemplateForms: FC<TemplateFormsProps> = ({
       ),
       dataIndex: ["payments", "isRejected"],
       key: "isRejected",
-      fixed: "right",
       render: (isRejected: boolean, record: any) => {
-        const time = record.payments?.approvedTime
-          ? convertTimestampToFullDateTime(record.payments.approvedTime)
-          : "";
-        const reason = record.payments?.reason;
         return (
           <>
             {record.payments ? (
@@ -139,6 +124,10 @@ const TemplateForms: FC<TemplateFormsProps> = ({
   ];
 
   if (!onSetPayments) {
+    tempColumns.pop();
+  }
+
+  if (hideEntryDate) {
     tempColumns.pop();
   }
 
@@ -192,9 +181,7 @@ const TemplateForms: FC<TemplateFormsProps> = ({
     <div>
       {loading ? (
         <>
-          <Card>
-            <Skeleton active />
-          </Card>
+          <LoadingSkeleton />
         </>
       ) : (
         <>
@@ -225,6 +212,9 @@ const TemplateForms: FC<TemplateFormsProps> = ({
             }}
             onChange={handleTableChange}
             className="custom-table-header shadow-md rounded-md"
+            rowClassName={(_, index) =>
+              index % 2 === 0 ? "bg-sky-50" : "bg-white"
+            }
           />
         </>
       )}

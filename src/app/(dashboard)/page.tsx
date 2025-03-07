@@ -85,13 +85,6 @@ const Home = () => {
       render: (formName: string) => <>{formName}</>,
     },
     {
-      title: "NHÓM",
-      dataIndex: "groupName",
-      key: "groupName",
-      className: "text-center w-[200px]",
-      render: (groupName: string) => <>{groupName}</>,
-    },
-    {
       title: "SỐ HOẠT ĐỘNG",
       dataIndex: "totalItems",
       key: "totalItems",
@@ -113,16 +106,16 @@ const Home = () => {
             .filter((x: any) => filterList.includes(x.shortName))
             .map((item: any) => ({ ...item, key: item.id || item.shortName }))}
           summary={() => (
-            <Table.Summary.Row  key={`${label}-${key}-summary`}>
+            <Table.Summary.Row key={`${label}-${key}-summary`}>
               <Table.Summary.Cell
-                colSpan={4}
+                colSpan={3}
                 index={0}
                 className="text-center font-semibold text-base bg-blue-50"
               >
                 Tổng số hoạt động
               </Table.Summary.Cell>
               <Table.Summary.Cell
-                index={5}
+                index={4}
                 className="text-center font-semibold text-base bg-blue-50"
               >
                 {dataReports?.items
@@ -215,7 +208,7 @@ const Home = () => {
                   ? "orange"
                   : "red",
               children: (
-                <div className="border-b">
+                <div className="border-b border-neutral-200">
                   <p className="text-sm">
                     <span className="font-semibold text-blue-500">
                       {item.username}
@@ -310,7 +303,7 @@ const Home = () => {
           ]}
         />
       </div>
-      <div className="grid grid-cols-6 gap-5 mb-3">
+      <div className="grid grid-cols-6 gap-5 pb-3 border-b border-neutral-300">
         <div className="flex items-center gap-2">
           <span className="text-[14px] font-medium text-neutral-500">
             Năm học:
@@ -331,7 +324,6 @@ const Home = () => {
           />
         </div>
       </div>
-      <hr className="mb-3" />
       {loading ? (
         <>
           <LoadingSpin isLoadingSpin={loading} />
@@ -340,7 +332,7 @@ const Home = () => {
         <>
           <section className="grid grid-cols-3 gap-6 my-6">
             <div className="bg-white flex flex-col justify-between rounded-lg shadow-lg">
-              <div className="px-4 py-3 h-14 border-b">
+              <div className="px-4 py-3 h-14 border-b border-neutral-300">
                 <span className="text-neutral-400 align-middle">Tổng quan</span>
               </div>
               <div
@@ -369,7 +361,7 @@ const Home = () => {
               </div>
             </div>
             <div className="col-span-2 h-[550px] bg-white rounded-lg shadow-lg cursor-pointer">
-              <div className="px-4 py-3 h-14 flex justify-between items-center">
+              <div className="px-4 py-3 h-14 flex justify-between items-center border-b border-neutral-300">
                 <span className="text-neutral-400 align-middle">
                   Thống kê các hoạt động theo thời gian
                 </span>
@@ -380,7 +372,6 @@ const Home = () => {
                   />
                 </div>
               </div>
-              <hr />
               <div className="h-fit px-4 py-5 flex items-center justify-center">
                 {typeChart === "month" ? (
                   <>
@@ -414,19 +405,17 @@ const Home = () => {
           </section>
           <section className="grid grid-cols-3 gap-6 mb-6">
             <div className="col-span-2 bg-white flex flex-col rounded-lg shadow-lg cursor-pointer">
-              <div className="px-4 py-3 h-14 flex justify-between items-center">
+              <div className="px-4 py-3 h-14 flex justify-between items-center border-b border-neutral-300">
                 <span className="text-neutral-400 align-middle">
                   Thông tin các biểu mẫu
                 </span>
               </div>
-              <hr />
               {dataReports && (
                 <>
                   <div className="h-full px-6 py-2">
                     <Tabs
                       defaultActiveKey="1"
                       items={items}
-                      // onChange={onChange}
                       indicator={{
                         size: (origin: any) => origin - 25,
                         align: "center",
@@ -438,12 +427,11 @@ const Home = () => {
               )}
             </div>
             <div className="bg-white flex flex-col rounded-lg shadow-lg cursor-pointer">
-              <div className="px-4 py-3 h-14 flex justify-between items-center">
+              <div className="px-4 py-3 h-14 flex justify-between items-center border-b border-neutral-300">
                 <span className="text-neutral-400 align-middle">
                   Tỉ lệ phê duyệt
                 </span>
               </div>
-              <hr />
               <div className="h-full px-6 py-4 flex flex-col gap-4">
                 {dataReports &&
                   dataReports.items
@@ -462,27 +450,24 @@ const Home = () => {
           </section>
           <section className="grid grid-cols-3 gap-6 mb-6">
             <div className="bg-white flex flex-col rounded-lg shadow-lg cursor-pointer">
-              <div className="px-4 py-3 h-14 flex justify-between items-center">
+              <div className="px-4 py-3 h-14 flex justify-between items-center border-b border-neutral-300">
                 <span className="text-neutral-400 align-middle">
                   Thống kê hoạt động theo đơn vị
                 </span>
               </div>
-              <hr />
-              <div className="h-full p-3 flex justify-center mt-2">
+              <div className="flex justify-center">
                 {dataFaculties && (
-                  <>
-                    <div className="my-[-20px] w-full">
-                      <BarChart
-                        categories={dataFaculties.categories ?? []}
-                        seriesData={dataFaculties.data ?? []}
-                      />
-                    </div>
-                  </>
+                  <div className="w-full">
+                    <BarChart
+                      categories={dataFaculties.categories ?? []}
+                      seriesData={dataFaculties.data ?? []}
+                    />
+                  </div>
                 )}
               </div>
             </div>
             <div className="bg-white flex flex-col rounded-lg shadow-lg cursor-pointer">
-              <div className="px-4 py-3 h-14 flex justify-between items-center">
+              <div className="px-4 py-3 h-14 flex justify-between items-center border-b border-neutral-300">
                 <span className="text-neutral-400 align-middle">
                   Tổng hợp hoạt động theo
                 </span>
@@ -508,7 +493,6 @@ const Home = () => {
                   className="w-3/5"
                 />
               </div>
-              <hr />
               <div className="h-full p-3 flex justify-center mt-2">
                 {dataFacultyById && (
                   <DonutChart
@@ -519,12 +503,11 @@ const Home = () => {
               </div>
             </div>
             <div className="bg-white flex flex-col rounded-lg shadow-lg cursor-pointer">
-              <div className="px-4 py-3 h-14 flex justify-between items-center">
+              <div className="px-4 py-3 h-14 flex justify-between items-center border-b border-neutral-300">
                 <span className="text-neutral-400 align-middle">
                   Các hoạt động gần đây
                 </span>
               </div>
-              <hr />
               <div className="px-3 pt-8 flex justify-center">
                 {dataHistory ? (
                   <>

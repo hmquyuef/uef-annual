@@ -27,7 +27,7 @@ import {
   PaginationProps,
   Table,
   TableColumnsType,
-  Tag
+  Tag,
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import { Key, useCallback, useEffect, useState } from "react";
@@ -236,7 +236,7 @@ const Units = () => {
           ]}
         />
       </div>
-      <div className="flex justify-end gap-4 mb-4">
+      <div className="flex justify-end gap-4 mb-3 border-b border-neutral-300 pb-3">
         {role?.displayRole.isCreate && (
           <>
             <Button
@@ -255,9 +255,9 @@ const Units = () => {
         {role?.displayRole.isDelete && (
           <>
             <Button
-              type="dashed"
+              color="danger"
+              variant="solid"
               disabled={selectedRowKeys.length === 0}
-              danger
               onClick={handleDelete}
               icon={<DeleteOutlined />}
               iconPosition="start"
@@ -267,68 +267,68 @@ const Units = () => {
           </>
         )}
       </div>
-
-      <div>
-        <CustomNotification
-          message={message}
-          description={description}
-          status={status}
-          isOpen={isNotificationOpen} // Truyền trạng thái mở
-        />
-        <CustomModal
-          isOpen={isOpen}
-          width={"25vw"}
-          title={
-            mode === "edit"
-              ? Messages.TITLE_UPDATE_UNITS
-              : Messages.TITLE_ADD_UNITS
-          }
-          role={role || undefined}
-          onOk={() => {
-            const formElement = document.querySelector("form");
-            formElement?.dispatchEvent(
-              new Event("submit", { cancelable: true, bubbles: true })
-            );
-          }}
-          onCancel={() => {
-            setNotificationOpen(false);
-            setIsOpen(false);
-            setSelectedItem(undefined);
-            setMode("add");
-          }}
-          bodyContent={
-            <FormUnit
-              onSubmit={handleSubmit}
-              initialData={selectedItem as Partial<RoleItem>}
-              mode={mode}
-            />
-          }
-        />
-        <Table<any>
-          key={"table-units"}
-          className="custom-table-header shadow-md rounded-md"
-          bordered
-          rowKey={(item) => item.id}
-          rowHoverable
-          size="small"
-          pagination={{
-            ...pagination,
-            total: units?.totalCount,
-            showTotal: showTotal,
-            showSizeChanger: true,
-            position: ["bottomRight"],
-            defaultPageSize: 15,
-            pageSizeOptions: ["15", "25", "50", "100"],
-          }}
-          rowSelection={rowSelection}
-          columns={columns}
-          dataSource={units?.items.sort((a: any, b: any) =>
-            a.name.localeCompare(b.name)
-          )}
-          locale={{ emptyText: <Empty description={Messages.NO_DATA}></Empty> }}
-          onChange={handleTableChange}
-        />
-      </div>
+      <CustomNotification
+        message={message}
+        description={description}
+        status={status}
+        isOpen={isNotificationOpen} // Truyền trạng thái mở
+      />
+      <CustomModal
+        isOpen={isOpen}
+        width={"25vw"}
+        title={
+          mode === "edit"
+            ? Messages.TITLE_UPDATE_UNITS
+            : Messages.TITLE_ADD_UNITS
+        }
+        role={role || undefined}
+        onOk={() => {
+          const formElement = document.querySelector("form");
+          formElement?.dispatchEvent(
+            new Event("submit", { cancelable: true, bubbles: true })
+          );
+        }}
+        onCancel={() => {
+          setNotificationOpen(false);
+          setIsOpen(false);
+          setSelectedItem(undefined);
+          setMode("add");
+        }}
+        bodyContent={
+          <FormUnit
+            onSubmit={handleSubmit}
+            initialData={selectedItem as Partial<RoleItem>}
+            mode={mode}
+          />
+        }
+      />
+      <Table<any>
+        key={"table-units"}
+        className="custom-table-header shadow-md rounded-md"
+        bordered
+        rowKey={(item) => item.id}
+        rowHoverable
+        size="small"
+        pagination={{
+          ...pagination,
+          total: units?.totalCount,
+          showTotal: showTotal,
+          showSizeChanger: true,
+          position: ["bottomRight"],
+          defaultPageSize: 15,
+          pageSizeOptions: ["15", "25", "50", "100"],
+        }}
+        rowSelection={rowSelection}
+        columns={columns}
+        dataSource={units?.items.sort((a: any, b: any) =>
+          a.name.localeCompare(b.name)
+        )}
+        locale={{ emptyText: <Empty description={Messages.NO_DATA}></Empty> }}
+        onChange={handleTableChange}
+        rowClassName={(_, index) =>
+          index % 2 === 0 ? "bg-sky-50" : "bg-white"
+        }
+      />
     </div>
   );
 };

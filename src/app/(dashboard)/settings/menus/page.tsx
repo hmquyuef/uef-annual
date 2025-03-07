@@ -29,7 +29,7 @@ import {
   Table,
   TableColumnsType,
   TableProps,
-  Tag
+  Tag,
 } from "antd";
 import { Key, useEffect, useState } from "react";
 
@@ -261,7 +261,7 @@ const Menus = () => {
           ]}
         />
       </div>
-      <div className="flex justify-end gap-4 mb-4">
+      <div className="flex justify-end gap-4 mb-3 border-b border-neutral-300 pb-3">
         <Button
           type="primary"
           onClick={() => {
@@ -284,61 +284,62 @@ const Menus = () => {
           Xóa
         </Button>
       </div>
-      <div>
-        <CustomNotification
-          message={message}
-          description={description}
-          status={status}
-          isOpen={isNotificationOpen} // Truyền trạng thái mở
-        />
-        <CustomModal
-          isOpen={isOpen}
-          width={"50vw"}
-          title={mode === "edit" ? "Cập nhật chức năng" : "Thêm mới chức năng"}
-          role={role || undefined}
-          onOk={() => {
-            const formElement = document.querySelector("form");
-            formElement?.dispatchEvent(
-              new Event("submit", { cancelable: true, bubbles: true })
-            );
-          }}
-          onCancel={() => {
-            setNotificationOpen(false);
-            setIsOpen(false);
-            setSelectedItem(undefined);
-            setMode("add");
-          }}
-          bodyContent={
-            <FormMenu
-              onSubmit={handleSubmit}
-              initialData={selectedItem as Partial<AddUpdateMenu>}
-              mode={mode}
-            />
-          }
-        />
-        <Table<MenuItem>
-          key={"table-menus"}
-          className="custom-table-header shadow-md rounded-md"
-          bordered
-          rowKey={(item) => item.position}
-          rowHoverable
-          size="small"
-          pagination={{
-            ...pagination,
-            total: data.length,
-            showTotal: showTotal,
-            showSizeChanger: true,
-            position: ["bottomRight"],
-            defaultPageSize: 15,
-            pageSizeOptions: ["15", "25", "50", "100"],
-          }}
-          rowSelection={{ ...rowSelection, checkStrictly: false }}
-          columns={columns}
-          dataSource={data}
-          locale={{ emptyText: <Empty description="No Data"></Empty> }}
-          onChange={handleTableChange}
-        />
-      </div>
+      <CustomNotification
+        message={message}
+        description={description}
+        status={status}
+        isOpen={isNotificationOpen} // Truyền trạng thái mở
+      />
+      <CustomModal
+        isOpen={isOpen}
+        width={"50vw"}
+        title={mode === "edit" ? "Cập nhật chức năng" : "Thêm mới chức năng"}
+        role={role || undefined}
+        onOk={() => {
+          const formElement = document.querySelector("form");
+          formElement?.dispatchEvent(
+            new Event("submit", { cancelable: true, bubbles: true })
+          );
+        }}
+        onCancel={() => {
+          setNotificationOpen(false);
+          setIsOpen(false);
+          setSelectedItem(undefined);
+          setMode("add");
+        }}
+        bodyContent={
+          <FormMenu
+            onSubmit={handleSubmit}
+            initialData={selectedItem as Partial<AddUpdateMenu>}
+            mode={mode}
+          />
+        }
+      />
+      <Table<MenuItem>
+        key={"table-menus"}
+        className="custom-table-header shadow-md rounded-md"
+        bordered
+        rowKey={(item) => item.position}
+        rowHoverable
+        size="small"
+        pagination={{
+          ...pagination,
+          total: data.length,
+          showTotal: showTotal,
+          showSizeChanger: true,
+          position: ["bottomRight"],
+          defaultPageSize: 15,
+          pageSizeOptions: ["15", "25", "50", "100"],
+        }}
+        rowSelection={{ ...rowSelection, checkStrictly: false }}
+        columns={columns}
+        dataSource={data}
+        locale={{ emptyText: <Empty description="No Data"></Empty> }}
+        onChange={handleTableChange}
+        rowClassName={(_, index) =>
+          index % 2 === 0 ? "bg-sky-50" : "bg-white"
+        }
+      />
     </div>
   );
 };

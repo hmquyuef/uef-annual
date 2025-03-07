@@ -4,7 +4,7 @@ import {
   IdcardOutlined,
   InfoCircleOutlined,
   LogoutOutlined,
-  MailOutlined
+  MailOutlined,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { Badge, Dropdown } from "antd";
@@ -99,7 +99,7 @@ const TopHeaders: React.FC<TopHeadersProps> = ({ name, email }) => {
             className="hover:cursor-pointer"
           >
             <img
-              src={`${isNotification ? "bell.svg" : "bell-off.svg"}`}
+              src={`/${isNotification ? "bell.svg" : "bell-off.svg"}`}
               alt="bell"
               className={`p-1 hover:rounded-lg hover:shadow-lg ${
                 isNotification
@@ -117,7 +117,7 @@ const TopHeaders: React.FC<TopHeadersProps> = ({ name, email }) => {
         >
           <a onClick={(e) => e.preventDefault()}>
             <img
-              src="users/user.svg"
+              src="/users/user.svg"
               alt="user"
               className="w-9 h-9 p-1 hover:bg-blue-100 hover:rounded-lg hover:shadow-lg hover:shadow-blue-300"
             />

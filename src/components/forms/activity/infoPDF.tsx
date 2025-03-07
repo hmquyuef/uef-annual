@@ -45,10 +45,9 @@ const InfoPDF: FC<InfoPDFProps> = ({ isShowPDF, onSetShowPDF, path }) => {
     <div>
       {isShowPDF && (
         <>
-          <hr className="mt-1 mb-2" />
           {path && path !== "" && (
             <>
-              <div className="grid grid-cols-2 mb-2">
+              <div className="grid grid-cols-2 mb-2 border-t border-neutral-300 pt-3">
                 <span className="font-medium text-neutral-600">
                   Chế độ xem chi tiết
                 </span>

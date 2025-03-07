@@ -387,9 +387,8 @@ const FormBM05: FC<FormBM05Props> = ({
       ) : (
         <>
           <form onSubmit={handleSubmit}>
-            <hr className="mt-1 mb-2" />
             <div
-              className={`grid grid-cols-5 mb-2 ${showPDF ? "gap-3" : "gap-6"}`}
+              className={`grid grid-cols-5 mb-2 border-t border-neutral-300 pt-3 ${showPDF ? "gap-3" : "gap-6"}`}
             >
               <div className="flex flex-col gap-[2px]">
                 <span className="font-medium text-neutral-600">

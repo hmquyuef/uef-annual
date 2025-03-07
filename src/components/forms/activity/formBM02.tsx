@@ -299,8 +299,7 @@ const FormBM02: FC<FormBM02Props> = (props) => {
       ) : (
         <>
           <form onSubmit={handleSubmit}>
-            <hr className="mt-1 mb-3" />
-            <div className="grid grid-cols-6 gap-6 mb-2">
+            <div className="grid grid-cols-6 gap-6 border-t border-neutral-300 pt-3 mb-2">
               <div className="flex flex-col gap-1">
                 <span className="font-medium text-neutral-600">Số văn bản</span>
                 <TextArea

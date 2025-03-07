@@ -805,7 +805,7 @@ const BM13 = () => {
 
   return (
     <div>
-      <div className="grid grid-cols-3 mb-3">
+      <div className="grid grid-cols-3 mb-3 border-b border-neutral-300 pb-3">
         <div className="col-span-2">
           <AnimatePresence>
             <motion.div
@@ -1007,9 +1007,9 @@ const BM13 = () => {
           {role?.displayRole.isDelete && (
             <>
               <Button
-                type="dashed"
+                color="danger"
+                variant="solid"
                 disabled={selectedRowKeys.length === 0}
-                danger
                 onClick={handleDelete}
                 icon={<DeleteOutlined />}
               >
@@ -1105,7 +1105,6 @@ const BM13 = () => {
                   <span className="font-semibold mt-4">Thông tin cập nhật</span>
                   {fields.map(({ key, label }) => (
                     <div key={key}>
-                      <hr />
                       <div className="grid grid-cols-2 gap-1">
                         <span className="text-neutral-500">{label}:</span>
                         <div className="flex justify-center gap-5">
@@ -1130,7 +1129,6 @@ const BM13 = () => {
                       </div>
                     </div>
                   ))}
-                  <hr />
                 </>
               )}
             </Modal>
@@ -1191,7 +1189,6 @@ const BM13 = () => {
           <LoadingSpin isLoadingSpin={loadingUpload} />
         </>
       )}
-      <hr className="mb-3" />
       <TemplateForms
         loading={loading}
         data={data}

@@ -274,7 +274,7 @@ const SchoolYear = () => {
           ]}
         />
       </div>
-      <div className="flex justify-end gap-4 mb-4">
+      <div className="flex justify-end gap-4 mb-3 border-b border-neutral-300 pb-3">
         {role?.displayRole.isCreate && (
           <>
             <Button
@@ -293,9 +293,9 @@ const SchoolYear = () => {
         {role?.displayRole.isDelete && (
           <>
             <Button
-              type="dashed"
+              color="danger"
+              variant="solid"
               disabled={selectedRowKeys.length === 0}
-              danger
               onClick={handleDelete}
               icon={<DeleteOutlined />}
               iconPosition="start"
@@ -305,66 +305,66 @@ const SchoolYear = () => {
           </>
         )}
       </div>
-
-      <div>
-        <CustomNotification
-          message={message}
-          description={description}
-          status={status}
-          isOpen={isNotificationOpen} // Truyền trạng thái mở
-        />
-        <CustomModal
-          isOpen={isOpen}
-          width={"25vw"}
-          title={
-            mode === "edit"
-              ? "Cập nhật thời gian năm học"
-              : "Thêm mới thời gian năm học"
-          }
-          role={role || undefined}
-          onOk={() => {
-            const formElement = document.querySelector("form");
-            formElement?.dispatchEvent(
-              new Event("submit", { cancelable: true, bubbles: true })
-            );
-          }}
-          onCancel={() => {
-            setNotificationOpen(false);
-            setIsOpen(false);
-            setSelectedItem(undefined);
-            setMode("add");
-          }}
-          bodyContent={
-            <FormSchoolYear
-              onSubmit={handleSubmit}
-              initialData={selectedItem as Partial<RoleItem>}
-              mode={mode}
-            />
-          }
-        />
-        <Table<any>
-          key={"table-school-years"}
-          className="custom-table-header shadow-md rounded-md"
-          bordered
-          rowKey={(item) => item.id}
-          rowHoverable
-          size="small"
-          pagination={{
-            ...pagination,
-            total: schoolYears?.totalCount,
-            showTotal: showTotal,
-            showSizeChanger: true,
-            position: ["bottomRight"],
-            defaultPageSize: 15,
-            pageSizeOptions: ["15", "25", "50", "100"],
-          }}
-          rowSelection={rowSelection}
-          columns={columns}
-          dataSource={schoolYears?.items}
-          locale={{ emptyText: <Empty description="No Data"></Empty> }}
-          onChange={handleTableChange}
-        />
-      </div>
+      <CustomNotification
+        message={message}
+        description={description}
+        status={status}
+        isOpen={isNotificationOpen} // Truyền trạng thái mở
+      />
+      <CustomModal
+        isOpen={isOpen}
+        width={"25vw"}
+        title={
+          mode === "edit"
+            ? "Cập nhật thời gian năm học"
+            : "Thêm mới thời gian năm học"
+        }
+        role={role || undefined}
+        onOk={() => {
+          const formElement = document.querySelector("form");
+          formElement?.dispatchEvent(
+            new Event("submit", { cancelable: true, bubbles: true })
+          );
+        }}
+        onCancel={() => {
+          setNotificationOpen(false);
+          setIsOpen(false);
+          setSelectedItem(undefined);
+          setMode("add");
+        }}
+        bodyContent={
+          <FormSchoolYear
+            onSubmit={handleSubmit}
+            initialData={selectedItem as Partial<RoleItem>}
+            mode={mode}
+          />
+        }
+      />
+      <Table<any>
+        key={"table-school-years"}
+        className="custom-table-header shadow-md rounded-md"
+        bordered
+        rowKey={(item) => item.id}
+        rowHoverable
+        size="small"
+        pagination={{
+          ...pagination,
+          total: schoolYears?.totalCount,
+          showTotal: showTotal,
+          showSizeChanger: true,
+          position: ["bottomRight"],
+          defaultPageSize: 15,
+          pageSizeOptions: ["15", "25", "50", "100"],
+        }}
+        rowSelection={rowSelection}
+        columns={columns}
+        dataSource={schoolYears?.items}
+        locale={{ emptyText: <Empty description="No Data"></Empty> }}
+        onChange={handleTableChange}
+        rowClassName={(_, index) =>
+          index % 2 === 0 ? "bg-sky-50" : "bg-white"
+        }
+      />
     </div>
   );
 };

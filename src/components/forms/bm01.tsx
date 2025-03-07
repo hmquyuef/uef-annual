@@ -50,7 +50,7 @@ import {
   Modal,
   Select,
   TableColumnsType,
-  Tag
+  Tag,
 } from "antd";
 
 import Colors from "@/utility/Colors";
@@ -968,7 +968,7 @@ const BM01 = () => {
 
   return (
     <div>
-      <div className="grid grid-cols-3 mb-3">
+      <div className="grid grid-cols-3 mb-3 border-b border-neutral-300 pb-3">
         <div className="col-span-2">
           <AnimatePresence>
             <motion.div
@@ -1185,9 +1185,9 @@ const BM01 = () => {
           {role?.displayRole.isDelete && (
             <>
               <Button
-                type="dashed"
+                color="danger"
+                variant="solid"
                 disabled={selectedRowKeys.length === 0}
-                danger
                 onClick={handleDelete}
                 icon={<DeleteOutlined />}
               >
@@ -1200,12 +1200,7 @@ const BM01 = () => {
           )}
         </div>
       </div>
-      <CustomNotification
-        isOpen={formNotification.isOpen}
-        status={formNotification.status}
-        message={formNotification.message}
-        description={formNotification.description}
-      />
+      <CustomNotification {...formNotification} />
       <CustomModal
         isOpen={isOpen}
         width={isShowPdf ? "85vw" : "1000px"}
@@ -1282,7 +1277,6 @@ const BM01 = () => {
           <LoadingSpin isLoadingSpin={loadingUpload} />
         </>
       )}
-      <hr className="mb-3" />
       <TemplateForms
         loading={loading}
         data={data}

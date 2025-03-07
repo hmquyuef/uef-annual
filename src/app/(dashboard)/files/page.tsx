@@ -19,7 +19,6 @@ import {
 } from "@ant-design/icons";
 import { Breadcrumb, Button, Input, Tree, TreeDataNode, TreeProps } from "antd";
 import { useCallback, useEffect, useState } from "react";
-import PDFViewer from "@/components/files/PDFViewer";
 
 const FilesManager = () => {
   const { Search } = Input;
@@ -275,7 +274,7 @@ const FilesManager = () => {
 
   useEffect(() => {
     getFilesInfomation();
-  }, [handleSearch]);
+  }, []);
 
   return (
     <section>
@@ -326,7 +325,7 @@ const FilesManager = () => {
                 : "h-[calc(100vh-250px)]"
             }`}
           >
-            <div className="grid grid-cols-4 gap-3 mb-3">
+            <div className="grid grid-cols-4 gap-3 mb-3 border-b border-neutral-200 pb-3">
               <span className="flex justify-center items-center text-[13px] text-neutral-400 place-items-center">
                 Tổng cộng:
                 <span className="ml-1 font-medium text-neutral-600">
@@ -367,7 +366,6 @@ const FilesManager = () => {
                 </Button>
               </div>
             </div>
-            <hr className="mb-3" />
             <div className="flex flex-col w-1/3 mb-3">
               <Search
                 allowClear

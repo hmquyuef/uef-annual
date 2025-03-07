@@ -37,7 +37,7 @@ const BarChart: FC<BarChartProps> = ({ categories, seriesData }) => {
     },
     dataLabels: {
       enabled: true,
-      offsetY: -16,
+      offsetY: -18,
       style: {
         fontSize: "11px",
         colors: [
@@ -132,7 +132,7 @@ const BarChart: FC<BarChartProps> = ({ categories, seriesData }) => {
       options={options}
       series={dataSeries}
       type="bar"
-      height={500}
+      height={450}
     />
   );
 };

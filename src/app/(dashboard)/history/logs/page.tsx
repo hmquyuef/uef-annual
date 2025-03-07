@@ -1,6 +1,7 @@
 "use client";
 
 import CustomNotification from "@/components/CustomNotification";
+import TemplateForms from "@/components/forms/workloads/TemplateForms";
 import {
   deleteLogActivities,
   getAllLogActivities,
@@ -20,18 +21,12 @@ import {
 import {
   Breadcrumb,
   Button,
-  Empty,
   GetProps,
   Input,
-  PaginationProps,
   Select,
-  Skeleton,
-  Table,
-  TableColumnsType
+  TableColumnsType,
 } from "antd";
-import { TableRowSelection } from "antd/es/table/interface";
 import { Key, useCallback, useEffect, useState } from "react";
-import "react-json-view-lite/dist/index.css";
 
 type SearchProps = GetProps<typeof Input.Search>;
 const { Search } = Input;
@@ -45,16 +40,19 @@ const LogsActivities = () => {
     LogActivityResponses | undefined
   >(undefined);
   const [role, setRole] = useState<RoleItem>();
-  const [pagination, setPagination] = useState({
-    current: 1,
-    pageSize: 15,
+
+  const [formNotification, setFormNotification] = useState<{
+    message: string;
+    description: string;
+    status: "success" | "error" | "info" | "warning";
+    isOpen: boolean;
+  }>({
+    message: "",
+    description: "",
+    status: "success",
+    isOpen: false,
   });
-  const [isNotificationOpen, setNotificationOpen] = useState(false);
-  const [message, setMessage] = useState("");
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState<
-    "success" | "error" | "info" | "warning"
-  >("success");
+
   const [selectedKey, setSelectedKey] = useState<any>();
 
   const getDefaultYears = async () => {
@@ -73,19 +71,10 @@ const LogsActivities = () => {
 
   const columns: TableColumnsType<LogActivityItem> = [
     {
-      title: <div className="p-2">STT</div>,
-      dataIndex: "stt",
-      key: "stt",
-      render: (_, __, index) => (
-        <>{pagination.pageSize * (pagination.current - 1) + index + 1}</>
-      ),
-      className: "text-center w-[20px]",
-    },
-    {
       title: "MÃ SỐ CB-GV-NV",
       dataIndex: "username",
       key: "username",
-      className: "max-w-[20rem]",
+      className: "max-w-[5rem]",
       render: (username: string) => (
         <span className="text-blue-500 font-medium cursor-pointer">
           {username}
@@ -97,42 +86,36 @@ const LogsActivities = () => {
       dataIndex: "functionName",
       key: "functionName",
       render: (functionName: string) => <>{functionName}</>,
-      className: "w-[20rem]",
+      className: "max-w-[20rem]",
     },
     {
-      title: "PHƯƠNG THỨC",
+      title: (
+        <div>
+          PHƯƠNG THỨC <br /> TRUY CẬP
+        </div>
+      ),
       dataIndex: "method",
       key: "method",
       render: (method: string) => (
         <>
           {method === "GET" ? (
-            <>
-              <span className="bg-blue-500 px-2 py-1 text-white rounded-md">
-                {method}
-              </span>
-            </>
+            <div className="bg-blue-500 text-white rounded-md">{method}</div>
           ) : (
             <>
               {method === "POST" ? (
-                <>
-                  <span className="bg-green-500 px-2 py-1 text-white rounded-md">
-                    {method}
-                  </span>
-                </>
+                <div className="bg-green-500 text-white rounded-md">
+                  {method}
+                </div>
               ) : (
                 <>
                   {method === "PUT" ? (
-                    <>
-                      <span className="bg-orange-500 px-2 py-1 text-white rounded-md">
-                        {method}
-                      </span>
-                    </>
+                    <div className="bg-orange-500 text-white rounded-md">
+                      {method}
+                    </div>
                   ) : (
-                    <>
-                      <span className="bg-red-500 px-2 py-1 text-white rounded-md">
-                        {method}
-                      </span>
-                    </>
+                    <div className="bg-red-500 text-white rounded-md">
+                      {method}
+                    </div>
                   )}
                 </>
               )}
@@ -143,35 +126,15 @@ const LogsActivities = () => {
       className: "text-center w-[100px]",
     },
     {
-      title: "ĐƯỜNG DẪN",
-      dataIndex: "path",
-      key: "path",
-      render: (path: string) => <>{path}</>,
-      className:
-        "max-w-[10rem] whitespace-nowrap overflow-hidden text-ellipsis",
-    },
-    {
-      title: "QUERY",
-      dataIndex: "query",
-      key: "query",
-      render: (query: string) => <>{query}</>,
-      className:
-        "max-w-[15rem] whitespace-nowrap overflow-hidden text-ellipsis",
-    },
-    {
-      title: "REQUEST BODY",
-      dataIndex: "requestBody",
-      key: "requestBody",
-      render: (requestBody: string) => <>{requestBody}</>,
-      className:
-        "max-w-[15rem] whitespace-nowrap overflow-hidden text-ellipsis",
-    },
-    {
-      title: <div className="py-1">THỜI GIAN XỬ LÝ</div>,
+      title: (
+        <div className="py-1">
+          THỜI GIAN <br /> PHẢN HỒI
+        </div>
+      ),
       dataIndex: "elapsedTime",
       key: "elapsedTime",
       render: (elapsedTime: number) => <>{elapsedTime}ms</>,
-      className: "text-center w-[80px]",
+      className: "text-center w-[100px]",
     },
     {
       title: "TRẠNG THÁI",
@@ -181,10 +144,15 @@ const LogsActivities = () => {
       className: "text-center w-[60px]",
     },
     {
-      title: "ĐỊA CHỈ IP",
+      title: (
+        <div>
+          ĐỊA CHỈ <br /> TRUY CẬP
+        </div>
+      ),
       dataIndex: "ip",
       key: "ip",
       render: (requestBody: string) => <>{requestBody}</>,
+      className: "text-center w-[120px]",
     },
     {
       title: "NGÀY KHỞI TẠO",
@@ -192,7 +160,7 @@ const LogsActivities = () => {
       key: "creationTime",
       render: (creationTime: number) =>
         creationTime ? convertTimestampToFullDateTime(creationTime) : "",
-      className: "text-center w-[110px]",
+      className: "text-center max-w-[3rem]",
     },
   ];
 
@@ -207,44 +175,26 @@ const LogsActivities = () => {
     setData(filteredData || []);
   };
 
-  const onSelectChange = (newSelectedRowKeys: Key[]) => {
-    setSelectedRowKeys(newSelectedRowKeys);
-  };
-  const rowSelection: TableRowSelection<LogActivityItem> = {
-    selectedRowKeys,
-    onChange: onSelectChange,
-  };
-  const showTotal: PaginationProps["showTotal"] = (total) => (
-    <p className="w-full text-start">
-      Đã chọn {selectedRowKeys.length} / {total} dòng dữ liệu
-    </p>
-  );
-
   const handleDelete = useCallback(async () => {
     try {
       const selectedKeysArray = Array.from(selectedRowKeys) as string[];
       if (selectedKeysArray.length > 0) {
         await deleteLogActivities(selectedKeysArray);
-        setDescription(
-          `Đã xóa thành công ${selectedKeysArray.length} sự kiện logs hoạt động!`
-        );
-        setNotificationOpen(true);
-        setStatus("success");
-        setMessage("Thông báo");
-        await getDefaultYears();
-        setSelectedRowKeys([]);
+        setFormNotification((prev) => ({
+          ...prev,
+          isOpen: true,
+          status: "success",
+          message: "Thông báo",
+          description: `Đã xóa thành công ${selectedKeysArray.length} sự kiện logs hoạt động!`,
+        }));
       }
     } catch (error) {
       console.error("Error deleting selected items:", error);
+    } finally {
+      await getDefaultYears();
+      setSelectedRowKeys([]);
     }
   }, [selectedRowKeys]);
-
-  const handleTableChange = (pagination: PaginationProps) => {
-    setPagination({
-      current: pagination.current || 1,
-      pageSize: pagination.pageSize || 15,
-    });
-  };
 
   const getDisplayRole = async () => {
     if (typeof window !== "undefined") {
@@ -270,11 +220,17 @@ const LogsActivities = () => {
     document.title = PageTitles.LOGS_ACTIVITY;
     getDefaultYears();
     getDisplayRole();
-    const timeoutId = setTimeout(() => {
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timeoutId);
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(
+      () => setFormNotification((prev) => ({ ...prev, isOpen: false })),
+      100
+    );
+    return () => clearTimeout(timer);
+  }, [formNotification.isOpen]);
+
   return (
     <div>
       <section className="mb-3">
@@ -309,109 +265,63 @@ const LogsActivities = () => {
           ]}
         />
       </section>
-      <section className="grid grid-cols-3 mb-3">
+      <section className="grid grid-cols-3 mb-3 border-b border-neutral-200 pb-3">
         <div className="col-span-2">
-          <div className="grid grid-cols-4 gap-4">
-            {loading ? (
-              <>
-                <Skeleton.Input active size="small" style={{ width: "100%" }} />
-                <Skeleton.Input active size="small" style={{ width: "100%" }} />
-                <Skeleton.Input active size="small" style={{ width: "100%" }} />
-              </>
-            ) : (
-              <>
-                <div className="flex flex-col justify-center gap-1">
-                  <span className="text-[14px] font-medium text-neutral-500">
-                    Tìm kiếm:
-                  </span>
-                  <Search placeholder=" " onSearch={onSearch} enterButton />
-                </div>
-                <div className="flex flex-col justify-center gap-1">
-                  <span className="text-[14px] font-medium text-neutral-500">
-                    Năm học:
-                  </span>
-                  <Select
-                    showSearch
-                    optionFilterProp="label"
-                    filterSort={(optionA, optionB) =>
-                      (optionA?.title ?? "").localeCompare(optionB?.title ?? "")
-                    }
-                    options={defaultYears?.map((year: any) => ({
-                      value: year.id,
-                      label: year.title,
-                    }))}
-                    //
-                    value={selectedKey && selectedKey.title}
-                    onChange={(value) => handleChangeYear(value)}
-                    className="w-fit"
-                  />
-                </div>
-              </>
-            )}
+          <div className="grid grid-cols-6 gap-4">
+            <div className="col-span-2 flex flex-col justify-center gap-1">
+              <span className="text-sm text-neutral-500">Tìm kiếm:</span>
+              <Search placeholder=" " onSearch={onSearch} enterButton />
+            </div>
+            <div className="flex flex-col justify-center gap-1">
+              <span className="text-sm text-neutral-500">Năm học:</span>
+              <Select
+                showSearch
+                optionFilterProp="label"
+                filterSort={(optionA, optionB) =>
+                  (optionA?.title ?? "").localeCompare(optionB?.title ?? "")
+                }
+                options={defaultYears?.map((year: any) => ({
+                  value: year.id,
+                  label: year.title,
+                }))}
+                //
+                value={selectedKey && selectedKey.title}
+                onChange={(value) => handleChangeYear(value)}
+                className="w-fit"
+              />
+            </div>
           </div>
         </div>
         <div className="flex justify-end items-end gap-4">
-          {loading ? (
+          {role?.displayRole.isDelete && role.name === "admin" && (
             <>
-              <Skeleton.Input active size="small" />
-              <Skeleton.Input active size="small" />
-              <Skeleton.Input active size="small" />
-            </>
-          ) : (
-            <>
-              {role?.displayRole.isDelete && role.name === "admin" && (
-                <>
-                  <Button
-                    type="dashed"
-                    disabled={selectedRowKeys.length === 0}
-                    danger
-                    onClick={handleDelete}
-                    icon={<DeleteOutlined />}
-                  >
-                    Xóa{" "}
-                    {selectedRowKeys.length !== 0
-                      ? `(${selectedRowKeys.length})`
-                      : ""}
-                  </Button>
-                </>
-              )}
+              <Button
+                color="danger"
+                variant="solid"
+                disabled={selectedRowKeys.length === 0}
+                onClick={handleDelete}
+                icon={<DeleteOutlined />}
+              >
+                Xóa{" "}
+                {selectedRowKeys.length !== 0
+                  ? `(${selectedRowKeys.length})`
+                  : ""}
+              </Button>
             </>
           )}
         </div>
       </section>
-      <CustomNotification
-        message={message}
-        description={description}
-        status={status}
-        isOpen={isNotificationOpen}
+      <CustomNotification {...formNotification} />
+      <TemplateForms
+        loading={loading}
+        data={data}
+        title={columns}
+        hideEntryDate={true}
+        onEdit={() => {}}
+        onSelectionChange={(selectedRowKeys) =>
+          setSelectedRowKeys(selectedRowKeys)
+        }
       />
-      <hr className="mb-3" />
-      <section>
-        <Table<LogActivityItem>
-          key={"table-logs-history"}
-          className="custom-table-header shadow-md rounded-md"
-          bordered
-          rowKey={(item) => item.id}
-          rowHoverable
-          size="small"
-          pagination={{
-            ...pagination,
-            total: data.length,
-            showTotal: showTotal,
-            showSizeChanger: true,
-            position: ["bottomRight"],
-            defaultPageSize: 15,
-            pageSizeOptions: ["15", "25", "50", "100"],
-          }}
-          rowSelection={rowSelection}
-          columns={columns}
-          dataSource={data}
-          locale={{
-            emptyText: <Empty description="Không có dữ liệu..."></Empty>,
-          }}
-          onChange={handleTableChange}
-        />
-      </section>
     </div>
   );
 };

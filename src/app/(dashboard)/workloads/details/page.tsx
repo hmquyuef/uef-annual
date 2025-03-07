@@ -462,7 +462,7 @@ const WorkloadDetails = () => {
           ]}
         />
       </div>
-      <div className="grid grid-cols-10 gap-4 mb-3">
+      <div className="grid grid-cols-10 gap-4 mb-3 border-b border-neutral-200 pb-3">
         <div className="flex flex-col justify-center gap-1">
           <span className="text-[14px] text-neutral-500">Năm học:</span>
           <Select
@@ -482,7 +482,6 @@ const WorkloadDetails = () => {
           />
         </div>
       </div>
-      <hr className="mb-3" />
       {loading ? (
         <>
           <LoadingSkeleton />
@@ -622,58 +621,6 @@ const WorkloadDetails = () => {
                         </div>
                       </div>
                     </div>
-                    {/* <div className="flex flex-col gap-1 pb-3">
-                      <div className="grid grid-cols-2 gap-3 px-3">
-                        <span className="text-neutral-400">
-                          Mã số CB-GV-NV:
-                        </span>
-                        <span className="text-end text-neutral-600 font-medium">
-                          {detailUser.userName}
-                        </span>
-                      </div>
-                      <hr />
-                      <div className="grid grid-cols-2 gap-3 px-3">
-                        <span className="text-neutral-400">Họ và Tên:</span>
-                        <span className="text-end text-neutral-600 font-medium">
-                          {detailUser.fullName}
-                        </span>
-                      </div>
-                      <hr />
-                      <div className="grid grid-cols-2 gap-3  px-3">
-                        <span className="text-neutral-400">Địa chỉ email:</span>
-                        <span className="text-end text-neutral-600 font-medium">
-                          {detailUser.email}
-                        </span>
-                      </div>
-                      <hr />
-                      <div className="grid grid-cols-2 gap-3 px-3">
-                        <span className="text-neutral-400">Đơn vị:</span>
-                        <span className="text-end text-neutral-600 font-medium">
-                          {detailUser.unitName}
-                        </span>
-                      </div>
-                      <hr />
-                      <div className="grid grid-cols-2  gap-3 px-3">
-                        <span className="text-neutral-400">
-                          Tổng số sự kiện:
-                        </span>
-                        <span className="text-end text-neutral-600 font-medium">
-                          {detailUser.totalEvents}
-                        </span>
-                      </div>
-                      <hr />
-                      <div className="grid grid-cols-2 gap-3 px-3">
-                        <span className="text-neutral-400">
-                          Tổng số tiết chuẩn:
-                        </span>
-                        <span className="text-end text-neutral-600 font-medium">
-                          {detailUser.items.other.reduce(
-                            (acc: number, x: any) => acc + x.totalStandarNumber,
-                            0
-                          )}
-                        </span>
-                      </div>
-                    </div> */}
                   </div>
                 </div>
               </div>

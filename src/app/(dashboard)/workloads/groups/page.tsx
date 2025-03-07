@@ -31,7 +31,7 @@ import {
   PaginationProps,
   Table,
   TableColumnsType,
-  Tag
+  Tag,
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import Cookies from "js-cookie";
@@ -264,9 +264,9 @@ const WorkloadGroups = () => {
         {role?.displayRole.isDelete && (
           <>
             <Button
-              type="dashed"
+              color="danger"
+              variant="solid"
               disabled={selectedRowKeys.length === 0}
-              danger
               onClick={handleDelete}
               icon={<DeleteOutlined />}
             >
