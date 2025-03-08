@@ -143,6 +143,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         localStorage.setItem("s_role", role as string);
         localStorage.setItem("s_username", userName as string);
         localStorage.setItem("s_family", family_name as string);
+        localStorage.setItem("s_fullname", session?.user?.name as string);
+        localStorage.setItem("s_email", session?.user?.email as string);
       }
     }
   };
@@ -247,10 +249,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         >
           {itemsMenu && itemsMenu.length > 0 && (
             <div>
-              <TopHeaders
-                name={session?.user?.name || ""}
-                email={session?.user?.email || ""}
-              />
+              <TopHeaders />
               <div
                 className="flex-1"
                 style={{ minHeight: "calc(100svh - 104px)" }}

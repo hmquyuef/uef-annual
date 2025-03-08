@@ -16,6 +16,7 @@ import {
 } from "@/services/reports/reportsServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
+import Colors from "@/utility/Colors";
 import PageTitles from "@/utility/Constraints";
 import { convertTimestampToFullDateTime } from "@/utility/Utilities";
 import { HomeOutlined, LineChartOutlined } from "@ant-design/icons";
@@ -330,7 +331,7 @@ const Home = () => {
         </>
       ) : (
         <>
-          <section className="grid grid-cols-3 gap-6 my-6">
+          <section className="grid grid-cols-3 gap-6 my-6 select-none">
             <div className="bg-white flex flex-col justify-between rounded-lg shadow-lg">
               <div className="px-4 py-3 h-14 border-b border-neutral-300">
                 <span className="text-neutral-400 align-middle">Tổng quan</span>
@@ -345,7 +346,7 @@ const Home = () => {
                       <Statistic
                         value={dataReports.totalItems}
                         formatter={formatter}
-                        valueStyle={{ fontSize: "72px", color: "black" }}
+                        valueStyle={{ fontSize: "76px", color: Colors.BLUE }}
                       />
                     </>
                   )}
@@ -403,7 +404,7 @@ const Home = () => {
               </div>
             </div>
           </section>
-          <section className="grid grid-cols-3 gap-6 mb-6">
+          <section className="grid grid-cols-3 gap-6 mb-6 select-none">
             <div className="col-span-2 bg-white flex flex-col rounded-lg shadow-lg cursor-pointer">
               <div className="px-4 py-3 h-14 flex justify-between items-center border-b border-neutral-300">
                 <span className="text-neutral-400 align-middle">
@@ -416,6 +417,7 @@ const Home = () => {
                     <Tabs
                       defaultActiveKey="1"
                       items={items}
+                      tabBarGutter={30}
                       indicator={{
                         size: (origin: any) => origin - 25,
                         align: "center",
@@ -448,7 +450,7 @@ const Home = () => {
               </div>
             </div>
           </section>
-          <section className="grid grid-cols-3 gap-6 mb-6">
+          <section className="grid grid-cols-3 gap-6 mb-6 select-none">
             <div className="bg-white flex flex-col rounded-lg shadow-lg cursor-pointer">
               <div className="px-4 py-3 h-14 flex justify-between items-center border-b border-neutral-300">
                 <span className="text-neutral-400 align-middle">

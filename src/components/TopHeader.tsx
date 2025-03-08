@@ -12,11 +12,6 @@ import Cookies from "js-cookie";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
 
-interface TopHeadersProps {
-  name: string;
-  email: React.ReactNode;
-}
-
 const handleMenuClick: MenuProps["onClick"] = async (e) => {
   if (e.key === "3") {
     ["s_t", "s_r", "m_i", "m_k", "p_s"].forEach((cookie) =>
@@ -77,9 +72,11 @@ const itemNotifications: MenuProps["items"] = [
   },
 ];
 
-const TopHeaders: React.FC<TopHeadersProps> = ({ name, email }) => {
+const TopHeaders = () => {
+  const name = localStorage.getItem("s_fullname");
+  const email = localStorage.getItem("s_email");
   const menuProps: MenuProps = {
-    items: createMenuItems(name, email as string),
+    items: createMenuItems(name as string, email as string),
     onClick: handleMenuClick,
   };
   const notificationsProps: MenuProps = {

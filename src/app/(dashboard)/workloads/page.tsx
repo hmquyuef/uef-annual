@@ -134,7 +134,7 @@ const Workloads = () => {
           value={type.totalItems}
           formatter={formatter}
           suffix="sự kiện"
-          valueStyle={{ fontSize: "14px", color: "rgb(59 130 246)" }}
+          valueStyle={{ fontSize: "14px", color: Colors.BLUE }}
         />
       </div>,
       <div
@@ -146,7 +146,7 @@ const Workloads = () => {
           value={type.totalApprovedItems}
           formatter={formatter}
           suffix="đã duyệt"
-          valueStyle={{ fontSize: "14px", color: "rgb(34 197 94)" }}
+          valueStyle={{ fontSize: "14px", color: Colors.GREEN }}
         />
       </div>,
     ];
@@ -227,15 +227,16 @@ const Workloads = () => {
   const getDisplayRole = async () => {
     const userName = localStorage.getItem("s_username");
     setUserName(userName as string);
-    const response = await getRoleByName(userName as string);
+    const s_role = localStorage.getItem("s_role");
+    const response = await getRoleByName(s_role as string);
     setRole(response.items[0]);
   };
 
   useEffect(() => {
     setLoading(true);
     document.title = PageTitles.BM;
-    getDisplayRole();
     getDefaultYears();
+    getDisplayRole();
   }, []);
 
   return (

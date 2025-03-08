@@ -114,8 +114,7 @@ const FormWorkloadType: React.FC<FormWorkloadTypeProps> = ({
   }, [initialData, mode]);
   return (
     <form onSubmit={handleSubmit}>
-      <hr className="mt-1 mb-3" />
-      <div className="grid grid-cols-6 gap-5 mb-3">
+      <div className="grid grid-cols-6 border-t border-neutral-300 pt-3 gap-5 mb-3">
         <div className="col-span-3">
           <div className="flex flex-col gap-1">
             <p className="font-medium text-neutral-600">

@@ -35,17 +35,18 @@ const TotalFormCard: FC<TotalFormCardProps> = ({ data }) => {
 
   return (
     <div className="grid grid-cols-2 gap-6">
-      {Object.entries(totals).map(([label, value], index) => (
+      {Object.entries(totals).map(([label, value]) => (
         <div
           key={label}
-          className="flex flex-col justify-center items-center px-12 py-4 cursor-pointer border border-neutral-200 rounded-lg hover:border-blue-500 hover:shadow-lg hover:shadow-blue-200"
+          className="flex flex-col justify-center items-center px-12 py-3 cursor-pointer border border-neutral-200 rounded-xl hover:border-blue-400 hover:shadow-lg hover:shadow-blue-200 text-neutral-400 hover:text-blue-500"
         >
           <Statistic
             value={value}
             formatter={formatter}
             valueStyle={{ fontSize: "48px" }}
+            className=" hover:text-blue-500"
           />
-          <span className="text-neutral-400 text-sm">{label}</span>
+          <span className="text-sm">{label}</span>
         </div>
       ))}
     </div>

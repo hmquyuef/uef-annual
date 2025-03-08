@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+html {
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
 .custom-table-header .ant-table-thead > tr > th {
   background-color: #1677ff !important;
   color: white !important;
@@ -50,13 +55,6 @@
 
 .ant-tree-node-content-wrapper {
   width: 100% !important;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 @layer utilities {

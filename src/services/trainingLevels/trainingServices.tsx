@@ -29,6 +29,17 @@ export async function getAllTrainingLevels(
   return response.data;
 }
 
+export async function getExportTrainingLevel(
+  yearId: string,
+  unitCode?: string | null
+): Promise<any> {
+  let url = unitCode
+    ? `api/training/export?unitCode=${unitCode}&SchoolYearId=${yearId}&FromDate=0&ToDate=0`
+    : `api/training/export?SchoolYearId=${yearId}&FromDate=0&ToDate=0`;
+  const response = await apiClient.get<any>(url);
+  return response.data;
+}
+
 export async function postTrainingLevel(data: Partial<any>): Promise<any> {
   const response = await apiClient.post<any>("api/training", data);
   return response.data;

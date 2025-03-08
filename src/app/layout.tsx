@@ -14,12 +14,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <SessionWrapper>
-      <html lang="en">
-        <body>
+    <html lang="en">
+      <body>
+        <SessionWrapper>
           <AntdRegistry>{children}</AntdRegistry>
-        </body>
-      </html>
-    </SessionWrapper>
+        </SessionWrapper>
+      </body>
+    </html>
   );
 }

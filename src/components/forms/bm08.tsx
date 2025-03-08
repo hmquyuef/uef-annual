@@ -537,8 +537,8 @@ const BM08 = () => {
         "Thời gian hoạt động",
         "Ghi chú",
       ],
-      ...results.data.map((item: any, index: number) => [
-        index + 1,
+      ...results.data.map((item: any) => [
+        item.stt,
         item.userName,
         item.fullName,
         item.unitName ?? "",
