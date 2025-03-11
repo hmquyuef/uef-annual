@@ -42,3 +42,8 @@ export async function putTokenByRefresh(refresh: string): Promise<any> {
     return null;
   }
 }
+
+export async function deleteToken(token: string): Promise<void> {
+  let url = `api/auth/destroy?token=${token}`;
+  await apiClient.delete(url);
+}

@@ -50,9 +50,7 @@ interface FormBM05Props {
   handleShowPDF: (isVisible: boolean) => void;
   initialData?: Partial<AddUpdateActivityItem>;
   mode: "add" | "edit";
-  numberActivity?: number;
-  isBlock: boolean;
-  isPayment?: PaymentApprovedItem;
+  isPayment?: PaymentApprovedItem[];
   displayRole: DisplayRoleItem;
 }
 
@@ -61,8 +59,6 @@ const FormBM05: FC<FormBM05Props> = ({
   handleShowPDF,
   initialData,
   mode,
-  numberActivity,
-  isBlock,
   isPayment,
   displayRole,
 }) => {
@@ -88,6 +84,7 @@ const FormBM05: FC<FormBM05Props> = ({
   );
   const [showPDF, setShowPDF] = useState<boolean>(false);
   const [isLoadingPDF, setIsLoadingPDF] = useState<boolean>(false);
+  const [isBlock, setIsBlock] = useState<boolean>(false);
   const [percent, setPercent] = useState<number>(0);
   const [formNotification, setFormNotification] = useState<{
     message: string;
@@ -312,12 +309,13 @@ const FormBM05: FC<FormBM05Props> = ({
     setListPicture(undefined);
     setDescription("");
     setDocumentNumber("");
+    setIsBlock(false);
   };
 
   useEffect(() => {
+    setIsBlock((isPayment?.length ?? 0) > 0 ? true : false);
     const loadUsers = async () => {
       setIsLoading(true);
-
       try {
         if (mode === "edit" && initialData) {
           setName(initialData.name || "");
@@ -365,7 +363,7 @@ const FormBM05: FC<FormBM05Props> = ({
 
     loadUsers();
     getListUnits();
-  }, [initialData, mode, numberActivity, handleShowPDF]);
+  }, [initialData, mode, handleShowPDF]);
 
   useEffect(() => {
     if (formNotification.isOpen) {
@@ -388,7 +386,9 @@ const FormBM05: FC<FormBM05Props> = ({
         <>
           <form onSubmit={handleSubmit}>
             <div
-              className={`grid grid-cols-5 mb-2 border-t border-neutral-300 pt-3 ${showPDF ? "gap-3" : "gap-6"}`}
+              className={`grid grid-cols-5 mb-2 border-t border-neutral-300 pt-3 ${
+                showPDF ? "gap-3" : "gap-6"
+              }`}
             >
               <div className="flex flex-col gap-[2px]">
                 <span className="font-medium text-neutral-600">
@@ -661,7 +661,11 @@ const FormBM05: FC<FormBM05Props> = ({
                 )}
               </div>
             </div>
-            <InfoApproved mode={mode} isPayment={isPayment} />
+            <InfoApproved
+              mode={mode}
+              payments={isPayment}
+              createdTime={initialData?.determinations?.entryDate ?? 0}
+            />
           </form>
         </>
       )}

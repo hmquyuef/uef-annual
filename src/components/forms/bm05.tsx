@@ -92,10 +92,11 @@ const BM05 = () => {
   const [isShowPdf, setIsShowPdf] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
   const [role, setRole] = useState<RoleItem>();
-  const [isBlock, setIsBlock] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [reason, setReason] = useState("");
-  const [isPayments, setIsPayments] = useState<PaymentApprovedItem>();
+  const [isPayments, setIsPayments] = useState<PaymentApprovedItem[] | null>(
+    null
+  );
 
   const [formNotification, setFormNotification] = useState<{
     message: string;
@@ -156,8 +157,7 @@ const BM05 = () => {
             } font-semibold cursor-pointer`}
             onClick={() => {
               handleEdit(record);
-              setIsBlock(record.payments?.isBlockData ?? false);
-              setIsPayments(record.payments);
+              setIsPayments(record.payments ? [record.payments] : null);
             }}
           >
             {name}
@@ -289,7 +289,7 @@ const BM05 = () => {
     {
       key: "1",
       label: (
-        <p onClick={() => handleApproved(false)} className="font-medium">
+        <p onClick={() => handleApproved(false, 1)} className="font-medium">
           Chấp nhận
         </p>
       ),
@@ -389,10 +389,11 @@ const BM05 = () => {
       })),
     };
     setSelectedItem(updatedActivity);
-    setIsPayments(activity.payments);
+    setIsPayments(activity.payments ? [activity.payments] : null);
     setMode("edit");
     setIsOpen(true);
   };
+
   const handleSubmit = async (formData: Partial<AddUpdateActivityItem>) => {
     try {
       if (mode === "edit" && selectedItem) {
@@ -725,16 +726,17 @@ const BM05 = () => {
     return () => clearTimeout(timeoutId);
   };
 
-  const handleApproved = async (isRejected: boolean) => {
+  const handleApproved = async (isRejected: boolean, type: number) => {
+    const s_role = localStorage.getItem("s_role");
+    const fullName = localStorage.getItem("s_fullname");
     const formData = {
       ids: selectedRowKeys.length > 0 ? selectedRowKeys : [selectedItem?.id],
-      paymentInfo: {
-        approver: userName,
-        approvedTime: Math.floor(Date.now() / 1000),
-        isRejected: isRejected,
-        reason: reason,
-        isBlockData: true,
-      },
+      userName: userName,
+      fullName: fullName ?? userName,
+      confirmationType:
+        s_role && s_role === "finance-manager" && isRejected ? 3 : type,
+      isRejected: isRejected,
+      reason: reason,
     };
     try {
       if (selectedRowKeys.length > 0 || selectedItem) {
@@ -864,9 +866,7 @@ const BM05 = () => {
                   hidden={role && role.name === "secretary"}
                 >
                   <div className="flex flex-col justify-center gap-1">
-                    <span className="text-[14px] text-neutral-500">
-                      Đơn vị:
-                    </span>
+                    <span className="text-sm text-neutral-500">Đơn vị:</span>
                     <Select
                       showSearch
                       allowClear
@@ -1070,19 +1070,23 @@ const BM05 = () => {
           )}
         </div>
       </div>
-      <CustomNotification
-        message={formNotification.message}
-        description={formNotification.description}
-        status={formNotification.status}
-        isOpen={formNotification.isOpen}
-      />
+      <CustomNotification {...formNotification} />
       <CustomModal
         isOpen={isOpen}
+        isBlock={
+          isPayments && isPayments.length >= 2
+            ? true
+            : isPayments?.length === 1 && isPayments[0].confirmationType === 3
+            ? true
+            : false
+        }
+        confirmType={isPayments?.length ?? 0}
         width={isShowPdf ? "85vw" : ""}
         title={mode === "edit" ? "Cập nhật hoạt động" : "Thêm mới hoạt động"}
         role={role || undefined}
-        isBlock={isBlock}
-        onApprove={() => handleApproved(false)}
+        onApprove={() => handleApproved(false, 1)}
+        onConfirm={() => handleApproved(false, 2)}
+        onApprovedConfirm={() => handleApproved(false, 3)}
         onReject={() => setIsModalVisible(true)}
         onOk={() => {
           const formElement = document.querySelector("form");
@@ -1107,9 +1111,7 @@ const BM05 = () => {
             handleShowPDF={setIsShowPdf}
             initialData={selectedItem as Partial<AddUpdateActivityItem>}
             mode={mode}
-            numberActivity={data.length}
-            isBlock={isBlock}
-            isPayment={isPayments}
+            isPayment={isPayments ?? []}
             displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
           />
         }
@@ -1122,7 +1124,7 @@ const BM05 = () => {
         }}
         onOk={() => {
           setIsModalVisible(false);
-          handleApproved(true);
+          handleApproved(true, 1);
           setReason("");
         }}
         title="Lý do từ chối"
@@ -1140,7 +1142,6 @@ const BM05 = () => {
         data={data}
         title={columns}
         onEdit={handleEdit}
-        onSetBlock={setIsBlock}
         onSetPayments={setIsPayments}
         onSelectionChange={(selectedRowKeys) =>
           setSelectedRowKeys(selectedRowKeys)

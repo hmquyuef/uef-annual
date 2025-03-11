@@ -3,7 +3,11 @@
 import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
 import Messages from "@/utility/Messages";
 import { convertTimestampToDate } from "@/utility/Utilities";
-import { CloseOutlined, SafetyOutlined } from "@ant-design/icons";
+import {
+  CheckOutlined,
+  CloseOutlined,
+  LoadingOutlined,
+} from "@ant-design/icons";
 import { Empty, PaginationProps, Spin, Table, TableColumnsType } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import Cookies from "js-cookie";
@@ -45,7 +49,7 @@ const TemplateForms: FC<TemplateFormsProps> = ({
   const rowSelection: TableRowSelection<any> = {
     selectedRowKeys,
     getCheckboxProps: (record: any) => ({
-      disabled: record.payments?.isBlockData ?? false,
+      disabled: record.payments.length > 0 ? true : false,
     }),
     onChange: onSelectChange,
   };
@@ -89,37 +93,62 @@ const TemplateForms: FC<TemplateFormsProps> = ({
     {
       title: (
         <div className="rounded-tr-lg">
-          PHÊ DUYỆT <br /> THANH TOÁN
+          KIỂM DUYỆT <br /> THANH TOÁN
         </div>
       ),
-      dataIndex: ["payments", "isRejected"],
-      key: "isRejected",
-      render: (isRejected: boolean, record: any) => {
-        return (
-          <>
-            {record.payments ? (
-              <>
-                {isRejected ? (
-                  <span className="text-red-500">
-                    <CloseOutlined className="me-1" /> Từ chối
-                  </span>
-                ) : (
-                  <span className="text-green-500">
-                    <SafetyOutlined className="me-1" /> Đã duyệt
-                  </span>
-                )}
-              </>
-            ) : (
-              <>
-                <span className="text-sky-500 flex justify-center items-center gap-2">
-                  <Spin size="small" /> Chờ duyệt
-                </span>
-              </>
-            )}
-          </>
+      dataIndex: "payments",
+      key: "payments",
+      render: (_: any, record: any) => {
+        const payments = record.payments ?? [];
+        const confirmationType = payments.reduce(
+          (max: number, x: any) =>
+            x.confirmationType > max ? x.confirmationType : max,
+          0
         );
+        const item = payments.find(
+          (x: any) => x.confirmationType === confirmationType
+        );
+        if (confirmationType === 0) {
+          return (
+            <div className="flex justify-center items-center gap-2">
+              <Spin size="small" />
+              <span className="text-blue-500">Kiểm duyệt</span>
+            </div>
+          );
+        }
+        if (confirmationType === 1) {
+          return (
+            <span className="text-orange-500 flex justify-center items-center gap-2">
+              <Spin
+                indicator={
+                  <span className="text-orange-600 mt-[-18px]">
+                    <LoadingOutlined spin />
+                  </span>
+                }
+              />
+              Đợi xác nhận
+            </span>
+          );
+        }
+        if (confirmationType === 2 || confirmationType === 3) {
+          if (item.isRejected) {
+            return (
+              <div className="flex justify-center items-center gap-2 text-red-500">
+                <CloseOutlined />
+                <span>Từ chối</span>
+              </div>
+            );
+          } else {
+            return (
+              <div className="flex justify-center items-center gap-2 text-green-500">
+                <CheckOutlined />
+                <span>Xác nhận</span>
+              </div>
+            );
+          }
+        }
       },
-      className: "customApprovedColors text-center w-[110px]",
+      className: "customApprovedColors text-center w-[130px]",
     },
   ];
 

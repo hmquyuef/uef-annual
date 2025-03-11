@@ -1,6 +1,8 @@
 export interface PaymentApprovedItem {
-  approver: string;
-  approvedTime: number;
+  userName: string;
+  fullName: string;
+  confirmationType: number;
+  confirmationTime: number;
   isRejected: boolean;
   isBlockData: boolean;
   reason: string;

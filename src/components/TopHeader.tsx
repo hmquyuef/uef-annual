@@ -1,5 +1,6 @@
 "use client";
 
+import { deleteToken } from "@/services/auth/authServices";
 import {
   IdcardOutlined,
   InfoCircleOutlined,
@@ -14,10 +15,18 @@ import { useState } from "react";
 
 const handleMenuClick: MenuProps["onClick"] = async (e) => {
   if (e.key === "3") {
-    ["s_t", "s_r", "m_i", "m_k", "p_s"].forEach((cookie) =>
-      Cookies.remove(cookie)
-    );
-    await signOut({ callbackUrl: "/login" });
+    const token = Cookies.get("s_t");
+    if (token) {
+      try {
+        await deleteToken(token);
+      } finally {
+        ["s_t", "s_r", "m_i", "m_k", "p_s"].forEach((cookie) =>
+          Cookies.remove(cookie)
+        );
+        if (typeof window !== "undefined") window.localStorage.clear();
+        await signOut({ callbackUrl: "/login" });
+      }
+    }
   }
 };
 

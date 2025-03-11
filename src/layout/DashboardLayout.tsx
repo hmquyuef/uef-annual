@@ -153,34 +153,43 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     const response = await putTokenByRefresh(refresh);
     if (response) {
       const expires = new Date(response.expiresAt * 1000);
-      Cookies.set("s_t", response.accessToken, { expires: expires });
+      Cookies.set("s_t", response.accessToken, { expires });
+      return true;
     } else {
       Cookies.remove("s_t");
       Cookies.remove("s_r");
-      await getToken(email);
+      return false;
     }
   };
 
   useEffect(() => {
     const fetchData = async () => {
-      if (session === undefined || session === null) {
+      if (!session?.user?.email) {
         router.push("/login");
         return;
       }
 
-      const email = session.user?.email;
-      if (email) {
-        const token = Cookies.get("s_t");
-        const refreshToken = Cookies.get("s_r");
-        if (!token && !refreshToken) {
+      const email = session.user.email;
+      const token = Cookies.get("s_t");
+      const refreshToken = Cookies.get("s_r");
+
+      if (!token) {
+        if (refreshToken) {
+          const success = await getTokenWithRefreshToken(refreshToken, email);
+          if (!success) {
+            await getToken(email);
+          }
+        } else {
           await getToken(email);
         }
-        if (!token && refreshToken) {
-          await getTokenWithRefreshToken(refreshToken, email);
-        }
-        await getMenuByUserName(email);
       }
-      if (!localStorage?.getItem("s_username")) {
+
+      await getMenuByUserName(email);
+
+      if (
+        typeof window !== "undefined" &&
+        !localStorage.getItem("s_username")
+      ) {
         Cookies.remove("s_t");
         Cookies.remove("s_r");
         await signOut({ callbackUrl: "/login" });
@@ -208,7 +217,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       >
         <div className="h-full fixed top-0 left-0 z-30">
           <aside
-            className={`flex flex-col transition-all duration-300 ${
+            className={`flex flex-col transition-all duration-300 select-none ${
               isOpened ? "w-60" : "w-16"
             }`}
           >
@@ -256,12 +265,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               >
                 {children}
               </div>
-              <footer className="bg-white h-10 max-h-10 px-3 py-2 border-t-2 border-gray-100 text-center align-middle">
+              <footer className="bg-white h-10 max-h-10 px-3 py-2 border-t-2 border-gray-100 text-center align-middle select-none">
                 <FloatButton.BackTop />
                 <span className="text-sm text-neutral-600">
                   Bản quyền © {new Date().getFullYear()} thuộc{" "}
                   <span className="text-red-500 font-semibold">UEF</span> -
-                  Thiết kế và phát triển bới{" "}
+                  Thiết kế và phát triển bởi{" "}
                   <span className="font-semibold">TT.QLCNTT</span>
                 </span>
               </footer>
