@@ -45,21 +45,13 @@ interface FormBM03Props {
   initialData?: Partial<any>;
   handleShowPDF: (isVisible: boolean) => void;
   mode: "add" | "edit";
-  isBlock: boolean;
-  isPayment?: PaymentApprovedItem;
+  isPayment?: PaymentApprovedItem[];
   displayRole: DisplayRoleItem;
 }
 
 const FormBM03: FC<FormBM03Props> = (props) => {
-  const {
-    onSubmit,
-    handleShowPDF,
-    initialData,
-    mode,
-    isBlock,
-    isPayment,
-    displayRole,
-  } = props;
+  const { onSubmit, handleShowPDF, initialData, mode, isPayment, displayRole } =
+    props;
   const { TextArea } = Input;
   const timestamp = dayjs().tz("Asia/Ho_Chi_Minh").unix();
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -73,7 +65,7 @@ const FormBM03: FC<FormBM03Props> = (props) => {
   const [listPicture, setListPicture] = useState<FileItem | undefined>(
     undefined
   );
-
+  const [isBlock, setIsBlock] = useState<boolean>(false);
   const [isLoadingPDF, setIsLoadingPDF] = useState<boolean>(false);
   const [percent, setPercent] = useState<number>(0);
   const [showPDF, setShowPDF] = useState<boolean>(false);
@@ -206,9 +198,11 @@ const FormBM03: FC<FormBM03Props> = (props) => {
     setDefaultUnits([]);
     setDefaultUsers([]);
     setListPicture(undefined);
+    setIsBlock(false);
   };
 
   useEffect(() => {
+    setIsBlock((isPayment?.length ?? 0) > 0 ? true : false);
     const loadUsers = async () => {
       setIsLoading(true);
 
@@ -663,7 +657,11 @@ const FormBM03: FC<FormBM03Props> = (props) => {
                 }
               />
             </div>
-            <InfoApproved mode={mode} isPayment={isPayment} />
+            <InfoApproved
+              mode={mode}
+              payments={isPayment}
+              createdTime={initialData?.determinations?.entryDate ?? 0}
+            />
           </form>
         </>
       )}
@@ -675,12 +673,7 @@ const FormBM03: FC<FormBM03Props> = (props) => {
           handleShowPDF(value);
         }}
       />
-      <CustomNotification
-        message={formNotification.message}
-        description={formNotification.description}
-        status={formNotification.status}
-        isOpen={formNotification.isOpen}
-      />
+      <CustomNotification {...formNotification} />
     </div>
   );
 };

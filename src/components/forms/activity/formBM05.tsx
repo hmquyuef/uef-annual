@@ -677,12 +677,7 @@ const FormBM05: FC<FormBM05Props> = ({
           handleShowPDF(value);
         }}
       />
-      <CustomNotification
-        message={formNotification.message}
-        description={formNotification.description}
-        status={formNotification.status}
-        isOpen={formNotification.isOpen}
-      />
+      <CustomNotification {...formNotification} />
     </div>
   );
 };

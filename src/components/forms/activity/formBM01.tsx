@@ -44,21 +44,13 @@ interface FormBM01Props {
   handleShowPDF: (isVisible: boolean) => void;
   initialData?: Partial<any>;
   mode: "add" | "edit";
-  isBlock: boolean;
-  isPayment?: PaymentApprovedItem;
+  isPayment?: PaymentApprovedItem[];
   displayRole: DisplayRoleItem;
 }
 
 const FormBM01: FC<FormBM01Props> = (props) => {
-  const {
-    onSubmit,
-    handleShowPDF,
-    initialData,
-    mode,
-    isBlock,
-    isPayment,
-    displayRole,
-  } = props;
+  const { onSubmit, handleShowPDF, initialData, mode, isPayment, displayRole } =
+    props;
   const { TextArea } = Input;
   const timestamp = dayjs().tz("Asia/Ho_Chi_Minh").unix();
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -75,6 +67,7 @@ const FormBM01: FC<FormBM01Props> = (props) => {
   const [isLoadingPDF, setIsLoadingPDF] = useState<boolean>(false);
   const [percent, setPercent] = useState<number>(0);
   const [showPDF, setShowPDF] = useState<boolean>(false);
+  const [isBlock, setIsBlock] = useState<boolean>(false);
   const [formNotification, setFormNotification] = useState<{
     message: string;
     description: string;
@@ -202,9 +195,11 @@ const FormBM01: FC<FormBM01Props> = (props) => {
     setUsers(undefined);
     setSelectedKey(null);
     setListPicture(undefined);
+    setIsBlock(false);
   };
 
   useEffect(() => {
+    setIsBlock((isPayment?.length ?? 0) > 0 ? true : false);
     const loadUsers = async () => {
       setIsLoading(true);
 
@@ -670,7 +665,11 @@ const FormBM01: FC<FormBM01Props> = (props) => {
                 }}
               />
             </div>
-            <InfoApproved mode={mode} isPayment={isPayment} />
+            <InfoApproved
+              mode={mode}
+              payments={isPayment}
+              createdTime={initialData?.determinations?.entryDate ?? 0}
+            />
           </form>
         </>
       )}
@@ -682,12 +681,7 @@ const FormBM01: FC<FormBM01Props> = (props) => {
           handleShowPDF(value);
         }}
       />
-      <CustomNotification
-        message={formNotification.message}
-        description={formNotification.description}
-        status={formNotification.status}
-        isOpen={formNotification.isOpen}
-      />
+      <CustomNotification {...formNotification} />
     </div>
   );
 };
