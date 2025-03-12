@@ -6,6 +6,7 @@ const useWebSocketPing = (url: string, interval = 5000, timeout = 5000) => {
     const socketRef = useRef<WebSocket | null>(null);
     const pingTimer = useRef<NodeJS.Timeout | null>(null);
     const responseTimer = useRef<NodeJS.Timeout | null>(null);
+    const lastPingTime = useRef<number | null>(null);
 
     const updateStatus = (lat: number) => {
         if (lat < 500) setStatus("fast");
@@ -15,23 +16,22 @@ const useWebSocketPing = (url: string, interval = 5000, timeout = 5000) => {
 
     const sendPing = () => {
         if (socketRef.current?.readyState === WebSocket.OPEN) {
-            const start = Date.now();
+            lastPingTime.current = Date.now();
             socketRef.current.send("ping");
-            responseTimer.current = setTimeout(() => setStatus("slow"), timeout);
 
-            socketRef.current.onmessage = (event) => {
-                if (event.data === "true") {
-                    const lat = Date.now() - start;
-                    setLatency(lat);
-                    updateStatus(lat);
-                    clearTimeout(responseTimer.current!);
-                }
-            };
+            responseTimer.current = setTimeout(() => {
+                setStatus("slow");
+            }, timeout);
         }
     };
 
     const cleanup = () => {
-        if (socketRef.current) socketRef.current.close();
+        if (socketRef.current) {
+            socketRef.current.onclose = null;
+            socketRef.current.onmessage = null;
+            socketRef.current.onerror = null;
+            socketRef.current.close();
+        }
         if (pingTimer.current) clearInterval(pingTimer.current);
         if (responseTimer.current) clearTimeout(responseTimer.current);
     };
@@ -45,12 +45,22 @@ const useWebSocketPing = (url: string, interval = 5000, timeout = 5000) => {
             pingTimer.current = setInterval(sendPing, interval);
         };
 
+        socketRef.current.onmessage = (event) => {
+            if (event.data === "true" && lastPingTime.current !== null) {
+                const lat = Date.now() - lastPingTime.current;
+                setLatency(lat);
+                updateStatus(lat);
+                clearTimeout(responseTimer.current!);
+                responseTimer.current = null;
+            }
+        };
+
         socketRef.current.onclose = () => {
             console.log("❌ WebSocket disconnected!");
             setStatus("disconnected");
             setLatency(null);
             cleanup();
-            setTimeout(connectWebSocket, 5000); // Tự động reconnect
+            setTimeout(connectWebSocket, 5000); // Tự động reconnect sau 5s
         };
 
         socketRef.current.onerror = (error) => {
@@ -62,7 +72,7 @@ const useWebSocketPing = (url: string, interval = 5000, timeout = 5000) => {
     useEffect(() => {
         connectWebSocket();
         return cleanup; // Cleanup khi unmount hoặc dependency thay đổi
-    }, [url, interval, timeout]);
+    }, [url]);
 
     return { latency, status };
 };

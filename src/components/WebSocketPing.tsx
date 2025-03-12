@@ -109,12 +109,7 @@ const WebSocketPing: FC<WebSocketPingProps> = (props) => {
           </>
         )}
       </div>
-      <CustomNotification
-        message={formNotification.message}
-        description={formNotification.description}
-        status={formNotification.status}
-        isOpen={formNotification.isOpen}
-      />
+      <CustomNotification {...formNotification} />
     </div>
   );
 };
