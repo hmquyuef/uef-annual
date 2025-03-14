@@ -49,7 +49,7 @@ const TemplateForms: FC<TemplateFormsProps> = ({
   const rowSelection: TableRowSelection<any> = {
     selectedRowKeys,
     getCheckboxProps: (record: any) => ({
-      disabled: record.payments.length > 0 ? true : false,
+      disabled: record.payments?.length > 0 ? true : false,
     }),
     onChange: onSelectChange,
   };

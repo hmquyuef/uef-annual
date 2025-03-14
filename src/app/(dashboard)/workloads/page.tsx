@@ -40,6 +40,7 @@ import {
   StatisticProps,
 } from "antd";
 import { SearchProps } from "antd/es/input";
+import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import CountUp from "react-countup";
@@ -124,6 +125,20 @@ const Workloads = () => {
     setSelectedItem(type);
     setTitle(`Chỉnh sửa ${type.name}`);
     setIsOpened(true);
+  };
+
+  const handleClick = (href: string) => {
+    const menuOpen = Cookies.get("m_i");
+    if (menuOpen) {
+      const openKeys = JSON.parse(menuOpen);
+      openKeys[2] = href;
+      console.log("openKeys :>> ", openKeys);
+      console.log("openKeys[2] :>> ", openKeys[2]);
+      Cookies.set(
+        "m_i",
+        JSON.stringify([openKeys[1], openKeys[0], openKeys[2]])
+      );
+    }
   };
 
   const actions = (type: WorkloadTypeItem): React.ReactNode[] => {
@@ -358,6 +373,7 @@ const Workloads = () => {
                             onClick={() => {
                               if (userName && type.emails?.includes(userName)) {
                                 router.push("/workloads/" + type.href);
+                                handleClick("/workloads/" + type.href);
                               } else {
                                 setMode("edit");
                                 setIsAccess(false);

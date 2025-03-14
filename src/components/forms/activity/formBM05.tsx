@@ -299,6 +299,7 @@ const FormBM05: FC<FormBM05Props> = ({
     };
     onSubmit(formData);
   };
+
   const resetForm = () => {
     setDeterEntryDate(timestamp);
     setName("");

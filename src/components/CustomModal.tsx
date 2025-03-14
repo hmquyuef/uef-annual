@@ -1,5 +1,6 @@
 import { RoleItem } from "@/services/roles/rolesServices";
 import { Button, Modal, ModalProps } from "antd";
+import { useState } from "react";
 
 interface CustomModalProps extends ModalProps {
   title: string;
@@ -32,13 +33,21 @@ const CustomModal: React.FC<CustomModalProps> = ({
   onReject,
   isBlock,
 }) => {
+  const [confirmLoading, setConfirmLoading] = useState(false);
   return (
     <Modal
       open={isOpen}
       title={title}
       style={{ top: 20 }}
-      onOk={onOk}
+      onOk={() => {
+        setConfirmLoading(true);
+        setTimeout(() => {
+          onOk();
+          setConfirmLoading(false);
+        }, 1000);
+      }}
       onCancel={onCancel}
+      confirmLoading={confirmLoading}
       okText="Xác nhận"
       cancelText="Quay lại"
       width={width ? width : "900px"}

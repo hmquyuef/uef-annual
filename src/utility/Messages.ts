@@ -64,6 +64,12 @@ enum Messages {
     APPROVED_TRAINING_LEVELS = "Phê duyệt thông bồi dưỡng, nâng cao trình độ thành công!",
     REJECTED_TRAINING_LEVELS = "Đã từ chối phê duyệt thông bồi dưỡng, nâng cao trình độ!",
 
+    //BM07 Contents
+    TITLE_ADD_TRAINING_CONTENTS = "Thêm mới nội dung bồi dưỡng, nâng cao trình độ",
+    TITLE_UPDATE_TRAINING_CONTENTS = "Cập nhật nội dung bồi dưỡng, nâng cao trình độ",
+    ADD_TRAINING_CONTENTS = "Thêm mới nội dung bồi dưỡng, nâng cao trình độ thành công!",
+    UPDATE_TRAINING_CONTENTS = "Cập nhật nội dung bồi dưỡng, nâng cao trình độ thành công!",
+
     //BM08
     TITLE_ADD_LABORS_UNION = "Thêm mới thông tin Công Đoàn",
     TITLE_UPDATE_LABORS_UNION = "Cập nhật thông tin Công Đoàn",

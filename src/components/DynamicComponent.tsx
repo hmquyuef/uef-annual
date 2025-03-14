@@ -15,7 +15,6 @@ import BM13 from "./forms/bm13";
 import BM14 from "./forms/bm14";
 import BM15 from "./forms/bm15";
 import NotFound from "./NotFound";
-
 interface DynamicComponentProps {
   params: {
     shortName: string;
@@ -41,6 +40,7 @@ const DynamicComponent = ({ params }: DynamicComponentProps) => {
     bm14: <BM14 />,
     bm15: <BM15 />,
   };
+  
   const component = componentsMap[shortName.toLowerCase()] || <NotFound />;
   return <>{component}</>;
 };

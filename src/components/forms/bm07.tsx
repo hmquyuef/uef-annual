@@ -35,6 +35,7 @@ import {
   Button,
   ConfigProvider,
   DatePicker,
+  Drawer,
   GetProps,
   Input,
   Select,
@@ -55,6 +56,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import Link from "next/link";
 import * as XLSX from "sheetjs-style";
+import DrawerForBM07 from "../drawerInfo/DrawerForBM07";
 dayjs.locale("vi");
 
 const BM07 = () => {
@@ -82,6 +84,7 @@ const BM07 = () => {
   const [advanced, setAdvanced] = useState(false);
   const [role, setRole] = useState<RoleItem>();
   const [isShowPdf, setIsShowPdf] = useState(false);
+  const [openDrawer, setOpenDrawer] = useState<boolean>(false);
 
   const [formNotification, setFormNotification] = useState<{
     message: string;
@@ -374,14 +377,7 @@ const BM07 = () => {
         "",
         "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM",
       ],
-      [
-        "THÀNH PHỐ HỒ CHÍ MINH",
-        "",
-        "",
-        "",
-        "",
-        "Độc lập - Tự do - Hạnh phúc",
-      ],
+      ["THÀNH PHỐ HỒ CHÍ MINH", "", "", "", "", "Độc lập - Tự do - Hạnh phúc"],
       ["(ĐƠN VỊ)", "", "", ""],
       ["TỔNG HỢP DANH SÁCH"],
       ["Tham gia bồi dưỡng nâng cao trình độ"],
@@ -851,6 +847,18 @@ const BM07 = () => {
           {role?.displayRole.isCreate && (
             <>
               <Button
+                color="cyan"
+                variant="solid"
+                icon={<FileExcelOutlined />}
+                iconPosition="start"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setOpenDrawer(!openDrawer);
+                }}
+              >
+                Nội dung đào tạo
+              </Button>
+              <Button
                 type="primary"
                 icon={<PlusOutlined />}
                 onClick={() => {
@@ -881,12 +889,7 @@ const BM07 = () => {
           )}
         </div>
       </div>
-      <CustomNotification
-        isOpen={formNotification.isOpen}
-        status={formNotification.status}
-        message={formNotification.message}
-        description={formNotification.description}
-      />
+      <CustomNotification {...formNotification} />
       <CustomModal
         isOpen={isOpen}
         width={isShowPdf ? "85vw" : "800px"}
@@ -920,6 +923,7 @@ const BM07 = () => {
             handleShowPDF={setIsShowPdf}
             initialData={selectedItem as Partial<any>}
             mode={mode}
+            yearId={selectedKey?.id as string}
             displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
           />
         }
@@ -933,6 +937,19 @@ const BM07 = () => {
           setSelectedRowKeys(selectedRowKeys)
         }
       />
+      <Drawer
+        title={`Dữ liệu các hoạt động bồi dưỡng, nâng cao trình độ trong năm học ${selectedKey?.title}`}
+        placement={"right"}
+        closable={true}
+        onClose={() => {
+          setOpenDrawer(!openDrawer);
+        }}
+        open={openDrawer}
+        width={"60%"}
+        key="drawer-infomation-bm07"
+      >
+        <DrawerForBM07 yearId={selectedKey?.id as string} />
+      </Drawer>
     </div>
   );
 };

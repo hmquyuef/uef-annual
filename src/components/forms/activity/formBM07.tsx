@@ -19,12 +19,16 @@ import { FC, FormEvent, Key, useEffect, useState } from "react";
 import CustomNotification from "@/components/CustomNotification";
 import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
 import { DisplayRoleItem } from "@/services/roles/rolesServices";
+import { getAllTrainingContents } from "@/services/trainingLevels/contentsServices";
 import {
   deleteFiles,
   FileItem,
   postFiles,
 } from "@/services/uploads/uploadsServices";
-import { CloudUploadOutlined, MinusCircleOutlined } from "@ant-design/icons";
+import {
+  CloudUploadOutlined,
+  MinusCircleOutlined
+} from "@ant-design/icons";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
@@ -36,11 +40,13 @@ interface FormBM07Props {
   initialData?: Partial<any>;
   handleShowPDF: (isVisible: boolean) => void;
   mode: "add" | "edit";
+  yearId: string;
   displayRole: DisplayRoleItem;
 }
 
 const FormBM07: FC<FormBM07Props> = (props) => {
-  const { onSubmit, initialData, handleShowPDF, mode, displayRole } = props;
+  const { onSubmit, initialData, handleShowPDF, mode, yearId, displayRole } =
+    props;
   const { TextArea } = Input;
   const timestamp = dayjs().tz("Asia/Ho_Chi_Minh").unix();
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -49,6 +55,7 @@ const FormBM07: FC<FormBM07Props> = (props) => {
   const [users, setUsers] = useState<UsersFromHRMResponse | undefined>(
     undefined
   );
+  const [dataContents, setDataContents] = useState<any[]>([]);
   const [selectedKey, setSelectedKey] = useState<Key | null>(null);
   const [defaultUsers, setDefaultUsers] = useState<UsersFromHRM[]>([]);
   const [listPicture, setListPicture] = useState<FileItem | undefined>(
@@ -57,7 +64,6 @@ const FormBM07: FC<FormBM07Props> = (props) => {
   const [isLoadingPDF, setIsLoadingPDF] = useState<boolean>(false);
   const [percent, setPercent] = useState<number>(0);
   const [showPDF, setShowPDF] = useState<boolean>(false);
-
   const [formNotification, setFormNotification] = useState<{
     message: string;
     description: string;
@@ -85,6 +91,11 @@ const FormBM07: FC<FormBM07Props> = (props) => {
     type: "",
     note: "",
   });
+
+  const getListTrainingContents = async () => {
+    const response = await getAllTrainingContents(yearId);
+    setDataContents(response.items);
+  };
 
   const getListUnits = async () => {
     const response = await getAllUnits("true");
@@ -232,7 +243,6 @@ const FormBM07: FC<FormBM07Props> = (props) => {
   useEffect(() => {
     const loadUsers = async () => {
       setIsLoading(true);
-
       try {
         if (mode === "edit" && initialData) {
           const units = await getAllUnits("true");
@@ -289,9 +299,8 @@ const FormBM07: FC<FormBM07Props> = (props) => {
           );
         } else {
           ResetForm();
-          getListUnits();
+          await Promise.all([getListUnits(), getListTrainingContents()]);
         }
-
         setShowPDF(false);
         if (handleShowPDF) handleShowPDF(false);
       } catch (error) {
@@ -300,7 +309,6 @@ const FormBM07: FC<FormBM07Props> = (props) => {
         setIsLoading(false);
       }
     };
-
     loadUsers();
   }, [initialData, mode]);
 
@@ -315,7 +323,7 @@ const FormBM07: FC<FormBM07Props> = (props) => {
 
   return (
     <div
-      className={`grid ${showPDF ? "grid-cols-2 gap-4" : "grid-cols-1"} mb-2`}
+      className={`grid ${showPDF ? "grid-cols-2 gap-4" : "grid-cols-1"} mb-4`}
     >
       {isLoading ? (
         <>
@@ -325,8 +333,8 @@ const FormBM07: FC<FormBM07Props> = (props) => {
         <>
           {" "}
           <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-4 gap-6 border-t border-neutral-300 pt-3 mb-2">
-              <div className="col-span-2 flex flex-col gap-1">
+            <div className="grid grid-cols-4 gap-6 border-t border-neutral-300 pt-3 mb-4">
+              <div className="col-span-2 flex flex-col gap-2">
                 <span className="font-medium text-neutral-600">Đơn vị</span>
                 <Select
                   showSearch
@@ -353,7 +361,7 @@ const FormBM07: FC<FormBM07Props> = (props) => {
                   }}
                 />
               </div>
-              <div className="col-span-2 flex flex-col gap-1">
+              <div className="col-span-2 flex flex-col gap-2">
                 <span className="font-medium text-neutral-600">
                   Tìm mã CB-GV-NV
                 </span>
@@ -385,32 +393,44 @@ const FormBM07: FC<FormBM07Props> = (props) => {
                 />
               </div>
             </div>
-            <div className="flex flex-col gap-1 mb-2">
+            <div className="col-span-2 flex flex-col gap-2 mb-4">
               <span className="font-medium text-neutral-600">
                 Nội dung đào tạo
               </span>
-              <TextArea
-                autoSize
-                value={formValues.contents}
-                onChange={(e) =>
-                  setFormValues({ ...formValues, contents: e.target.value })
+              <Select
+                showSearch
+                optionFilterProp="label"
+                filterSort={(optionA, optionB) =>
+                  (optionA?.label ?? "")
+                    .toLowerCase()
+                    .localeCompare((optionB?.label ?? "").toLowerCase())
                 }
-              />
-            </div>
-            <div className="flex flex-col gap-1 mb-2">
-              <span className="font-medium text-neutral-600">Nơi đào tạo</span>
-              <Input
-                value={formValues.issuancePlace}
-                onChange={(e) =>
+                options={dataContents.map((content: UnitItem) => ({
+                  value: content.id,
+                  label: content.name,
+                  key: content.id,
+                }))}
+                value={formValues.contents}
+                onChange={(value) => {
+                  const item = dataContents.find(
+                    (content) => content.id === value
+                  );
+                  const contents = item?.name || "";
+                  const location = item?.location || "";
                   setFormValues({
                     ...formValues,
-                    issuancePlace: e.target.value,
-                  })
-                }
+                    contents: contents,
+                    issuancePlace: location,
+                  });
+                }}
               />
             </div>
-            <div className="grid grid-cols-4 mb-2 gap-6">
-              <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-2 mb-4">
+              <span className="font-medium text-neutral-600">Nơi đào tạo</span>
+              <Input value={formValues.issuancePlace} />
+            </div>
+            <div className="grid grid-cols-4 mb-4 gap-6">
+              <div className="flex flex-col gap-2">
                 <span className="font-medium text-neutral-600">
                   Loại CC/GCN
                 </span>
@@ -431,7 +451,7 @@ const FormBM07: FC<FormBM07Props> = (props) => {
                   }}
                 />
               </div>
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-2">
                 <span className="font-medium text-neutral-600">Số vào sổ</span>
                 <Input
                   value={formValues.documentNumber}
@@ -443,7 +463,7 @@ const FormBM07: FC<FormBM07Props> = (props) => {
                   }
                 />
               </div>
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-2">
                 <span className="font-medium text-neutral-600">
                   Ngày cấp CC/GCN
                 </span>
@@ -470,7 +490,7 @@ const FormBM07: FC<FormBM07Props> = (props) => {
                   />
                 </ConfigProvider>
               </div>
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-2">
                 <span className="font-medium text-neutral-600">Ngày nhập</span>
                 <ConfigProvider locale={locale}>
                   <DatePicker
@@ -488,7 +508,7 @@ const FormBM07: FC<FormBM07Props> = (props) => {
                 </ConfigProvider>
               </div>
             </div>
-            <div className="flex flex-col gap-[2px] mb-2">
+            <div className="flex flex-col gap-[2px] mb-4">
               <span className="font-medium text-neutral-600">
                 Tài liệu đính kèm
               </span>
@@ -527,7 +547,7 @@ const FormBM07: FC<FormBM07Props> = (props) => {
                       </>
                     ) : (
                       <>
-                        <div className="flex flex-col items-center gap-1 py-2">
+                        <div className="flex flex-col items-center gap-2 py-2">
                           <div className="grid grid-cols-3 gap-2">
                             <img
                               src="/file-pdf.svg"
@@ -586,7 +606,7 @@ const FormBM07: FC<FormBM07Props> = (props) => {
                 )}
               </div>
             </div>
-            <div className="flex flex-col gap-1 mb-3">
+            <div className="flex flex-col gap-2 mb-3">
               <span className="font-medium text-neutral-600">Ghi chú</span>
               <TextArea
                 autoSize
@@ -607,12 +627,7 @@ const FormBM07: FC<FormBM07Props> = (props) => {
           handleShowPDF(value);
         }}
       />
-      <CustomNotification
-        message={formNotification.message}
-        description={formNotification.description}
-        status={formNotification.status}
-        isOpen={formNotification.isOpen}
-      />
+      <CustomNotification {...formNotification} />
     </div>
   );
 };
