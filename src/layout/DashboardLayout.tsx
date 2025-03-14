@@ -36,6 +36,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isOpened, setIsOpened] = useState(true);
   const [stateOpenKeys, setStateOpenKeys] = useState(["1", "12"]);
   const [itemsMenu, setItemsMenu] = useState<MenuItem[]>([]);
+
+  const CallLogout = async () => {
+    Cookies.remove("s_t");
+    Cookies.remove("s_r");
+    await signOut({ callbackUrl: "/login" });
+    return;
+  };
+
   const getLevelKeys = (items1: LevelKeysProps[]) => {
     const key: Record<string, number> = {};
     const func = (items2: LevelKeysProps[], level = 1) => {
@@ -51,6 +59,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     func(items1);
     return key;
   };
+
+  const levelKeys = getLevelKeys(itemsMenu as LevelKeysProps[]);
 
   const onOpenChange: MenuProps["onOpenChange"] = (openKeys) => {
     const currentOpenKey = openKeys.find(
@@ -71,7 +81,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
-  const levelKeys = getLevelKeys(itemsMenu as LevelKeysProps[]);
   const handleClick = (e: any) => {
     Cookies.set("m_k", e.key);
     Cookies.set(
@@ -79,73 +88,82 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       JSON.stringify([e.keyPath[1], e.keyPath[0], e.domEvent.target.href])
     );
   };
+
   const getMenuByUserName = async (email: string) => {
-    const userName = localStorage.getItem("s_username");
-    const listmenus = await getAllPermissionsForMenuByUserName(
-      userName as string
-    );
-    if (listmenus.items.length === 0) return router.push("/not-permission");
-    const tempMenu: any[] = listmenus.items[0].permissions.map((item) => {
-      const tempChildren: MenuItem[] | null = item.isChildren
-        ? item.children
-            ?.filter((child) => child.isActived)
-            .map((child) => ({
-              key: child.position,
-              label: <Link href={child.href}>{child.label}</Link>,
-            }))
-        : null;
-      const IconComponent = item.icon
-        ? require(`@ant-design/icons`)[item.icon]
-        : null;
-      if (tempChildren && tempChildren.length > 0) {
-        return {
-          key: item.position,
-          icon: IconComponent ? <IconComponent /> : null,
-          label: item.label,
-          children: tempChildren,
-        };
+    if (typeof window !== "undefined") {
+      const userName = localStorage.getItem("s_username");
+      const role = localStorage.getItem("s_role");
+      if (!userName && !role) {
+        CallLogout();
       }
-    });
-    const { role } = getUserInfoFromToken();
-    if (role === "admin" || role === "user" || role === "manager") {
-      setItemsMenu([
-        {
-          key: "0",
-          icon: <HomeOutlined />,
-          label: <Link href={"/"}>Trang chủ</Link>,
-        },
-        ...tempMenu,
-      ]);
-    } else {
-      setItemsMenu(tempMenu);
+      const listmenus = await getAllPermissionsForMenuByUserName(
+        userName as string
+      );
+
+      if (listmenus.items.length === 0) return router.push("/not-permission");
+      const tempMenu: any[] = listmenus.items[0].permissions.map((item) => {
+        const tempChildren: MenuItem[] | null = item.isChildren
+          ? item.children
+              ?.filter((child) => child.isActived)
+              .map((child) => ({
+                key: child.position,
+                label: <Link href={child.href}>{child.label}</Link>,
+              }))
+          : null;
+        const IconComponent = item.icon
+          ? require(`@ant-design/icons`)[item.icon]
+          : null;
+        if (tempChildren && tempChildren.length > 0) {
+          return {
+            key: item.position,
+            icon: IconComponent ? <IconComponent /> : null,
+            label: item.label,
+            children: tempChildren,
+          };
+        }
+      });
+      if (role === "admin" || role === "user" || role === "manager") {
+        setItemsMenu([
+          {
+            key: "0",
+            icon: <HomeOutlined />,
+            label: <Link href={"/"}>Trang chủ</Link>,
+          },
+          ...tempMenu,
+        ]);
+      } else {
+        setItemsMenu(tempMenu);
+      }
     }
   };
 
   const getToken = async (email: string) => {
     const formData = new FormData();
-    formData.append("username", "");
-    formData.append("password", "");
     formData.append("email", email);
     formData.append("provider", "Google");
 
-    const response = await postInfoToGetToken(formData);
-    if (response && response !== undefined) {
-      const expires = new Date(response.expiresAt * 1000);
-      const expiresRefresh = new Date(response.expiresAt * 1000);
-      expiresRefresh.setDate(expiresRefresh.getDate() + 7);
-      Cookies.set("s_t", response.accessToken, { expires: expires });
-      Cookies.set("s_r", response.refreshToken, {
-        expires: expiresRefresh,
-      });
-      const { role, userName, family_name } = getUserInfoFromToken();
-      // Chỉ sử dụng localStorage ở phía client
-      if (typeof window !== "undefined") {
-        localStorage.setItem("s_role", role as string);
-        localStorage.setItem("s_username", userName as string);
-        localStorage.setItem("s_family", family_name as string);
-        localStorage.setItem("s_fullname", session?.user?.name as string);
-        localStorage.setItem("s_email", session?.user?.email as string);
+    try {
+      const response = await postInfoToGetToken(formData);
+      if (response) {
+        const expires = new Date(response.expiresAt * 1000);
+        const expiresRefresh = new Date(response.expiresAt * 1000);
+        expiresRefresh.setDate(expiresRefresh.getDate() + 7);
+        Cookies.set("s_t", response.accessToken, { expires: expires });
+        Cookies.set("s_r", response.refreshToken, {
+          expires: expiresRefresh,
+        });
+        const { role, userName, family_name } = getUserInfoFromToken();
+        // Chỉ sử dụng localStorage ở phía client
+        if (typeof window !== "undefined") {
+          localStorage.setItem("s_role", role as string);
+          localStorage.setItem("s_username", userName as string);
+          localStorage.setItem("s_family", family_name as string);
+          localStorage.setItem("s_fullname", response.userName as string);
+          localStorage.setItem("s_email", response.email as string);
+        }
       }
+    } catch (error) {
+      CallLogout();
     }
   };
 
@@ -159,6 +177,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       Cookies.remove("s_t");
       Cookies.remove("s_r");
       return false;
+    }
+  };
+
+  const loadMenuFromStorages = () => {
+    const menuOpen = Cookies.get("m_i");
+    if (menuOpen) {
+      const openKeys = JSON.parse(menuOpen);
+      setStateOpenKeys([openKeys[0], openKeys[1]]);
+      router.push(openKeys[2]);
     }
   };
 
@@ -190,23 +217,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         typeof window !== "undefined" &&
         !localStorage.getItem("s_username")
       ) {
-        Cookies.remove("s_t");
-        Cookies.remove("s_r");
-        await signOut({ callbackUrl: "/login" });
-      }
-    };
-
-    const loadMenuFromCookies = () => {
-      const menuOpen = Cookies.get("m_i");
-      if (menuOpen) {
-        const openKeys = JSON.parse(menuOpen);
-        setStateOpenKeys([openKeys[0], openKeys[1]]);
-        router.push(openKeys[2]);
+        CallLogout();
       }
     };
 
     fetchData();
-    loadMenuFromCookies();
+    loadMenuFromStorages();
   }, [session, router]);
 
   return (

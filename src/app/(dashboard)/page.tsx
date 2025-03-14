@@ -139,13 +139,6 @@ const Home = () => {
     generateTab("4", "Công tác khác", listOthers),
   ];
 
-  const getListUnits = async () => {
-    const response = await getAllUnits("true");
-    const temp = response.items.sort((a, b) => a.name.localeCompare(b.name));
-    setUnits(temp);
-    setSelectedKeyUnit(temp[0].id);
-  };
-
   const getDefaultYears = async () => {
     setLoading(true);
     const [responseSchoolYear, responseUnits] = await Promise.all([
@@ -153,6 +146,7 @@ const Home = () => {
       getAllUnits("true"),
     ]);
     setDefaultYears(responseSchoolYear.items);
+    setUnits(responseUnits.items);
     const yearId = responseSchoolYear.items.filter(
       (x: any) => x.isDefault
     )[0] as any;
@@ -160,6 +154,7 @@ const Home = () => {
     const tempUnits = responseUnits.items.sort((a, b) =>
       a.name.localeCompare(b.name)
     );
+    setSelectedKeyUnit(tempUnits[0].id);
     Promise.all([
       getReports(yearId.id),
       getMultiLineMonths(yearId.id),
@@ -276,7 +271,7 @@ const Home = () => {
 
   useEffect(() => {
     document.title = PageTitles.HOME;
-    Promise.all([getDefaultYears(), getListUnits()]);
+    Promise.all([getDefaultYears()]);
   }, []);
 
   return (
