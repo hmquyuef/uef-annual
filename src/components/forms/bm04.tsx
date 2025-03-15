@@ -15,6 +15,7 @@ import PageTitles from "@/utility/Constraints";
 import {
   convertTimestampToDate,
   defaultFooterInfo,
+  getRandomKey,
   setCellStyle,
 } from "@/utility/Utilities";
 import {
@@ -1217,6 +1218,7 @@ const BM04 = () => {
             isUpload ? (
               <>
                 <FromUpload
+                  key={getRandomKey()}
                   formName="bm04"
                   onSubmit={handleSubmitUpload}
                   handleShowPDF={setIsShowPdf}
@@ -1226,7 +1228,7 @@ const BM04 = () => {
             ) : (
               <>
                 <FormBM04
-                  key="form-qae-bm04"
+                  key={getRandomKey()}
                   onSubmit={handleSubmit}
                   handleShowPDF={setIsShowPdf}
                   initialData={selectedItem as Partial<QAItem>}
@@ -1239,6 +1241,7 @@ const BM04 = () => {
           }
         />
         <Modal
+          key={getRandomKey()}
           open={isModalVisible}
           onCancel={() => {
             setIsModalVisible(false);
@@ -1261,6 +1264,7 @@ const BM04 = () => {
         </>
       )}
       <TemplateForms
+        key={getRandomKey()}
         loading={loading}
         data={data}
         title={columns}

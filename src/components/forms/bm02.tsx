@@ -15,6 +15,7 @@ import PageTitles from "@/utility/Constraints";
 import {
   convertTimestampToDate,
   defaultFooterInfo,
+  getRandomKey,
   setCellStyle,
 } from "@/utility/Utilities";
 import {
@@ -1179,6 +1180,7 @@ const BM02 = () => {
         </div>
         <CustomNotification {...formNotification} />
         <CustomModal
+          key={getRandomKey()}
           isOpen={isOpen}
           width={isShowPdf ? "85vw" : "1000px"}
           title={
@@ -1219,6 +1221,7 @@ const BM02 = () => {
             isUpload ? (
               <>
                 <FromUpload
+                  key={getRandomKey()}
                   formName="bm02"
                   onSubmit={handleSubmitUpload}
                   handleShowPDF={setIsShowPdf}
@@ -1228,7 +1231,7 @@ const BM02 = () => {
             ) : (
               <>
                 <FormBM02
-                  key="form-assistant-bm02"
+                  key={getRandomKey()}
                   onSubmit={handleSubmit}
                   handleShowPDF={setIsShowPdf}
                   initialData={selectedItem as Partial<ClassAssistantItem>}
@@ -1241,6 +1244,7 @@ const BM02 = () => {
           }
         />
         <Modal
+          key={getRandomKey()}
           open={isModalVisible}
           onCancel={() => {
             setIsModalVisible(false);
@@ -1263,6 +1267,7 @@ const BM02 = () => {
         </>
       )}
       <TemplateForms
+        key={getRandomKey()}
         loading={loading}
         data={data}
         title={columns}

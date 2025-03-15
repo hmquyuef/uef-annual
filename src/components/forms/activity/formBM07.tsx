@@ -25,10 +25,7 @@ import {
   FileItem,
   postFiles,
 } from "@/services/uploads/uploadsServices";
-import {
-  CloudUploadOutlined,
-  MinusCircleOutlined
-} from "@ant-design/icons";
+import { CloudUploadOutlined, MinusCircleOutlined } from "@ant-design/icons";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
@@ -75,10 +72,13 @@ const FormBM07: FC<FormBM07Props> = (props) => {
     status: "success",
     isOpen: false,
   });
+
   const [formValues, setFormValues] = useState({
+    id: "",
     contents: "",
+    location: "",
+    abbreviation: "",
     issuanceDate: 0,
-    issuancePlace: "",
     entryDate: timestamp,
     documentNumber: "",
     documentDate: 0,
@@ -132,10 +132,6 @@ const FormBM07: FC<FormBM07Props> = (props) => {
         });
       }, 10);
     }
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   };
 
   const handleUploadPDF = async (acceptedFiles: File[]) => {
@@ -184,15 +180,16 @@ const FormBM07: FC<FormBM07Props> = (props) => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    console.log("defaultUsers :>> ", defaultUsers);
     const tempUser = users?.items?.find((user) => user.id === selectedKey);
+    console.log("tempUser :>> ", tempUser);
     const formData: Partial<any> = {
       id: initialData?.id || "",
       userName: mode !== "edit" ? tempUser?.userName : defaultUsers[0].userName,
       fullName: mode !== "edit" ? tempUser?.fullName : defaultUsers[0].fullName,
       unitName: mode !== "edit" ? tempUser?.unitName : defaultUsers[0].unitName,
-      contents: formValues.contents,
+      contentId: formValues.id,
       issuanceDate: formValues.issuanceDate,
-      issuancePlace: formValues.issuancePlace,
       determinations: {
         documentNumber: formValues.documentNumber,
         internalNumber: "",
@@ -213,14 +210,15 @@ const FormBM07: FC<FormBM07Props> = (props) => {
       note: formValues.note,
     };
     onSubmit(formData);
-    setFormNotification((prev) => ({ ...prev, isOpen: false }));
   };
 
   const ResetForm = () => {
     setFormValues({
+      id: "",
       contents: "",
       issuanceDate: 0,
-      issuancePlace: "",
+      location: "",
+      abbreviation: "",
       entryDate: timestamp,
       documentNumber: "",
       documentDate: 0,
@@ -240,77 +238,80 @@ const FormBM07: FC<FormBM07Props> = (props) => {
     setListPicture(undefined);
   };
 
-  useEffect(() => {
-    const loadUsers = async () => {
-      setIsLoading(true);
-      try {
-        if (mode === "edit" && initialData) {
-          const units = await getAllUnits("true");
-          const unit = units.items.find(
-            (unit) => unit.code === initialData.unitName
+  const loadUsers = async () => {
+    try {
+      if (initialData) {
+        const units = await getAllUnits("true");
+        const unit = units.items.find(
+          (unit) => unit.code === initialData.unitName
+        );
+
+        if (unit) {
+          setDefaultUnits((prev) =>
+            JSON.stringify(prev) !== JSON.stringify([unit]) ? [unit] : prev
           );
 
-          if (unit) {
-            setDefaultUnits((prev) =>
-              JSON.stringify(prev) !== JSON.stringify([unit]) ? [unit] : prev
-            );
+          const usersTemp = await getUsersFromHRMbyId(unit.idHrm);
+          const userTemp = usersTemp.items.find(
+            (user) =>
+              user.userName.toUpperCase() ===
+              initialData.userName?.toUpperCase()
+          );
 
-            const usersTemp = await getUsersFromHRMbyId(unit.idHrm);
-            const userTemp = usersTemp.items.find(
-              (user) =>
-                user.userName.toUpperCase() ===
-                initialData.userName?.toUpperCase()
-            );
-
-            setDefaultUsers((prev) =>
-              userTemp && JSON.stringify(prev) !== JSON.stringify([userTemp])
-                ? [userTemp]
-                : prev
-            );
-          }
-
-          setFormValues((prev) => {
-            const newValues = {
-              contents: initialData.contents || "",
-              issuanceDate: initialData.issuanceDate || 0,
-              issuancePlace: initialData.issuancePlace || "",
-              entryDate: initialData.determinations?.entryDate || timestamp,
-              documentNumber: initialData.determinations?.documentNumber || "",
-              documentDate: initialData.determinations?.documentDate || 0,
-              attackmentFile: initialData.determinations?.files?.[0] || {
-                type: "",
-                path: "",
-                name: "",
-                size: 0,
-              },
-              type: initialData.type || "",
-              note: initialData.note || "",
-            };
-            return JSON.stringify(prev) !== JSON.stringify(newValues)
-              ? newValues
-              : prev;
-          });
-
-          setListPicture((prev) =>
-            JSON.stringify(prev) !==
-            JSON.stringify(initialData.determinations?.files?.[0])
-              ? initialData.determinations?.files?.[0]
+          setDefaultUsers((prev) =>
+            userTemp && JSON.stringify(prev) !== JSON.stringify([userTemp])
+              ? [userTemp]
               : prev
           );
-        } else {
-          ResetForm();
-          await Promise.all([getListUnits(), getListTrainingContents()]);
         }
-        setShowPDF(false);
-        if (handleShowPDF) handleShowPDF(false);
-      } catch (error) {
-        console.error("Error loading users:", error);
-      } finally {
-        setIsLoading(false);
+
+        setFormValues((prev) => {
+          const newValues = {
+            id: initialData.id || "",
+            contents: initialData.contents || "",
+            issuanceDate: initialData.issuanceDate || 0,
+            location: initialData.location || "",
+            abbreviation: initialData.abbreviation || "",
+            entryDate: initialData.determinations?.entryDate || timestamp,
+            documentNumber: initialData.determinations?.documentNumber || "",
+            documentDate: initialData.determinations?.documentDate || 0,
+            attackmentFile: initialData.determinations?.files?.[0] || {
+              type: "",
+              path: "",
+              name: "",
+              size: 0,
+            },
+            type: initialData.type || "",
+            note: initialData.note || "",
+          };
+          return JSON.stringify(prev) !== JSON.stringify(newValues)
+            ? newValues
+            : prev;
+        });
+
+        setListPicture((prev) =>
+          JSON.stringify(prev) !==
+          JSON.stringify(initialData.determinations?.files?.[0])
+            ? initialData.determinations?.files?.[0]
+            : prev
+        );
+      } else {
+        ResetForm();
       }
-    };
+      setShowPDF(false);
+      if (handleShowPDF) handleShowPDF(false);
+    } catch (error) {
+      console.error("Error loading users:", error);
+    }
+  };
+
+  useEffect(() => {
+    setIsLoading(true);
     loadUsers();
-  }, [initialData, mode]);
+    getListUnits();
+    getListTrainingContents();
+    setIsLoading(false);
+  }, [initialData]);
 
   useEffect(() => {
     if (formNotification.isOpen) {
@@ -331,7 +332,6 @@ const FormBM07: FC<FormBM07Props> = (props) => {
         </>
       ) : (
         <>
-          {" "}
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-4 gap-6 border-t border-neutral-300 pt-3 mb-4">
               <div className="col-span-2 flex flex-col gap-2">
@@ -389,6 +389,9 @@ const FormBM07: FC<FormBM07Props> = (props) => {
                   }
                   onChange={(value) => {
                     setSelectedKey(value);
+                    setDefaultUsers(
+                      users?.items?.filter((user) => user.id === value) || []
+                    );
                   }}
                 />
               </div>
@@ -415,19 +418,28 @@ const FormBM07: FC<FormBM07Props> = (props) => {
                   const item = dataContents.find(
                     (content) => content.id === value
                   );
-                  const contents = item?.name || "";
-                  const location = item?.location || "";
-                  setFormValues({
-                    ...formValues,
-                    contents: contents,
-                    issuancePlace: location,
-                  });
+                  if (!item) return;
+                  setFormValues((prev) => ({
+                    ...prev,
+                    contents: value, // Đảm bảo cập nhật contents đúng
+                    id: item.id,
+                    location: item.location,
+                    abbreviation: item.abbreviation,
+                  }));
                 }}
               />
             </div>
-            <div className="flex flex-col gap-2 mb-4">
-              <span className="font-medium text-neutral-600">Nơi đào tạo</span>
-              <Input value={formValues.issuancePlace} />
+            <div className="grid grid-cols-2 gap-6 mb-4">
+              <div className="flex flex-col gap-2">
+                <span className="font-medium text-neutral-600">
+                  Nơi đào tạo
+                </span>
+                <Input value={formValues.location} />
+              </div>
+              <div className="flex flex-col gap-2 mb-4">
+                <span className="font-medium text-neutral-600">Viết tắt</span>
+                <Input value={formValues.abbreviation} />
+              </div>
             </div>
             <div className="grid grid-cols-4 mb-4 gap-6">
               <div className="flex flex-col gap-2">
@@ -447,7 +459,10 @@ const FormBM07: FC<FormBM07Props> = (props) => {
                   ]}
                   value={formValues.type}
                   onChange={(value) => {
-                    setFormValues({ ...formValues, type: value });
+                    setFormValues((prev) => ({
+                      ...prev,
+                      type: value,
+                    }));
                   }}
                 />
               </div>

@@ -8,7 +8,7 @@ import {
   putTrainingContents,
 } from "@/services/trainingLevels/contentsServices";
 import Messages from "@/utility/Messages";
-import { convertTimestampToDate } from "@/utility/Utilities";
+import { convertTimestampToDate, getRandomKey } from "@/utility/Utilities";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, TableColumnsType } from "antd";
 import { FC, Key, useCallback, useEffect, useState } from "react";
@@ -46,7 +46,7 @@ const DrawerForBM07: FC<DrawerForBM07Props> = (props) => {
 
   const columns: TableColumnsType<any> = [
     {
-      title: <div className="py-2">NỘI DUNG</div>,
+      title: <div className="py-3">NỘI DUNG</div>,
       dataIndex: "name",
       key: "name",
       className: "max-w-10",
@@ -96,6 +96,17 @@ const DrawerForBM07: FC<DrawerForBM07Props> = (props) => {
       key: "abbreviation",
       render: (abbreviation: string) => <>{abbreviation}</>,
       className: "text-center max-w-2",
+    },
+    {
+      title: (
+        <div>
+          SỐ LƯỢNG <br /> THAM GIA
+        </div>
+      ),
+      dataIndex: "totalEmployees",
+      key: "totalEmployees",
+      render: (totalEmployees: number) => <>{totalEmployees}</>,
+      className: "text-center w-[100px]",
     },
   ];
 
@@ -223,6 +234,7 @@ const DrawerForBM07: FC<DrawerForBM07Props> = (props) => {
       </div>
       <CustomNotification {...formNotification} />
       <CustomModal
+        key={getRandomKey()}
         isOpen={isOpen}
         width="800px"
         title={
@@ -232,8 +244,7 @@ const DrawerForBM07: FC<DrawerForBM07Props> = (props) => {
         }
         role={role || undefined}
         onOk={() => {
-          const formElement = document.querySelector("#form-contents");
-          console.log('formElement :>> ', formElement);
+          const formElement = document.querySelector("form");
           formElement?.dispatchEvent(
             new Event("submit", { cancelable: true, bubbles: true })
           );
@@ -249,7 +260,8 @@ const DrawerForBM07: FC<DrawerForBM07Props> = (props) => {
         }}
         bodyContent={
           <FormBM07Contents
-            onSubmit={() => handleSubmit}
+            key={getRandomKey()}
+            onSubmit={handleSubmit}
             mode={mode}
             initialData={selectedItem}
           />

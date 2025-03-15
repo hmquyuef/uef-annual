@@ -24,6 +24,10 @@ export function convertTimestampToDayMonth(timestamp: number): string {
   return `${day}/${month}`;
 }
 
+export function getRandomKey(): string {
+  return Math.random().toString(36).substring(2, 16);
+};
+
 export const setCellStyle = (
   worksheet: any,
   cell: string,

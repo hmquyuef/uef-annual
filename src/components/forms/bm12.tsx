@@ -21,6 +21,7 @@ import Messages from "@/utility/Messages";
 import {
   convertTimestampToDate,
   defaultFooterInfo,
+  getRandomKey,
   setCellStyle,
 } from "@/utility/Utilities";
 import {
@@ -932,13 +933,9 @@ const BM12 = () => {
           )}
         </div>
       </div>
-      <CustomNotification
-        isOpen={formNotification.isOpen}
-        status={formNotification.status}
-        message={formNotification.message}
-        description={formNotification.description}
-      />
+      <CustomNotification {...formNotification} />
       <CustomModal
+        key={getRandomKey()}
         isOpen={isOpen}
         width={isShowPdf ? "85vw" : "900px"}
         title={
@@ -968,6 +965,7 @@ const BM12 = () => {
           isUpload ? (
             <>
               <FromUpload
+                key={getRandomKey()}
                 formName="bm12"
                 onSubmit={handleSubmitUpload}
                 handleShowPDF={setIsShowPdf}
@@ -977,7 +975,7 @@ const BM12 = () => {
           ) : (
             <>
               <FormBM12
-                key="form-unit-levels-bm12"
+                key={getRandomKey()}
                 onSubmit={handleSubmit}
                 initialData={selectedItem as Partial<any>}
                 mode={mode}
@@ -994,6 +992,7 @@ const BM12 = () => {
         </>
       )}
       <TemplateForms
+        key={getRandomKey()}
         loading={loading}
         data={data}
         title={columns}

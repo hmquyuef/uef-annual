@@ -24,6 +24,7 @@ import Messages from "@/utility/Messages";
 import {
   convertTimestampToDate,
   defaultFooterInfo,
+  getRandomKey,
   setCellStyle,
 } from "@/utility/Utilities";
 import {
@@ -1173,6 +1174,7 @@ const BM03 = () => {
         </div>
         <CustomNotification {...formNotification} />
         <CustomModal
+          key={getRandomKey()}
           isOpen={isOpen}
           width={isShowPdf ? "85vw" : "1000px"}
           title={
@@ -1213,6 +1215,7 @@ const BM03 = () => {
             isUpload ? (
               <>
                 <FromUpload
+                  key={getRandomKey()}
                   formName="bm03"
                   onSubmit={handleSubmitUpload}
                   handleShowPDF={setIsShowPdf}
@@ -1222,6 +1225,7 @@ const BM03 = () => {
             ) : (
               <>
                 <FormBM03
+                  key={getRandomKey()}
                   onSubmit={handleSubmit}
                   handleShowPDF={setIsShowPdf}
                   initialData={selectedItem as Partial<any>}
@@ -1234,6 +1238,7 @@ const BM03 = () => {
           }
         />
         <Modal
+          key={getRandomKey()}
           open={isModalVisible}
           onCancel={() => {
             setIsModalVisible(false);
@@ -1256,6 +1261,7 @@ const BM03 = () => {
         </>
       )}
       <TemplateForms
+        key={getRandomKey()}
         loading={loading}
         data={data}
         title={columns}

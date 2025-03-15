@@ -20,6 +20,7 @@ import Messages from "@/utility/Messages";
 import {
   convertTimestampToDate,
   defaultFooterInfo,
+  getRandomKey,
   setCellStyle,
 } from "@/utility/Utilities";
 import {
@@ -168,17 +169,17 @@ const BM07 = () => {
     },
     {
       title: "NƠI ĐẠO TẠO",
-      dataIndex: "issuancePlace",
-      key: "issuancePlace",
-      render: (issuancePlace: string) => <>{issuancePlace}</>,
+      dataIndex: "location",
+      key: "location",
+      render: (location: string) => <>{location}</>,
       className: "max-w-12",
     },
     {
-      title: "LOẠI CC/GCN",
-      dataIndex: "type",
-      key: "type",
-      render: (type: string) => <>{type}</>,
-      className: "text-center w-[120px]",
+      title: "VIẾT TẮT",
+      dataIndex: "abbreviation",
+      key: "abbreviation",
+      render: (abbreviation: string) => <>{abbreviation}</>,
+      className: "text-center max-w-6",
     },
     {
       title: (
@@ -193,6 +194,13 @@ const BM07 = () => {
         <>{convertTimestampToDate(issuanceDate)}</>
       ),
       className: "text-center w-[120px]",
+    },
+    {
+      title: "LOẠI CC/GCN",
+      dataIndex: "type",
+      key: "type",
+      render: (type: string) => <>{type}</>,
+      className: "text-center w-[100px]",
     },
     {
       title: (
@@ -650,10 +658,9 @@ const BM07 = () => {
   }, [training, units, selectedKeyUnit, startDate, endDate]);
 
   useEffect(() => {
-    const timer = setTimeout(
-      () => setFormNotification((prev) => ({ ...prev, isOpen: false })),
-      100
-    );
+    const timer = setTimeout(() => {
+      setFormNotification((prev) => ({ ...prev, isOpen: false }));
+    }, 100);
     return () => clearTimeout(timer);
   }, [formNotification.isOpen]);
 
@@ -863,7 +870,7 @@ const BM07 = () => {
                 icon={<PlusOutlined />}
                 onClick={() => {
                   setIsOpen(true);
-                  setMode("add");
+                  setMode("edit");
                 }}
                 iconPosition="start"
               >
@@ -891,6 +898,7 @@ const BM07 = () => {
       </div>
       <CustomNotification {...formNotification} />
       <CustomModal
+        key={getRandomKey()}
         isOpen={isOpen}
         width={isShowPdf ? "85vw" : "800px"}
         title={
@@ -918,7 +926,7 @@ const BM07 = () => {
         }}
         bodyContent={
           <FormBM07
-            key="form-training-levels-bm07"
+            key={getRandomKey()}
             onSubmit={handleSubmit}
             handleShowPDF={setIsShowPdf}
             initialData={selectedItem as Partial<any>}
@@ -938,15 +946,16 @@ const BM07 = () => {
         }
       />
       <Drawer
+        key={getRandomKey()}
         title={`Dữ liệu các hoạt động bồi dưỡng, nâng cao trình độ trong năm học ${selectedKey?.title}`}
-        placement={"right"}
+        placement={"bottom"}
+        height={"80%"}
         closable={true}
         onClose={() => {
           setOpenDrawer(!openDrawer);
+          getListTrainingLevels(selectedKey.id);
         }}
         open={openDrawer}
-        width={"60%"}
-        key="drawer-infomation-bm07"
       >
         <DrawerForBM07 yearId={selectedKey?.id as string} />
       </Drawer>

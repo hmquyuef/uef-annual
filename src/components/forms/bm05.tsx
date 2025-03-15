@@ -24,6 +24,7 @@ import Messages from "@/utility/Messages";
 import {
   convertTimestampToDate,
   defaultFooterInfo,
+  getRandomKey,
   setCellStyle,
 } from "@/utility/Utilities";
 import {
@@ -1072,6 +1073,7 @@ const BM05 = () => {
       </div>
       <CustomNotification {...formNotification} />
       <CustomModal
+        key={getRandomKey()}
         isOpen={isOpen}
         isBlock={
           isPayments && isPayments.length >= 2
@@ -1106,7 +1108,7 @@ const BM05 = () => {
         }}
         bodyContent={
           <FormBM05
-            key="form-activity-bm05"
+            key={getRandomKey()}
             onSubmit={handleSubmit}
             handleShowPDF={setIsShowPdf}
             initialData={selectedItem as Partial<AddUpdateActivityItem>}
@@ -1117,6 +1119,7 @@ const BM05 = () => {
         }
       />
       <Modal
+        key={getRandomKey()}
         open={isModalVisible}
         onCancel={() => {
           setIsModalVisible(false);
@@ -1138,6 +1141,7 @@ const BM05 = () => {
         </>
       )}
       <TemplateForms
+        key={getRandomKey()}
         loading={loading}
         data={data}
         title={columns}
