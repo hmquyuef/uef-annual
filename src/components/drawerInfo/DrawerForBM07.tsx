@@ -248,12 +248,12 @@ const DrawerForBM07: FC<DrawerForBM07Props> = (props) => {
           formElement?.dispatchEvent(
             new Event("submit", { cancelable: true, bubbles: true })
           );
+          setKeyCustom(getRandomKey());
+          setIsOpen(false);
         }}
         onCancel={() => {
           setKeyCustom(getRandomKey());
           setIsOpen(false);
-          setSelectedItem(undefined);
-          setMode("addContent");
         }}
         bodyContent={
           <FormBM07Contents

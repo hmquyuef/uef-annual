@@ -1196,14 +1196,12 @@ const BM04 = () => {
             formElement?.dispatchEvent(
               new Event("submit", { cancelable: true, bubbles: true })
             );
+            setKeyCustom(getRandomKey());
+            setIsOpen(false);
           }}
           onCancel={() => {
             setKeyCustom(getRandomKey());
             setIsOpen(false);
-            setSelectedItem(undefined);
-            setMode("add");
-            setIsUpload(false);
-            setIsShowPdf(false);
           }}
           bodyContent={
             isUpload ? (
