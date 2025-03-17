@@ -94,6 +94,7 @@ const BM01 = () => {
   const [role, setRole] = useState<RoleItem>();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [reason, setReason] = useState("");
+  const [keyCustom, setKeyCustom] = useState("");
   const [isPayments, setIsPayments] = useState<PaymentApprovedItem[] | null>(
     null
   );
@@ -1195,7 +1196,7 @@ const BM01 = () => {
       </div>
       <CustomNotification {...formNotification} />
       <CustomModal
-        key={getRandomKey()}
+        key={keyCustom}
         isOpen={isOpen}
         width={isShowPdf ? "85vw" : "1000px"}
         title={
@@ -1222,10 +1223,7 @@ const BM01 = () => {
         onApprovedConfirm={() => handleApproved(false, 3)}
         onReject={() => setIsModalVisible(true)}
         onCancel={() => {
-          setFormNotification((prev) => ({
-            ...prev,
-            isOpen: false,
-          }));
+          setKeyCustom(getRandomKey());
           setIsOpen(false);
           setSelectedItem(undefined);
           setMode("add");
@@ -1236,7 +1234,6 @@ const BM01 = () => {
           isUpload ? (
             <>
               <FromUpload
-                key={getRandomKey()}
                 formName="bm01"
                 onSubmit={handleSubmitUpload}
                 handleShowPDF={setIsShowPdf}
@@ -1246,7 +1243,6 @@ const BM01 = () => {
           ) : (
             <>
               <FormBM01
-                key={getRandomKey()}
                 onSubmit={handleSubmit}
                 handleShowPDF={setIsShowPdf}
                 initialData={selectedItem as Partial<ClassLeaderItem>}
@@ -1259,7 +1255,6 @@ const BM01 = () => {
         }
       />
       <Modal
-        key={getRandomKey()}
         open={isModalVisible}
         onCancel={() => {
           setIsModalVisible(false);
@@ -1281,7 +1276,6 @@ const BM01 = () => {
         </>
       )}
       <TemplateForms
-        key={getRandomKey()}
         loading={loading}
         data={data}
         title={columns}

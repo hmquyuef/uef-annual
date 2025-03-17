@@ -71,6 +71,7 @@ const BM07 = () => {
   const [selectedItem, setSelectedItem] = useState<Partial<any> | undefined>(
     undefined
   );
+  const [keyCustom, setKeyCustom] = useState("");
   const [units, setUnits] = useState<UnitItem[]>([]);
   const [defaultYears, setDefaultYears] = useState<any>();
   const [selectedKey, setSelectedKey] = useState<any>();
@@ -894,7 +895,7 @@ const BM07 = () => {
       </div>
       <CustomNotification {...formNotification} />
       <CustomModal
-        key={getRandomKey()}
+        key={keyCustom}
         isOpen={isOpen}
         width={isShowPdf ? "85vw" : "800px"}
         title={
@@ -910,10 +911,7 @@ const BM07 = () => {
         }}
         role={role || undefined}
         onCancel={() => {
-          setFormNotification((prev) => ({
-            ...prev,
-            isOpen: false,
-          }));
+          setKeyCustom(getRandomKey());
           setIsOpen(false);
           setSelectedItem(undefined);
           setMode("add");
@@ -922,7 +920,6 @@ const BM07 = () => {
         }}
         bodyContent={
           <FormBM07
-            key={getRandomKey()}
             onSubmit={handleSubmit}
             handleShowPDF={setIsShowPdf}
             initialData={selectedItem as Partial<any>}

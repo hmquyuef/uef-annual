@@ -11,10 +11,7 @@ import {
   putUpdateInvigilator,
 } from "@/services/forms/invigilatorsServices";
 import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
-import {
-  DisplayRoleItem,
-  RoleItem
-} from "@/services/roles/rolesServices";
+import { DisplayRoleItem, RoleItem } from "@/services/roles/rolesServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
 import { postFiles } from "@/services/uploads/uploadsServices";
@@ -99,6 +96,7 @@ const BM14 = () => {
   const [isPayments, setIsPayments] = useState<PaymentApprovedItem[] | null>(
     null
   );
+  const [keyCustom, setKeyCustom] = useState("");
   const [formNotification, setFormNotification] = useState<{
     message: string;
     description: string;
@@ -1086,7 +1084,7 @@ const BM14 = () => {
       </div>
       <CustomNotification {...formNotification} />
       <CustomModal
-        key={getRandomKey()}
+        key={keyCustom}
         isOpen={isOpen}
         width={isShowPdf ? "85vw" : "800px"}
         title={
@@ -1113,10 +1111,7 @@ const BM14 = () => {
         onApprovedConfirm={() => handleApproved(false, 3)}
         onReject={() => setIsModalVisible(true)}
         onCancel={() => {
-          setFormNotification((prev) => ({
-            ...prev,
-            isOpen: false,
-          }));
+          setKeyCustom(getRandomKey());
           setIsOpen(false);
           setSelectedItem(undefined);
           setMode("add");
@@ -1127,7 +1122,6 @@ const BM14 = () => {
           isUpload ? (
             <>
               <FromUpload
-                key={getRandomKey()}
                 formName="bm14"
                 onSubmit={handleSubmitUpload}
                 handleShowPDF={setIsShowPdf}
@@ -1137,7 +1131,6 @@ const BM14 = () => {
           ) : (
             <>
               <FormBM14
-                key={getRandomKey()}
                 onSubmit={handleSubmit}
                 handleShowPDF={setIsShowPdf}
                 initialData={selectedItem as Partial<any>}
@@ -1150,7 +1143,6 @@ const BM14 = () => {
         }
       />
       <Modal
-        key={getRandomKey()}
         open={isModalVisible}
         onCancel={() => {
           setIsModalVisible(false);
@@ -1172,7 +1164,6 @@ const BM14 = () => {
         </>
       )}
       <TemplateForms
-        key={getRandomKey()}
         loading={loading}
         data={data}
         title={columns}

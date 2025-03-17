@@ -92,6 +92,7 @@ const BM15 = () => {
   const [advanced, setAdvanced] = useState(false);
   const [role, setRole] = useState<RoleItem>();
   const [isShowPdf, setIsShowPdf] = useState(false);
+  const [keyCustom, setKeyCustom] = useState("");
   const [formNotification, setFormNotification] = useState<{
     message: string;
     description: string;
@@ -1218,7 +1219,7 @@ const BM15 = () => {
           );
         })()}
       <CustomModal
-        key={getRandomKey()}
+        key={keyCustom}
         isOpen={isOpen}
         width={isShowPdf ? "85vw" : "800px"}
         title={
@@ -1234,6 +1235,7 @@ const BM15 = () => {
         }}
         role={role || undefined}
         onCancel={() => {
+          setKeyCustom(getRandomKey());
           setIsOpen(false);
           setSelectedItem(undefined);
           setMode("add");
@@ -1244,7 +1246,6 @@ const BM15 = () => {
           isUpload ? (
             <>
               <FromUpload
-                key={getRandomKey()}
                 formName="bm15"
                 onSubmit={handleSubmitUpload}
                 handleShowPDF={setIsShowPdf}
@@ -1254,7 +1255,6 @@ const BM15 = () => {
           ) : (
             <>
               <FormBM15
-                key={getRandomKey()}
                 onSubmit={handleSubmit}
                 handleShowPDF={setIsShowPdf}
                 initialData={selectedItem as Partial<any>}
@@ -1271,7 +1271,6 @@ const BM15 = () => {
         </>
       )}
       <TemplateForms
-        key={getRandomKey()}
         loading={loading}
         data={data}
         title={columns}

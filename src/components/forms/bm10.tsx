@@ -9,10 +9,7 @@ import {
   postCharitable,
   putCharitable,
 } from "@/services/generalWorks/charitableServices";
-import {
-  DisplayRoleItem,
-  RoleItem
-} from "@/services/roles/rolesServices";
+import { DisplayRoleItem, RoleItem } from "@/services/roles/rolesServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import { postFiles } from "@/services/uploads/uploadsServices";
 import Colors from "@/utility/Colors";
@@ -82,6 +79,7 @@ const BM10 = () => {
   const [maxEndDate, setMaxEndDate] = useState<number | 0>(0);
   const [role, setRole] = useState<RoleItem>();
   const [isShowPdf, setIsShowPdf] = useState(false);
+  const [keyCustom, setKeyCustom] = useState("");
 
   const [formNotification, setFormNotification] = useState<{
     message: string;
@@ -925,7 +923,7 @@ const BM10 = () => {
       </div>
       <CustomNotification {...formNotification} />
       <CustomModal
-        key={getRandomKey()}
+        key={keyCustom}
         isOpen={isOpen}
         width={isShowPdf ? "85vw" : "900px"}
         title={
@@ -941,10 +939,7 @@ const BM10 = () => {
         }}
         role={role || undefined}
         onCancel={() => {
-          setFormNotification((prev) => ({
-            ...prev,
-            isOpen: false,
-          }));
+          setKeyCustom(getRandomKey());
           setIsOpen(false);
           setSelectedItem(undefined);
           setMode("add");
@@ -955,7 +950,6 @@ const BM10 = () => {
           isUpload ? (
             <>
               <FromUpload
-                key={getRandomKey()}
                 formName="bm10"
                 onSubmit={handleSubmitUpload}
                 handleShowPDF={setIsShowPdf}
@@ -965,7 +959,6 @@ const BM10 = () => {
           ) : (
             <>
               <FormBM10
-                key={getRandomKey()}
                 onSubmit={handleSubmit}
                 initialData={selectedItem as Partial<any>}
                 mode={mode}
@@ -982,7 +975,6 @@ const BM10 = () => {
         </>
       )}
       <TemplateForms
-        key={getRandomKey()}
         loading={loading}
         data={data}
         title={columns}

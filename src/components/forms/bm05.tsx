@@ -91,6 +91,7 @@ const BM05 = () => {
   const [role, setRole] = useState<RoleItem>();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [reason, setReason] = useState("");
+  const [keyCustom, setKeyCustom] = useState("");
   const [isPayments, setIsPayments] = useState<PaymentApprovedItem[] | null>(
     null
   );
@@ -1065,7 +1066,7 @@ const BM05 = () => {
       </div>
       <CustomNotification {...formNotification} />
       <CustomModal
-        key={getRandomKey()}
+        key={keyCustom}
         isOpen={isOpen}
         isBlock={
           isPayments && isPayments.length >= 2
@@ -1089,10 +1090,7 @@ const BM05 = () => {
           );
         }}
         onCancel={() => {
-          setFormNotification((prev) => ({
-            ...prev,
-            isOpen: false,
-          }));
+          setKeyCustom(getRandomKey());
           setIsOpen(false);
           setSelectedItem(undefined);
           setMode("add");
@@ -1100,7 +1098,6 @@ const BM05 = () => {
         }}
         bodyContent={
           <FormBM05
-            key={getRandomKey()}
             onSubmit={handleSubmit}
             handleShowPDF={setIsShowPdf}
             initialData={selectedItem as Partial<AddUpdateActivityItem>}
@@ -1111,7 +1108,6 @@ const BM05 = () => {
         }
       />
       <Modal
-        key={getRandomKey()}
         open={isModalVisible}
         onCancel={() => {
           setIsModalVisible(false);
@@ -1133,7 +1129,6 @@ const BM05 = () => {
         </>
       )}
       <TemplateForms
-        key={getRandomKey()}
         loading={loading}
         data={data}
         title={columns}

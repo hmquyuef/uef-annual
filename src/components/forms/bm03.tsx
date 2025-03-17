@@ -11,10 +11,7 @@ import {
   putUpdateApprovedAdmissionCounseling,
 } from "@/services/forms/admissionCounseling";
 import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
-import {
-  DisplayRoleItem,
-  RoleItem
-} from "@/services/roles/rolesServices";
+import { DisplayRoleItem, RoleItem } from "@/services/roles/rolesServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
 import { postFiles } from "@/services/uploads/uploadsServices";
@@ -97,13 +94,13 @@ const BM03 = () => {
   const [endDate, setEndDate] = useState<number | 0>(0);
   const [maxEndDate, setMaxEndDate] = useState<number | 0>(0);
   const [advanced, setAdvanced] = useState(false);
-  const [userName, setUserName] = useState<string | null>(null);
   const [role, setRole] = useState<RoleItem>();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [reason, setReason] = useState("");
   const [isPayments, setIsPayments] = useState<PaymentApprovedItem[] | null>(
     null
   );
+  const [keyCustom, setKeyCustom] = useState("");
   const [isShowPdf, setIsShowPdf] = useState(false);
 
   const [formNotification, setFormNotification] = useState<{
@@ -1170,7 +1167,7 @@ const BM03 = () => {
         </div>
         <CustomNotification {...formNotification} />
         <CustomModal
-          key={getRandomKey()}
+          key={keyCustom}
           isOpen={isOpen}
           width={isShowPdf ? "85vw" : "1000px"}
           title={
@@ -1197,10 +1194,7 @@ const BM03 = () => {
             );
           }}
           onCancel={() => {
-            setFormNotification((prev) => ({
-              ...prev,
-              isOpen: false,
-            }));
+            setKeyCustom(getRandomKey());
             setIsOpen(false);
             setSelectedItem(undefined);
             setMode("add");
@@ -1211,7 +1205,6 @@ const BM03 = () => {
             isUpload ? (
               <>
                 <FromUpload
-                  key={getRandomKey()}
                   formName="bm03"
                   onSubmit={handleSubmitUpload}
                   handleShowPDF={setIsShowPdf}
@@ -1221,7 +1214,6 @@ const BM03 = () => {
             ) : (
               <>
                 <FormBM03
-                  key={getRandomKey()}
                   onSubmit={handleSubmit}
                   handleShowPDF={setIsShowPdf}
                   initialData={selectedItem as Partial<any>}
@@ -1234,7 +1226,6 @@ const BM03 = () => {
           }
         />
         <Modal
-          key={getRandomKey()}
           open={isModalVisible}
           onCancel={() => {
             setIsModalVisible(false);
@@ -1257,7 +1248,6 @@ const BM03 = () => {
         </>
       )}
       <TemplateForms
-        key={getRandomKey()}
         loading={loading}
         data={data}
         title={columns}

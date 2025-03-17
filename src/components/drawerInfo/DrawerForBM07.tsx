@@ -1,6 +1,6 @@
 "use client";
 
-import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
+import { RoleItem } from "@/services/roles/rolesServices";
 import {
   deleteTrainingContents,
   getAllTrainingContents,
@@ -32,6 +32,7 @@ const DrawerForBM07: FC<DrawerForBM07Props> = (props) => {
   const [selectedItem, setSelectedItem] = useState<Partial<any> | undefined>(
     undefined
   );
+  const [keyCustom, setKeyCustom] = useState("");
   const [formNotification, setFormNotification] = useState<{
     message: string;
     description: string;
@@ -233,7 +234,7 @@ const DrawerForBM07: FC<DrawerForBM07Props> = (props) => {
       </div>
       <CustomNotification {...formNotification} />
       <CustomModal
-        key={getRandomKey()}
+        key={keyCustom}
         isOpen={isOpen}
         width="800px"
         title={
@@ -249,17 +250,13 @@ const DrawerForBM07: FC<DrawerForBM07Props> = (props) => {
           );
         }}
         onCancel={() => {
-          setFormNotification((prev) => ({
-            ...prev,
-            isOpen: false,
-          }));
+          setKeyCustom(getRandomKey());
           setIsOpen(false);
           setSelectedItem(undefined);
           setMode("addContent");
         }}
         bodyContent={
           <FormBM07Contents
-            key={getRandomKey()}
             onSubmit={handleSubmit}
             mode={mode}
             initialData={selectedItem}
