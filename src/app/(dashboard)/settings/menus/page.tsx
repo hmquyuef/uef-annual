@@ -12,7 +12,7 @@ import {
   postAddMenu,
   putUpdateMenu,
 } from "@/services/menus/menuServices";
-import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
+import { RoleItem } from "@/services/roles/rolesServices";
 import PageTitles from "@/utility/Constraints";
 import {
   ContactsOutlined,
@@ -215,9 +215,8 @@ const Menus = () => {
 
   const getDisplayRole = async () => {
     if (typeof window !== "undefined") {
-      const s_role = localStorage.getItem("s_role");
-      const response = await getRoleByName(s_role as string);
-      setRole(response.items[0]);
+      const displayRole = localStorage.getItem("s_dr");
+      setRole(JSON.parse(displayRole as string) as RoleItem);
     }
   };
 

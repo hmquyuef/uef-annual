@@ -12,11 +12,7 @@ import {
 } from "@/services/forms/classLeadersServices";
 import { AddUpdateActivityItem } from "@/services/forms/formsServices";
 import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
-import {
-  DisplayRoleItem,
-  getRoleByName,
-  RoleItem,
-} from "@/services/roles/rolesServices";
+import { DisplayRoleItem, RoleItem } from "@/services/roles/rolesServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
 import { postFiles } from "@/services/uploads/uploadsServices";
@@ -54,6 +50,7 @@ import {
   Tag,
 } from "antd";
 
+import { getUserInfoFromToken } from "@/utility/Auth";
 import Colors from "@/utility/Colors";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
@@ -94,7 +91,6 @@ const BM01 = () => {
   const [endDate, setEndDate] = useState<number | 0>(0);
   const [maxEndDate, setMaxEndDate] = useState<number | 0>(0);
   const [advanced, setAdvanced] = useState(false);
-  const [userName, setUserName] = useState<string | null>(null);
   const [role, setRole] = useState<RoleItem>();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [reason, setReason] = useState("");
@@ -862,52 +858,52 @@ const BM01 = () => {
   };
 
   const handleApproved = async (isRejected: boolean, type: number) => {
-    const s_role = localStorage.getItem("s_role");
-    const fullName = localStorage.getItem("s_fullname");
-    const formData = {
-      ids: selectedRowKeys.length > 0 ? selectedRowKeys : [selectedItem?.id],
-      userName: userName,
-      fullName: fullName ?? userName,
-      confirmationType:
-        s_role && s_role === "finance-manager" && isRejected ? 3 : type,
-      isRejected: isRejected,
-      reason: reason,
-    };
-    try {
-      if (selectedRowKeys.length > 0 || selectedItem) {
-        const response = await putUpdateApprovedClassLeader(formData);
-        if (response) {
-          setFormNotification((prev) => ({
-            ...prev,
-            description: isRejected
-              ? `${Messages.REJECTED_CLASSLEADERS} (${
-                  selectedRowKeys.length > 0 ? selectedRowKeys.length : 1
-                } dòng)`
-              : `${Messages.APPROVED_CLASSLEADERS} (${
-                  selectedRowKeys.length > 0 ? selectedRowKeys.length : 1
-                } dòng)`,
-          }));
+    if (typeof window !== "undefined") {
+      const { role, username, fullname } = getUserInfoFromToken();
+      const formData = {
+        ids: selectedRowKeys.length > 0 ? selectedRowKeys : [selectedItem?.id],
+        userName: username,
+        fullName: fullname,
+        confirmationType: role === "finance-manager" && isRejected ? 3 : type,
+        isRejected: isRejected,
+        reason: reason,
+      };
+      try {
+        if (selectedRowKeys.length > 0 || selectedItem) {
+          const response = await putUpdateApprovedClassLeader(formData);
+          if (response) {
+            setFormNotification((prev) => ({
+              ...prev,
+              description: isRejected
+                ? `${Messages.REJECTED_CLASSLEADERS} (${
+                    selectedRowKeys.length > 0 ? selectedRowKeys.length : 1
+                  } dòng)`
+                : `${Messages.APPROVED_CLASSLEADERS} (${
+                    selectedRowKeys.length > 0 ? selectedRowKeys.length : 1
+                  } dòng)`,
+            }));
+          }
         }
+        setSelectedRowKeys([]);
+        setFormNotification((prev) => ({
+          ...prev,
+          isOpen: true,
+          status: "success",
+          message: "Thông báo",
+        }));
+        await getListClassLeaders(selectedKey.id);
+        setIsOpen(false);
+        setSelectedItem(undefined);
+        setMode("add");
+      } catch (error) {
+        setFormNotification((prev) => ({
+          ...prev,
+          isOpen: true,
+          status: "error",
+          message: "Thông báo",
+          description: Messages.ERROR,
+        }));
       }
-      setSelectedRowKeys([]);
-      setFormNotification((prev) => ({
-        ...prev,
-        isOpen: true,
-        status: "success",
-        message: "Thông báo",
-      }));
-      await getListClassLeaders(selectedKey.id);
-      setIsOpen(false);
-      setSelectedItem(undefined);
-      setMode("add");
-    } catch (error) {
-      setFormNotification((prev) => ({
-        ...prev,
-        isOpen: true,
-        status: "error",
-        message: "Thông báo",
-        description: Messages.ERROR,
-      }));
     }
   };
 
@@ -926,15 +922,12 @@ const BM01 = () => {
 
   const getDisplayRole = async () => {
     if (typeof window !== "undefined") {
-      const s_username = localStorage.getItem("s_username");
-      setUserName(s_username as string);
-      const s_role = localStorage.getItem("s_role");
-      const s_family = localStorage.getItem("s_family");
-      if (s_family && s_role === "secretary") {
-        setSelectedKeyUnit(s_family.toLowerCase());
+      const { role, family_name } = getUserInfoFromToken();
+      if (family_name && role === "secretary") {
+        setSelectedKeyUnit(family_name.toLowerCase());
       }
-      const response = await getRoleByName(s_role as string);
-      setRole(response.items[0]);
+      const displayRole = localStorage.getItem("s_dr");
+      setRole(JSON.parse(displayRole as string) as RoleItem);
     }
   };
 

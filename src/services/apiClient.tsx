@@ -5,9 +5,7 @@ import { signOut } from "next-auth/react";
 let retryCount = 0;
 
 const apiClient: AxiosInstance = axios.create({
-  baseURL: "https://api-annual.uef.edu.vn/",
-  // baseURL: "http://192.168.98.60:8081/",
-  // baseURL: "http://localhost:5215/",
+  baseURL: `${process.env.NEXT_PUBLIC_API_URL}`,
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",

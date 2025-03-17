@@ -1,6 +1,7 @@
 "use client";
 
 import { deleteToken } from "@/services/auth/authServices";
+import { getUserInfoFromToken } from "@/utility/Auth";
 import {
   IdcardOutlined,
   InfoCircleOutlined,
@@ -82,10 +83,9 @@ const itemNotifications: MenuProps["items"] = [
 ];
 
 const TopHeaders = () => {
-  const name = localStorage.getItem("s_fullname");
-  const email = localStorage.getItem("s_email");
+  const { fullname, email } = getUserInfoFromToken();
   const menuProps: MenuProps = {
-    items: createMenuItems(name as string, email as string),
+    items: createMenuItems(fullname as string, email as string),
     onClick: handleMenuClick,
   };
   const notificationsProps: MenuProps = {

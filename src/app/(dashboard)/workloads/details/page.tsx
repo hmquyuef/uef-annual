@@ -38,6 +38,7 @@ import {
   RegulationItems,
 } from "@/services/exports/RegulationItems";
 import { TrainingItems } from "@/services/exports/TrainingItems";
+import { getUserInfoFromToken } from "@/utility/Auth";
 import Colors from "@/utility/Colors";
 import { convertTimestampToDate } from "@/utility/Utilities";
 import dayjs from "dayjs";
@@ -424,8 +425,8 @@ const WorkloadDetails = () => {
   useEffect(() => {
     setLoading(true);
     document.title = PageTitles.SUMMARY_ACTIVITIES;
-    const s_username = localStorage.getItem("s_username");
-    setUserName(s_username as string);
+    const { username } = getUserInfoFromToken();
+    setUserName(username as string);
     getDefaultYears();
     const timeoutId = setTimeout(() => {
       setLoading(false);

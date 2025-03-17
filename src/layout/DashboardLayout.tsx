@@ -7,6 +7,7 @@ import {
   putTokenByRefresh,
 } from "@/services/auth/authServices";
 import { getAllPermissionsForMenuByUserName } from "@/services/permissions/permissionForMenu";
+import { getRoleByName } from "@/services/roles/rolesServices";
 import { getUserInfoFromToken } from "@/utility/Auth";
 import Colors from "@/utility/Colors";
 import {
@@ -32,6 +33,7 @@ interface LevelKeysProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { data: session } = useSession();
   const router = useRouter();
+  const validRoles = ["admin", "user", "manager"];
   type MenuItem = Required<MenuProps>["items"][number];
   const [isOpened, setIsOpened] = useState(true);
   const [stateOpenKeys, setStateOpenKeys] = useState(["1", "12"]);
@@ -91,14 +93,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const getMenuByUserName = async (email: string) => {
     if (typeof window !== "undefined") {
-      const userName = localStorage.getItem("s_username");
-      const role = localStorage.getItem("s_role");
-      if (!userName && !role) {
+      const { role, username } = getUserInfoFromToken();
+      if (!username && !role) {
         CallLogout();
       }
-      const listmenus = await getAllPermissionsForMenuByUserName(
-        userName as string
-      );
+      const [displayRole, listmenus] = await Promise.all([
+        getRoleByName(role as string),
+        getAllPermissionsForMenuByUserName(username as string),
+      ]);
+      if (displayRole) {
+        localStorage.setItem("s_dr", JSON.stringify(displayRole.items[0]));
+      }
 
       if (listmenus.items.length === 0) return router.push("/not-permission");
       const tempMenu: any[] = listmenus.items[0].permissions.map((item) => {
@@ -122,7 +127,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           };
         }
       });
-      if (role === "admin" || role === "user" || role === "manager") {
+      if (validRoles.includes(role as string)) {
         setItemsMenu([
           {
             key: "0",
@@ -152,18 +157,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         Cookies.set("s_r", response.refreshToken, {
           expires: expiresRefresh,
         });
-        const { role, userName, family_name } = getUserInfoFromToken();
-        // Chỉ sử dụng localStorage ở phía client
-        if (typeof window !== "undefined") {
-          localStorage.setItem("s_role", role as string);
-          localStorage.setItem("s_username", userName as string);
-          localStorage.setItem("s_family", family_name as string);
-          localStorage.setItem("s_fullname", response.userName as string);
-          localStorage.setItem("s_email", response.email as string);
-        }
       }
     } catch (error) {
       CallLogout();
+      router.push("/not-permission");
     }
   };
 
@@ -189,38 +186,34 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!session?.user?.email) {
-        router.push("/login");
-        return;
-      }
+  const fetchData = async () => {
+    if (!session?.user?.email) {
+      router.push("/login");
+      return;
+    }
 
-      const email = session.user.email;
-      const token = Cookies.get("s_t");
-      const refreshToken = Cookies.get("s_r");
+    const email = session.user.email;
+    const token = Cookies.get("s_t");
+    const refreshToken = Cookies.get("s_r");
 
-      if (!token) {
-        if (refreshToken) {
-          const success = await getTokenWithRefreshToken(refreshToken, email);
-          if (!success) {
-            await getToken(email);
-          }
-        } else {
+    if (!token) {
+      if (refreshToken) {
+        const success = await getTokenWithRefreshToken(refreshToken, email);
+        if (!success) {
           await getToken(email);
         }
+      } else {
+        await getToken(email);
       }
+    }
+    await getMenuByUserName(email);
+    if (typeof window !== "undefined" && !localStorage.getItem("s_dr")) {
+      CallLogout();
+      router.push("/not-permission");
+    }
+  };
 
-      await getMenuByUserName(email);
-
-      if (
-        typeof window !== "undefined" &&
-        !localStorage.getItem("s_username")
-      ) {
-        CallLogout();
-      }
-    };
-
+  useEffect(() => {
     fetchData();
     loadMenuFromStorages();
   }, [session, router]);

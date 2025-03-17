@@ -11,8 +11,7 @@ import {
 } from "@/services/generalWorks/schoolLevelServices";
 import {
   DisplayRoleItem,
-  getRoleByName,
-  RoleItem,
+  RoleItem
 } from "@/services/roles/rolesServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import { postFiles } from "@/services/uploads/uploadsServices";
@@ -763,9 +762,8 @@ const BM11 = () => {
 
   const getDisplayRole = async () => {
     if (typeof window !== "undefined") {
-      const s_role = localStorage.getItem("s_role");
-      const response = await getRoleByName(s_role as string);
-      setRole(response.items[0]);
+      const displayRole = localStorage.getItem("s_dr");
+      setRole(JSON.parse(displayRole as string) as RoleItem);
     }
   };
 

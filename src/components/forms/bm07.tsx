@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  DisplayRoleItem,
-  getRoleByName,
-  RoleItem,
-} from "@/services/roles/rolesServices";
+import { DisplayRoleItem, RoleItem } from "@/services/roles/rolesServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import {
   deleteTrainingLevels,
@@ -52,6 +48,7 @@ import TemplateForms from "./workloads/TemplateForms";
 
 import saveAs from "file-saver";
 
+import { getUserInfoFromToken } from "@/utility/Auth";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
@@ -624,13 +621,12 @@ const BM07 = () => {
 
   const getDisplayRole = async () => {
     if (typeof window !== "undefined") {
-      const s_role = localStorage.getItem("s_role");
-      const s_family = localStorage.getItem("s_family");
-      if (s_family && s_role === "secretary") {
-        setSelectedKeyUnit(s_family.toLowerCase());
+      const { role, family_name } = getUserInfoFromToken();
+      if (family_name && role === "secretary") {
+        setSelectedKeyUnit(family_name.toLowerCase());
       }
-      const response = await getRoleByName(s_role as string);
-      setRole(response.items[0]);
+      const displayRole = localStorage.getItem("s_dr");
+      setRole(JSON.parse(displayRole as string) as RoleItem);
     }
   };
 

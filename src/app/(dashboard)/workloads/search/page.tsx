@@ -41,6 +41,7 @@ import {
   getUsersFromHRM,
   UsersFromHRMResponse,
 } from "@/services/users/usersServices";
+import { getUserInfoFromToken } from "@/utility/Auth";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import Link from "next/link";
@@ -402,8 +403,8 @@ const SearchMembers = () => {
   useEffect(() => {
     setLoading(true);
     document.title = PageTitles.SEARCH;
-    const s_username = localStorage.getItem("s_username");
-    setUserName(s_username ?? "");
+    const { username } = getUserInfoFromToken();
+    setUserName(username as string);
     Promise.all([getDefaultYears(), getUsersHRM()]);
     const timeoutId = setTimeout(() => {
       setLoading(false);

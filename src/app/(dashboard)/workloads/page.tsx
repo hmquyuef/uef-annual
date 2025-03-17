@@ -5,7 +5,7 @@ import CustomNotification from "@/components/CustomNotification";
 import FormWorkloadType from "@/components/forms/workloads/formWorkloadType";
 import NotFound from "@/components/NotFound";
 import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
-import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
+import { RoleItem } from "@/services/roles/rolesServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import {
   getWorkloadGroups,
@@ -18,6 +18,7 @@ import {
   putUpdateWorkloadType,
   WorkloadTypeItem,
 } from "@/services/workloads/typesServices";
+import { getUserInfoFromToken } from "@/utility/Auth";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
 import {
@@ -132,8 +133,6 @@ const Workloads = () => {
     if (menuOpen) {
       const openKeys = JSON.parse(menuOpen);
       openKeys[2] = href;
-      console.log("openKeys :>> ", openKeys);
-      console.log("openKeys[2] :>> ", openKeys[2]);
       Cookies.set(
         "m_i",
         JSON.stringify([openKeys[1], openKeys[0], openKeys[2]])
@@ -240,11 +239,12 @@ const Workloads = () => {
   };
 
   const getDisplayRole = async () => {
-    const userName = localStorage.getItem("s_username");
-    setUserName(userName as string);
-    const s_role = localStorage.getItem("s_role");
-    const response = await getRoleByName(s_role as string);
-    setRole(response.items[0]);
+    if (typeof window !== "undefined") {
+      const { username } = getUserInfoFromToken();
+      setUserName(username);
+      const displayRole = localStorage.getItem("s_dr");
+      setRole(JSON.parse(displayRole as string) as RoleItem);
+    }
   };
 
   useEffect(() => {

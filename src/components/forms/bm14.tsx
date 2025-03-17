@@ -13,12 +13,12 @@ import {
 import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
 import {
   DisplayRoleItem,
-  getRoleByName,
-  RoleItem,
+  RoleItem
 } from "@/services/roles/rolesServices";
 import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
 import { postFiles } from "@/services/uploads/uploadsServices";
+import { getUserInfoFromToken } from "@/utility/Auth";
 import Colors from "@/utility/Colors";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
@@ -92,7 +92,6 @@ const BM14 = () => {
   const [endDate, setEndDate] = useState<number | 0>(0);
   const [maxEndDate, setMaxEndDate] = useState<number | 0>(0);
   const [advanced, setAdvanced] = useState(false);
-  const [userName, setUserName] = useState<string | null>(null);
   const [role, setRole] = useState<RoleItem>();
   const [isShowPdf, setIsShowPdf] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -661,14 +660,13 @@ const BM14 = () => {
   ];
 
   const handleApproved = async (isRejected: boolean, type: number) => {
-    const s_role = localStorage.getItem("s_role");
-    const fullName = localStorage.getItem("s_fullname");
+    const { role, username, fullname } = getUserInfoFromToken();
     const formData = {
       ids: selectedRowKeys.length > 0 ? selectedRowKeys : [selectedItem?.id],
-      userName: userName,
-      fullName: fullName ?? userName,
+      userName: username,
+      fullName: fullname,
       confirmationType:
-        s_role && s_role === "finance-manager" && isRejected ? 3 : type,
+        role && role === "finance-manager" && isRejected ? 3 : type,
       isRejected: isRejected,
       reason: reason,
     };
@@ -812,15 +810,12 @@ const BM14 = () => {
 
   const getDisplayRole = async () => {
     if (typeof window !== "undefined") {
-      const s_username = localStorage.getItem("s_username");
-      setUserName(s_username as string);
-      const s_role = localStorage.getItem("s_role");
-      const s_family = localStorage.getItem("s_family");
-      if (s_family && s_role === "secretary") {
-        setSelectedKeyUnit(s_family.toLowerCase());
+      const { role, family_name } = getUserInfoFromToken();
+      if (family_name && role === "secretary") {
+        setSelectedKeyUnit(family_name.toLowerCase());
       }
-      const response = await getRoleByName(s_role as string);
-      setRole(response.items[0]);
+      const displayRole = localStorage.getItem("s_dr");
+      setRole(JSON.parse(displayRole as string) as RoleItem);
     }
   };
 
