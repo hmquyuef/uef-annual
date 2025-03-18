@@ -11,6 +11,7 @@ import {
   putUpdateWorkloadGroup,
   WorkloadGroupItem,
 } from "@/services/workloads/groupsServices";
+import { RootState } from "@/store";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
 import { convertTimestampToDate } from "@/utility/Utilities";
@@ -36,11 +37,12 @@ import {
 import { TableRowSelection } from "antd/es/table/interface";
 import Cookies from "js-cookie";
 import { Key, useCallback, useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 type SearchProps = GetProps<typeof Input.Search>;
 
 const WorkloadGroups = () => {
+  const app = useSelector((state: RootState) => state.app);
   const [loading, setLoading] = useState(false);
-  const [role, setRole] = useState<RoleItem>();
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [data, setData] = useState<WorkloadGroupItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -193,13 +195,6 @@ const WorkloadGroups = () => {
     );
   };
 
-  const getDisplayRole = async () => {
-    if (typeof window !== "undefined") {
-      const displayRole = localStorage.getItem("s_dr");
-      setRole(JSON.parse(displayRole as string) as RoleItem);
-    }
-  };
-
   useEffect(() => {
     setLoading(true);
     document.title = PageTitles.WORKLOAD_GROUPS;
@@ -212,7 +207,6 @@ const WorkloadGroups = () => {
       });
     }
     getListWorkloadGroup();
-    getDisplayRole();
 
     const timeoutId = setTimeout(() => {
       setLoading(false);
@@ -245,7 +239,7 @@ const WorkloadGroups = () => {
         />
       </div>
       <div className="flex justify-end mt-6 gap-3 mb-3">
-        {role?.displayRole.isCreate && (
+        {app?.displayRole.isCreate && (
           <>
             <Button
               type="primary"
@@ -260,7 +254,7 @@ const WorkloadGroups = () => {
             </Button>
           </>
         )}
-        {role?.displayRole.isDelete && (
+        {app?.displayRole.isDelete && (
           <>
             <Button
               color="danger"
@@ -289,7 +283,7 @@ const WorkloadGroups = () => {
         title={
           mode === "edit" ? "Cập nhật nhóm biểu mẫu" : "Thêm mới nhóm biểu mẫu"
         }
-        role={role || undefined}
+        role={app || undefined}
         onOk={() => {
           const formElement = document.querySelector("form");
           formElement?.dispatchEvent(

@@ -8,6 +8,9 @@ import {
 } from "@/services/auth/authServices";
 import { getAllPermissionsForMenuByUserName } from "@/services/permissions/permissionForMenu";
 import { getRoleByName } from "@/services/roles/rolesServices";
+import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
+import { getAllUnits } from "@/services/units/unitsServices";
+import { setAppData } from "@/store/slices/appSlice";
 import { getUserInfoFromToken } from "@/utility/Auth";
 import Colors from "@/utility/Colors";
 import {
@@ -21,6 +24,7 @@ import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -38,6 +42,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isOpened, setIsOpened] = useState(true);
   const [stateOpenKeys, setStateOpenKeys] = useState(["1", "12"]);
   const [itemsMenu, setItemsMenu] = useState<MenuItem[]>([]);
+
+  const dispatch = useDispatch();
 
   const CallLogout = async () => {
     Cookies.remove("s_t");
@@ -97,12 +103,23 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       if (!username && !role) {
         CallLogout();
       }
-      const [displayRole, listmenus] = await Promise.all([
-        getRoleByName(role as string),
-        getAllPermissionsForMenuByUserName(username as string),
-      ]);
+      const [displayRole, listmenus, responseSchoolYear, responseUnits] =
+        await Promise.all([
+          getRoleByName(role as string),
+          getAllPermissionsForMenuByUserName(username as string),
+          getAllSchoolYears(),
+          getAllUnits("true"),
+        ]);
+
       if (displayRole) {
-        localStorage.setItem("s_dr", JSON.stringify(displayRole.items[0]));
+        dispatch(setAppData(displayRole.items[0]));
+        localStorage.setItem("s_y", JSON.stringify(responseSchoolYear.items));
+        localStorage.setItem(
+          "s_u",
+          JSON.stringify(
+            responseUnits.items.sort((a, b) => a.name.localeCompare(b.name))
+          )
+        );
       }
 
       if (listmenus.items.length === 0) return router.push("/not-permission");
@@ -207,10 +224,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       }
     }
     await getMenuByUserName(email);
-    if (typeof window !== "undefined" && !localStorage.getItem("s_dr")) {
-      CallLogout();
-      router.push("/not-permission");
-    }
   };
 
   useEffect(() => {

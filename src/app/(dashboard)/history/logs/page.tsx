@@ -8,8 +8,7 @@ import {
   LogActivityItem,
   LogActivityResponses,
 } from "@/services/history/logActivityServices";
-import { getRoleByName, RoleItem } from "@/services/roles/rolesServices";
-import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
+import { RootState } from "@/store";
 import PageTitles from "@/utility/Constraints";
 import { convertTimestampToFullDateTime } from "@/utility/Utilities";
 import {
@@ -27,11 +26,13 @@ import {
   TableColumnsType,
 } from "antd";
 import { Key, useCallback, useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 
 type SearchProps = GetProps<typeof Input.Search>;
 const { Search } = Input;
 
 const LogsActivities = () => {
+  const app = useSelector((state: RootState) => state.app);
   const [loading, setLoading] = useState(false);
   const [defaultYears, setDefaultYears] = useState<any>();
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
@@ -39,7 +40,6 @@ const LogsActivities = () => {
   const [logActivities, setLogActivities] = useState<
     LogActivityResponses | undefined
   >(undefined);
-  const [role, setRole] = useState<RoleItem>();
 
   const [formNotification, setFormNotification] = useState<{
     message: string;
@@ -56,11 +56,13 @@ const LogsActivities = () => {
   const [selectedKey, setSelectedKey] = useState<any>();
 
   const getDefaultYears = async () => {
-    const response = await getAllSchoolYears();
-    setDefaultYears(response.items);
-    const yearId = response.items.filter((x: any) => x.isDefault)[0] as any;
-    setSelectedKey(yearId);
-    getListLogActivities(yearId.id);
+    if (typeof window !== "undefined") {
+      const years = JSON.parse(localStorage.getItem("s_y") as string);
+      setDefaultYears(years);
+      const yearId = years.filter((x: any) => x.isDefault)[0] as any;
+      setSelectedKey(yearId);
+      getListLogActivities(yearId.id);
+    }
   };
 
   const getListLogActivities = async (yearId: string) => {
@@ -196,13 +198,6 @@ const LogsActivities = () => {
     }
   }, [selectedRowKeys]);
 
-  const getDisplayRole = async () => {
-    if (typeof window !== "undefined") {
-      const displayRole = localStorage.getItem("s_dr");
-      setRole(JSON.parse(displayRole as string) as RoleItem);
-    }
-  };
-
   const handleChangeYear = (value: any) => {
     setLoading(true);
     const temp = defaultYears.filter((x: any) => x.id === value)[0] as any;
@@ -218,7 +213,6 @@ const LogsActivities = () => {
     setLoading(true);
     document.title = PageTitles.LOGS_ACTIVITY;
     getDefaultYears();
-    getDisplayRole();
     setLoading(false);
   }, []);
 
@@ -292,7 +286,7 @@ const LogsActivities = () => {
           </div>
         </div>
         <div className="flex justify-end items-end gap-4">
-          {role?.displayRole.isDelete && role.name === "admin" && (
+          {app?.displayRole.isDelete && app.name === "admin" && (
             <>
               <Button
                 color="danger"

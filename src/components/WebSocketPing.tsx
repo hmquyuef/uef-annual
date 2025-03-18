@@ -11,7 +11,7 @@ interface WebSocketPingProps {
 const WebSocketPing: FC<WebSocketPingProps> = (props) => {
   const { isOpen } = props;
   const { latency, status } = useWebSocketPing(
-    "wss://api-annual.uef.edu.vn/ws/connect"
+    "ws://192.168.98.60:8081/ws/connect"
   );
   const [formNotification, setFormNotification] = useState<{
     message: string;

@@ -1,7 +1,6 @@
 "use client";
 
-import { DisplayRoleItem, RoleItem } from "@/services/roles/rolesServices";
-import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
+import { DisplayRoleItem } from "@/services/roles/rolesServices";
 import {
   deleteTrainingLevels,
   getAllTrainingLevels,
@@ -10,7 +9,7 @@ import {
   putTrainingLevel,
   TrainingLevelItem,
 } from "@/services/trainingLevels/trainingServices";
-import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
+import { UnitItem } from "@/services/units/unitsServices";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
 import {
@@ -48,16 +47,19 @@ import TemplateForms from "./workloads/TemplateForms";
 
 import saveAs from "file-saver";
 
+import { RootState } from "@/store";
 import { getUserInfoFromToken } from "@/utility/Auth";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import Link from "next/link";
+import { useSelector } from "react-redux";
 import * as XLSX from "sheetjs-style";
 import DrawerForBM07 from "../drawerInfo/DrawerForBM07";
 dayjs.locale("vi");
 
 const BM07 = () => {
+  const app = useSelector((state: RootState) => state.app);
   type SearchProps = GetProps<typeof Input.Search>;
   const { Search } = Input;
   const [loading, setLoading] = useState(false);
@@ -81,7 +83,6 @@ const BM07 = () => {
   const [endDate, setEndDate] = useState<number | 0>(0);
   const [maxEndDate, setMaxEndDate] = useState<number | 0>(0);
   const [advanced, setAdvanced] = useState(false);
-  const [role, setRole] = useState<RoleItem>();
   const [isShowPdf, setIsShowPdf] = useState(false);
   const [openDrawer, setOpenDrawer] = useState<boolean>(false);
 
@@ -98,10 +99,10 @@ const BM07 = () => {
   });
 
   const getDefaultYears = async () => {
-    const { items } = await getAllSchoolYears();
-    if (items) {
-      setDefaultYears(items);
-      const defaultYear = items.find((x: any) => x.isDefault);
+    if (typeof window !== "undefined") {
+      const years = JSON.parse(localStorage.getItem("s_y") as string);
+      setDefaultYears(years);
+      const defaultYear = years.find((x: any) => x.isDefault);
       if (defaultYear) {
         const { id, startDate, endDate } = defaultYear;
         setSelectedKey(defaultYear);
@@ -121,8 +122,10 @@ const BM07 = () => {
   };
 
   const getListUnits = async () => {
-    const response = await getAllUnits("true");
-    setUnits(response.items);
+    if (typeof window !== "undefined") {
+      const responseUnits = JSON.parse(localStorage.getItem("s_u") as string);
+      setUnits(responseUnits);
+    }
   };
 
   const columns: TableColumnsType<TrainingLevelItem> = [
@@ -616,7 +619,7 @@ const BM07 = () => {
     setEndDate(temp.endDate);
     const timeoutId = setTimeout(() => {
       setLoading(false);
-    }, 500);
+    }, 200);
     return () => clearTimeout(timeoutId);
   };
 
@@ -626,8 +629,6 @@ const BM07 = () => {
       if (family_name && role === "secretary") {
         setSelectedKeyUnit(family_name.toLowerCase());
       }
-      const displayRole = localStorage.getItem("s_dr");
-      setRole(JSON.parse(displayRole as string) as RoleItem);
     }
   };
 
@@ -640,7 +641,7 @@ const BM07 = () => {
     onSearch("");
     const timeoutId = setTimeout(() => {
       setLoading(false);
-    }, 500);
+    }, 200);
     return () => clearTimeout(timeoutId);
   }, []);
 
@@ -691,7 +692,7 @@ const BM07 = () => {
                 </div>
                 <div
                   className="col-span-2"
-                  hidden={role && role.name === "secretary"}
+                  hidden={app && app.name === "secretary"}
                 >
                   <div className="flex flex-col justify-center gap-1">
                     <span className="text-[14px] text-neutral-500">
@@ -835,7 +836,7 @@ const BM07 = () => {
           </AnimatePresence>
         </div>
         <div className="flex justify-end mt-6 gap-3">
-          {role?.displayRole.isExport && (
+          {app?.displayRole.isExport && (
             <>
               <Button
                 color="green"
@@ -848,7 +849,7 @@ const BM07 = () => {
               </Button>
             </>
           )}
-          {role?.displayRole.isCreate && (
+          {app?.displayRole.isCreate && (
             <>
               <Button
                 color="cyan"
@@ -875,7 +876,7 @@ const BM07 = () => {
               </Button>
             </>
           )}
-          {role?.displayRole.isDelete && (
+          {app?.displayRole.isDelete && (
             <>
               <Button
                 color="red"
@@ -911,7 +912,7 @@ const BM07 = () => {
           setKeyCustom(getRandomKey());
           setIsOpen(false);
         }}
-        role={role || undefined}
+        role={app || undefined}
         onCancel={() => {
           setKeyCustom(getRandomKey());
           setIsOpen(false);
@@ -923,7 +924,7 @@ const BM07 = () => {
             initialData={selectedItem as Partial<any>}
             mode={mode}
             yearId={selectedKey?.id as string}
-            displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
+            displayRole={app?.displayRole ?? ({} as DisplayRoleItem)}
           />
         }
       />

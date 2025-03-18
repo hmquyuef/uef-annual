@@ -1,17 +1,18 @@
 "use client";
 
-import { RoleItem } from "@/services/roles/rolesServices";
 import {
   deleteTrainingContents,
   getAllTrainingContents,
   postTrainingContents,
   putTrainingContents,
 } from "@/services/trainingLevels/contentsServices";
+import { RootState } from "@/store";
 import Messages from "@/utility/Messages";
 import { convertTimestampToDate, getRandomKey } from "@/utility/Utilities";
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, TableColumnsType } from "antd";
 import { FC, Key, useCallback, useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
 import FormBM07Contents from "../forms/activity/formBM07Contents";
@@ -22,12 +23,12 @@ interface DrawerForBM07Props {
 }
 
 const DrawerForBM07: FC<DrawerForBM07Props> = (props) => {
+  const app = useSelector((state: RootState) => state.app);
   const { yearId } = props;
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [mode, setMode] = useState<"addContent" | "editContent">("addContent");
-  const [role, setRole] = useState<RoleItem>();
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [selectedItem, setSelectedItem] = useState<Partial<any> | undefined>(
     undefined
@@ -186,16 +187,8 @@ const DrawerForBM07: FC<DrawerForBM07Props> = (props) => {
     }
   }, [selectedRowKeys]);
 
-  const getDisplayRole = async () => {
-    if (typeof window !== "undefined") {
-      const displayRole = localStorage.getItem("s_dr");
-      setRole(JSON.parse(displayRole as string) as RoleItem);
-    }
-  };
-
   useEffect(() => {
     getListTrainingContents();
-    getDisplayRole();
   }, []);
 
   useEffect(() => {
@@ -242,7 +235,7 @@ const DrawerForBM07: FC<DrawerForBM07Props> = (props) => {
             ? Messages.TITLE_UPDATE_TRAINING_CONTENTS
             : Messages.TITLE_ADD_TRAINING_CONTENTS
         }
-        role={role || undefined}
+        role={app || undefined}
         onOk={() => {
           const formElement = document.querySelector("form");
           formElement?.dispatchEvent(

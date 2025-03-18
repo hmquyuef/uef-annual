@@ -10,7 +10,6 @@ import { GeneralItems } from "@/services/exports/GeneralItems";
 import { OtherItems } from "@/services/exports/OtherItems";
 import { Employees, Lecture } from "@/services/exports/RegulationItems";
 import { TrainingItems } from "@/services/exports/TrainingItems";
-import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
 import { convertTimestampToDate } from "@/utility/Utilities";
@@ -75,19 +74,14 @@ const SearchMembers = () => {
   };
 
   const getDefaultYears = async () => {
-    setLoading(true);
-    const { items } = await getAllSchoolYears();
-    if (items) {
-      setDefaultYears(items);
-      const defaultYear = items.find((x: any) => x.isDefault);
+    if (typeof window !== "undefined") {
+      const years = JSON.parse(localStorage.getItem("s_y") as string);
+      setDefaultYears(years);
+      const defaultYear = years.find((x: any) => x.isDefault);
       if (defaultYear) {
         setSelectedKeyYear(defaultYear);
       }
     }
-    const timeoutId = setTimeout(() => {
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timeoutId);
   };
 
   const handleSearch = async () => {
@@ -110,7 +104,7 @@ const SearchMembers = () => {
     }
     const timeoutId = setTimeout(() => {
       setLoading(false);
-    }, 500);
+    }, 200);
     return () => clearTimeout(timeoutId);
   };
 
@@ -408,7 +402,7 @@ const SearchMembers = () => {
     Promise.all([getDefaultYears(), getUsersHRM()]);
     const timeoutId = setTimeout(() => {
       setLoading(false);
-    }, 500);
+    }, 200);
     return () => clearTimeout(timeoutId);
   }, []);
 

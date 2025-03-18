@@ -1,6 +1,5 @@
 "use client";
 
-import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
 import {
@@ -64,19 +63,14 @@ const WorkloadDetails = () => {
   const [selectedKeyYear, setSelectedKeyYear] = useState<any>();
 
   const getDefaultYears = async () => {
-    setLoading(true);
-    const { items } = await getAllSchoolYears();
-    if (items) {
-      setDefaultYears(items);
-      const defaultYear = items.find((x: any) => x.isDefault);
+    if (typeof window !== "undefined") {
+      const years = JSON.parse(localStorage.getItem("s_y") as string);
+      setDefaultYears(years);
+      const defaultYear = years.find((x: any) => x.isDefault);
       if (defaultYear) {
         setSelectedKeyYear(defaultYear);
       }
     }
-    const timeoutId = setTimeout(() => {
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timeoutId);
   };
 
   const handleChangeYear = (value: any) => {
@@ -418,7 +412,7 @@ const WorkloadDetails = () => {
     }
     const timeoutId = setTimeout(() => {
       setLoading(false);
-    }, 500);
+    }, 200);
     return () => clearTimeout(timeoutId);
   };
 
@@ -430,7 +424,7 @@ const WorkloadDetails = () => {
     getDefaultYears();
     const timeoutId = setTimeout(() => {
       setLoading(false);
-    }, 500);
+    }, 200);
     return () => clearTimeout(timeoutId);
   }, []);
 

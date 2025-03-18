@@ -1,12 +1,11 @@
+"use client";
+
 import SessionWrapper from "@/components/SessionWrapper";
+import { store } from "@/store";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
-import type { Metadata } from "next";
+import { Provider } from "react-redux";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "Phần mềm quản lý tiết chuẩn - UEF",
-  description: "Standard Plan Management Software",
-};
 
 export default function RootLayout({
   children,
@@ -16,9 +15,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <SessionWrapper>
-          <AntdRegistry>{children}</AntdRegistry>
-        </SessionWrapper>
+        <Provider store={store}>
+          <SessionWrapper>
+            <AntdRegistry>{children}</AntdRegistry>
+          </SessionWrapper>
+        </Provider>
       </body>
     </html>
   );

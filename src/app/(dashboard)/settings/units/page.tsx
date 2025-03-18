@@ -11,6 +11,7 @@ import {
   putUnit,
   UnitsResponse,
 } from "@/services/units/unitsServices";
+import { RootState } from "@/store";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
 import {
@@ -31,9 +32,10 @@ import {
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import { Key, useCallback, useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 
 const Units = () => {
-  const [role, setRole] = useState<RoleItem>();
+  const app = useSelector((state: RootState) => state.app);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [units, setUnits] = useState<UnitsResponse | undefined>(undefined);
   const [isOpen, setIsOpen] = useState(false);
@@ -189,17 +191,9 @@ const Units = () => {
     setNotificationOpen(false);
   };
 
-  const getDisplayRole = async () => {
-    if (typeof window !== "undefined") {
-      const displayRole = localStorage.getItem("s_dr");
-      setRole(JSON.parse(displayRole as string) as RoleItem);
-    }
-  };
-
   useEffect(() => {
     document.title = PageTitles.UNITS;
     getListUnits();
-    getDisplayRole();
   }, []);
   return (
     <div>
@@ -236,7 +230,7 @@ const Units = () => {
         />
       </div>
       <div className="flex justify-end gap-4 mb-3 border-b border-neutral-300 pb-3">
-        {role?.displayRole.isCreate && (
+        {app?.displayRole.isCreate && (
           <>
             <Button
               type="primary"
@@ -251,7 +245,7 @@ const Units = () => {
             </Button>
           </>
         )}
-        {role?.displayRole.isDelete && (
+        {app?.displayRole.isDelete && (
           <>
             <Button
               color="danger"
@@ -280,7 +274,7 @@ const Units = () => {
             ? Messages.TITLE_UPDATE_UNITS
             : Messages.TITLE_ADD_UNITS
         }
-        role={role || undefined}
+        role={app || undefined}
         onOk={() => {
           const formElement = document.querySelector("form");
           formElement?.dispatchEvent(

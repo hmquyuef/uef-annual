@@ -12,9 +12,8 @@ import {
   putUpdateApprovedActivity,
 } from "@/services/forms/formsServices";
 import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
-import { DisplayRoleItem, RoleItem } from "@/services/roles/rolesServices";
-import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
-import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
+import { DisplayRoleItem } from "@/services/roles/rolesServices";
+import { UnitItem } from "@/services/units/unitsServices";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
 import {
@@ -57,17 +56,20 @@ import CustomNotification from "../CustomNotification";
 import FormBM05 from "./activity/formBM05";
 import TemplateForms from "./workloads/TemplateForms";
 
+import { RootState } from "@/store";
 import { getUserInfoFromToken } from "@/utility/Auth";
 import Colors from "@/utility/Colors";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
+import { useSelector } from "react-redux";
 import { LoadingSpin } from "../skeletons/LoadingSpin";
 dayjs.locale("vi");
 
 const { Search } = Input;
 
 const BM05 = () => {
+  const app = useSelector((state: RootState) => state.app);
   const [loading, setLoading] = useState(false);
   const [loadingUpload, setLoadingUpload] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
@@ -88,7 +90,6 @@ const BM05 = () => {
   const [maxEndDate, setMaxEndDate] = useState<number | 0>(0);
   const [advanced, setAdvanced] = useState(false);
   const [isShowPdf, setIsShowPdf] = useState(false);
-  const [role, setRole] = useState<RoleItem>();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [reason, setReason] = useState("");
   const [keyCustom, setKeyCustom] = useState("");
@@ -109,10 +110,10 @@ const BM05 = () => {
   });
 
   const getDefaultYears = async () => {
-    const { items } = await getAllSchoolYears();
-    if (items) {
-      setDefaultYears(items);
-      const defaultYear = items.find((x: any) => x.isDefault);
+    if (typeof window !== "undefined") {
+      const years = JSON.parse(localStorage.getItem("s_y") as string);
+      setDefaultYears(years);
+      const defaultYear = years.find((x: any) => x.isDefault);
       if (defaultYear) {
         const { id, startDate, endDate } = defaultYear;
         setSelectedKey(defaultYear);
@@ -129,15 +130,13 @@ const BM05 = () => {
     const response = await getAllActivities(yearId);
     setActivities(response.items);
     setData(response.items);
-    setFormNotification((prev) => ({
-      ...prev,
-      isOpen: false,
-    }));
   };
 
   const getListUnits = async () => {
-    const response = await getAllUnits("true");
-    setUnits(response.items);
+    if (typeof window !== "undefined") {
+      const responseUnits = JSON.parse(localStorage.getItem("s_u") as string);
+      setUnits(responseUnits);
+    }
   };
 
   const columns: TableColumnsType<ActivityItem> = [
@@ -792,8 +791,8 @@ const BM05 = () => {
       if (family_name && role === "secretary") {
         setSelectedKeyUnit(family_name.toLowerCase());
       }
-      const displayRole = localStorage.getItem("s_dr");
-      setRole(JSON.parse(displayRole as string) as RoleItem);
+      // const displayRole = localStorage.getItem("s_dr");
+      // setRole(JSON.parse(displayRole as string) as RoleItem);
     }
   };
 
@@ -805,7 +804,7 @@ const BM05 = () => {
     onSearch("");
     const timeoutId = setTimeout(() => {
       setLoading(false);
-    }, 500);
+    }, 200);
     return () => clearTimeout(timeoutId);
   }, []);
 
@@ -857,7 +856,7 @@ const BM05 = () => {
                 </div>
                 <div
                   className="col-span-2"
-                  hidden={role && role.name === "secretary"}
+                  hidden={!!(app.name && app.name === "secretary")}
                 >
                   <div className="flex flex-col justify-center gap-1">
                     <span className="text-sm text-neutral-500">Đơn vị:</span>
@@ -999,7 +998,7 @@ const BM05 = () => {
           </AnimatePresence>
         </div>
         <div className="flex justify-end mt-6 gap-3">
-          {role?.displayRole.isApprove && role?.displayRole.isReject && (
+          {app?.displayRole.isApprove && app?.displayRole.isReject && (
             <>
               <Dropdown menu={{ items: itemsApproved }} trigger={["click"]}>
                 <a onClick={(e) => e.preventDefault()}>
@@ -1018,7 +1017,7 @@ const BM05 = () => {
               </Dropdown>
             </>
           )}
-          {role?.displayRole.isExport && (
+          {app?.displayRole.isExport && (
             <>
               <Button
                 color="green"
@@ -1031,7 +1030,7 @@ const BM05 = () => {
               </Button>
             </>
           )}
-          {role?.displayRole.isCreate && (
+          {app?.displayRole.isCreate && (
             <>
               <Button
                 type="primary"
@@ -1046,7 +1045,7 @@ const BM05 = () => {
               </Button>
             </>
           )}
-          {role?.displayRole.isDelete && (
+          {app?.displayRole.isDelete && (
             <>
               <Button
                 color="red"
@@ -1078,7 +1077,7 @@ const BM05 = () => {
         confirmType={isPayments?.length ?? 0}
         width={isShowPdf ? "85vw" : ""}
         title={mode === "edit" ? "Cập nhật hoạt động" : "Thêm mới hoạt động"}
-        role={role || undefined}
+        role={app || undefined}
         onApprove={() => handleApproved(false, 1)}
         onConfirm={() => handleApproved(false, 2)}
         onApprovedConfirm={() => handleApproved(false, 3)}
@@ -1102,7 +1101,7 @@ const BM05 = () => {
             initialData={selectedItem as Partial<AddUpdateActivityItem>}
             mode={mode}
             isPayment={isPayments ?? []}
-            displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
+            displayRole={app?.displayRole ?? ({} as DisplayRoleItem)}
           />
         }
       />

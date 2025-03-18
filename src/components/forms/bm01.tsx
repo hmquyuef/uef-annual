@@ -12,9 +12,8 @@ import {
 } from "@/services/forms/classLeadersServices";
 import { AddUpdateActivityItem } from "@/services/forms/formsServices";
 import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
-import { DisplayRoleItem, RoleItem } from "@/services/roles/rolesServices";
-import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
-import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
+import { DisplayRoleItem } from "@/services/roles/rolesServices";
+import { UnitItem } from "@/services/units/unitsServices";
 import { postFiles } from "@/services/uploads/uploadsServices";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
@@ -50,6 +49,7 @@ import {
   Tag,
 } from "antd";
 
+import { RootState } from "@/store";
 import { getUserInfoFromToken } from "@/utility/Auth";
 import Colors from "@/utility/Colors";
 import locale from "antd/locale/vi_VN";
@@ -59,6 +59,7 @@ import saveAs from "file-saver";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { Key, useCallback, useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import * as XLSX from "sheetjs-style";
 import CustomModal from "../CustomModal";
 import CustomNotification from "../CustomNotification";
@@ -69,6 +70,7 @@ import TemplateForms from "./workloads/TemplateForms";
 dayjs.locale("vi");
 
 const BM01 = () => {
+  const app = useSelector((state: RootState) => state.app);
   type SearchProps = GetProps<typeof Input.Search>;
   const { Search } = Input;
   const [loading, setLoading] = useState(false);
@@ -91,7 +93,6 @@ const BM01 = () => {
   const [endDate, setEndDate] = useState<number | 0>(0);
   const [maxEndDate, setMaxEndDate] = useState<number | 0>(0);
   const [advanced, setAdvanced] = useState(false);
-  const [role, setRole] = useState<RoleItem>();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [reason, setReason] = useState("");
   const [keyCustom, setKeyCustom] = useState("");
@@ -112,10 +113,10 @@ const BM01 = () => {
   });
 
   const getDefaultYears = async () => {
-    const { items } = await getAllSchoolYears();
-    if (items) {
-      setDefaultYears(items);
-      const defaultYear = items.find((x: any) => x.isDefault);
+    if (typeof window !== "undefined") {
+      const years = JSON.parse(localStorage.getItem("s_y") as string);
+      setDefaultYears(years);
+      const defaultYear = years.find((x: any) => x.isDefault);
       if (defaultYear) {
         const { id, startDate, endDate } = defaultYear;
         setSelectedKey(defaultYear);
@@ -135,8 +136,10 @@ const BM01 = () => {
   };
 
   const getListUnits = async () => {
-    const response = await getAllUnits("true");
-    setUnits(response.items);
+    if (typeof window !== "undefined") {
+      const responseUnits = JSON.parse(localStorage.getItem("s_u") as string);
+      setUnits(responseUnits);
+    }
   };
 
   const columns: TableColumnsType<ClassLeaderItem> = [
@@ -917,7 +920,7 @@ const BM01 = () => {
     setEndDate(temp.endDate);
     const timeoutId = setTimeout(() => {
       setLoading(false);
-    }, 300);
+    }, 200);
     return () => clearTimeout(timeoutId);
   };
 
@@ -927,8 +930,6 @@ const BM01 = () => {
       if (family_name && role === "secretary") {
         setSelectedKeyUnit(family_name.toLowerCase());
       }
-      const displayRole = localStorage.getItem("s_dr");
-      setRole(JSON.parse(displayRole as string) as RoleItem);
     }
   };
 
@@ -940,7 +941,7 @@ const BM01 = () => {
     onSearch("");
     const timeoutId = setTimeout(() => {
       setLoading(false);
-    }, 500);
+    }, 200);
     return () => clearTimeout(timeoutId);
   }, []);
 
@@ -991,7 +992,7 @@ const BM01 = () => {
                 </div>
                 <div
                   className="col-span-2"
-                  hidden={role && role.name === "secretary"}
+                  hidden={app && app.name === "secretary"}
                 >
                   <div className="flex flex-col justify-center gap-1">
                     <span className="text-[14px] text-neutral-500">Đơn vị</span>
@@ -1133,7 +1134,7 @@ const BM01 = () => {
           </AnimatePresence>
         </div>
         <div className="flex justify-end mt-6 gap-3">
-          {role?.displayRole.isApprove && role?.displayRole.isReject && (
+          {app?.displayRole.isApprove && app?.displayRole.isReject && (
             <>
               <Dropdown menu={{ items: itemsApproved }} trigger={["click"]}>
                 <a onClick={(e) => e.preventDefault()}>
@@ -1152,7 +1153,7 @@ const BM01 = () => {
               </Dropdown>
             </>
           )}
-          {role?.displayRole.isExport && (
+          {app?.displayRole.isExport && (
             <>
               <Button
                 color="green"
@@ -1165,7 +1166,7 @@ const BM01 = () => {
               </Button>
             </>
           )}
-          {role?.displayRole.isCreate && (
+          {app?.displayRole.isCreate && (
             <>
               <Dropdown menu={{ items }} trigger={["click"]}>
                 <a onClick={(e) => e.preventDefault()}>
@@ -1176,7 +1177,7 @@ const BM01 = () => {
               </Dropdown>
             </>
           )}
-          {role?.displayRole.isDelete && (
+          {app?.displayRole.isDelete && (
             <>
               <Button
                 color="red"
@@ -1212,7 +1213,7 @@ const BM01 = () => {
           setKeyCustom(getRandomKey());
           setIsOpen(false);
         }}
-        role={role || undefined}
+        role={app || undefined}
         isBlock={
           isPayments && isPayments.length >= 2
             ? true
@@ -1235,7 +1236,7 @@ const BM01 = () => {
                 formName="bm01"
                 onSubmit={handleSubmitUpload}
                 handleShowPDF={setIsShowPdf}
-                displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
+                displayRole={app?.displayRole ?? ({} as DisplayRoleItem)}
               />
             </>
           ) : (
@@ -1246,7 +1247,7 @@ const BM01 = () => {
                 initialData={selectedItem as Partial<ClassLeaderItem>}
                 mode={mode}
                 isPayment={isPayments ?? []}
-                displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
+                displayRole={app?.displayRole ?? ({} as DisplayRoleItem)}
               />
             </>
           )

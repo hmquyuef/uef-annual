@@ -1,6 +1,7 @@
 "use client";
 
 import { deleteToken } from "@/services/auth/authServices";
+import { resetAppData } from "@/store/slices/appSlice";
 import { getUserInfoFromToken } from "@/utility/Auth";
 import {
   IdcardOutlined,
@@ -13,77 +14,82 @@ import { Badge, Dropdown } from "antd";
 import Cookies from "js-cookie";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
-
-const handleMenuClick: MenuProps["onClick"] = async (e) => {
-  if (e.key === "3") {
-    const token = Cookies.get("s_t");
-    if (token) {
-      try {
-        await deleteToken(token);
-      } finally {
-        ["s_t", "s_r", "m_i", "m_k", "p_s"].forEach((cookie) =>
-          Cookies.remove(cookie)
-        );
-        if (typeof window !== "undefined") window.localStorage.clear();
-        await signOut({ callbackUrl: "/login" });
-      }
-    }
-  }
-};
-
-const createMenuItems = (name: string, email: string): MenuProps["items"] => [
-  {
-    key: "1",
-    label: (
-      <div>
-        <span className="text-[12px] text-neutral-500 mb-1">
-          Thông tin cá nhân
-        </span>
-        <div className="bg-neutral-200/50 rounded-md px-3 py-1">
-          <span className="text-[12px] text-neutral-600">
-            <IdcardOutlined className="me-1" />{" "}
-            <span className="font-medium">{name}</span>
-          </span>
-          <br />
-          <span className="text-[12px] text-neutral-600">
-            <MailOutlined className="me-1" />{" "}
-            <span className="font-medium">{email}</span>
-          </span>
-        </div>
-      </div>
-    ),
-  },
-  {
-    type: "divider",
-  },
-  {
-    key: "3",
-    label: "Đăng xuất",
-    icon: <LogoutOutlined />,
-    danger: true,
-  },
-];
-
-const itemNotifications: MenuProps["items"] = [
-  {
-    key: "1",
-    label: (
-      <>
-        <div className="flex flex-col w-64">
-          <span>Thông báo đang cập nhật</span>
-          <span className="text-xs text-gray-400 mb-1">Đang cập nhật</span>
-          <div className="flex justify-end">
-            <span className="text-xs text-gray-400">đang cập nhật</span>
-          </div>
-        </div>
-      </>
-    ),
-    icon: <InfoCircleOutlined />,
-  },
-];
+import { useDispatch } from "react-redux";
 
 const TopHeaders = () => {
+  const dispatch = useDispatch();
   const { fullname, email } = getUserInfoFromToken();
+  const [isNotification, setIsNotification] = useState(false);
+
+  const handleMenuClick: MenuProps["onClick"] = async (e) => {
+    if (e.key === "3") {
+      const token = Cookies.get("s_t");
+      if (token) {
+        try {
+          await deleteToken(token);
+        } finally {
+          ["s_t", "s_r", "m_i", "m_k", "p_s"].forEach((cookie) =>
+            Cookies.remove(cookie)
+          );
+          if (typeof window !== "undefined") window.localStorage.clear();
+          dispatch(resetAppData());
+          await signOut({ callbackUrl: "/login" });
+        }
+      }
+    }
+  };
+
+  const createMenuItems = (name: string, email: string): MenuProps["items"] => [
+    {
+      key: "1",
+      label: (
+        <div>
+          <span className="text-[12px] text-neutral-500 mb-1">
+            Thông tin cá nhân
+          </span>
+          <div className="bg-neutral-200/50 rounded-md px-3 py-1">
+            <span className="text-[12px] text-neutral-600">
+              <IdcardOutlined className="me-1" />{" "}
+              <span className="font-medium">{name}</span>
+            </span>
+            <br />
+            <span className="text-[12px] text-neutral-600">
+              <MailOutlined className="me-1" />{" "}
+              <span className="font-medium">{email}</span>
+            </span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      type: "divider",
+    },
+    {
+      key: "3",
+      label: "Đăng xuất",
+      icon: <LogoutOutlined />,
+      danger: true,
+    },
+  ];
+
+  const itemNotifications: MenuProps["items"] = [
+    {
+      key: "1",
+      label: (
+        <>
+          <div className="flex flex-col w-64">
+            <span>Thông báo đang cập nhật</span>
+            <span className="text-xs text-gray-400 mb-1">Đang cập nhật</span>
+            <div className="flex justify-end">
+              <span className="text-xs text-gray-400">đang cập nhật</span>
+            </div>
+          </div>
+        </>
+      ),
+      icon: <InfoCircleOutlined />,
+    },
+  ];
+
   const menuProps: MenuProps = {
     items: createMenuItems(fullname as string, email as string),
     onClick: handleMenuClick,
@@ -92,7 +98,6 @@ const TopHeaders = () => {
     items: itemNotifications,
     onClick: handleMenuClick,
   };
-  const [isNotification, setIsNotification] = useState(false);
 
   return (
     <div className="h-16 sticky top-0 right-0 shadow-md z-10 bg-white">

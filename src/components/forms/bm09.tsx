@@ -9,8 +9,7 @@ import {
   putYouthUnion,
   YouthUnionItem,
 } from "@/services/generalWorks/youthUnionServices";
-import { DisplayRoleItem, RoleItem } from "@/services/roles/rolesServices";
-import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
+import { DisplayRoleItem } from "@/services/roles/rolesServices";
 import { postFiles } from "@/services/uploads/uploadsServices";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
@@ -50,14 +49,17 @@ import TemplateForms from "./workloads/TemplateForms";
 import saveAs from "file-saver";
 import * as XLSX from "sheetjs-style";
 
+import { RootState } from "@/store";
 import Colors from "@/utility/Colors";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
+import { useSelector } from "react-redux";
 import { LoadingSpin } from "../skeletons/LoadingSpin";
 dayjs.locale("vi");
 
 const BM09 = () => {
+  const app = useSelector((state: RootState) => state.app);
   type SearchProps = GetProps<typeof Input.Search>;
   const { Search } = Input;
   const [loading, setLoading] = useState(false);
@@ -77,7 +79,6 @@ const BM09 = () => {
   const [minStartDate, setMinStartDate] = useState<number | 0>(0);
   const [endDate, setEndDate] = useState<number | 0>(0);
   const [maxEndDate, setMaxEndDate] = useState<number | 0>(0);
-  const [role, setRole] = useState<RoleItem>();
   const [isShowPdf, setIsShowPdf] = useState(false);
   const [keyCustom, setKeyCustom] = useState("");
   const [formNotification, setFormNotification] = useState<{
@@ -93,10 +94,10 @@ const BM09 = () => {
   });
 
   const getDefaultYears = async () => {
-    const { items } = await getAllSchoolYears();
-    if (items) {
-      setDefaultYears(items);
-      const defaultYear = items.find((x: any) => x.isDefault);
+    if (typeof window !== "undefined") {
+      const years = JSON.parse(localStorage.getItem("s_y") as string);
+      setDefaultYears(years);
+      const defaultYear = years.find((x: any) => x.isDefault);
       if (defaultYear) {
         const { id, startDate, endDate } = defaultYear;
         setSelectedKey(defaultYear);
@@ -753,26 +754,18 @@ const BM09 = () => {
     setEndDate(temp.endDate);
     const timeoutId = setTimeout(() => {
       setLoading(false);
-    }, 500);
+    }, 200);
     return () => clearTimeout(timeoutId);
-  };
-
-  const getDisplayRole = async () => {
-    if (typeof window !== "undefined") {
-      const displayRole = localStorage.getItem("s_dr");
-      setRole(JSON.parse(displayRole as string) as RoleItem);
-    }
   };
 
   useEffect(() => {
     setLoading(true);
     document.title = PageTitles.BM09;
     getDefaultYears();
-    getDisplayRole();
     onSearch("");
     const timeoutId = setTimeout(() => {
       setLoading(false);
-    }, 500);
+    }, 200);
     return () => clearTimeout(timeoutId);
   }, []);
 
@@ -876,7 +869,7 @@ const BM09 = () => {
           </div>
         </div>
         <div className="flex justify-end mt-6 gap-3">
-          {role?.displayRole.isExport && (
+          {app?.displayRole.isExport && (
             <>
               <Button
                 color="green"
@@ -889,7 +882,7 @@ const BM09 = () => {
               </Button>
             </>
           )}
-          {role?.displayRole.isCreate && (
+          {app?.displayRole.isCreate && (
             <>
               <Dropdown menu={{ items }} trigger={["click"]}>
                 <a onClick={(e) => e.preventDefault()}>
@@ -900,7 +893,7 @@ const BM09 = () => {
               </Dropdown>
             </>
           )}
-          {role?.displayRole.isDelete && (
+          {app?.displayRole.isDelete && (
             <>
               <Button
                 color="red"
@@ -936,7 +929,7 @@ const BM09 = () => {
           setKeyCustom(getRandomKey());
           setIsOpen(false);
         }}
-        role={role || undefined}
+        role={app || undefined}
         onCancel={() => {
           setKeyCustom(getRandomKey());
           setIsOpen(false);
@@ -948,7 +941,7 @@ const BM09 = () => {
                 formName="bm09"
                 onSubmit={handleSubmitUpload}
                 handleShowPDF={setIsShowPdf}
-                displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
+                displayRole={app?.displayRole ?? ({} as DisplayRoleItem)}
               />
             </>
           ) : (
@@ -958,7 +951,7 @@ const BM09 = () => {
                 initialData={selectedItem as Partial<any>}
                 mode={mode}
                 formName="bm09"
-                displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
+                displayRole={app?.displayRole ?? ({} as DisplayRoleItem)}
               />
             </>
           )

@@ -14,8 +14,7 @@ import {
   getReportMultiMonths,
   getReportMultiYears,
 } from "@/services/reports/reportsServices";
-import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
-import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
+import { UnitItem } from "@/services/units/unitsServices";
 import Colors from "@/utility/Colors";
 import PageTitles from "@/utility/Constraints";
 import { convertTimestampToFullDateTime } from "@/utility/Utilities";
@@ -40,7 +39,6 @@ const Home = () => {
   const listTrainings = ["bm07"];
   const listGenerals = ["bm08", "bm09", "bm10", "bm11", "bm12"];
   const listOthers = ["bm01", "bm02", "bm03", "bm04", "bm05", "bm14"];
-
   const [loading, setLoading] = useState(false);
   const [defaultYears, setDefaultYears] = useState<any>();
   const [selectedKey, setSelectedKey] = useState<any>();
@@ -53,6 +51,7 @@ const Home = () => {
   const [dataFacultyById, setDataFacultyById] = useState<any>();
   const [units, setUnits] = useState<UnitItem[]>([]);
   const [selectedKeyUnit, setSelectedKeyUnit] = useState<Key | null>(null);
+
   const formatter: StatisticProps["formatter"] = (value) => (
     <CountUp end={value as number} duration={3} separator="," />
   );
@@ -140,32 +139,25 @@ const Home = () => {
   ];
 
   const getDefaultYears = async () => {
-    setLoading(true);
-    const [responseSchoolYear, responseUnits] = await Promise.all([
-      getAllSchoolYears(),
-      getAllUnits("true"),
-    ]);
-    setDefaultYears(responseSchoolYear.items);
-    setUnits(responseUnits.items);
-    const yearId = responseSchoolYear.items.filter(
-      (x: any) => x.isDefault
-    )[0] as any;
-    setSelectedKey(yearId);
-    const tempUnits = responseUnits.items.sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
-    setSelectedKeyUnit(tempUnits[0].id);
-    Promise.all([
-      getReports(yearId.id),
-      getMultiLineMonths(yearId.id),
-      getHistory(yearId.id),
-      getFacultiesChart(yearId.id),
-      getFacultiesChartById(yearId.id, tempUnits[0].id),
-    ]);
-    const timeoutId = setTimeout(() => {
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timeoutId);
+    if (typeof window !== "undefined") {
+      const years = JSON.parse(localStorage.getItem("s_y") as string);
+      const responseUnits = JSON.parse(localStorage.getItem("s_u") as string);
+      setDefaultYears(years);
+      setUnits(responseUnits);
+      const yearId = years.filter((x: any) => x.isDefault)[0] as any;
+      setSelectedKey(yearId);
+      const tempUnits = responseUnits.sort((a: any, b: any) =>
+        a.name.localeCompare(b.name)
+      );
+      setSelectedKeyUnit(tempUnits[0].id);
+      await Promise.all([
+        getReports(yearId.id),
+        getMultiLineMonths(yearId.id),
+        getHistory(yearId.id),
+        getFacultiesChart(yearId.id),
+        getFacultiesChartById(yearId.id, tempUnits[0].id),
+      ]);
+    }
   };
 
   const getReports = async (id: string) => {
@@ -270,8 +262,10 @@ const Home = () => {
   };
 
   useEffect(() => {
+    setLoading(true);
     document.title = PageTitles.HOME;
-    Promise.all([getDefaultYears()]);
+    getDefaultYears();
+    setLoading(false);
   }, []);
 
   return (

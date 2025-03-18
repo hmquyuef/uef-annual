@@ -5,8 +5,6 @@ import CustomNotification from "@/components/CustomNotification";
 import FormWorkloadType from "@/components/forms/workloads/formWorkloadType";
 import NotFound from "@/components/NotFound";
 import { LoadingSkeleton } from "@/components/skeletons/LoadingSkeleton";
-import { RoleItem } from "@/services/roles/rolesServices";
-import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
 import {
   getWorkloadGroups,
   WorkloadGroupItem,
@@ -18,6 +16,7 @@ import {
   putUpdateWorkloadType,
   WorkloadTypeItem,
 } from "@/services/workloads/typesServices";
+import { RootState } from "@/store";
 import { getUserInfoFromToken } from "@/utility/Auth";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
@@ -45,9 +44,11 @@ import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import CountUp from "react-countup";
+import { useSelector } from "react-redux";
 import Colors from "../../../utility/Colors";
 
 const Workloads = () => {
+  const app = useSelector((state: RootState) => state.app);
   const { Search } = Input;
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -60,41 +61,42 @@ const Workloads = () => {
   const [groups, setGroups] = useState<WorkloadGroupItem[]>([]);
   const [tempGroups, setTempGroups] = useState<WorkloadGroupItem[]>([]);
   const [isOpened, setIsOpened] = useState(false);
-  const [notificationOpen, setNotificationOpen] = useState(false);
   const [isAccess, setIsAccess] = useState(true);
   const [title, setTitle] = useState("");
   const [mode, setMode] = useState<"add" | "edit">("add");
-  const [message, setMessage] = useState("");
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState<
-    "success" | "error" | "info" | "warning"
-  >("success");
   const [selectedItem, setSelectedItem] = useState<
     Partial<WorkloadTypeItem> | undefined
   >(undefined);
-  const [role, setRole] = useState<RoleItem>();
+
+  const [formNotification, setFormNotification] = useState<{
+    message: string;
+    description: string;
+    status: "success" | "error" | "info" | "warning";
+    isOpen: boolean;
+  }>({
+    message: "",
+    description: "",
+    status: "success",
+    isOpen: false,
+  });
 
   const getDefaultYears = async () => {
-    setLoading(true);
-    const response = await getAllSchoolYears();
-    const yearId = response.items.filter((x: any) => x.isDefault)[0] as any;
-    setDefaultYears(response.items);
-    setSelectedKey(yearId);
-    await Promise.all([
-      getListWorkloadTypes(yearId.id),
-      getListWorkloadGroups(),
-    ]);
-    const timeoutId = setTimeout(() => {
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timeoutId);
+    if (typeof window !== "undefined") {
+      const years = JSON.parse(localStorage.getItem("s_y") as string);
+      const yearId = years.filter((x: any) => x.isDefault)[0] as any;
+      setDefaultYears(years);
+      setSelectedKey(yearId);
+      await Promise.all([
+        getListWorkloadTypes(yearId.id),
+        getListWorkloadGroups(),
+      ]);
+    }
   };
 
   const getListWorkloadTypes = async (yearId: string) => {
     const response = await getWorkloadTypes(yearId);
     setTypes(response.items);
     setTempTypes(response.items);
-    setNotificationOpen(false);
   };
 
   const getListWorkloadGroups = async () => {
@@ -164,7 +166,7 @@ const Workloads = () => {
         />
       </div>,
     ];
-    if (role && role.name === "admin") {
+    if (app && app.name === "admin") {
       actionItems.push(
         <div
           key="edit"
@@ -187,25 +189,37 @@ const Workloads = () => {
           formData
         );
         if (response) {
-          setDescription("Cập nhật biểu mẫu thành công!");
+          setFormNotification((prev) => ({
+            ...prev,
+            description: "Cập nhật biểu mẫu thành công!",
+          }));
         }
       } else {
         const response = await postAddWorkloadType(formData);
         if (response) {
-          setDescription("Khởi tạo biểu mẫu thành công!");
+          setFormNotification((prev) => ({
+            ...prev,
+            description: "Khởi tạo biểu mẫu thành công!",
+          }));
         }
       }
-      setNotificationOpen(true);
-      setStatus("success");
-      setMessage("Thông báo");
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "success",
+        message: "Thông báo",
+      }));
       setIsOpened(false);
       setSelectedItem(undefined);
       await getListWorkloadTypes(selectedKey.id);
     } catch (error) {
-      setNotificationOpen(true);
-      setStatus("error");
-      setMessage("Thông báo");
-      setDescription(Messages.ERROR);
+      setFormNotification((prev) => ({
+        ...prev,
+        isOpen: true,
+        status: "error",
+        message: "Đã có lỗi xảy ra!",
+        description: `${error}`,
+      }));
     }
   };
 
@@ -242,8 +256,6 @@ const Workloads = () => {
     if (typeof window !== "undefined") {
       const { username } = getUserInfoFromToken();
       setUserName(username);
-      const displayRole = localStorage.getItem("s_dr");
-      setRole(JSON.parse(displayRole as string) as RoleItem);
     }
   };
 
@@ -252,6 +264,7 @@ const Workloads = () => {
     document.title = PageTitles.BM;
     getDefaultYears();
     getDisplayRole();
+    setLoading(false);
   }, []);
 
   return (
@@ -362,7 +375,7 @@ const Workloads = () => {
                     ?.filter((type) => type.workloadGroupId === group.id)
                     .map((type) =>
                       (userName && type.emails?.includes(userName)) ||
-                      role?.name === "admin" ? (
+                      app?.name === "admin" ? (
                         <Card
                           key={type.id}
                           actions={actions(type)}
@@ -389,7 +402,7 @@ const Workloads = () => {
                               </span>
                               {userName &&
                                 type.emails?.includes(userName) &&
-                                role?.name === "admin" && (
+                                app?.name === "admin" && (
                                   <>
                                     <div className="flex items-center gap-1 text-green-500">
                                       <img src="/ticker.svg" width={24} />
@@ -423,7 +436,7 @@ const Workloads = () => {
                         </Card>
                       ) : null
                     )}
-                  {role?.name === "admin" && (
+                  {app?.name === "admin" && (
                     <Button
                       key={`${group.id}-add-button`}
                       color="primary"
@@ -446,25 +459,20 @@ const Workloads = () => {
           })()}
         </>
       )}
-      <CustomNotification
-        message={message}
-        description={description}
-        status={status}
-        isOpen={notificationOpen}
-      />
+      <CustomNotification {...formNotification} />
       <CustomModal
         isOpen={isOpened}
         title={title}
         width="900px"
-        role={role || undefined}
+        role={app || undefined}
         onOk={() => {
           const formElement = document.querySelector("form");
           formElement?.dispatchEvent(
             new Event("submit", { cancelable: true, bubbles: true })
           );
+          setIsOpened(false);
         }}
         onCancel={() => {
-          setNotificationOpen(false);
           setIsOpened(false);
           setMode("add");
         }}

@@ -5,7 +5,7 @@ import {
   ApplicationItem,
   getAllApplications,
 } from "@/services/applications/applicationServices";
-import { RoleItem } from "@/services/roles/rolesServices";
+import { RootState } from "@/store";
 import PageTitles from "@/utility/Constraints";
 import { convertTimestampToDate } from "@/utility/Utilities";
 import {
@@ -23,8 +23,10 @@ import {
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import { Key, useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 
 const Applications = () => {
+  const app = useSelector((state: RootState) => state.app);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [data, setData] = useState<ApplicationItem[]>([]);
   const [isNotificationOpen, setNotificationOpen] = useState(false);
@@ -33,7 +35,7 @@ const Applications = () => {
   const [status, setStatus] = useState<
     "success" | "error" | "info" | "warning"
   >("success");
-  const [role, setRole] = useState<RoleItem>();
+
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 15,
@@ -163,18 +165,9 @@ const Applications = () => {
       pageSize: pagination.pageSize || 15,
     });
   };
-
-  const getDisplayRole = async () => {
-    if (typeof window !== "undefined") {
-      const displayRole = localStorage.getItem("s_dr");
-      setRole(JSON.parse(displayRole as string) as RoleItem);
-    }
-  };
-
   useEffect(() => {
     document.title = PageTitles.APPLICATIONS;
     getListApplications();
-    getDisplayRole();
   }, []);
 
   return (
@@ -217,7 +210,7 @@ const Applications = () => {
         status={status}
         isOpen={isNotificationOpen}
       />
-      {role?.displayRole.isRead ? (
+      {app?.displayRole.isRead ? (
         <>
           <div>
             <Table<ApplicationItem>

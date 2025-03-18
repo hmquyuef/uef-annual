@@ -12,7 +12,7 @@ import {
   postAddMenu,
   putUpdateMenu,
 } from "@/services/menus/menuServices";
-import { RoleItem } from "@/services/roles/rolesServices";
+import { RootState } from "@/store";
 import PageTitles from "@/utility/Constraints";
 import {
   ContactsOutlined,
@@ -32,10 +32,13 @@ import {
   Tag,
 } from "antd";
 import { Key, useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 
 type TableRowSelection<T extends object = object> =
   TableProps<T>["rowSelection"];
+
 const Menus = () => {
+  const app = useSelector((state: RootState) => state.app);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [mode, setMode] = useState<"add" | "edit">("add");
@@ -49,7 +52,7 @@ const Menus = () => {
   const [status, setStatus] = useState<
     "success" | "error" | "info" | "warning"
   >("success");
-  const [role, setRole] = useState<RoleItem>();
+
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 15,
@@ -212,18 +215,9 @@ const Menus = () => {
     }
     setNotificationOpen(false);
   };
-
-  const getDisplayRole = async () => {
-    if (typeof window !== "undefined") {
-      const displayRole = localStorage.getItem("s_dr");
-      setRole(JSON.parse(displayRole as string) as RoleItem);
-    }
-  };
-
   useEffect(() => {
     document.title = PageTitles.MENUS;
     getListMenus();
-    getDisplayRole();
   }, []);
 
   return (
@@ -293,7 +287,7 @@ const Menus = () => {
         isOpen={isOpen}
         width={"50vw"}
         title={mode === "edit" ? "Cập nhật chức năng" : "Thêm mới chức năng"}
-        role={role || undefined}
+        role={app || undefined}
         onOk={() => {
           const formElement = document.querySelector("form");
           formElement?.dispatchEvent(

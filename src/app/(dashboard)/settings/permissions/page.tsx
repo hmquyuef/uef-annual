@@ -16,7 +16,7 @@ import {
   postAddPermission,
   putUpdatePermission,
 } from "@/services/permissions/permissionServices";
-import { RoleItem } from "@/services/roles/rolesServices";
+import { RootState } from "@/store";
 import PageTitles from "@/utility/Constraints";
 import { convertTimestampToDate } from "@/utility/Utilities";
 import {
@@ -37,8 +37,10 @@ import {
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import { Key, useCallback, useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 
 const Permissions = () => {
+  const app = useSelector((state: RootState) => state.app);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [mode, setMode] = useState<"add" | "edit">("add");
@@ -55,7 +57,7 @@ const Permissions = () => {
   const [status, setStatus] = useState<
     "success" | "error" | "info" | "warning"
   >("success");
-  const [role, setRole] = useState<RoleItem>();
+
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 15,
@@ -268,16 +270,10 @@ const Permissions = () => {
   const fetchData = async () => {
     await Promise.all([getListPermissions(), getListPermissionsForMenu()]);
   };
-  const getDisplayRole = async () => {
-    if (typeof window !== "undefined") {
-      const displayRole = localStorage.getItem("s_dr");
-      setRole(JSON.parse(displayRole as string) as RoleItem);
-    }
-  };
+
   useEffect(() => {
     document.title = PageTitles.PERMISSIONS;
     fetchData();
-    getDisplayRole();
   }, []);
 
   return (
@@ -315,7 +311,7 @@ const Permissions = () => {
         />
       </div>
       <div className="flex justify-end gap-4 mb-3 border-b border-neutral-300 pb-3">
-        {role?.displayRole.isCreate && (
+        {app?.displayRole.isCreate && (
           <>
             <Button
               type="primary"
@@ -331,7 +327,7 @@ const Permissions = () => {
           </>
         )}
 
-        {role?.displayRole.isDelete && (
+        {app?.displayRole.isDelete && (
           <>
             <Button
               color="danger"
@@ -356,7 +352,7 @@ const Permissions = () => {
         isOpen={isOpen}
         width={"40vw"}
         title={mode === "edit" ? "Cập nhật phân quyền" : "Thêm mới phân quyền"}
-        role={role || undefined}
+        role={app || undefined}
         onOk={() => {
           const formElement = document.querySelector("form");
           formElement?.dispatchEvent(

@@ -11,9 +11,8 @@ import {
   putUpdateApprovedAdmissionCounseling,
 } from "@/services/forms/admissionCounseling";
 import { PaymentApprovedItem } from "@/services/forms/PaymentApprovedItem";
-import { DisplayRoleItem, RoleItem } from "@/services/roles/rolesServices";
-import { getAllSchoolYears } from "@/services/schoolYears/schoolYearsServices";
-import { getAllUnits, UnitItem } from "@/services/units/unitsServices";
+import { DisplayRoleItem } from "@/services/roles/rolesServices";
+import { UnitItem } from "@/services/units/unitsServices";
 import { postFiles } from "@/services/uploads/uploadsServices";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
@@ -58,11 +57,13 @@ import CustomNotification from "../CustomNotification";
 import FormBM03 from "./activity/formBM03";
 import FromUpload from "./activity/formUpload";
 
+import { RootState } from "@/store";
 import { getUserInfoFromToken } from "@/utility/Auth";
 import Colors from "@/utility/Colors";
 import locale from "antd/locale/vi_VN";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
+import { useSelector } from "react-redux";
 import { LoadingSpin } from "../skeletons/LoadingSpin";
 import TemplateForms from "./workloads/TemplateForms";
 dayjs.locale("vi");
@@ -70,6 +71,7 @@ dayjs.locale("vi");
 type SearchProps = GetProps<typeof Input.Search>;
 
 const BM03 = () => {
+  const app = useSelector((state: RootState) => state.app);
   const { Search } = Input;
   const [loading, setLoading] = useState(false);
   const [loadingUpload, setLoadingUpload] = useState(false);
@@ -94,7 +96,6 @@ const BM03 = () => {
   const [endDate, setEndDate] = useState<number | 0>(0);
   const [maxEndDate, setMaxEndDate] = useState<number | 0>(0);
   const [advanced, setAdvanced] = useState(false);
-  const [role, setRole] = useState<RoleItem>();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [reason, setReason] = useState("");
   const [isPayments, setIsPayments] = useState<PaymentApprovedItem[] | null>(
@@ -116,10 +117,10 @@ const BM03 = () => {
   });
 
   const getDefaultYears = async () => {
-    const { items } = await getAllSchoolYears();
-    if (items) {
-      setDefaultYears(items);
-      const defaultYear = items.find((x: any) => x.isDefault);
+    if (typeof window !== "undefined") {
+      const years = JSON.parse(localStorage.getItem("s_y") as string);
+      setDefaultYears(years);
+      const defaultYear = years.find((x: any) => x.isDefault);
       if (defaultYear) {
         const { id, startDate, endDate } = defaultYear;
         setSelectedKey(defaultYear);
@@ -139,8 +140,10 @@ const BM03 = () => {
   };
 
   const getListUnits = async () => {
-    const response = await getAllUnits("true");
-    setUnits(response.items);
+    if (typeof window !== "undefined") {
+      const responseUnits = JSON.parse(localStorage.getItem("s_u") as string);
+      setUnits(responseUnits);
+    }
   };
 
   const columns: TableColumnsType<AdmissionCounselingItem> = [
@@ -885,7 +888,7 @@ const BM03 = () => {
     setEndDate(temp.endDate);
     const timeoutId = setTimeout(() => {
       setLoading(false);
-    }, 500);
+    }, 200);
     return () => clearTimeout(timeoutId);
   };
 
@@ -895,21 +898,18 @@ const BM03 = () => {
       if (family_name && role === "secretary") {
         setSelectedKeyUnit(family_name.toLowerCase());
       }
-      const displayRole = localStorage.getItem("s_dr");
-      setRole(JSON.parse(displayRole as string) as RoleItem);
     }
   };
 
   useEffect(() => {
     setLoading(true);
     document.title = PageTitles.BM03;
-
     Promise.all([getDefaultYears(), getListUnits()]);
     getDisplayRole();
     onSearch("");
     const timeoutId = setTimeout(() => {
       setLoading(false);
-    }, 500);
+    }, 200);
     return () => clearTimeout(timeoutId);
   }, []);
 
@@ -961,7 +961,7 @@ const BM03 = () => {
                 </div>
                 <div
                   className="col-span-2"
-                  hidden={role && role.name === "secretary"}
+                  hidden={app && app.name === "secretary"}
                 >
                   <div className="flex flex-col justify-center gap-1">
                     <span className="text-[14px] text-neutral-500">
@@ -1105,7 +1105,7 @@ const BM03 = () => {
           </AnimatePresence>
         </div>
         <div className="flex justify-end mt-6 gap-3">
-          {role?.displayRole.isApprove && role?.displayRole.isReject && (
+          {app?.displayRole.isApprove && app?.displayRole.isReject && (
             <>
               <Dropdown menu={{ items: itemsApproved }} trigger={["click"]}>
                 <a onClick={(e) => e.preventDefault()}>
@@ -1124,7 +1124,7 @@ const BM03 = () => {
               </Dropdown>
             </>
           )}
-          {role?.displayRole.isExport && (
+          {app?.displayRole.isExport && (
             <>
               <Button
                 color="green"
@@ -1137,7 +1137,7 @@ const BM03 = () => {
               </Button>
             </>
           )}
-          {role?.displayRole.isCreate && (
+          {app?.displayRole.isCreate && (
             <>
               <Dropdown menu={{ items }} trigger={["click"]}>
                 <a onClick={(e) => e.preventDefault()}>
@@ -1148,7 +1148,7 @@ const BM03 = () => {
               </Dropdown>
             </>
           )}
-          {role?.displayRole.isDelete && (
+          {app?.displayRole.isDelete && (
             <>
               <Button
                 color="red"
@@ -1175,7 +1175,7 @@ const BM03 = () => {
               ? Messages.UPDATE_ADMISSION_COUNSELING
               : Messages.ADD_ADMISSION_COUNSELING
           }
-          role={role || undefined}
+          role={app || undefined}
           isBlock={
             isPayments && isPayments.length >= 2
               ? true
@@ -1206,7 +1206,7 @@ const BM03 = () => {
                   formName="bm03"
                   onSubmit={handleSubmitUpload}
                   handleShowPDF={setIsShowPdf}
-                  displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
+                  displayRole={app?.displayRole ?? ({} as DisplayRoleItem)}
                 />
               </>
             ) : (
@@ -1217,7 +1217,7 @@ const BM03 = () => {
                   initialData={selectedItem as Partial<any>}
                   mode={mode}
                   isPayment={isPayments ?? []}
-                  displayRole={role?.displayRole ?? ({} as DisplayRoleItem)}
+                  displayRole={app?.displayRole ?? ({} as DisplayRoleItem)}
                 />
               </>
             )

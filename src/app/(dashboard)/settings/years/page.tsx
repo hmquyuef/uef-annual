@@ -11,6 +11,7 @@ import {
   putSchoolYear,
   SchoolYearsResponses,
 } from "@/services/schoolYears/schoolYearsServices";
+import { RootState } from "@/store";
 import PageTitles from "@/utility/Constraints";
 import Messages from "@/utility/Messages";
 import { convertTimestampToDate } from "@/utility/Utilities";
@@ -33,8 +34,10 @@ import {
 } from "antd";
 import { TableRowSelection } from "antd/es/table/interface";
 import { Key, useCallback, useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 
 const SchoolYear = () => {
+  const app = useSelector((state: RootState) => state.app);
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [schoolYears, setSchoolYears] = useState<
     SchoolYearsResponses | undefined
@@ -47,7 +50,6 @@ const SchoolYear = () => {
   const [selectedItem, setSelectedItem] = useState<Partial<any> | undefined>(
     undefined
   );
-  const [role, setRole] = useState<RoleItem>();
   const [status, setStatus] = useState<
     "success" | "error" | "info" | "warning"
   >("success");
@@ -227,17 +229,9 @@ const SchoolYear = () => {
     }
   }, [selectedRowKeys]);
 
-  const getDisplayRole = async () => {
-    if (typeof window !== "undefined") {
-      const displayRole = localStorage.getItem("s_dr");
-      setRole(JSON.parse(displayRole as string) as RoleItem);
-    }
-  };
-
   useEffect(() => {
     document.title = PageTitles.SCHOOL_YEARS;
     getSchoolYears();
-    getDisplayRole();
   }, []);
   return (
     <div>
@@ -274,7 +268,7 @@ const SchoolYear = () => {
         />
       </div>
       <div className="flex justify-end gap-4 mb-3 border-b border-neutral-300 pb-3">
-        {role?.displayRole.isCreate && (
+        {app?.displayRole.isCreate && (
           <>
             <Button
               type="primary"
@@ -289,7 +283,7 @@ const SchoolYear = () => {
             </Button>
           </>
         )}
-        {role?.displayRole.isDelete && (
+        {app?.displayRole.isDelete && (
           <>
             <Button
               color="danger"
@@ -318,7 +312,7 @@ const SchoolYear = () => {
             ? "Cập nhật thời gian năm học"
             : "Thêm mới thời gian năm học"
         }
-        role={role || undefined}
+        role={app || undefined}
         onOk={() => {
           const formElement = document.querySelector("form");
           formElement?.dispatchEvent(
