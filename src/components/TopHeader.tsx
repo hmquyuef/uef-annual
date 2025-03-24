@@ -29,7 +29,7 @@ const TopHeaders = () => {
   const dispatch = useDispatch();
   const { username, fullname, email } = getUserInfoFromToken();
   const { isNews } = useNotifications(
-    `ws://${process.env.NEXT_PUBLIC_SOCKET_URL}/ws?userName=${username}`
+    `${process.env.NEXT_PUBLIC_SOCKET_URL}/ws?userName=${username}`
   );
   const [dataNews, setDataNews] = useState<any[]>([]);
 

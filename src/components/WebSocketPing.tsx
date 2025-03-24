@@ -11,7 +11,7 @@ interface WebSocketPingProps {
 const WebSocketPing: FC<WebSocketPingProps> = (props) => {
   const { isOpen } = props;
   const { latency, status } = useWebSocketPing(
-    `ws://${process.env.NEXT_PUBLIC_SOCKET_URL}/connect`
+    `${process.env.NEXT_PUBLIC_SOCKET_URL}/connect`
   );
   const [formNotification, setFormNotification] = useState<{
     message: string;
