@@ -27,6 +27,7 @@ import {
 } from "@ant-design/icons";
 import {
   Button,
+  Checkbox,
   ConfigProvider,
   DatePicker,
   Input,
@@ -295,7 +296,7 @@ const FormBM05: FC<FormBM05Props> = ({
         unitName: user.unitName,
         standardNumber: user.standardNumber,
         description: user.description,
-      })),
+      }))
     };
     onSubmit(formData);
   };

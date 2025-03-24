@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 const useWebSocketPing = (url: string, interval = 5000, timeout = 5000) => {
     const [latency, setLatency] = useState<number | null>(null);
     const [status, setStatus] = useState<"fast" | "slow" | "disconnected">("fast");
+
     const socketRef = useRef<WebSocket | null>(null);
     const pingTimer = useRef<NodeJS.Timeout | null>(null);
     const responseTimer = useRef<NodeJS.Timeout | null>(null);
@@ -44,7 +45,7 @@ const useWebSocketPing = (url: string, interval = 5000, timeout = 5000) => {
             console.log("✅ WebSocket connected!");
             pingTimer.current = setInterval(sendPing, interval);
         };
-
+        
         socketRef.current.onmessage = (event) => {
             if (event.data === "true" && lastPingTime.current !== null) {
                 const lat = Date.now() - lastPingTime.current;

@@ -17,6 +17,7 @@ interface TemplateFormsProps {
   loading: boolean;
   data: any;
   title: any[];
+  role?: string;
   hideEntryDate?: boolean;
   onEdit?: (record: any) => void;
   onSelectionChange?: (selectedKeys: Key[]) => void;
@@ -28,6 +29,7 @@ const TemplateForms: FC<TemplateFormsProps> = ({
   loading,
   data,
   title,
+  role,
   hideEntryDate,
   onEdit,
   onSelectionChange,
@@ -40,6 +42,7 @@ const TemplateForms: FC<TemplateFormsProps> = ({
     pageSize: 15,
   });
 
+  const rolesManager = ["admin", "finance-manager"];
   const onSelectChange = (newSelectedRowKeys: Key[]) => {
     setSelectedRowKeys(newSelectedRowKeys);
     if (typeof onSelectionChange === "function") {
@@ -49,7 +52,16 @@ const TemplateForms: FC<TemplateFormsProps> = ({
   const rowSelection: TableRowSelection<any> = {
     selectedRowKeys,
     getCheckboxProps: (record: any) => ({
-      disabled: record.payments?.length > 0 ? true : false,
+      disabled: rolesManager.includes(role ?? "")
+        ? record.payments?.some(
+            (x: { confirmationType: number }) =>
+              x.confirmationType === 2 || x.confirmationType === 3
+          )
+          ? true
+          : false
+        : record.payments?.length > 0
+        ? true
+        : false,
     }),
     onChange: onSelectChange,
   };
@@ -121,7 +133,7 @@ const TemplateForms: FC<TemplateFormsProps> = ({
             <span className="text-orange-500 flex justify-center items-center gap-2">
               <Spin
                 indicator={
-                  <span className="text-orange-600 mt-[-18px]">
+                  <span className="text-orange-600 mt-[-16px]">
                     <LoadingOutlined spin />
                   </span>
                 }
@@ -240,7 +252,7 @@ const TemplateForms: FC<TemplateFormsProps> = ({
               ),
             }}
             onChange={handleTableChange}
-            className="custom-table-header shadow-md rounded-md"
+            className="custom-table-header shadow-md rounded-md select-none"
             rowClassName={(_, index) =>
               index % 2 === 0 ? "bg-sky-50" : "bg-white"
             }

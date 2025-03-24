@@ -831,13 +831,9 @@ const BM03 = () => {
   };
 
   const handleApproved = async (isRejected: boolean, type: number) => {
-    const { role, username, fullname } = getUserInfoFromToken();
     const formData = {
       ids: selectedRowKeys.length > 0 ? selectedRowKeys : [selectedItem?.id],
-      userName: username,
-      fullName: fullname,
-      confirmationType:
-        role && role === "finance-manager" && isRejected ? 3 : type,
+      confirmationType: type,
       isRejected: isRejected,
       reason: reason,
     };
@@ -863,11 +859,12 @@ const BM03 = () => {
         status: "success",
         message: "Thông báo",
       }));
-      setSelectedRowKeys([]);
       await getListAdmissionCounseling(selectedKey.id);
+      setSelectedRowKeys([]);
       setIsOpen(false);
       setSelectedItem(undefined);
       setMode("add");
+      setKeyCustom(getRandomKey());
     } catch (error) {
       setFormNotification((prev) => ({
         ...prev,

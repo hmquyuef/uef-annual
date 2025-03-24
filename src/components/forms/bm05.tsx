@@ -24,6 +24,7 @@ import {
 } from "@/utility/Utilities";
 import {
   ArrowsAltOutlined,
+  CheckCircleOutlined,
   CheckOutlined,
   CloseCircleOutlined,
   CloseOutlined,
@@ -31,7 +32,6 @@ import {
   FileExcelOutlined,
   FileProtectOutlined,
   PlusOutlined,
-  SafetyOutlined,
   ShrinkOutlined,
 } from "@ant-design/icons";
 import {
@@ -286,25 +286,65 @@ const BM05 = () => {
     {
       key: "1",
       label: (
-        <p onClick={() => handleApproved(false, 1)} className="font-medium">
-          Chấp nhận
-        </p>
+        <span
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsModalVisible(true);
+          }}
+          className="text-red-500"
+        >
+          Từ chối
+        </span>
       ),
-      icon: <SafetyOutlined />,
-      style: { color: Colors.GREEN },
+      icon: <CloseCircleOutlined />,
+      style: { color: Colors.RED },
     },
+
     {
       type: "divider",
     },
     {
       key: "2",
       label: (
-        <span onClick={() => setIsModalVisible(true)} className="font-medium">
-          Từ chối
+        <span
+          onClick={(e) => {
+            e.stopPropagation();
+            console.log("selectedRowKeys :>> ", selectedRowKeys);
+            const temp = activities.filter((x) =>
+              selectedRowKeys.includes(x.id)
+            );
+            console.log("temp :>> ", temp);
+            // handleApproved(false, 1);
+          }}
+          className="text-green-500"
+        >
+          {app.name === "admin" || app.name === "finance-manager"
+            ? "Chấp nhận"
+            : "Kiểm duyệt"}
         </span>
       ),
-      icon: <CloseCircleOutlined />,
-      style: { color: Colors.RED },
+      icon: <CheckCircleOutlined />,
+      style: { color: Colors.GREEN },
+    },
+    {
+      type: "divider",
+    },
+    {
+      key: "3",
+      label: (
+        <span
+          onClick={(e) => {
+            e.stopPropagation();
+            handleApproved(false, 3);
+            setKeyCustom(getRandomKey());
+          }}
+          className="text-blue-500"
+        >
+          Kiểm duyệt & Xác nhận
+        </span>
+      ),
+      icon: <CheckOutlined />,
+      style: { color: Colors.BLUE },
     },
   ];
 
@@ -724,13 +764,9 @@ const BM05 = () => {
   };
 
   const handleApproved = async (isRejected: boolean, type: number) => {
-    const { role, username, fullname } = getUserInfoFromToken();
     const formData = {
       ids: selectedRowKeys.length > 0 ? selectedRowKeys : [selectedItem?.id],
-      userName: username,
-      fullName: fullname,
-      confirmationType:
-        role && role === "finance-manager" && isRejected ? 3 : type,
+      confirmationType: type,
       isRejected: isRejected,
       reason: reason,
     };
@@ -756,11 +792,12 @@ const BM05 = () => {
         status: "success",
         message: "Thông báo",
       }));
-      setSelectedRowKeys([]);
       await getListActivities(selectedKey.id);
+      setSelectedRowKeys([]);
       setIsOpen(false);
       setSelectedItem(undefined);
       setMode("add");
+      setKeyCustom(getRandomKey());
     } catch (error) {
       setFormNotification((prev) => ({
         ...prev,
@@ -791,8 +828,6 @@ const BM05 = () => {
       if (family_name && role === "secretary") {
         setSelectedKeyUnit(family_name.toLowerCase());
       }
-      // const displayRole = localStorage.getItem("s_dr");
-      // setRole(JSON.parse(displayRole as string) as RoleItem);
     }
   };
 
@@ -1088,7 +1123,6 @@ const BM05 = () => {
             new Event("submit", { cancelable: true, bubbles: true })
           );
           setKeyCustom(getRandomKey());
-          setIsOpen(false);
         }}
         onCancel={() => {
           setKeyCustom(getRandomKey());
@@ -1127,9 +1161,11 @@ const BM05 = () => {
         </>
       )}
       <TemplateForms
+        key={`${keyCustom}-table`}
         loading={loading}
         data={data}
         title={columns}
+        role={app?.name}
         onEdit={handleEdit}
         onSetPayments={setIsPayments}
         onSelectionChange={(selectedRowKeys) =>

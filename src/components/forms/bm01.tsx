@@ -863,12 +863,9 @@ const BM01 = () => {
 
   const handleApproved = async (isRejected: boolean, type: number) => {
     if (typeof window !== "undefined") {
-      const { role, username, fullname } = getUserInfoFromToken();
       const formData = {
         ids: selectedRowKeys.length > 0 ? selectedRowKeys : [selectedItem?.id],
-        userName: username,
-        fullName: fullname,
-        confirmationType: role === "finance-manager" && isRejected ? 3 : type,
+        confirmationType: type,
         isRejected: isRejected,
         reason: reason,
       };
@@ -888,17 +885,18 @@ const BM01 = () => {
             }));
           }
         }
-        setSelectedRowKeys([]);
         setFormNotification((prev) => ({
           ...prev,
           isOpen: true,
           status: "success",
           message: "Thông báo",
         }));
+        setSelectedRowKeys([]);
         await getListClassLeaders(selectedKey.id);
         setIsOpen(false);
         setSelectedItem(undefined);
         setMode("add");
+        setKeyCustom(getRandomKey());
       } catch (error) {
         setFormNotification((prev) => ({
           ...prev,
